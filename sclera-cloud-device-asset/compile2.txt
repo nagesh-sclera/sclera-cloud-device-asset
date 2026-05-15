@@ -1,0 +1,662 @@
+﻿[INFO] Scanning for projects...
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for io:Sclera:jar:0.0.1-SNAPSHOT
+[WARNING] 'dependencies.dependency.systemPath' for io.ScleraTools:ScleraTools:jar should not point at files within the project directory, ${project.basedir}/src/main/resources/External_jar/ScleraTools.jar will be unresolvable by dependent projects @ line 166, column 25
+[WARNING] 'dependencies.dependency.systemPath' for org.projecthaystack:haystack-java:jar should not point at files within the project directory, ${project.basedir}/src/main/resources/External_jar/haystack-java.jar will be unresolvable by dependent projects @ line 174, column 25
+[WARNING] 'dependencies.dependency.(groupId:artifactId:type:classifier)' must be unique: org.springframework.boot:spring-boot-starter-cache:jar -> duplicate declaration of version (?) @ line 446, column 21
+[WARNING] 
+[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
+[WARNING] 
+[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
+[WARNING] 
+[INFO] 
+[INFO] -----------------------------< io:Sclera >------------------------------
+[INFO] Building Sclera 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[WARNING] 1 problem was encountered while building the effective model for org.javassist:javassist:jar:3.20.0-GA during dependency collection step for project (use -X to see details)
+[INFO] 
+[INFO] --- clean:3.1.0:clean (default-clean) @ Sclera ---
+[INFO] Deleting C:\Users\KNageshNayak\Desktop\Work\Sclara-2.0\sclera-cloud-device-asset\target
+[INFO] 
+[INFO] --- resources:3.2.0:resources (default-resources) @ Sclera ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Using 'UTF-8' encoding to copy filtered properties files.
+[INFO] Copying 6 resources
+[INFO] Copying 36 resources
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ Sclera ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 488 source files with javac [debug parameters target 11] to target\classes
+[INFO] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/auth/TenantJWSKeySelector.java: Some input files use or override a deprecated API.
+[INFO] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/auth/TenantJWSKeySelector.java: Recompile with -Xlint:deprecation for details.
+[INFO] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/utils/Utils.java: Some input files use unchecked or unsafe operations.
+[INFO] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/utils/Utils.java: Recompile with -Xlint:unchecked for details.
+[INFO] Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+[INFO] -------------------------------------------------------------
+[WARNING] COMPILATION WARNING : 
+[INFO] -------------------------------------------------------------
+[WARNING] location of system modules is not set in conjunction with -source 11
+  not setting the location of system modules may lead to class files that cannot run on JDK 11
+    --release 11 is recommended instead of -source 11 -target 11 because it sets the location of system modules automatically
+[INFO] 1 warning
+[INFO] -------------------------------------------------------------
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DeviceService.java:[2364,48] cannot find symbol
+  symbol:   method getDeviceIdByMyDevicesSensorId(java.lang.String)
+  location: variable myDevicesService of type io.sclera.service.MyDevicesService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DeviceService.java:[2375,60] cannot find symbol
+  symbol:   method getMyDevicesSensorCountByDeviceId(java.lang.String)
+  location: variable myDevicesService of type io.sclera.service.MyDevicesService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DeviceService.java:[2386,48] cannot find symbol
+  symbol:   method getDeviceIdByMyDevicesSensorId(java.lang.String)
+  location: variable myDevicesService of type io.sclera.service.MyDevicesService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DeviceService.java:[2399,49] cannot find symbol
+  symbol:   method getMyDevicesSensorAlertStatusByDeviceId(java.lang.String)
+  location: variable myDevicesService of type io.sclera.service.MyDevicesService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DeviceService.java:[2654,55] cannot find symbol
+  symbol:   method getDeviceMyDevicesSensors(java.lang.String,java.lang.String,java.lang.String)
+  location: variable myDevicesService of type io.sclera.service.MyDevicesService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DeviceService.java:[3618,60] cannot find symbol
+  symbol:   method getMydevicesSensorsByDeviceId(java.lang.String)
+  location: variable myDevicesService of type io.sclera.service.MyDevicesService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DeviceService.java:[4431,47] cannot find symbol
+  symbol:   method listmydevicesDeviceAlertMessagesByDeviceIds(java.util.List<java.lang.String>)
+  location: variable myDevicesService of type io.sclera.service.MyDevicesService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DeviceService.java:[8491,25] cannot find symbol
+  symbol:   method updateMyDevicesSensorDeviceId(java.lang.String,java.lang.String,java.util.Set<java.lang.String>)
+  location: variable myDevicesService of type io.sclera.service.MyDevicesService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[151,44] cannot find symbol
+  symbol:   method syncLocationToADC(java.util.List<io.sclera.dto.LocationDTO>,java.lang.String,java.lang.String,java.lang.String)
+  location: variable apicallService of type io.sclera.service.APICallService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[201,72] cannot find symbol
+  symbol:   method getRecordChecklistStatusByLocationId(java.lang.String,java.lang.String)
+  location: variable recordChecklistService of type io.sclera.service.RecordChecklistService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[214,64] cannot find symbol
+  symbol:   method getChecklistStatusCountLocationId(java.lang.String,java.lang.String,java.lang.String)
+  location: variable recordChecklistService of type io.sclera.service.RecordChecklistService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[292,34] cannot find symbol
+  symbol:   method updatePropertyServiceLocations(java.lang.String)
+  location: variable propertyQrcodeService of type io.sclera.service.PropertyQrcodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[294,59] cannot find symbol
+  symbol:   method getRecord_checklist()
+  location: variable location of type io.sclera.models.Location
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[320,77] cannot find symbol
+  symbol:   method getGlobal_inspection_relation()
+  location: variable location of type io.sclera.models.Location
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[333,79] cannot find symbol
+  symbol:   method getGlobal_checklist_conditions()
+  location: variable location of type io.sclera.models.Location
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[346,55] cannot find symbol
+  symbol:   method getRecord_checklist()
+  location: variable location of type io.sclera.models.Location
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[357,54] cannot find symbol
+  symbol:   method getRecord_checklist()
+  location: variable location of type io.sclera.models.Location
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[365,63] cannot find symbol
+  symbol:   method getGlobal_inspection_relation()
+  location: variable location of type io.sclera.models.Location
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[373,63] cannot find symbol
+  symbol:   method getGlobal_checklist_conditions()
+  location: variable location of type io.sclera.models.Location
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[380,35] cannot find symbol
+  symbol:   method updateRecordChecklistLocationAndIsRemoved(java.util.Set<java.lang.String>)
+  location: variable recordChecklistService of type io.sclera.service.RecordChecklistService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[381,42] cannot find symbol
+  symbol:   method updateGlobalInspectionRelationLocationAndIsRemoved(java.util.Set<java.lang.String>)
+  location: variable globalInspectionRecordService of type io.sclera.service.GlobalInspectionRecordService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[382,45] cannot find symbol
+  symbol:   method updateGlobalChecklistConditionsLocationAndIsRemoved(java.util.Set<java.lang.String>)
+  location: variable globalChecklistConditionsService of type io.sclera.service.GlobalChecklistConditionsService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[384,23] cannot find symbol
+  symbol:   method updatePmsAttributesByLocationId(java.lang.String)
+  location: variable pmsService of type io.sclera.service.PmsService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[418,44] cannot find symbol
+  symbol:   method deleteLocationFromADC(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.util.List<java.lang.String>)
+  location: variable apicallService of type io.sclera.service.APICallService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[439,34] cannot find symbol
+  symbol:   method updatePropertyServiceLocations(java.lang.String)
+  location: variable propertyQrcodeService of type io.sclera.service.PropertyQrcodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[440,35] cannot find symbol
+  symbol:   method deleteRecordChecklistByLocationId(java.lang.String)
+  location: variable recordChecklistService of type io.sclera.service.RecordChecklistService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[441,32] cannot find symbol
+  symbol:   method deleteGlobalQRCodeByLocationId(java.lang.String)
+  location: variable globalQrcodeService of type io.sclera.service.GlobalQrcodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[442,23] cannot find symbol
+  symbol:   method updatePmsAttributesByLocationId(java.lang.String)
+  location: variable pmsService of type io.sclera.service.PmsService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[443,60] cannot find symbol
+  symbol:   method deleteAllRecordChecklistByLocationId(java.lang.String)
+  location: variable recordChecklistService of type io.sclera.service.RecordChecklistService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[524,67] cannot find symbol
+  symbol:   method getQrCodesByLocationIds(java.util.Set<java.lang.String>)
+  location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[525,58] cannot find symbol
+  symbol:   method getNfcsByLocationIds(java.util.Set<java.lang.String>)
+  location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[571,54] cannot find symbol
+  symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+  location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[572,66] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+  location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[579,48] cannot find symbol
+  symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+  location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[580,60] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+  location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[670,68] cannot find symbol
+  symbol:   method getQrCodesByLocationIds(java.util.Set<java.lang.String>)
+  location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[679,59] cannot find symbol
+  symbol:   method getNfcsByLocationIds(java.util.Set<java.lang.String>)
+  location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[737,58] cannot find symbol
+  symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+  location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[738,70] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+  location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[747,52] cannot find symbol
+  symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+  location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[748,64] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+  location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[830,72] cannot find symbol
+  symbol:   method getLocation_id()
+  location: variable recordChecklistDTO of type io.sclera.dto.RecordChecklistDTO
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[873,13] cannot find symbol
+  symbol:   class PmsAttributesDTO
+  location: class io.sclera.service.LocationService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[873,61] cannot find symbol
+  symbol:   method getPmsAttributesByLocationIds(java.util.Set<java.lang.String>)
+  location: variable pmsService of type io.sclera.service.PmsService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[874,14] cannot find symbol
+  symbol:   class PmsAttributesDTO
+  location: class io.sclera.service.LocationService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[907,58] cannot find symbol
+  symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+  location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[908,70] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+  location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[926,52] cannot find symbol
+  symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+  location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[927,64] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+  location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[962,54] cannot find symbol
+  symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+  location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[963,66] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+  location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[970,48] cannot find symbol
+  symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+  location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[971,60] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+  location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1037,61] cannot find symbol
+  symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+  location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1038,73] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+  location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1045,55] cannot find symbol
+  symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+  location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1046,67] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+  location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1068,61] cannot find symbol
+  symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+  location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1069,73] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+  location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1076,55] cannot find symbol
+  symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+  location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1077,67] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+  location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1162,58] cannot find symbol
+  symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+  location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1163,70] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+  location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1172,52] cannot find symbol
+  symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+  location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1173,64] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+  location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1182,51] cannot find symbol
+  symbol:   method getLocationIdsByRoomStatus(java.lang.String,java.lang.String)
+  location: variable pmsService of type io.sclera.service.PmsService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1267,58] cannot find symbol
+  symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+  location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1268,70] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+  location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1286,52] cannot find symbol
+  symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+  location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1287,64] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+  location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1345,58] cannot find symbol
+  symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+  location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1346,70] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+  location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1363,52] cannot find symbol
+  symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+  location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1364,64] cannot find symbol
+  symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+  location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[414,23] cannot find symbol
+  symbol:   method sendSensorValueDataToIOC(java.lang.String,java.math.BigInteger)
+  location: variable iocService of type io.sclera.service.IOCService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[416,26] cannot find symbol
+  symbol:   method socketMeasuringInstrumentSensorValueUpdate(java.lang.String)
+  location: variable socketService of type io.sclera.sockets.SocketService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[424,32] cannot find symbol
+  symbol:   method rabbitmqMeasuringInstrumentData(java.lang.String,java.lang.String,java.math.BigInteger,java.lang.String)
+  location: variable rabbitmqService of type io.sclera.rabbitmq.RabbitmqService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[442,74] cannot find symbol
+  symbol:   method fetchMeasuringInstruments()
+  location: variable apiCallService of type io.sclera.service.APICallService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[663,22] cannot find symbol
+  symbol:   class DaintreeConfigurationDTO
+  location: class io.sclera.service.MeasuringInstrumentService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[663,88] cannot find symbol
+  symbol:   method getDaintreeConfigurations(java.lang.String)
+  location: variable daintreeService of type io.sclera.service.DaintreeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[664,22] cannot find symbol
+  symbol:   class DaintreeConfigurationDTO
+  location: class io.sclera.service.MeasuringInstrumentService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[670,144] cannot find symbol
+  symbol:   method getId()
+  location: variable daintreeDevice of type io.sclera.dto.DaintreeDeviceDTO
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[809,80] cannot find symbol
+  symbol:   method updateAttributeValueById(java.lang.String,java.lang.String)
+  location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[832,48] cannot find symbol
+  symbol:   method upsertMeasuringInstrumentAttribute(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.Integer)
+  location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[843,55] cannot find symbol
+  symbol:   method getMeasuringInstrumentAttributeById(java.lang.String)
+  location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[847,55] cannot find symbol
+  symbol:   method getAllMeasuringInstrumentAttributes()
+  location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[851,55] cannot find symbol
+  symbol:   method getMeasuringInstrumentAttributesByMeasuringInstrumentId(java.lang.String)
+  location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[855,48] cannot find symbol
+  symbol:   method deleteMeasuringInstrumentAttributeById(java.lang.String)
+  location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[859,48] cannot find symbol
+  symbol:   method deleteMeasuringInstrumentAttributeByMeasuringInstrumentId(java.lang.String)
+  location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[864,48] cannot find symbol
+  symbol:   method updateAttributeValue(java.lang.String,java.lang.String,java.lang.String,java.lang.String)
+  location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[865,85] cannot find symbol
+  symbol:   method getMeasuringInstrumentIdByIds(java.lang.String,java.lang.String,java.lang.String)
+  location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[926,48] cannot find symbol
+  symbol:   method upsertMeasuringInstrumentAttribute(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.Integer)
+  location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DocumentService.java:[118,49] cannot find symbol
+  symbol:   method load(java.io.InputStream)
+  location: class org.apache.pdfbox.pdmodel.PDDocument
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DocumentService.java:[128,53] cannot find symbol
+  symbol:   method canPrintDegraded()
+  location: variable permissions of type org.apache.pdfbox.pdmodel.encryption.AccessPermission
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/ConnectedDevicesService.java:[35,35] cannot find symbol
+  symbol:   method addConnectedDevices(java.lang.String,java.lang.String,java.lang.String)
+  location: variable connectedDevicesRepository of type io.sclera.Repository.ConnectedDevicesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/ConnectedDevicesService.java:[40,84] cannot find symbol
+  symbol:   method getConnectedDevicesSpecifications(java.lang.String,java.lang.Integer,java.lang.Integer)
+  location: variable connectedDevicesRepository of type io.sclera.Repository.ConnectedDevicesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/ConnectedDevicesService.java:[119,42] cannot find symbol
+  symbol:   method getConnectedSpecificationsByDeviceId(java.lang.String)
+  location: variable connectedDevicesRepository of type io.sclera.Repository.ConnectedDevicesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/ConnectedDevicesService.java:[125,42] cannot find symbol
+  symbol:   method getAllInputConnectedSpecifications(java.lang.String)
+  location: variable connectedDevicesRepository of type io.sclera.Repository.ConnectedDevicesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/ConnectedDevicesService.java:[130,42] cannot find symbol
+  symbol:   method getAllOutputConnectedSpecifications(java.lang.String)
+  location: variable connectedDevicesRepository of type io.sclera.Repository.ConnectedDevicesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/ConnectedDevicesService.java:[161,35] cannot find symbol
+  symbol:   method untagPowerSource(java.lang.String,java.lang.String)
+  location: variable connectedDevicesRepository of type io.sclera.Repository.ConnectedDevicesRepository
+[INFO] 100 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  15.476 s
+[INFO] Finished at: 2026-05-13T18:32:32+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:compile (default-compile) on project Sclera: Compilation failure: Compilation failure: 
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DeviceService.java:[2364,48] cannot find symbol
+[ERROR]   symbol:   method getDeviceIdByMyDevicesSensorId(java.lang.String)
+[ERROR]   location: variable myDevicesService of type io.sclera.service.MyDevicesService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DeviceService.java:[2375,60] cannot find symbol
+[ERROR]   symbol:   method getMyDevicesSensorCountByDeviceId(java.lang.String)
+[ERROR]   location: variable myDevicesService of type io.sclera.service.MyDevicesService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DeviceService.java:[2386,48] cannot find symbol
+[ERROR]   symbol:   method getDeviceIdByMyDevicesSensorId(java.lang.String)
+[ERROR]   location: variable myDevicesService of type io.sclera.service.MyDevicesService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DeviceService.java:[2399,49] cannot find symbol
+[ERROR]   symbol:   method getMyDevicesSensorAlertStatusByDeviceId(java.lang.String)
+[ERROR]   location: variable myDevicesService of type io.sclera.service.MyDevicesService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DeviceService.java:[2654,55] cannot find symbol
+[ERROR]   symbol:   method getDeviceMyDevicesSensors(java.lang.String,java.lang.String,java.lang.String)
+[ERROR]   location: variable myDevicesService of type io.sclera.service.MyDevicesService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DeviceService.java:[3618,60] cannot find symbol
+[ERROR]   symbol:   method getMydevicesSensorsByDeviceId(java.lang.String)
+[ERROR]   location: variable myDevicesService of type io.sclera.service.MyDevicesService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DeviceService.java:[4431,47] cannot find symbol
+[ERROR]   symbol:   method listmydevicesDeviceAlertMessagesByDeviceIds(java.util.List<java.lang.String>)
+[ERROR]   location: variable myDevicesService of type io.sclera.service.MyDevicesService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DeviceService.java:[8491,25] cannot find symbol
+[ERROR]   symbol:   method updateMyDevicesSensorDeviceId(java.lang.String,java.lang.String,java.util.Set<java.lang.String>)
+[ERROR]   location: variable myDevicesService of type io.sclera.service.MyDevicesService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[151,44] cannot find symbol
+[ERROR]   symbol:   method syncLocationToADC(java.util.List<io.sclera.dto.LocationDTO>,java.lang.String,java.lang.String,java.lang.String)
+[ERROR]   location: variable apicallService of type io.sclera.service.APICallService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[201,72] cannot find symbol
+[ERROR]   symbol:   method getRecordChecklistStatusByLocationId(java.lang.String,java.lang.String)
+[ERROR]   location: variable recordChecklistService of type io.sclera.service.RecordChecklistService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[214,64] cannot find symbol
+[ERROR]   symbol:   method getChecklistStatusCountLocationId(java.lang.String,java.lang.String,java.lang.String)
+[ERROR]   location: variable recordChecklistService of type io.sclera.service.RecordChecklistService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[292,34] cannot find symbol
+[ERROR]   symbol:   method updatePropertyServiceLocations(java.lang.String)
+[ERROR]   location: variable propertyQrcodeService of type io.sclera.service.PropertyQrcodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[294,59] cannot find symbol
+[ERROR]   symbol:   method getRecord_checklist()
+[ERROR]   location: variable location of type io.sclera.models.Location
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[320,77] cannot find symbol
+[ERROR]   symbol:   method getGlobal_inspection_relation()
+[ERROR]   location: variable location of type io.sclera.models.Location
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[333,79] cannot find symbol
+[ERROR]   symbol:   method getGlobal_checklist_conditions()
+[ERROR]   location: variable location of type io.sclera.models.Location
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[346,55] cannot find symbol
+[ERROR]   symbol:   method getRecord_checklist()
+[ERROR]   location: variable location of type io.sclera.models.Location
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[357,54] cannot find symbol
+[ERROR]   symbol:   method getRecord_checklist()
+[ERROR]   location: variable location of type io.sclera.models.Location
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[365,63] cannot find symbol
+[ERROR]   symbol:   method getGlobal_inspection_relation()
+[ERROR]   location: variable location of type io.sclera.models.Location
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[373,63] cannot find symbol
+[ERROR]   symbol:   method getGlobal_checklist_conditions()
+[ERROR]   location: variable location of type io.sclera.models.Location
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[380,35] cannot find symbol
+[ERROR]   symbol:   method updateRecordChecklistLocationAndIsRemoved(java.util.Set<java.lang.String>)
+[ERROR]   location: variable recordChecklistService of type io.sclera.service.RecordChecklistService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[381,42] cannot find symbol
+[ERROR]   symbol:   method updateGlobalInspectionRelationLocationAndIsRemoved(java.util.Set<java.lang.String>)
+[ERROR]   location: variable globalInspectionRecordService of type io.sclera.service.GlobalInspectionRecordService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[382,45] cannot find symbol
+[ERROR]   symbol:   method updateGlobalChecklistConditionsLocationAndIsRemoved(java.util.Set<java.lang.String>)
+[ERROR]   location: variable globalChecklistConditionsService of type io.sclera.service.GlobalChecklistConditionsService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[384,23] cannot find symbol
+[ERROR]   symbol:   method updatePmsAttributesByLocationId(java.lang.String)
+[ERROR]   location: variable pmsService of type io.sclera.service.PmsService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[418,44] cannot find symbol
+[ERROR]   symbol:   method deleteLocationFromADC(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.util.List<java.lang.String>)
+[ERROR]   location: variable apicallService of type io.sclera.service.APICallService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[439,34] cannot find symbol
+[ERROR]   symbol:   method updatePropertyServiceLocations(java.lang.String)
+[ERROR]   location: variable propertyQrcodeService of type io.sclera.service.PropertyQrcodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[440,35] cannot find symbol
+[ERROR]   symbol:   method deleteRecordChecklistByLocationId(java.lang.String)
+[ERROR]   location: variable recordChecklistService of type io.sclera.service.RecordChecklistService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[441,32] cannot find symbol
+[ERROR]   symbol:   method deleteGlobalQRCodeByLocationId(java.lang.String)
+[ERROR]   location: variable globalQrcodeService of type io.sclera.service.GlobalQrcodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[442,23] cannot find symbol
+[ERROR]   symbol:   method updatePmsAttributesByLocationId(java.lang.String)
+[ERROR]   location: variable pmsService of type io.sclera.service.PmsService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[443,60] cannot find symbol
+[ERROR]   symbol:   method deleteAllRecordChecklistByLocationId(java.lang.String)
+[ERROR]   location: variable recordChecklistService of type io.sclera.service.RecordChecklistService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[524,67] cannot find symbol
+[ERROR]   symbol:   method getQrCodesByLocationIds(java.util.Set<java.lang.String>)
+[ERROR]   location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[525,58] cannot find symbol
+[ERROR]   symbol:   method getNfcsByLocationIds(java.util.Set<java.lang.String>)
+[ERROR]   location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[571,54] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+[ERROR]   location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[572,66] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+[ERROR]   location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[579,48] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+[ERROR]   location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[580,60] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+[ERROR]   location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[670,68] cannot find symbol
+[ERROR]   symbol:   method getQrCodesByLocationIds(java.util.Set<java.lang.String>)
+[ERROR]   location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[679,59] cannot find symbol
+[ERROR]   symbol:   method getNfcsByLocationIds(java.util.Set<java.lang.String>)
+[ERROR]   location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[737,58] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+[ERROR]   location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[738,70] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+[ERROR]   location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[747,52] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+[ERROR]   location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[748,64] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+[ERROR]   location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[830,72] cannot find symbol
+[ERROR]   symbol:   method getLocation_id()
+[ERROR]   location: variable recordChecklistDTO of type io.sclera.dto.RecordChecklistDTO
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[873,13] cannot find symbol
+[ERROR]   symbol:   class PmsAttributesDTO
+[ERROR]   location: class io.sclera.service.LocationService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[873,61] cannot find symbol
+[ERROR]   symbol:   method getPmsAttributesByLocationIds(java.util.Set<java.lang.String>)
+[ERROR]   location: variable pmsService of type io.sclera.service.PmsService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[874,14] cannot find symbol
+[ERROR]   symbol:   class PmsAttributesDTO
+[ERROR]   location: class io.sclera.service.LocationService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[907,58] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+[ERROR]   location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[908,70] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+[ERROR]   location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[926,52] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+[ERROR]   location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[927,64] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+[ERROR]   location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[962,54] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+[ERROR]   location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[963,66] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+[ERROR]   location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[970,48] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+[ERROR]   location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[971,60] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+[ERROR]   location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1037,61] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+[ERROR]   location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1038,73] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+[ERROR]   location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1045,55] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+[ERROR]   location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1046,67] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+[ERROR]   location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1068,61] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+[ERROR]   location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1069,73] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+[ERROR]   location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1076,55] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+[ERROR]   location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1077,67] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+[ERROR]   location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1162,58] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+[ERROR]   location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1163,70] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+[ERROR]   location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1172,52] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+[ERROR]   location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1173,64] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+[ERROR]   location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1182,51] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsByRoomStatus(java.lang.String,java.lang.String)
+[ERROR]   location: variable pmsService of type io.sclera.service.PmsService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1267,58] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+[ERROR]   location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1268,70] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+[ERROR]   location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1286,52] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+[ERROR]   location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1287,64] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+[ERROR]   location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1345,58] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToQrCode(java.lang.String)
+[ERROR]   location: variable qrCodeService of type io.sclera.service.QrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1346,70] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientQrCode(java.lang.String)
+[ERROR]   location: variable clientQrCodeService of type io.sclera.service.ClientQrCodeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1363,52] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToNfc(java.lang.String)
+[ERROR]   location: variable nfcService of type io.sclera.service.NfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/LocationService.java:[1364,64] cannot find symbol
+[ERROR]   symbol:   method getLocationIdsTaggedToClientNfc(java.lang.String)
+[ERROR]   location: variable clientNfcService of type io.sclera.service.ClientNfcService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[414,23] cannot find symbol
+[ERROR]   symbol:   method sendSensorValueDataToIOC(java.lang.String,java.math.BigInteger)
+[ERROR]   location: variable iocService of type io.sclera.service.IOCService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[416,26] cannot find symbol
+[ERROR]   symbol:   method socketMeasuringInstrumentSensorValueUpdate(java.lang.String)
+[ERROR]   location: variable socketService of type io.sclera.sockets.SocketService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[424,32] cannot find symbol
+[ERROR]   symbol:   method rabbitmqMeasuringInstrumentData(java.lang.String,java.lang.String,java.math.BigInteger,java.lang.String)
+[ERROR]   location: variable rabbitmqService of type io.sclera.rabbitmq.RabbitmqService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[442,74] cannot find symbol
+[ERROR]   symbol:   method fetchMeasuringInstruments()
+[ERROR]   location: variable apiCallService of type io.sclera.service.APICallService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[663,22] cannot find symbol
+[ERROR]   symbol:   class DaintreeConfigurationDTO
+[ERROR]   location: class io.sclera.service.MeasuringInstrumentService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[663,88] cannot find symbol
+[ERROR]   symbol:   method getDaintreeConfigurations(java.lang.String)
+[ERROR]   location: variable daintreeService of type io.sclera.service.DaintreeService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[664,22] cannot find symbol
+[ERROR]   symbol:   class DaintreeConfigurationDTO
+[ERROR]   location: class io.sclera.service.MeasuringInstrumentService
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[670,144] cannot find symbol
+[ERROR]   symbol:   method getId()
+[ERROR]   location: variable daintreeDevice of type io.sclera.dto.DaintreeDeviceDTO
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[809,80] cannot find symbol
+[ERROR]   symbol:   method updateAttributeValueById(java.lang.String,java.lang.String)
+[ERROR]   location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[832,48] cannot find symbol
+[ERROR]   symbol:   method upsertMeasuringInstrumentAttribute(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.Integer)
+[ERROR]   location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[843,55] cannot find symbol
+[ERROR]   symbol:   method getMeasuringInstrumentAttributeById(java.lang.String)
+[ERROR]   location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[847,55] cannot find symbol
+[ERROR]   symbol:   method getAllMeasuringInstrumentAttributes()
+[ERROR]   location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[851,55] cannot find symbol
+[ERROR]   symbol:   method getMeasuringInstrumentAttributesByMeasuringInstrumentId(java.lang.String)
+[ERROR]   location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[855,48] cannot find symbol
+[ERROR]   symbol:   method deleteMeasuringInstrumentAttributeById(java.lang.String)
+[ERROR]   location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[859,48] cannot find symbol
+[ERROR]   symbol:   method deleteMeasuringInstrumentAttributeByMeasuringInstrumentId(java.lang.String)
+[ERROR]   location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[864,48] cannot find symbol
+[ERROR]   symbol:   method updateAttributeValue(java.lang.String,java.lang.String,java.lang.String,java.lang.String)
+[ERROR]   location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[865,85] cannot find symbol
+[ERROR]   symbol:   method getMeasuringInstrumentIdByIds(java.lang.String,java.lang.String,java.lang.String)
+[ERROR]   location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/MeasuringInstrumentService.java:[926,48] cannot find symbol
+[ERROR]   symbol:   method upsertMeasuringInstrumentAttribute(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.Integer)
+[ERROR]   location: variable measuringInstrumentAttributesRepository of type io.sclera.Repository.MeasuringInstrumentAttributesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DocumentService.java:[118,49] cannot find symbol
+[ERROR]   symbol:   method load(java.io.InputStream)
+[ERROR]   location: class org.apache.pdfbox.pdmodel.PDDocument
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/DocumentService.java:[128,53] cannot find symbol
+[ERROR]   symbol:   method canPrintDegraded()
+[ERROR]   location: variable permissions of type org.apache.pdfbox.pdmodel.encryption.AccessPermission
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/ConnectedDevicesService.java:[35,35] cannot find symbol
+[ERROR]   symbol:   method addConnectedDevices(java.lang.String,java.lang.String,java.lang.String)
+[ERROR]   location: variable connectedDevicesRepository of type io.sclera.Repository.ConnectedDevicesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/ConnectedDevicesService.java:[40,84] cannot find symbol
+[ERROR]   symbol:   method getConnectedDevicesSpecifications(java.lang.String,java.lang.Integer,java.lang.Integer)
+[ERROR]   location: variable connectedDevicesRepository of type io.sclera.Repository.ConnectedDevicesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/ConnectedDevicesService.java:[119,42] cannot find symbol
+[ERROR]   symbol:   method getConnectedSpecificationsByDeviceId(java.lang.String)
+[ERROR]   location: variable connectedDevicesRepository of type io.sclera.Repository.ConnectedDevicesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/ConnectedDevicesService.java:[125,42] cannot find symbol
+[ERROR]   symbol:   method getAllInputConnectedSpecifications(java.lang.String)
+[ERROR]   location: variable connectedDevicesRepository of type io.sclera.Repository.ConnectedDevicesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/ConnectedDevicesService.java:[130,42] cannot find symbol
+[ERROR]   symbol:   method getAllOutputConnectedSpecifications(java.lang.String)
+[ERROR]   location: variable connectedDevicesRepository of type io.sclera.Repository.ConnectedDevicesRepository
+[ERROR] /C:/Users/KNageshNayak/Desktop/Work/Sclara-2.0/sclera-cloud-device-asset/src/main/java/io/sclera/service/ConnectedDevicesService.java:[161,35] cannot find symbol
+[ERROR]   symbol:   method untagPowerSource(java.lang.String,java.lang.String)
+[ERROR]   location: variable connectedDevicesRepository of type io.sclera.Repository.ConnectedDevicesRepository
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

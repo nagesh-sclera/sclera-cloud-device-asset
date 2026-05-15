@@ -1,0 +1,117 @@
+[
+    {
+        "key": "Device Id",
+        "column": "id",
+        "custom": false
+    },
+    {
+        "key": "Device Name",
+        "column": "display_name",
+        "custom": false
+    },
+    {
+        "key": "Vendor",
+        "column": "vendor",
+        "custom": false
+    },
+    {
+        "key": "Model",
+        "column": "model",
+        "custom": false
+    },
+    {
+        "key": "Category",
+        "column": "type",
+        "custom": false
+    },
+    {
+        "key": "IP Address",
+        "column": "ip_address",
+        "custom": false
+    },
+    {
+        "key": "Mac Address",
+        "column": "mac_address",
+        "custom": false
+    },
+    {
+        "key": "Location",
+        "column": "location",
+        "custom": false
+    },
+    {
+        "key": "Floor",
+        "column": "floor",
+        "custom": false
+    },
+    {
+        "key": "Building",
+        "column": "building",
+        "custom": false
+    },
+    {
+        "key": "Latitude",
+        "column": "latitude",
+        "custom": false
+    },
+    {
+        "key": "Longitude",
+        "column": "longitude",
+        "custom": false
+    },
+    {
+        "key": "Serial Number",
+        "column": "serial_number",
+        "custom": false
+    },
+    {
+        "key": "Warranty",
+        "column": "warranty",
+        "custom": false
+    },
+    {
+        "key": "Created Timestamp",
+        "column": "created_timestamp",
+        "custom": false
+    },
+    {
+        "key": "Updated Email",
+        "column": "updated_email",
+        "custom": false
+    },
+    {
+        "key": "Updated Timestamp",
+        "column": "updated_timestamp",
+        "custom": false
+    },
+    {
+        "key": "Description",
+        "column": "description",
+        "custom": false
+    },
+    {
+        "key": "Assignee",
+        "column": "assigned_user_email",
+        "custom": false
+    },
+    {
+        "key": "Cost",
+        "column": "cost_value",
+        "custom": false
+    },
+    {
+        "key": "PC Location",
+        "column": "pc_location",
+        "custom": false
+    },
+    {
+        "key": "ISP Location",
+        "column": "isp_location",
+        "custom": false
+    },
+    {
+        "key": "Username",
+        "column": "username",
+        "custom": false
+    }
+]

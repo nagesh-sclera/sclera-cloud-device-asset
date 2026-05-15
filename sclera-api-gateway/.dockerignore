@@ -1,0 +1,4 @@
+.git
+src
+target/*
+!target/sclera-api-gateway.jar

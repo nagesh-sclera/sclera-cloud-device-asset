@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sclara 2.0 — Architecture & Dapr Guide</title>
+<style>
+/* ─── Reset & base ─────────────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0d14;--surface:#12151f;--card:#1a1d2e;--border:#252840;
+  --text:#e2e8f0;--muted:#64748b;--dim:#94a3b8;
+  --blue:#7c8cf8;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;
+  --purple:#a78bfa;--teal:#2dd4bf;--pink:#f472b6;--orange:#fb923c;
+  --blue-bg:#1e3a5f;--green-bg:#14532d;--red-bg:#450a0a;--amber-bg:#451a03;
+  --purple-bg:#2e1065;--teal-bg:#134e4a;
+}
+html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+
+/* ─── Slide engine ─────────────────────────────────────────────────────── */
+.deck{width:100%;height:100%;position:relative}
+.slide{
+  position:absolute;inset:0;
+  display:none;flex-direction:column;
+  padding:0;overflow:hidden;
+}
+.slide.active{display:flex}
+
+/* ─── Slide layout ─────────────────────────────────────────────────────── */
+.slide-head{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:16px 48px;display:flex;align-items:center;gap:12px;flex-shrink:0
+}
+.slide-head .num{
+  font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--muted);
+  background:var(--card);border:1px solid var(--border);border-radius:4px;
+  padding:3px 8px;white-space:nowrap
+}
+.slide-head h1{font-size:20px;font-weight:700;color:#fff}
+.slide-head .tag{
+  margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.08em;
+  padding:4px 12px;border-radius:20px;white-space:nowrap
+}
+.tag-dapr   {background:var(--blue-bg);color:var(--blue)}
+.tag-arch   {background:var(--purple-bg);color:var(--purple)}
+.tag-flow   {background:var(--teal-bg);color:var(--teal)}
+.tag-ref    {background:#1a1a2e;color:var(--amber)}
+.tag-infra  {background:#1a1a1a;color:var(--dim)}
+
+.slide-body{
+  flex:1;overflow-y:auto;padding:28px 48px;display:flex;flex-direction:column;gap:20px
+}
+.slide-body.cols2{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-content:start}
+.slide-body.cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-content:start}
+
+/* ─── Navigation ───────────────────────────────────────────────────────── */
+.nav{
+  background:var(--surface);border-top:1px solid var(--border);
+  padding:10px 48px;display:flex;align-items:center;gap:14px;flex-shrink:0
+}
+.nav .progress-wrap{flex:1;height:4px;background:var(--border);border-radius:2px}
+.nav .progress-bar{height:4px;background:var(--blue);border-radius:2px;transition:width .3s}
+.nav .counter{font-size:12px;color:var(--muted);white-space:nowrap}
+.nav-btn{
+  background:var(--card);border:1px solid var(--border);color:var(--text);
+  padding:7px 16px;border-radius:5px;cursor:pointer;font-size:13px;font-weight:500;
+  display:flex;align-items:center;gap:5px
+}
+.nav-btn:hover{background:var(--border)}
+.nav-btn:disabled{opacity:.3;cursor:default}
+
+/* ─── Cards ────────────────────────────────────────────────────────────── */
+.box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px}
+.box h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px}
+.box h3{font-size:15px;font-weight:600;color:#c7d2fe;margin-bottom:8px}
+.box p{color:var(--dim);line-height:1.6;font-size:14px}
+
+.hero-box{
+  background:linear-gradient(135deg,#1a1d2e 0%,#0f1117 100%);
+  border:1px solid var(--border);border-radius:12px;padding:32px;text-align:center
+}
+.hero-box .big{font-size:52px;font-weight:800;color:var(--blue);line-height:1}
+.hero-box .sub{font-size:22px;font-weight:300;color:var(--dim);margin-top:10px}
+.hero-box .tagline{font-size:14px;color:var(--muted);margin-top:16px;font-style:italic}
+
+/* ─── Diagram boxes ─────────────────────────────────────────────────────── */
+.svc{
+  border:2px solid;border-radius:8px;padding:12px 16px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  min-width:130px;text-align:center
+}
+.svc .name{font-weight:700;font-size:13px}
+.svc .port{font-size:11px;font-family:monospace;opacity:.7}
+.svc .note{font-size:10px;opacity:.6;margin-top:3px}
+
+.svc-gw   {border-color:var(--blue);background:#0d1628;color:var(--blue)}
+.svc-asset{border-color:var(--green);background:#0a1f12;color:var(--green)}
+.svc-vdms {border-color:var(--purple);background:#150d2e;color:var(--purple)}
+.svc-dapr {border-color:var(--orange);background:#1a0f05;color:var(--orange)}
+.svc-redis{border-color:var(--red);background:#1a0505;color:var(--red)}
+.svc-mysql{border-color:var(--amber);background:#1a1005;color:var(--amber)}
+.svc-ui   {border-color:var(--teal);background:#041a18;color:var(--teal)}
+.svc-browser{border-color:var(--pink);background:#1a0815;color:var(--pink)}
+
+.arrow{
+  display:flex;align-items:center;gap:6px;font-size:12px;
+  color:var(--muted);padding:3px 6px;
+}
+.arrow .line{flex:1;height:1px;background:var(--border)}
+.arrow .lbl{font-size:10px;white-space:nowrap;font-family:monospace;background:var(--card);padding:1px 5px;border-radius:3px;border:1px solid var(--border)}
+
+.flow-row{display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto;padding:4px 0}
+.flow-arrow{padding:0 8px;color:var(--muted);font-size:18px;flex-shrink:0}
+.flow-down{text-align:center;color:var(--muted);font-size:18px;margin:4px 0}
+
+/* ─── Steps ─────────────────────────────────────────────────────────────── */
+.steps{display:flex;flex-direction:column;gap:0}
+.step{
+  display:flex;gap:16px;align-items:flex-start;
+  padding:12px 0;border-bottom:1px solid var(--border)
+}
+.step:last-child{border-bottom:none}
+.step-n{
+  width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px
+}
+.step-n.blue  {background:var(--blue-bg);color:var(--blue)}
+.step-n.green {background:var(--green-bg);color:var(--green)}
+.step-n.purple{background:var(--purple-bg);color:var(--purple)}
+.step-n.amber {background:var(--amber-bg);color:var(--amber)}
+.step-n.teal  {background:var(--teal-bg);color:var(--teal)}
+.step-n.red   {background:var(--red-bg);color:var(--red)}
+.step-body .title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px}
+.step-body .desc{font-size:13px;color:var(--dim);line-height:1.5}
+.step-body .url{
+  font-family:monospace;font-size:11px;color:var(--teal);
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:4px;padding:4px 8px;margin-top:5px;display:inline-block
+}
+
+/* ─── Code block ─────────────────────────────────────────────────────────── */
+.code{
+  background:var(--bg);border:1px solid var(--border);border-radius:6px;
+  padding:12px 16px;font-family:'Consolas',monospace;font-size:12px;
+  line-height:1.6;overflow-x:auto;color:#a5f3fc
+}
+.code .k{color:#c084fc} /* keyword */
+.code .s{color:#86efac} /* string */
+.code .c{color:#475569} /* comment */
+.code .t{color:#fde68a} /* type */
+.code .m{color:#fb923c} /* method */
+
+/* ─── Table ───────────────────────────────────────────────────────────── */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 12px;background:var(--bg);color:var(--muted);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--dim);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#181b28}
+td code{font-family:monospace;font-size:11px;color:var(--teal);background:var(--bg);padding:1px 5px;border-radius:3px;border:1px solid var(--border)}
+td .pill{
+  display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600
+}
+td .pill-blue  {background:var(--blue-bg);color:var(--blue)}
+td .pill-green {background:var(--green-bg);color:var(--green)}
+td .pill-purple{background:var(--purple-bg);color:var(--purple)}
+td .pill-amber {background:var(--amber-bg);color:var(--amber)}
+td .pill-red   {background:var(--red-bg);color:var(--red)}
+
+/* ─── Callout ─────────────────────────────────────────────────────────── */
+.callout{
+  border-left:3px solid;border-radius:0 6px 6px 0;
+  padding:12px 16px;font-size:13px;line-height:1.6;margin-top:8px
+}
+.callout.info  {border-color:var(--blue);background:var(--blue-bg);color:#bfdbfe}
+.callout.success{border-color:var(--green);background:var(--green-bg);color:#bbf7d0}
+.callout.warn  {border-color:var(--amber);background:var(--amber-bg);color:#fde68a}
+.callout b{font-weight:700;color:#fff}
+
+/* ─── Badge ───────────────────────────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.badge-blue  {background:var(--blue-bg);color:var(--blue)}
+.badge-green {background:var(--green-bg);color:var(--green)}
+.badge-purple{background:var(--purple-bg);color:var(--purple)}
+.badge-amber {background:var(--amber-bg);color:var(--amber)}
+.badge-red   {background:var(--red-bg);color:var(--red)}
+.badge-teal  {background:var(--teal-bg);color:var(--teal)}
+
+/* ─── Title slide ─────────────────────────────────────────────────────── */
+#s0{
+  background:radial-gradient(ellipse at 30% 40%,#1a1d3f 0%,var(--bg) 60%);
+  display:flex;align-items:center;justify-content:center
+}
+.title-inner{text-align:center;max-width:700px}
+.title-inner .headline{font-size:58px;font-weight:900;line-height:1;letter-spacing:-.02em}
+.title-inner .headline span{color:var(--blue)}
+.title-inner .sub{font-size:18px;color:var(--dim);margin-top:14px;line-height:1.5}
+.title-inner .chips{display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+.title-inner .chip{
+  border:1px solid var(--border);border-radius:20px;padding:6px 16px;
+  font-size:13px;color:var(--dim);background:var(--card)
+}
+.title-inner .key{font-size:12px;color:var(--muted);margin-top:28px}
+
+/* ─── Diagram: full system ────────────────────────────────────────────── */
+.sys-diagram{
+  display:flex;flex-direction:column;align-items:center;gap:0;
+  padding:10px 0
+}
+.sys-row{display:flex;gap:12px;align-items:center;justify-content:center}
+.sys-col{display:flex;flex-direction:column;align-items:center;gap:4px}
+
+/* ─── Dapr explain ────────────────────────────────────────────────────── */
+.dapr-pair{
+  display:flex;border:2px solid var(--border);border-radius:12px;overflow:hidden;
+  max-width:500px;margin:0 auto
+}
+.dapr-pair .app-side{
+  flex:1;padding:16px;background:#0a1f12;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  border-right:2px dashed var(--border)
+}
+.dapr-pair .dapr-side{
+  flex:1;padding:16px;background:#1a0f05;
+  display:flex;flex-direction:column;align-items:center;gap:8px
+}
+.dapr-pair .label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;opacity:.6}
+.dapr-pair .icon{font-size:32px}
+.dapr-pair .name{font-size:14px;font-weight:700}
+.dapr-pair .desc{font-size:11px;color:var(--muted);text-align:center;line-height:1.4}
+.same-net{
+  text-align:center;font-size:11px;color:var(--muted);margin-top:6px;
+  border:1px dashed var(--border);border-radius:6px;padding:5px 12px;
+  background:var(--surface)
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────────────── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- ══════════════════════════════════════════════════════ SLIDE 0 — TITLE -->
+<div class="slide active" id="s0">
+  <div class="title-inner">
+    <div class="headline">Sclara <span>2.0</span></div>
+    <div class="sub">Architecture &amp; Dapr Communication<br>A complete guide — browser to database and back</div>
+    <div class="chips">
+      <span class="chip">Spring Boot 2.6.5</span>
+      <span class="chip">Java 17</span>
+      <span class="chip">Dapr 1.12</span>
+      <span class="chip">Redis Pub/Sub</span>
+      <span class="chip">MySQL 8</span>
+      <span class="chip">Docker Compose</span>
+    </div>
+    <div class="key">Press → or click Next to begin</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ SLIDE 1 — BIG PICTURE -->
+<div class="slide" id="s1">
+  <div class="slide-head">
+    <span class="num">01</span>
+    <h1>The Big Picture</h1>
+    <span class="tag tag-arch">Architecture</span>
+  </div>
+  <div class="slide-body">
+
+    <div class="box">
+      <h2>All containers at a glance</h2>
+      <div class="sys-diagram">
+
+        <div class="sys-row">
+          <div class="svc svc-browser"><span class="name">Browser / Client</span><span class="note">You are here</span></div>
+        </div>
+        <div style="text-align:center;color:var(--muted);padding:4px 0;font-size:12px">HTTP :8080</div>
+
+        <div class="sys-row">
+          <div class="svc svc-gw"><span class="name">API Gateway</span><span class="port">:8080</span><span class="note">Spring Cloud Gateway</span></div>
+        </div>
+        <div style="text-align:center;color:var(--muted);padding:4px 0;font-size:11px;display:flex;gap:80px;justify-content:center">
+          <span>/asset/** → strips prefix</span>
+          <span>/vdms/** → pass-through</span>
+        </div>
+
+        <div class="sys-row" style="gap:40px">
+          <div class="sys-col">
+            <div class="svc svc-asset"><span class="name">Device-Asset</span><span class="port">:8085</span><span class="note">Core service — devices, buildings, sensors</span></div>
+            <div style="text-align:center;color:var(--orange);font-size:11px;margin-top:4px">↕ localhost:3500</div>
+            <div class="svc svc-dapr"><span class="name">app-dapr</span><span class="port">Dapr sidecar</span><span class="note">app-id: sclera-cloud-device-asset</span></div>
+          </div>
+          <div class="sys-col">
+            <div class="svc svc-vdms"><span class="name">VDMS Service</span><span class="port">:8089</span><span class="note">VDMS identity &amp; config store</span></div>
+            <div style="text-align:center;color:var(--orange);font-size:11px;margin-top:4px">↕ localhost:3500</div>
+            <div class="svc svc-dapr"><span class="name">vdms-dapr</span><span class="port">Dapr sidecar</span><span class="note">app-id: vdms-service</span></div>
+          </div>
+        </div>
+
+        <div style="text-align:center;color:var(--muted);padding:4px 0;font-size:11px;display:flex;gap:100px;justify-content:center">
+          <span>⬇ JDBC</span>
+          <span>pub/sub via Redis ↔</span>
+          <span>JDBC ⬇</span>
+        </div>
+
+        <div class="sys-row" style="gap:40px">
+          <div class="svc svc-mysql"><span class="name">MySQL</span><span class="port">:3306 (host)</span><span class="note">Shared vdms schema</span></div>
+          <div class="svc svc-redis"><span class="name">Redis</span><span class="port">sclera-redis</span><span class="note">Dapr pub/sub broker</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="callout info">
+      <b>One rule:</b> The browser only ever talks to port <b>8080</b> (the gateway). Every other port is internal.
+      Port <b>3000</b> is the test UI served by nginx (not part of the application stack).
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ SLIDE 2 — WHAT IS DAPR -->
+<div class="slide" id="s2">
+  <div class="slide-head">
+    <span class="num">02</span>
+    <h1>What is Dapr?</h1>
+    <span class="tag tag-dapr">Dapr</span>
+  </div>
+  <div class="slide-body cols2">
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h3>The short version</h3>
+        <p>Dapr is a <b style="color:var(--text)">middleman process</b> that sits next to your service and handles all the difficult networking problems so your code doesn't have to.</p>
+        <br>
+        <p>Think of it like a <b style="color:var(--text)">post office clerk</b> sitting at your desk — you hand them a letter, they figure out the routing, retries, and delivery. You write business logic, not network plumbing.</p>
+      </div>
+
+      <div class="box">
+        <h3>What problems does it solve?</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="step-n blue">1</div>
+            <div class="step-body">
+              <div class="title">Service Discovery</div>
+              <div class="desc">You call <code style="font-family:monospace;color:var(--teal);font-size:12px">invoke/vdms-service/method/vdms/id</code> — Dapr finds where that service actually is.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n purple">2</div>
+            <div class="step-body">
+              <div class="title">Pub/Sub Messaging</div>
+              <div class="desc">Publish an event to a topic name. Dapr writes it to Redis, routes it to all subscribers. No direct connection needed.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n green">3</div>
+            <div class="step-body">
+              <div class="title">Retries &amp; Resiliency</div>
+              <div class="desc">If a service is temporarily down, Dapr can retry. Your code makes one call and moves on.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n amber">4</div>
+            <div class="step-body">
+              <div class="title">Observability</div>
+              <div class="desc">Dapr logs every invoke and publish call, giving you a trace of exactly what called what.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h3>The Sidecar Pattern</h3>
+        <p style="margin-bottom:16px">Each service gets its own Dapr process. They share the same network namespace — meaning they reach each other on <b style="color:var(--text)">localhost</b>.</p>
+        <div class="dapr-pair">
+          <div class="app-side">
+            <div class="label">Your App</div>
+            <div class="icon">☕</div>
+            <div class="name" style="color:var(--green)">Spring Boot</div>
+            <div class="desc">Writes business logic. Calls localhost:3500 to use Dapr features.</div>
+          </div>
+          <div class="dapr-side">
+            <div class="label">Dapr Sidecar</div>
+            <div class="icon">📮</div>
+            <div class="name" style="color:var(--orange)">daprd</div>
+            <div class="desc">Handles service discovery, pub/sub, retries, and observability.</div>
+          </div>
+        </div>
+        <div class="same-net">Both share the same Docker network namespace — they see each other on <b style="font-family:monospace">localhost</b></div>
+      </div>
+
+      <div class="box">
+        <h3>The two Dapr APIs used here</h3>
+        <div class="code"><span class="c">// 1. Synchronous call to another service</span>
+<span class="k">GET</span> <span class="s">localhost:3500/v1.0/invoke/{app-id}/method/{path}</span>
+
+<span class="c">// 2. Publish an async event</span>
+<span class="k">POST</span> <span class="s">localhost:3500/v1.0/publish/{pubsub}/{topic}</span></div>
+        <div class="callout info" style="margin-top:10px">
+          Your app always talks to <b>localhost:3500</b>. Dapr handles everything else.
+          No IP addresses, no service URLs, no load balancer config in code.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ SLIDE 3 — SERVICES OVERVIEW -->
+<div class="slide" id="s3">
+  <div class="slide-head">
+    <span class="num">03</span>
+    <h1>Services Overview</h1>
+    <span class="tag tag-arch">Architecture</span>
+  </div>
+  <div class="slide-body">
+
+    <table>
+      <thead>
+        <tr><th>Service</th><th>Port</th><th>App-ID (Dapr)</th><th>Tech Stack</th><th>Responsibility</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="pill pill-blue">API Gateway</span></td>
+          <td><code>8080</code></td>
+          <td><code>—</code> <span style="color:var(--muted);font-size:11px">(no Dapr)</span></td>
+          <td>Spring Cloud Gateway</td>
+          <td>Single entry point for all external HTTP. Routes <code>/asset/**</code> → device-asset, <code>/vdms/**</code> → vdms-service. No auth here.</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-green">Device-Asset</span></td>
+          <td><code>8085</code></td>
+          <td><code>sclera-cloud-device-asset</code></td>
+          <td>Spring Boot 2.6.5, Java 17, JDBC/JPA</td>
+          <td>Core business service. Manages devices, buildings, sensors, documents, AI suggestions. Does JWT validation. Calls vdms-service via Dapr. Publishes events to Redis.</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-purple">VDMS Service</span></td>
+          <td><code>8089</code></td>
+          <td><code>vdms-service</code></td>
+          <td>Spring Boot, Java 17, JDBC/JPA</td>
+          <td>Lightweight identity &amp; config store. Holds VDMS details, audit logs. Subscribes to events from device-asset. Can call back to device-asset via Dapr (2-way).</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-amber">app-dapr</span></td>
+          <td><code>3500</code> (internal)</td>
+          <td>serves device-asset</td>
+          <td>daprio/daprd:1.12.0</td>
+          <td>Dapr sidecar for device-asset. Shares network namespace via <code>network_mode: service:app</code>.</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-amber">vdms-dapr</span></td>
+          <td><code>3500</code> (internal)</td>
+          <td>serves vdms-service</td>
+          <td>daprio/daprd:1.12.0</td>
+          <td>Dapr sidecar for vdms-service. Shares network namespace via <code>network_mode: service:vdms-service</code>.</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-red">Redis</span></td>
+          <td>internal</td>
+          <td>—</td>
+          <td>redis:7-alpine</td>
+          <td>Message broker for Dapr pub/sub. Both sidecars connect here to exchange async events.</td>
+        </tr>
+        <tr>
+          <td>MySQL</td>
+          <td><code>3306</code> (host)</td>
+          <td>—</td>
+          <td>MySQL 8</td>
+          <td>Shared database. Both device-asset and vdms-service use the same <code>vdms</code> schema via <code>host.docker.internal:3306</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn">
+      <b>Why two Dapr sidecars?</b> Each service needs its own Dapr process because Dapr needs to know the <b>app-id</b> (service name) and <b>app-port</b> (where to deliver inbound calls) for the service it is paired with. One sidecar cannot serve two apps.
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ SLIDE 4 — API GATEWAY -->
+<div class="slide" id="s4">
+  <div class="slide-head">
+    <span class="num">04</span>
+    <h1>API Gateway — The Front Door</h1>
+    <span class="tag tag-arch">Architecture</span>
+  </div>
+  <div class="slide-body cols2">
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h3>What it does</h3>
+        <p>The API Gateway is the <b style="color:var(--text)">only container</b> that accepts traffic from the internet/browser. It is a pure reverse proxy — it strips or passes URL prefixes and forwards requests to the right backend service. It does <b style="color:var(--text)">not</b> use Dapr, do authentication, or contain business logic.</p>
+      </div>
+
+      <div class="box">
+        <h3>Routing Rules</h3>
+        <table>
+          <thead><tr><th>Incoming path</th><th>Forwards to</th><th>Transform</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>/asset/**</code></td>
+              <td><code>device-asset:8085</code></td>
+              <td>Strips <code>/asset</code> prefix</td>
+            </tr>
+            <tr>
+              <td><code>/vdms/**</code></td>
+              <td><code>vdms-service:8089</code></td>
+              <td>Pass-through (no change)</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout info" style="margin-top:12px">
+          <b>Example:</b> Browser calls <code>GET /asset/user/admin/vdms/V1/docker/d1/devices</code><br>
+          Gateway strips <code>/asset</code> → forwards <code>GET /user/admin/vdms/V1/docker/d1/devices</code> to device-asset:8085
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="box">
+        <h3>Request path through the gateway</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="step-n blue">1</div>
+            <div class="step-body">
+              <div class="title">Browser sends request</div>
+              <div class="url">GET http://localhost:8080/asset/user/{u}/vdms/{v}/docker/{d}/devices</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n blue">2</div>
+            <div class="step-body">
+              <div class="title">Gateway matches route <code>/asset/**</code></div>
+              <div class="desc">Strips the <code>/asset</code> prefix from the URL.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n blue">3</div>
+            <div class="step-body">
+              <div class="title">Gateway forwards to device-asset</div>
+              <div class="url">GET http://sclera-cloud-device-asset:8085/user/{u}/vdms/{v}/docker/{d}/devices</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n blue">4</div>
+            <div class="step-body">
+              <div class="title">Response passes back through gateway</div>
+              <div class="desc">The gateway streams the response back to the browser. Status code, headers, and body are unchanged.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ SLIDE 5 — DEVICE ASSET SVC -->
+<div class="slide" id="s5">
+  <div class="slide-head">
+    <span class="num">05</span>
+    <h1>Device-Asset Service</h1>
+    <span class="tag tag-arch">Architecture</span>
+  </div>
+  <div class="slide-body cols2">
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h3>What it manages</h3>
+        <p>This is the core of the application. Every device, building, floor, sensor, document, and AI suggestion lives here. It is where all CRUD (Create, Read, Update, Delete) operations happen.</p>
+      </div>
+
+      <div class="box" style="margin-bottom:16px">
+        <h3>Key controllers (endpoints)</h3>
+        <table>
+          <thead><tr><th>Controller</th><th>Handles</th></tr></thead>
+          <tbody>
+            <tr><td><code>DeviceController</code></td><td>Add / edit / delete / list / search / sort devices</td></tr>
+            <tr><td><code>BuildingController</code></td><td>Buildings &amp; locations management</td></tr>
+            <tr><td><code>SensorController</code></td><td>Sensor data &amp; configuration</td></tr>
+            <tr><td><code>DocumentController</code></td><td>File attachments and documents</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="box">
+        <h3>URL pattern for all device endpoints</h3>
+        <div class="code"><span class="s">/user/{username}/vdms/{vdmsId}/docker/{dockerName}/...</span></div>
+        <p style="font-size:13px;color:var(--dim);margin-top:8px">Every endpoint is scoped to a specific VDMS installation identified by <b style="color:var(--text)">username</b>, <b style="color:var(--text)">vdmsId</b>, and <b style="color:var(--text)">dockerName</b>.</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h3>How it talks to VDMS Service</h3>
+        <div class="code"><span class="c">// VdmsClient.java (device-asset side)</span>
+<span class="k">public</span> Map getVdmsDetails() {
+  <span class="c">// calls localhost:3500 (its own Dapr sidecar)</span>
+  <span class="k">return</span> <span class="m">invoke</span>(<span class="s">"vdms/details"</span>, Map.class);
+}
+
+<span class="k">private</span> T <span class="m">invoke</span>(String path, Class&lt;T&gt; type) {
+  String url = daprBase
+    + <span class="s">"/v1.0/invoke/vdms-service/method/"</span> + path;
+  <span class="k">return</span> rest.<span class="m">getForEntity</span>(url, type).<span class="m">getBody</span>();
+}</div>
+      </div>
+
+      <div class="box">
+        <h3>How it publishes async events</h3>
+        <div class="code"><span class="c">// UserActionLogService.java triggers this</span>
+vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</span>, payload);
+
+<span class="c">// VdmsClient.publishEvent() does:</span>
+<span class="k">POST</span> localhost:3500/v1.0/publish/pubsub/device.audit
+<span class="c">// Dapr writes to Redis → delivered to vdms-service</span></div>
+        <div class="callout success" style="margin-top:10px">
+          Publishing is <b>fire-and-forget</b>. The service returns to the caller immediately. Dapr + Redis guarantee the message reaches the subscriber — even if vdms-service is momentarily down.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ SLIDE 6 — VDMS SERVICE -->
+<div class="slide" id="s6">
+  <div class="slide-head">
+    <span class="num">06</span>
+    <h1>VDMS Service</h1>
+    <span class="tag tag-arch">Architecture</span>
+  </div>
+  <div class="slide-body cols2">
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h3>What it stores</h3>
+        <p>VDMS stands for <b style="color:var(--text)">Virtual Device Management System</b>. This service is a dedicated store for VDMS identity and configuration — things like the property address, customer org ID, whether a VDMS is a master unit, and all device audit logs.</p>
+      </div>
+
+      <div class="box">
+        <h3>Controllers</h3>
+        <table>
+          <thead><tr><th>Class</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>VdmsController</code></td>
+              <td>Serves VDMS identity data (id, details, master, customer org). Also registers Dapr subscriptions via <code>GET /dapr/subscribe</code>.</td>
+            </tr>
+            <tr>
+              <td><code>VdmsSubscriber</code></td>
+              <td>Receives CloudEvents from device-asset. Updates VDMS table rows when property details or org ID change.</td>
+            </tr>
+            <tr>
+              <td><code>AuditSubscriber</code></td>
+              <td>Receives <code>device.audit</code> CloudEvents. Persists them to <code>user_action_log</code> table. Also exposes <code>GET /vdms/audit-log</code> for clients to read them back.</td>
+            </tr>
+            <tr>
+              <td><code>AssetProxyController</code> <span style="font-size:10px;color:var(--teal)">NEW</span></td>
+              <td>2-way proxy. Calls back to device-asset via its own Dapr sidecar. Endpoints: <code>/vdms/asset/{u}/{v}/{d}/device-count</code> and <code>/devices</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h3>How Dapr delivers events to VDMS</h3>
+        <p style="margin-bottom:10px">When vdms-service starts, Dapr calls its <code>GET /dapr/subscribe</code> endpoint to find out which topics it listens to. Dapr then routes matching Redis messages to the registered POST handlers.</p>
+        <div class="code"><span class="c">// VdmsController returns this list to Dapr</span>
+[
+  { <span class="s">"pubsubname"</span>: <span class="s">"pubsub"</span>,
+    <span class="s">"topic"</span>: <span class="s">"vdms.update-property-details"</span>,
+    <span class="s">"route"</span>: <span class="s">"/vdms/update-property-details"</span> },
+  { <span class="s">"topic"</span>: <span class="s">"device.audit"</span>,
+    <span class="s">"route"</span>: <span class="s">"/vdms/device-audit"</span> },
+  <span class="c">// ... more topics</span>
+]</div>
+      </div>
+
+      <div class="box">
+        <h3>New: Calling back to Device-Asset</h3>
+        <div class="code"><span class="c">// ScleraCloudDeviceClient.java (vdms-service)</span>
+<span class="k">private static final</span> String APP_ID =
+    <span class="s">"sclera-cloud-device-asset"</span>;
+
+<span class="k">public</span> Object <span class="m">getDevices</span>(String u, String v, String d) {
+  String path = <span class="s">"user/"</span>+u+<span class="s">"/vdms/"</span>+v+<span class="s">"/docker/"</span>+d+<span class="s">"/devices"</span>;
+  <span class="c">// calls its OWN sidecar on localhost:3500</span>
+  <span class="k">return</span> <span class="m">invoke</span>(path, Object.class);
+}</div>
+        <div class="callout success" style="margin-top:10px">
+          Both services use the exact same Dapr invoke pattern. The only difference is the <b>app-id</b> they target.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ SLIDE 7 — CHANNEL 1: INVOKE -->
+<div class="slide" id="s7">
+  <div class="slide-head">
+    <span class="num">07</span>
+    <h1>Communication Channel 1 — Synchronous Invoke</h1>
+    <span class="tag tag-dapr">Dapr</span>
+  </div>
+  <div class="slide-body">
+
+    <div class="box">
+      <h3>device-asset → vdms-service (synchronous query)</h3>
+      <p style="margin-bottom:16px">Used when device-asset needs VDMS data <em>right now</em> to process a request. The caller waits for the response.</p>
+
+      <div class="flow-row">
+        <div class="svc svc-asset" style="min-width:110px"><span class="name">device-asset</span><span class="port">:8085</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="svc svc-dapr" style="min-width:120px"><span class="name">app-dapr</span><span class="note">localhost:3500</span></div>
+        <div class="flow-arrow">→</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:11px;font-family:monospace;color:var(--dim);flex-shrink:0">Docker network<br>sclera-net</div>
+        <div class="flow-arrow">→</div>
+        <div class="svc svc-dapr" style="min-width:120px"><span class="name">vdms-dapr</span><span class="note">routes to :8089</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="svc svc-vdms" style="min-width:110px"><span class="name">vdms-service</span><span class="port">:8089</span></div>
+      </div>
+    </div>
+
+    <div class="cols2" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="box">
+        <h3>URL pattern</h3>
+        <div class="code">localhost:3500/v1.0/invoke/<span class="t">vdms-service</span>/method/<span class="s">{path}</span></div>
+        <br>
+        <h3>All VdmsClient methods</h3>
+        <table>
+          <thead><tr><th>Java Method</th><th>Maps to vdms-service endpoint</th><th>Returns</th></tr></thead>
+          <tbody>
+            <tr><td><code>getVdmsId()</code></td><td><code>GET /vdms/id</code></td><td><code>{"vdmsId":"…"}</code></td></tr>
+            <tr><td><code>getVdmsDetails()</code></td><td><code>GET /vdms/details</code></td><td>Full VdmsDTO</td></tr>
+            <tr><td><code>getMaster()</code></td><td><code>GET /vdms/master</code></td><td><code>{"isMaster":0|1}</code></td></tr>
+            <tr><td><code>getHasSecondaryDevice()</code></td><td><code>GET /vdms/has-secondary-device</code></td><td><code>{"hasSecondaryDevice":0|1}</code></td></tr>
+            <tr><td><code>getSecondaryDeviceId()</code></td><td><code>GET /vdms/secondary-device-id</code></td><td><code>{"secondaryDeviceId":"…"}</code></td></tr>
+            <tr><td><code>getCustomerOrgId(vdmsId)</code></td><td><code>GET /vdms/customer-org-id/{vdmsId}</code></td><td><code>{"customerOrgId":"…"}</code></td></tr>
+            <tr><td><code>getSyncDetailsForAdc()</code></td><td><code>GET /vdms/sync-details-for-adc</code></td><td>Subset of VdmsDTO</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="box">
+        <h3>Step-by-step trace</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="step-n green">1</div>
+            <div class="step-body">
+              <div class="title">Service calls VdmsClient</div>
+              <div class="desc">e.g., <code style="font-family:monospace;font-size:11px;color:var(--teal)">vdmsClient.getVdmsDetails()</code> inside a service method</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n green">2</div>
+            <div class="step-body">
+              <div class="title">VdmsClient calls its own Dapr sidecar</div>
+              <div class="url">GET localhost:3500/v1.0/invoke/vdms-service/method/vdms/details</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n green">3</div>
+            <div class="step-body">
+              <div class="title">app-dapr resolves "vdms-service"</div>
+              <div class="desc">Dapr looks up the container with app-id <code style="font-family:monospace;font-size:11px;color:var(--teal)">vdms-service</code> and forwards to its sidecar (vdms-dapr) over the Docker bridge network.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n green">4</div>
+            <div class="step-body">
+              <div class="title">vdms-dapr delivers to Spring Boot</div>
+              <div class="url">GET http://localhost:8089/vdms/details</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n green">5</div>
+            <div class="step-body">
+              <div class="title">Response flows back</div>
+              <div class="desc">vdms-service → vdms-dapr → network → app-dapr → VdmsClient → caller. Synchronous, returns the JSON map.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ SLIDE 8 — CHANNEL 2 PUBSUB -->
+<div class="slide" id="s8">
+  <div class="slide-head">
+    <span class="num">08</span>
+    <h1>Communication Channel 2 — Pub/Sub (Async Events)</h1>
+    <span class="tag tag-dapr">Dapr</span>
+  </div>
+  <div class="slide-body">
+
+    <div class="box" style="margin-bottom:0">
+      <h3>device-asset → Redis → vdms-service (fire-and-forget)</h3>
+      <div class="flow-row" style="margin:14px 0 4px">
+        <div class="svc svc-asset" style="min-width:100px"><span class="name">device-asset</span><span class="note">publishEvent()</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="svc svc-dapr" style="min-width:100px"><span class="name">app-dapr</span><span class="note">POST /v1.0/publish</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="svc svc-redis" style="min-width:100px"><span class="name">Redis</span><span class="note">Stream / Queue</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="svc svc-dapr" style="min-width:100px"><span class="name">vdms-dapr</span><span class="note">reads from Redis</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="svc svc-vdms" style="min-width:100px"><span class="name">vdms-service</span><span class="note">POST /vdms/…</span></div>
+      </div>
+    </div>
+
+    <div class="cols2" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="box">
+        <h3>All pub/sub topics</h3>
+        <table>
+          <thead><tr><th>Topic</th><th>Published when</th><th>Handled by</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>vdms.update-property-details</code></td>
+              <td>Property address changes</td>
+              <td><code>VdmsSubscriber</code></td>
+              <td>Updates address column in VDMS table</td>
+            </tr>
+            <tr>
+              <td><code>vdms.update-customer-org-id</code></td>
+              <td>Org ID changes</td>
+              <td><code>VdmsSubscriber</code></td>
+              <td>Updates customer_org_id column</td>
+            </tr>
+            <tr>
+              <td><code>vdms.set-agent-permission</code></td>
+              <td>Agent permission change</td>
+              <td><code>VdmsSubscriber</code></td>
+              <td>Logs event (handler extensible)</td>
+            </tr>
+            <tr>
+              <td><code>device.audit</code></td>
+              <td>Device add / edit / delete</td>
+              <td><code>AuditSubscriber</code></td>
+              <td>Persists row to <code>user_action_log</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="box">
+        <h3>What a CloudEvent looks like</h3>
+        <p style="font-size:13px;color:var(--dim);margin-bottom:10px">Dapr wraps your payload in a CloudEvent envelope before delivering it to the subscriber.</p>
+        <div class="code">{
+  <span class="s">"specversion"</span>: <span class="s">"1.0"</span>,
+  <span class="s">"type"</span>: <span class="s">"com.dapr.event.sent"</span>,
+  <span class="s">"source"</span>: <span class="s">"sclera-cloud-device-asset"</span>,
+  <span class="s">"topic"</span>: <span class="s">"device.audit"</span>,
+  <span class="s">"pubsubname"</span>: <span class="s">"pubsub"</span>,
+  <span class="s">"data"</span>: {
+    <span class="s">"vdmsId"</span>: <span class="s">"VDMS760"</span>,
+    <span class="s">"action"</span>: <span class="s">"ADD"</span>,
+    <span class="s">"deviceId"</span>: <span class="s">"dev-123"</span>,
+    <span class="s">"userEmail"</span>: <span class="s">"admin@sclera.com"</span>,
+    <span class="s">"message"</span>: <span class="s">"Device 'Lobby Sensor' added"</span>
+  }
+}</div>
+        <div class="callout info" style="margin-top:10px">
+          The subscriber reads the <b>data</b> field. The outer envelope is boilerplate added/removed by Dapr automatically.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ SLIDE 9 — CHANNEL 3: 2-WAY -->
+<div class="slide" id="s9">
+  <div class="slide-head">
+    <span class="num">09</span>
+    <h1>Communication Channel 3 — 2-Way (Reverse Call)</h1>
+    <span class="tag tag-dapr">Dapr</span>
+  </div>
+  <div class="slide-body cols2">
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h3>vdms-service → device-asset</h3>
+        <p style="margin-bottom:14px">The new reverse direction. vdms-service can now call back to device-asset — useful when a client queries <code>/vdms/asset/…</code> and expects device data sourced from device-asset, routed through vdms-service.</p>
+        <div class="flow-row">
+          <div class="svc svc-browser" style="min-width:80px"><span class="name">Client</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="svc svc-gw" style="min-width:80px"><span class="name">Gateway</span><span class="port">:8080</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="svc svc-vdms" style="min-width:100px"><span class="name">VDMS</span><span class="note">:8089</span></div>
+        </div>
+        <div style="text-align:center;margin:8px 0;font-size:20px;color:var(--purple)">↓</div>
+        <div class="flow-row">
+          <div class="svc svc-dapr" style="min-width:100px"><span class="name">vdms-dapr</span><span class="note">localhost:3500</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="svc svc-dapr" style="min-width:100px"><span class="name">app-dapr</span><span class="note">routes to :8085</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="svc svc-asset" style="min-width:100px"><span class="name">device-asset</span><span class="port">:8085</span></div>
+        </div>
+      </div>
+
+      <div class="box">
+        <h3>New endpoints in vdms-service</h3>
+        <table>
+          <thead><tr><th>Endpoint</th><th>Proxies to</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>GET /vdms/asset/{u}/{v}/{d}/device-count</code></td>
+              <td><code>GET /user/{u}/vdms/{v}/docker/{d}/getdevicecount</code> on device-asset</td>
+            </tr>
+            <tr>
+              <td><code>GET /vdms/asset/{u}/{v}/{d}/devices</code></td>
+              <td><code>GET /user/{u}/vdms/{v}/docker/{d}/devices</code> on device-asset</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h3>ScleraCloudDeviceClient.java</h3>
+        <div class="code"><span class="c">// In: sclera-vdms-service/…/client/</span>
+<span class="k">@Service</span>
+<span class="k">public class</span> <span class="t">ScleraCloudDeviceClient</span> {
+
+  <span class="k">private static final</span> String APP_ID =
+      <span class="s">"sclera-cloud-device-asset"</span>;
+
+  <span class="k">public</span> Object <span class="m">getDevices</span>(String u, String v, String d) {
+    <span class="k">return</span> <span class="m">invoke</span>(
+      <span class="s">"user/"</span>+u+<span class="s">"/vdms/"</span>+v+<span class="s">"/docker/"</span>+d+<span class="s">"/devices"</span>,
+      Object.class  <span class="c">// device-asset returns JSON array</span>
+    );
+  }
+
+  <span class="k">private</span> T <span class="m">invoke</span>(String path, Class&lt;T&gt; type) {
+    String url = daprBase
+      + <span class="s">"/v1.0/invoke/"</span> + APP_ID + <span class="s">"/method/"</span> + path;
+    <span class="k">return</span> rest.<span class="m">getForEntity</span>(url, type).<span class="m">getBody</span>();
+  }
+}</div>
+      </div>
+
+      <div class="box">
+        <h3>AssetProxyController.java</h3>
+        <div class="code"><span class="k">@RestController</span>
+<span class="k">@RequestMapping</span>(<span class="s">"/vdms/asset"</span>)
+<span class="k">public class</span> <span class="t">AssetProxyController</span> {
+
+  <span class="k">@GetMapping</span>(<span class="s">"/{u}/{v}/{d}/devices"</span>)
+  <span class="k">public</span> ResponseEntity&lt;Object&gt; <span class="m">getDevices</span>(
+      <span class="k">@PathVariable</span> String u, v, d) {
+    Object result = assetClient.<span class="m">getDevices</span>(u, v, d);
+    <span class="k">if</span> (result == <span class="k">null</span>)
+      <span class="k">return</span> ResponseEntity.<span class="m">status</span>(502)...;
+    <span class="k">return</span> ResponseEntity.<span class="m">ok</span>(result);
+  }
+}</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SLIDE 10 — FLOW: DEVICE LIST QUERY -->
+<div class="slide" id="s10">
+  <div class="slide-head">
+    <span class="num">10</span>
+    <h1>Request Flow — Device List Query</h1>
+    <span class="tag tag-flow">End-to-End Flow</span>
+  </div>
+  <div class="slide-body cols2">
+
+    <div class="box">
+      <h3>Pin-to-pin trace</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-n blue">1</div>
+          <div class="step-body">
+            <div class="title">Browser / Test UI sends request</div>
+            <div class="url">GET http://localhost:8080/asset/user/admin/vdms/VDMS760/docker/right_wing/devices</div>
+            <div class="desc" style="margin-top:5px">With header: <code style="font-family:monospace;font-size:11px;color:var(--teal)">Authorization: Bearer &lt;JWT&gt;</code></div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n blue">2</div>
+          <div class="step-body">
+            <div class="title">API Gateway — route match</div>
+            <div class="desc">Matches <code style="font-family:monospace;color:var(--teal);font-size:11px">/asset/**</code>. Strips the prefix and forwards.</div>
+            <div class="url">GET http://sclera-cloud-device-asset:8085/user/admin/vdms/VDMS760/docker/right_wing/devices</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n green">3</div>
+          <div class="step-body">
+            <div class="title">Device-Asset — JWT Validation</div>
+            <div class="desc">JWT filter validates the Bearer token. Multi-tenant: it reads the issuer claim to pick the right JWK set. Rejects 401 if invalid.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n green">4</div>
+          <div class="step-body">
+            <div class="title">DeviceController → DeviceService</div>
+            <div class="desc">Controller extracts path variables, calls DeviceService. If VDMS data is needed (e.g., permission check), it calls VdmsClient.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n purple">5</div>
+          <div class="step-body">
+            <div class="title">(optional) VdmsClient → Dapr → vdms-service</div>
+            <div class="url">GET localhost:3500/v1.0/invoke/vdms-service/method/vdms/details</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n amber">6</div>
+          <div class="step-body">
+            <div class="title">DeviceService queries MySQL</div>
+            <div class="desc">JDBC query against the <code style="font-family:monospace;color:var(--teal);font-size:11px">vdms</code> schema returns the device list as a <code style="font-family:monospace;color:var(--teal);font-size:11px">Set&lt;DeviceDTO&gt;</code>.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n blue">7</div>
+          <div class="step-body">
+            <div class="title">Response returns to browser</div>
+            <div class="desc">JSON array of devices flows back through gateway to browser. HTTP 200.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h3>As a diagram</h3>
+        <div style="font-family:monospace;font-size:12px;color:var(--dim);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;line-height:2">
+          <span style="color:var(--pink)">Browser</span>
+          <span style="color:var(--muted)"> → :8080 →</span>
+          <span style="color:var(--blue)"> Gateway</span>
+          <span style="color:var(--muted)"> strips /asset →</span><br>
+          <span style="color:var(--green)">device-asset:8085</span>
+          <span style="color:var(--muted)"> JWT check →</span><br>
+          <span style="color:var(--green)">DeviceController</span>
+          <span style="color:var(--muted)"> →</span>
+          <span style="color:var(--green)">DeviceService</span><br>
+          <span style="color:var(--muted)">  ↳ (if needed)</span>
+          <span style="color:var(--orange)"> VdmsClient</span>
+          <span style="color:var(--muted)"> → localhost:3500</span><br>
+          <span style="color:var(--muted)">    → Dapr →</span>
+          <span style="color:var(--purple)">vdms-service:8089</span>
+          <span style="color:var(--muted)"> → MySQL</span><br>
+          <span style="color:var(--green)">  ↳ MySQL</span>
+          <span style="color:var(--muted)"> → Set&lt;DeviceDTO&gt;</span><br>
+          <span style="color:var(--muted)">← ← ← JSON array ← ← ←</span>
+          <span style="color:var(--pink)">Browser</span>
+        </div>
+      </div>
+
+      <div class="box">
+        <h3>Key facts about this flow</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="step-n blue">!</div>
+            <div class="step-body">
+              <div class="title">Auth happens inside device-asset</div>
+              <div class="desc">The gateway passes the JWT header through. JWT validation is done by the <code style="font-family:monospace;color:var(--teal);font-size:11px">WebSecurityConfig</code> filter chain in device-asset, not the gateway.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n green">!</div>
+            <div class="step-body">
+              <div class="title">VdmsClient call is optional</div>
+              <div class="desc">Device-asset only calls vdms-service when it actually needs VDMS data. Many device endpoints work purely from MySQL without touching the VDMS service.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n amber">!</div>
+            <div class="step-body">
+              <div class="title">Shared MySQL schema</div>
+              <div class="desc">Both services connect to the same MySQL <code style="font-family:monospace;color:var(--teal);font-size:11px">vdms</code> database. They each own their own tables within that schema.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════ SLIDE 11 — FLOW: DEVICE ADD + AUDIT LOG -->
+<div class="slide" id="s11">
+  <div class="slide-head">
+    <span class="num">11</span>
+    <h1>Request Flow — Device Add + Audit Log</h1>
+    <span class="tag tag-flow">End-to-End Flow</span>
+  </div>
+  <div class="slide-body cols2">
+
+    <div class="box">
+      <h3>Pin-to-pin trace</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-n blue">1</div>
+          <div class="step-body">
+            <div class="title">Browser POSTs a new device</div>
+            <div class="url">POST http://localhost:8080/asset/user/admin/vdms/VDMS760/docker/right_wing/adddevice</div>
+            <div class="desc" style="margin-top:5px">Body: <code style="font-family:monospace;font-size:11px;color:var(--teal)">{"user_data_name":"Lobby Sensor","type":"generic",...}</code></div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n blue">2</div>
+          <div class="step-body">
+            <div class="title">Gateway strips prefix → device-asset</div>
+            <div class="url">POST http://sclera-cloud-device-asset:8085/user/admin/vdms/VDMS760/docker/right_wing/adddevice</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n green">3</div>
+          <div class="step-body">
+            <div class="title">DeviceController → DeviceService.addDevice()</div>
+            <div class="desc">JWT validated. DeviceService builds the DeviceDTO and writes it to MySQL via JDBC.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n amber">4</div>
+          <div class="step-body">
+            <div class="title">MySQL write completes</div>
+            <div class="desc">Device row inserted into the <code style="font-family:monospace;color:var(--teal);font-size:11px">device</code> table in the <code style="font-family:monospace;color:var(--teal);font-size:11px">vdms</code> schema.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n orange" style="background:#1a0f05;color:var(--orange)">5</div>
+          <div class="step-body">
+            <div class="title">UserActionLogService publishes audit event</div>
+            <div class="url">POST localhost:3500/v1.0/publish/pubsub/device.audit</div>
+            <div class="desc" style="margin-top:5px">Payload: vdmsId, action="ADD", deviceId, userEmail, timestamp. app-dapr accepts it and writes to Redis immediately.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n blue">6</div>
+          <div class="step-body">
+            <div class="title">HTTP 200 back to browser</div>
+            <div class="desc">Device-asset returns the created device. The audit event delivery to vdms-service is happening <b style="color:var(--text)">asynchronously in the background</b> — the user doesn't wait for it.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n purple">7</div>
+          <div class="step-body">
+            <div class="title">Redis → vdms-dapr → AuditSubscriber</div>
+            <div class="url">POST http://localhost:8089/vdms/device-audit  (CloudEvent)</div>
+            <div class="desc" style="margin-top:5px">vdms-service's Dapr sidecar reads from Redis and delivers the CloudEvent. AuditSubscriber unwraps the data and inserts a row into <code style="font-family:monospace;color:var(--teal);font-size:11px">user_action_log</code>.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h3>Timeline — what happens when</h3>
+        <div style="font-family:monospace;font-size:12px;color:var(--dim);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;line-height:2">
+          t=0ms  <span style="color:var(--pink)">Browser POST</span><br>
+          t=5ms  <span style="color:var(--blue)">Gateway forwards</span><br>
+          t=10ms <span style="color:var(--green)">JWT validated</span><br>
+          t=15ms <span style="color:var(--amber)">MySQL INSERT done</span><br>
+          t=18ms <span style="color:var(--orange)">Dapr publish accepted</span><br>
+          t=20ms <span style="color:var(--blue)">← HTTP 200 to browser</span><br>
+          <br>
+          <span style="color:var(--muted)">--- async, after response ---</span><br>
+          t=25ms <span style="color:var(--red)">Redis delivery</span><br>
+          t=30ms <span style="color:var(--purple)">vdms-service: audit row written</span>
+        </div>
+      </div>
+
+      <div class="box">
+        <h3>Why async for audit?</h3>
+        <div class="callout success">
+          <b>Speed:</b> The user gets an instant response. Audit logging is a side-effect — there's no reason to make the user wait for it.
+        </div>
+        <div class="callout info" style="margin-top:10px">
+          <b>Reliability:</b> Redis + Dapr guarantees at-least-once delivery. Even if vdms-service crashes at step 7, the audit event stays in Redis until it's successfully processed.
+        </div>
+        <div class="callout warn" style="margin-top:10px">
+          <b>Eventual consistency:</b> The audit log entry appears a few milliseconds after the device is created. If you query the audit log immediately after adding a device, it might not appear yet — refresh in a second.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ SLIDE 12 — FLOW: AUDIT LOG QUERY -->
+<div class="slide" id="s12">
+  <div class="slide-head">
+    <span class="num">12</span>
+    <h1>Request Flow — Audit Log Query</h1>
+    <span class="tag tag-flow">End-to-End Flow</span>
+  </div>
+  <div class="slide-body cols2">
+
+    <div class="box">
+      <h3>Pin-to-pin trace</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-n blue">1</div>
+          <div class="step-body">
+            <div class="title">Browser requests audit log</div>
+            <div class="url">GET http://localhost:8080/vdms/audit-log?vdmsId=VDMS760&amp;page=0&amp;size=20</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n blue">2</div>
+          <div class="step-body">
+            <div class="title">Gateway matches <code>/vdms/**</code></div>
+            <div class="desc">Pass-through (no prefix stripping). Forwards to vdms-service.</div>
+            <div class="url">GET http://vdms-service:8089/vdms/audit-log?vdmsId=VDMS760&amp;page=0&amp;size=20</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n purple">3</div>
+          <div class="step-body">
+            <div class="title">AuditSubscriber.getAuditLog()</div>
+            <div class="desc">Controller reads query params: vdmsId, page (0-based), size (capped at 100).</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n amber">4</div>
+          <div class="step-body">
+            <div class="title">UserActionLogRepository queries MySQL</div>
+            <div class="desc"><code style="font-family:monospace;color:var(--teal);font-size:11px">findByVdmsIdOrderByCreatedAtDesc(vdmsId, pageable)</code> — returns newest entries first, paginated.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n blue">5</div>
+          <div class="step-body">
+            <div class="title">JSON array returned to browser</div>
+            <div class="desc">Each entry: id, action, deviceId, userEmail, message, createdAt. HTTP 200.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h3>Closing the loop</h3>
+        <div style="font-family:monospace;font-size:12px;color:var(--dim);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;line-height:1.9">
+          <span style="color:var(--green)">device-asset</span>  adds device → MySQL<br>
+          <span style="color:var(--green)">device-asset</span>  publishes <span style="color:var(--red)">device.audit</span> event<br>
+          <span style="color:var(--red)">Redis</span>         stores event<br>
+          <span style="color:var(--purple)">vdms-service</span> consumes event → MySQL<br>
+          <br>
+          <span style="color:var(--pink)">Client</span> queries <span style="color:var(--purple)">vdms-service</span><br>
+          <span style="color:var(--purple)">vdms-service</span> reads MySQL → returns log
+        </div>
+        <div class="callout success" style="margin-top:12px">
+          This is the <b>write-once, read-anywhere</b> pattern. device-asset writes events; any client can later read them from vdms-service without device-asset being involved.
+        </div>
+      </div>
+
+      <div class="box">
+        <h3>Also: 2-way query flow (new)</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="step-n teal" style="background:var(--teal-bg);color:var(--teal)">1</div>
+            <div class="step-body">
+              <div class="title">Browser queries via VDMS route</div>
+              <div class="url">GET /vdms/asset/admin/VDMS760/right_wing/devices</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n teal" style="background:var(--teal-bg);color:var(--teal)">2</div>
+            <div class="step-body">
+              <div class="title">Gateway → vdms-service (pass-through)</div>
+              <div class="desc"><code>/vdms/**</code> routes to vdms-service:8089</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n teal" style="background:var(--teal-bg);color:var(--teal)">3</div>
+            <div class="step-body">
+              <div class="title">AssetProxyController calls ScleraCloudDeviceClient</div>
+              <div class="url">GET localhost:3500/v1.0/invoke/sclera-cloud-device-asset/method/user/…/devices</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n teal" style="background:var(--teal-bg);color:var(--teal)">4</div>
+            <div class="step-body">
+              <div class="title">vdms-dapr → device-asset:8085 → MySQL</div>
+              <div class="desc">Device list flows back through the Dapr invoke chain to the browser.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SLIDE 13 — DOCKER COMPOSE -->
+<div class="slide" id="s13">
+  <div class="slide-head">
+    <span class="num">13</span>
+    <h1>Docker Compose — Container Topology</h1>
+    <span class="tag tag-infra">Infrastructure</span>
+  </div>
+  <div class="slide-body cols2">
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h3>Container startup order</h3>
+        <div class="steps">
+          <div class="step">
+            <div class="step-n red">1</div>
+            <div class="step-body">
+              <div class="title">redis (sclera-redis)</div>
+              <div class="desc">Starts first. Health-checked with <code style="font-family:monospace;font-size:11px;color:var(--teal)">redis-cli ping</code>. All other containers wait for it to be healthy.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n green">2</div>
+            <div class="step-body">
+              <div class="title">app (sclera-cloud-device-asset)</div>
+              <div class="desc">Starts after redis. Spring Boot on :8085. Connects to <code style="font-family:monospace;font-size:11px;color:var(--teal)">host.docker.internal:3306</code> for MySQL (MySQL runs on the host machine, not in Docker).</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n purple">3</div>
+            <div class="step-body">
+              <div class="title">vdms-service</div>
+              <div class="desc">Same as app — starts after redis, connects to host MySQL on :3306.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n orange" style="background:#1a0f05;color:var(--orange)">4</div>
+            <div class="step-body">
+              <div class="title">app-dapr &amp; vdms-dapr (sidecars)</div>
+              <div class="desc">Start after their paired service. Use <code style="font-family:monospace;font-size:11px;color:var(--teal)">network_mode: "service:app"</code> / <code style="font-family:monospace;font-size:11px;color:var(--teal)">"service:vdms-service"</code> — they share the network namespace of the service container.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n blue">5</div>
+            <div class="step-body">
+              <div class="title">api-gateway</div>
+              <div class="desc">Starts last, after both services are up. Exposes :8080 externally.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n teal" style="background:var(--teal-bg);color:var(--teal)">6</div>
+            <div class="step-body">
+              <div class="title">ui (sclera-test-ui)</div>
+              <div class="desc">nginx serving <code style="font-family:monospace;font-size:11px;color:var(--teal)">./test-ui/</code> on :3000. demo.html, architecture.html, etc. are served from here.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h3>The <code>network_mode: service:X</code> trick</h3>
+        <p style="margin-bottom:12px">This is the key to how Dapr sidecars work in Docker Compose. When a container uses <code style="font-family:monospace;color:var(--teal);font-size:12px">network_mode: "service:app"</code>, it:</p>
+        <div class="steps">
+          <div class="step">
+            <div class="step-n amber">✓</div>
+            <div class="step-body">
+              <div class="title">Shares the same network namespace</div>
+              <div class="desc">The sidecar has the exact same IP address and ports as the main service container. <code style="font-family:monospace;font-size:11px;color:var(--teal)">localhost</code> inside device-asset reaches app-dapr on port 3500.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n amber">✓</div>
+            <div class="step-body">
+              <div class="title">No separate IP needed</div>
+              <div class="desc">The sidecar has no dedicated port mapping. Communication between app and sidecar is purely through <code style="font-family:monospace;font-size:11px;color:var(--teal)">localhost</code>.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n red">!</div>
+            <div class="step-body">
+              <div class="title">Rebuild caveat</div>
+              <div class="desc">If you rebuild the service container (<code style="font-family:monospace;font-size:11px;color:var(--teal)">docker-compose up --build</code>), the old container is destroyed. The sidecar's <code style="font-family:monospace;font-size:11px;color:var(--teal)">network_mode</code> now points to a dead container — <b style="color:var(--text)">you must recreate the sidecar too</b>:<br>
+              <code style="font-family:monospace;font-size:11px;color:var(--teal)">docker-compose stop vdms-dapr &amp;&amp; docker-compose rm -f vdms-dapr &amp;&amp; docker-compose up -d vdms-dapr</code></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="box">
+        <h3>Port map at a glance</h3>
+        <table>
+          <thead><tr><th>Container</th><th>Host Port</th><th>Container Port</th></tr></thead>
+          <tbody>
+            <tr><td>sclera-api-gateway</td><td><code>8080</code></td><td><code>8080</code></td></tr>
+            <tr><td>sclera-cloud-device-asset</td><td><code>8085</code></td><td><code>8085</code></td></tr>
+            <tr><td>vdms-service</td><td><code>8089</code></td><td><code>8089</code></td></tr>
+            <tr><td>sclera-test-ui (nginx)</td><td><code>3000</code></td><td><code>80</code></td></tr>
+            <tr><td>MySQL (host process)</td><td><code>3306</code></td><td>—</td></tr>
+            <tr><td>sclera-redis</td><td>internal only</td><td>—</td></tr>
+            <tr><td>app-dapr / vdms-dapr</td><td>internal only</td><td><code>3500</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ SLIDE 14 — QUICK REFERENCE -->
+<div class="slide" id="s14">
+  <div class="slide-head">
+    <span class="num">14</span>
+    <h1>Quick Reference Card</h1>
+    <span class="tag tag-ref">Reference</span>
+  </div>
+  <div class="slide-body cols2">
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h3>Dapr URL patterns (memorize these two)</h3>
+        <div class="code"><span class="c">── Synchronous service call ────────────────</span>
+<span class="k">GET</span> localhost:3500
+     /v1.0/invoke/<span class="t">{app-id}</span>/method/<span class="s">{path}</span>
+
+<span class="c">── Async publish ───────────────────────────</span>
+<span class="k">POST</span> localhost:3500
+     /v1.0/publish/<span class="t">{pubsub-name}</span>/<span class="s">{topic}</span>
+<span class="c">     Content-Type: application/json</span>
+<span class="c">     Body: your JSON payload</span></div>
+      </div>
+
+      <div class="box" style="margin-bottom:16px">
+        <h3>App IDs</h3>
+        <table>
+          <thead><tr><th>Service</th><th>Dapr app-id</th></tr></thead>
+          <tbody>
+            <tr><td>Device-Asset</td><td><code>sclera-cloud-device-asset</code></td></tr>
+            <tr><td>VDMS Service</td><td><code>vdms-service</code></td></tr>
+            <tr><td>Pub/Sub component name</td><td><code>pubsub</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="box">
+        <h3>Common pub/sub topics</h3>
+        <table>
+          <thead><tr><th>Topic</th><th>Direction</th></tr></thead>
+          <tbody>
+            <tr><td><code>device.audit</code></td><td>device-asset → vdms</td></tr>
+            <tr><td><code>vdms.update-property-details</code></td><td>device-asset → vdms</td></tr>
+            <tr><td><code>vdms.update-customer-org-id</code></td><td>device-asset → vdms</td></tr>
+            <tr><td><code>vdms.set-agent-permission</code></td><td>device-asset → vdms</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h3>Key client classes</h3>
+        <table>
+          <thead><tr><th>Class</th><th>Lives in</th><th>Calls to</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>VdmsClient</code></td>
+              <td>device-asset</td>
+              <td>vdms-service via app-dapr</td>
+            </tr>
+            <tr>
+              <td><code>ScleraCloudDeviceClient</code></td>
+              <td>vdms-service</td>
+              <td>device-asset via vdms-dapr</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="box" style="margin-bottom:16px">
+        <h3>Rebuild checklist</h3>
+        <div class="code"><span class="c"># 1. Build the JAR first</span>
+mvn -B clean package -DskipTests
+
+<span class="c"># 2. Rebuild &amp; restart the service</span>
+docker-compose up --build -d vdms-service
+
+<span class="c"># 3. Recreate the Dapr sidecar (CRITICAL)</span>
+docker-compose stop vdms-dapr
+docker-compose rm -f vdms-dapr
+docker-compose up -d vdms-dapr</div>
+      </div>
+
+      <div class="box">
+        <h3>Test UI endpoints</h3>
+        <table>
+          <thead><tr><th>URL</th><th>What it is</th></tr></thead>
+          <tbody>
+            <tr><td><code>localhost:3000/demo.html</code></td><td>Interactive test UI — all flows</td></tr>
+            <tr><td><code>localhost:3000/architecture.html</code></td><td>This presentation</td></tr>
+            <tr><td><code>localhost:8080/vdms/id</code></td><td>Quick health check</td></tr>
+            <tr><td><code>localhost:8080/vdms/details</code></td><td>VDMS config data</td></tr>
+            <tr><td><code>localhost:8080/vdms/audit-log?vdmsId=…</code></td><td>Audit log (paginated)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ SLIDE 15 — SUMMARY -->
+<div class="slide" id="s15">
+  <div class="slide-head">
+    <span class="num">15</span>
+    <h1>Summary</h1>
+    <span class="tag tag-arch">Architecture</span>
+  </div>
+  <div class="slide-body cols3">
+
+    <div class="box">
+      <h2>3 Communication Channels</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-n green">1</div>
+          <div class="step-body">
+            <div class="title" style="color:var(--green)">Sync Invoke</div>
+            <div class="desc">device-asset → VdmsClient → Dapr → vdms-service<br>Real-time query. Caller waits for response.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n purple">2</div>
+          <div class="step-body">
+            <div class="title" style="color:var(--purple)">Pub/Sub (Async)</div>
+            <div class="desc">device-asset → Dapr → Redis → vdms-service<br>Fire-and-forget. Used for audit, state changes.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n teal" style="background:var(--teal-bg);color:var(--teal)">3</div>
+          <div class="step-body">
+            <div class="title" style="color:var(--teal)">Reverse Invoke (2-way)</div>
+            <div class="desc">vdms-service → ScleraCloudDeviceClient → Dapr → device-asset<br>New. vdms-service can proxy device data back to clients.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>5 Key Design Decisions</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-n blue">→</div>
+          <div class="step-body">
+            <div class="title">Single gateway, port 8080</div>
+            <div class="desc">No service is exposed directly. All traffic enters through the gateway.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n blue">→</div>
+          <div class="step-body">
+            <div class="title">JWT auth inside device-asset</div>
+            <div class="desc">Not at the gateway. Multi-tenant: each issuer has its own JWK set.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n blue">→</div>
+          <div class="step-body">
+            <div class="title">Dapr for all inter-service calls</div>
+            <div class="desc">No hardcoded service URLs. Dapr resolves by app-id. Easy to move services.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n blue">→</div>
+          <div class="step-body">
+            <div class="title">Async audit via pub/sub</div>
+            <div class="desc">Audit logging never slows down the user's request. Redis persists events if vdms-service is down.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n blue">→</div>
+          <div class="step-body">
+            <div class="title">Shared MySQL schema</div>
+            <div class="desc">Both services use the same DB. Simple for now — could be split if services need to scale independently.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="box" style="margin-bottom:16px">
+        <h2>The complete message path</h2>
+        <div style="font-family:monospace;font-size:11px;line-height:1.9;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;color:var(--dim)">
+          <span style="color:var(--pink)">Browser</span><br>
+          &nbsp;&nbsp;↓ HTTP :8080<br>
+          <span style="color:var(--blue)">API Gateway</span> (route + strip)<br>
+          &nbsp;&nbsp;↓ HTTP :8085<br>
+          <span style="color:var(--green)">device-asset</span> (JWT + logic)<br>
+          &nbsp;&nbsp;↓ localhost:3500<br>
+          <span style="color:var(--orange)">app-dapr</span> (service invoke)<br>
+          &nbsp;&nbsp;↓ Docker network<br>
+          <span style="color:var(--orange)">vdms-dapr</span> → <span style="color:var(--purple)">vdms-service</span><br>
+          &nbsp;&nbsp;↓ MySQL query<br>
+          &nbsp;&nbsp;↑ response back<br>
+          <span style="color:var(--orange)">app-dapr</span> (pub/sub publish)<br>
+          &nbsp;&nbsp;↓ localhost:6379<br>
+          <span style="color:var(--red)">Redis</span> → <span style="color:var(--orange)">vdms-dapr</span><br>
+          &nbsp;&nbsp;↓ CloudEvent POST<br>
+          <span style="color:var(--purple)">vdms-service</span> (subscriber)<br>
+          &nbsp;&nbsp;↓ MySQL INSERT<br>
+          <span style="color:var(--amber)">user_action_log</span>
+        </div>
+      </div>
+
+      <div class="callout success">
+        <b>The loop is complete.</b> A device add by a user in the browser ends up as a device row in MySQL AND an audit entry in MySQL — via two separate paths, one synchronous and one async.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<!-- ════════════════════════ Navigation (outside the slide flow) -->
+<div class="nav" id="nav-bar">
+  <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Prev</button>
+  <div class="progress-wrap"><div class="progress-bar" id="prog"></div></div>
+  <span class="counter" id="counter">1 / 16</span>
+  <button class="nav-btn" id="btn-next" onclick="go(1)">Next →</button>
+</div>
+
+<script>
+const TOTAL = 16;
+let cur = 0;
+
+function show(n) {
+  document.querySelectorAll('.slide').forEach((s, i) => {
+    s.classList.toggle('active', i === n);
+  });
+  cur = n;
+  document.getElementById('counter').textContent = (n + 1) + ' / ' + TOTAL;
+  document.getElementById('prog').style.width = ((n / (TOTAL - 1)) * 100) + '%';
+  document.getElementById('btn-prev').disabled = n === 0;
+  document.getElementById('btn-next').disabled = n === TOTAL - 1;
+}
+
+function go(d) { show(Math.max(0, Math.min(TOTAL - 1, cur + d))); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown')  go(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')    go(-1);
+  if (e.key === 'Home') show(0);
+  if (e.key === 'End')  show(TOTAL - 1);
+});
+
+// Make the .deck respect the nav bar height
+function layout() {
+  const nb = document.getElementById('nav-bar');
+  document.getElementById('deck').style.height = 'calc(100vh - ' + nb.offsetHeight + 'px)';
+}
+layout();
+window.addEventListener('resize', layout);
+show(0);
+</script>
+</body>
+</html>

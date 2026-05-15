@@ -1,0 +1,54 @@
+[
+  {
+    "key": "Name",
+    "column": "name"
+  },
+  {
+    "key": "Application Name",
+    "column": "application_name"
+  },
+  {
+    "key": "Assignee",
+    "column": "email"
+  },
+  {
+    "key": "OS Type",
+    "column": "os_type"
+  },
+  {
+    "key": "Status",
+    "column": "status"
+  },
+  {
+    "key": "Subscription End Date",
+    "column": "subscription_end_date"
+  },
+  {
+    "key": "Subscription Start Date",
+    "column": "subscription_start_date"
+  },
+  {
+    "key": "Subscription Id",
+    "column": "subscription_id"
+  },
+  {
+    "key": "Subscription Type",
+    "column": "subscription_type"
+  },
+  {
+    "key": "Application Type",
+    "column": "application_type"
+  },
+  {
+    "key": "Vendor",
+    "column": "vendor"
+  },
+  {
+    "key": "Currency",
+    "column": "currency"
+  },
+  {
+    "key": "Unit Price",
+    "column": "unit_price"
+  }
+]

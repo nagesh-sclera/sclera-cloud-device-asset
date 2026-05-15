@@ -1,0 +1,119 @@
+services:
+
+  redis:
+    image: redis:7-alpine
+    container_name: sclera-redis
+    networks:
+      - sclera-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: ./sclera-cloud-device-asset
+    container_name: sclera-cloud-device-asset
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_URL: jdbc:mysql://host.docker.internal:3306/vdms
+      DB_USER: root
+      DB_PASS: mypass123
+      DAPR_HTTP_PORT: "3500"
+      DAPR_GRPC_PORT: "50001"
+      SPRING_FLYWAY_ENABLED: "false"
+    ports:
+      - "8085:8085"
+    networks:
+      - sclera-net
+    restart: on-failure
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  app-dapr:
+    image: daprio/daprd:1.12.0
+    command: [
+      "./daprd",
+      "--app-id", "sclera-cloud-device-asset",
+      "--app-port", "8085",
+      "--dapr-http-port", "3500",
+      "--dapr-grpc-port", "50001",
+      "--placement-host-address", "",
+      "--config", "/dapr/config.yaml",
+      "--components-path", "/dapr/components",
+      "--log-level", "info"
+    ]
+    volumes:
+      - ./sclera-cloud-device-asset/dapr:/dapr
+    network_mode: "service:app"
+    depends_on:
+      - app
+      - redis
+
+  vdms-service:
+    build: ./sclera-vdms-service
+    container_name: vdms-service
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_URL: jdbc:mysql://host.docker.internal:3306/vdms
+      DB_USER: root
+      DB_PASS: mypass123
+    ports:
+      - "8089:8089"
+    networks:
+      - sclera-net
+    restart: on-failure
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  vdms-dapr:
+    image: daprio/daprd:1.12.0
+    command: [
+      "./daprd",
+      "--app-id", "vdms-service",
+      "--app-port", "8089",
+      "--dapr-http-port", "3500",
+      "--dapr-grpc-port", "50001",
+      "--placement-host-address", "",
+      "--config", "/dapr/config.yaml",
+      "--components-path", "/dapr/components",
+      "--log-level", "info"
+    ]
+    volumes:
+      - ./sclera-cloud-device-asset/dapr:/dapr
+    network_mode: "service:vdms-service"
+    depends_on:
+      - vdms-service
+      - redis
+
+  api-gateway:
+    build: ./sclera-api-gateway
+    container_name: sclera-api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - app
+      - vdms-service
+    networks:
+      - sclera-net
+    restart: on-failure
+
+  ui:
+    image: nginx:alpine
+    container_name: sclera-test-ui
+    ports:
+      - "3000:80"
+    volumes:
+      - ./test-ui:/usr/share/nginx/html:ro
+    networks:
+      - sclera-net
+
+networks:
+  sclera-net:
+    driver: bridge

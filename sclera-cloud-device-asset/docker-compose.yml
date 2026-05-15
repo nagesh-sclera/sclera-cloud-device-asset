@@ -1,0 +1,84 @@
+version: "3.8"
+
+services:
+
+  mysql:
+    image: mysql:8
+    container_name: sclera-cloud-device-asset-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: sclera_cloud_device_asset
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  app:
+    build: .
+    container_name: sclera-cloud-device-asset
+    depends_on:
+      - mysql
+    environment:
+      SERVER_PORT: "8085"
+      SERVER_SSL_ENABLED: "false"
+      SPRING_DATASOURCE_URL: "jdbc:mysql://sclera-cloud-device-asset-mysql:3306/sclera_cloud_device_asset"
+      SPRING_DATASOURCE_USERNAME: "root"
+      SPRING_DATASOURCE_PASSWORD: "root"
+      SPRING_AUTOCONFIGURE_EXCLUDE: "org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration,org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration"
+      DAPR_GRPC_PORT: "50001"
+    ports:
+      - "8085:8085"
+      - "3500:3500"
+
+  app-dapr:
+    image: daprio/daprd:1.12.0
+    command:
+      - "./daprd"
+      - "--app-id"
+      - "sclera-cloud-device-asset"
+      - "--app-port"
+      - "8085"
+      - "--dapr-http-port"
+      - "3500"
+      - "--dapr-grpc-port"
+      - "50001"
+      - "--config"
+      - "/dapr/config.yaml"
+      - "--components-path"
+      - "/dapr/components"
+    volumes:
+      - ./dapr:/dapr
+    network_mode: "service:app"
+    depends_on:
+      - app
+
+  vdms-service:
+    build: ./vdms-service
+    container_name: vdms-service
+    ports:
+      - "8086:8086"
+
+  vdms-dapr:
+    image: daprio/daprd:1.12.0
+    command:
+      - "./daprd"
+      - "--app-id"
+      - "vdms-service"
+      - "--app-port"
+      - "8086"
+      - "--dapr-http-port"
+      - "3500"
+      - "--dapr-grpc-port"
+      - "50001"
+      - "--config"
+      - "/dapr/config.yaml"
+      - "--components-path"
+      - "/dapr/components"
+    volumes:
+      - ./dapr:/dapr
+    network_mode: "service:vdms-service"
+    depends_on:
+      - vdms-service
+
+volumes:
+  mysql_data:

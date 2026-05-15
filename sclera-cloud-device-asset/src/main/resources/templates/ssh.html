@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+		integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"
+		integrity="sha512-5yJ548VSnLflcRxWNqVWYeQZnby8D8fJTmYRLyvs445j1XmzR8cnWi85lcHx3CUEeAX+GrK3TqTfzOO6LKDpdw=="
+		crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"
+		integrity="sha512-iKDtgDyTHjAitUDdLljGhenhPwrbBfqTKWO1mkhSFH3A7blITC9MhYon6SjnMhp4o0rADGw9yAC6EW4t5a4K3g=="
+		crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@4.5.0/css/xterm.css" />
+	<script src="https://cdn.jsdelivr.net/npm/xterm@4.5.0/lib/xterm.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.3.0/lib/xterm-addon-fit.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+	<title>SSH</title>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			height: 100vh;
+			width: 100vw;
+		}
+
+		#terminal-container {
+			background: black;
+			height: 100vh;
+		}
+
+		/* auth css */
+		.auth-body {
+			font-family: Arial, Helvetica, sans-serif;
+			height: 100%;
+			width: 100%;
+			/* display: grid;
+        place-items: center; */
+			position: fixed;
+		}
+
+		.auth-form {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			display: flex;
+			flex-direction: column;
+			/* padding: 0.2rem; */
+			/* border: 2px solid #0393f6; */
+			border-radius: 15px;
+			width: 28rem;
+		}
+
+		.auth-form-header {
+			padding: 1.5rem 3rem;
+			font-size: 1.5rem;
+			font-weight: bold;
+			color: #fff;
+			background-color: #0393f6;
+			border-radius: 8px 8px 0 0;
+			text-align: center;
+			display: none;
+		}
+
+		.auth-form-body {
+			padding: 3rem 2rem;
+			padding-bottom: 1rem;
+		}
+
+		.auth-label {
+			font-size: 0.95rem;
+			color: #b6b6b6;
+			font-style: italic;
+			margin-bottom: 0.5rem;
+			margin-left: 0.5rem;
+		}
+
+		.auth-form-footer {
+			width: 100%;
+			display: flex;
+			margin-bottom: 1.5rem;
+		}
+
+		.ssh-submit,
+		.ssh-input {
+			padding: 8px;
+			border: none;
+			outline: none;
+			color: #ffffff;
+			border-radius: 12px;
+		}
+
+		.ssh-input {
+			background-color: #242424;
+			margin-bottom: 1.5rem;
+			width: 100%;
+			box-sizing: border-box;
+			font-size: 1.1rem;
+			padding: 0.8rem;
+		}
+
+		.ssh-submit {
+			background-color: #0393f6;
+			width: 85%;
+			margin: 0 auto;
+			font-size: 0.9rem;
+			padding: 0.8rem;
+		}
+
+		.auth-password-form {
+			position: relative;
+		}
+
+		.auth-eye {
+			position: absolute;
+			right: 10px;
+			top: 33%;
+			color: #fff;
+			font-size: 1.4rem;
+			transform: translateY(-50%);
+		}
+	</style>
+</head>
+
+<body>
+	<div id="login-form" class="auth-body">
+		<div class="auth-form auth-body">
+			<div class="auth-form-header">SSH Credentials</div>
+			<div class="auth-form-body">
+				<p class="auth-label">Username</p>
+				<input type="text" class="ssh-input" placeholder="Username" id="username" required />
+				<p class="auth-label">Password</p>
+				<div class="auth-password-form">
+					<input type="password" class="ssh-input" placeholder="Password" id="password" required />
+					<i class="fa fa-eye auth-eye" aria-hidden="true" id="eye-open"></i>
+					<i class="fa fa-eye-slash auth-eye" aria-hidden="true" id="eye-close"></i>
+				</div>
+			</div>
+			<div class="auth-form-footer">
+				<button class="ssh-submit" id="connect" type="submit">Connect</button>
+			</div>
+		</div>
+	</div>
+
+	<div id="terminal-container"></div>
+
+	<script>
+		const eye_open = document.getElementById("eye-open");
+		const eye_close = document.getElementById("eye-close");
+		const password_text = document.getElementById("password");
+		let show_password = false;
+		const loadData = () => {
+			handlepassword();
+		};
+		eye_open.addEventListener("click", () => {
+			show_password = false;
+			handlepassword();
+		});
+		eye_close.addEventListener("click", () => {
+			show_password = true;
+			handlepassword();
+		});
+
+		handlepassword = () => {
+			if (show_password) {
+				eye_open.style.display = "block";
+				eye_close.style.display = "none";
+				password_text.setAttribute("type", "text");
+			} else {
+				eye_open.style.display = "none";
+				eye_close.style.display = "block";
+				password_text.setAttribute("type", "password");
+			}
+		};
+		console.log("SCRIPT FILE STARTED");
+		//Global data received from thyme template
+		const private_ip = "[[${private_ip}]]";
+		const public_ip = "[[${public_ip}]]";
+		const public_port = "[[${public_port}]]";
+		const private_port = "[[${private_port}]]";
+		const docker_ip = "[[${docker_ip}]]";
+		const vdms_id = "[[${vdms_id}]]";
+		const is_ssl = "[[${is_ssl}]]";
+
+		let socketPath;
+		console.log("IS SSL", is_ssl);
+		if (is_ssl === "true") {
+			socketPath = `https://${public_ip}:${public_port}/ws?vdms_id=${vdms_id}`;
+		} else {
+			socketPath = `http://${public_ip}:${public_port}/ws?vdms_id=${vdms_id}`;
+		}
+		var term = null;
+		var stompClient = null;
+		var timestamp = null;
+		var username = null;
+		var password = null;
+
+		const connectBtn = document.getElementById("connect");
+
+		connectBtn.addEventListener("click", () => {
+			start("SSH");
+		});
+
+		window.addEventListener("beforeunload", (e) => {
+			sendData(String.fromCharCode(3) + String.fromCharCode(13) + "exit" + String.fromCharCode(13));
+		});
+
+		const startTerminalInstance = () => {
+			console.log("clientHeigth", window.innerHeight);
+			term_height = Math.floor(window.innerHeight / 17);
+			term = new Terminal({
+				rows: term_height,
+			});
+
+			// term._core.rows = term_height
+			console.log("term", term);
+
+			const f = new FitAddon.FitAddon();
+			term.loadAddon(f);
+
+			term.open(document.getElementById("terminal-container"), false);
+			f.fit();
+
+			let shellPrompt = "$";
+			term.prompt = () => {
+				term.write("\r\n" + shellPrompt);
+			};
+
+			term.prompt();
+			term.setOption("cursorBlink", true);
+
+			var cmd = "";
+			var currLine = "";
+			var input = "";
+			var cursor = 0;
+			var activePrompt = null;
+			var prompt = "$";
+
+			term.onData((d) => {
+				const code = d.charCodeAt(0);
+				if (code === 29) {
+					sendData();
+				}
+				sendData(d);
+			});
+		};
+
+		const sendData = (char) => {
+			if (stompClient !== null && docker_ip !== null) {
+				stompClient.send("/topic/messages-" + docker_ip, {}, JSON.stringify({command: char, ip: docker_ip, id: timestamp.toString()}));
+			}
+		};
+
+		const setConnected = () => {
+			document.getElementById("login-form").style.display = "none";
+		};
+
+		const sendUser = (protocol) => {
+			if (stompClient !== null && docker_ip !== null) {
+				timestamp = Date.now();
+				console.log("TIMESTAMP INSIDE sendUser", timestamp);
+				stompClient.send("/app/user", {}, JSON.stringify({docker_ip: docker_ip, private_ip: private_ip, protocol: "SSH", username: username, password: password, private_port: parseInt(private_port, 10), timestamp: timestamp.toString()}));
+			}
+		};
+
+		const start = (service) => {
+			if (private_port == 0) private_port = 22;
+			username = document.getElementById("username").value;
+			password = document.getElementById("password").value;
+			initTerminal("SSH");
+		};
+
+		const initTerminal = (protocol) => {
+			const container = document.getElementById("terminal-container");
+			let socket = new SockJS(socketPath);
+			stompClient = Stomp.over(socket);
+			//stompClient.debug = null;
+
+			if (docker_ip !== null) {
+				startTerminalInstance();
+				stompClient.connect({}, (frame) => {
+					setConnected(true);
+					sendUser(protocol);
+					stompClient.subscribe("/topic/response-" + docker_ip + "-" + timestamp, (greeting) => {
+						let termOutput = stripAnsi(greeting.body);
+						if (termOutput !== null) {
+							term.write(termOutput);
+						}
+					});
+				});
+			}
+		};
+
+		const stripAnsi = (s) => {
+			if (s >= 0) {
+				return String.fromCharCode(s);
+			} else if (s == "-1") {
+				closeConnection();
+				return "Connection Closed";
+			} else if (s == "-2") {
+				closeConnection();
+				return "Authentication Failed";
+			} else if (s == "-3") {
+				closeConnection();
+				return "Could not connect to the host";
+			}
+		};
+
+		const closeConnection = () => {
+			stompClient = null;
+			dockerIp = null;
+		};
+
+
+	</script>
+</body>
+
+</html>

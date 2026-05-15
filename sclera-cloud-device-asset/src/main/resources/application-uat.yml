@@ -1,0 +1,102 @@
+server:
+  port: 8887
+  http:
+    port: 8888
+  ssl:
+    key-store: classpath:keystore/certificate.p12
+    key-store-password: HkPvhcryJP79kTiWxkQ6
+
+spring:
+  main:
+    allow-circular-references: true
+  datasource:
+    url: jdbc:mysql://scleravdmsdatabase:3306/vdms
+    username: sclerauser
+    password: WySq1@Sclera
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 500
+      idle-timeout: 200000
+      pool-name: SpringBootJPAHikariCP
+      max-lifetime: 2000000
+      connection-timeout: 30000
+      leak-detection-threshold: 10000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  servlet:
+    multipart:
+      max-request-size: 200MB
+      max-file-size: 200MB
+  rabbitmq:
+    host: sclerarabbitmq
+    port: 5672
+    username: sclerauser
+    password: Ra66i+Mq@Sclera
+
+sclera:
+  chirpstackutils:
+    email: admin
+    password: admin
+    network-server-limit: 100
+    organization-limit: 100
+    application-limit: 100
+    gateway-discovery-enabled: true
+    sensor-is-disabled: false
+    gateway-profile-limit: 100
+    service-profile-limit: 100
+    device-profile-limit: 100
+    device_count_limit: 25000
+  mri:
+    instruction-query-filter-id:
+  chirpstack-server-url: http://localhost:8080
+  chirpstack-serverv4-url: http://localhost:8090
+  analytics-server-url: http://localhost:5123
+  cloud-server-ip-address: uat-app.sclera.com
+  vdms-server-url: https://uat-app.sclera.com/vdms
+  vendor-server-url: https://uat-app.sclera.com/vendor
+  product-server-url: https://uat-app.sclera.com/stores
+  p2p-web-socket-url: https://uat-app.sclera.com/wsvdms
+  integration-web-socket-url: https://uat-app.sclera.com/wsintegration
+  health-server-url: https://uat-app.sclera.com/health
+  services-cloud-server-url: https://uat-app.sclera.com
+  global-qrcode-server-url: https://uat-app.sclera.com
+  server-qrcode-images-url: http://localhost:8888/images/qrcodes/
+  server-qrcode-images-absolute-path: /home/sclera/images/qrcodes/
+  server-floor-images-url: http://localhost:8888/images/floors/
+  server-floor-images-absolute-path: /home/sclera/images/floors/
+  server-checklist-images-url: http://localhost:8888/images/checklist/
+  server-checklist-images-absolute-path: /home/sclera/images/checklist/
+  server-asset-images-url: http://localhost:8888/images/assets/
+  server-asset-images-absolute-path: /home/sclera/images/assets/
+  server-asset-ocr-images-url: http://localhost:8888/images/assets/ocr/
+  server-asset-ocr-images-absolute-path: /home/sclera/images/assets/ocr/
+  server-app-url: https://uat-app.sclera.com/
+  auth-server-app-url: https://uat-accounts.sclera.com/sclera
+  backup-path: /home/sclera/backup
+  image-folder-path: /home/sclera/images
+  analytics-file-path: /home/sclera/sclera_data.db
+  mysql-container-name: sclera_database
+  location-server-url: https://uat-app.sclera.com/location
+  alert-scheduler-server-url: http://localhost:8081
+  poly-lens-auth-url: https://login.silica-prod01.io.lens.poly.com/oauth/token
+  chat-bot-url: https://uat-ai.sclera.com/document-chatbot
+  skill-profiles-server-url: https://uat-app.sclera.com/skill-profiles
+  consumable-inventory-server-url: https://uat-app.sclera.com/itam-inventory/
+  ai-call-flow-server-url: https://uat-app.sclera.com/
+  ws-status-update-url: wss://itam-ai-uat.sclera.com/wscall-agent/status-updates/
+  ai-call-status-url: https://itam-ai-uat.sclera.com/
+  syslog_url: http://localhost:7799
+  secret_url: sclera/uat/edge/sclera-vdms-server/credential/
+  translator_base_url: https://api.cognitive.microsofttranslator.com/translate?api-version=3.0
+
+  socket-url: wss://uat-app.sclera.com/wsasset-data-collection
+  adc-server-url: https://uat-app.sclera.com/api/asset-data-collection/organisation/
+  adc-document-url: https://uat-app.sclera.com/api/asset-data-collection/sclera-uat-resource/asset-data-collection/images/
+logging:
+  config: classpath:logback/logback-uat.xml
+

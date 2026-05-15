@@ -1,0 +1,14 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: asset-route
+          uri: http://localhost:8085
+          predicates:
+            - Path=/asset/**
+          filters:
+            - StripPrefix=1
+        - id: vdms-route
+          uri: http://localhost:8089
+          predicates:
+            - Path=/vdms/**

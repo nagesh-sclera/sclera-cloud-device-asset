@@ -1,0 +1,22 @@
+server:
+  port: 8089
+
+spring:
+  application:
+    name: sclera-vdms-service
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/vdms}
+    username: ${DB_USER:root}
+    password: ${DB_PASS:mypass123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+# Dapr communication logs — shows every audit event received from device-asset
+logging:
+  level:
+    io.sclera.vdms.controller.AuditSubscriber: INFO
+    io.sclera.vdms.controller.VdmsController: INFO
+    root: INFO

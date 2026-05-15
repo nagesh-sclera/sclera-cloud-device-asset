@@ -1,0 +1,107 @@
+server:
+  port: 8085
+  ssl:
+    enabled: false
+  http:
+    port: 8085
+
+spring:
+  main:
+    allow-circular-references: true
+  data:
+    jpa:
+      repositories:
+        bootstrap-mode: lazy
+  flyway:
+    enabled: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/vdms}
+    username: ${DB_USER:root}
+    password: ${DB_PASS:mypass123}
+    hikari:
+      minimum-idle: 2
+      maximum-pool-size: 50
+      connection-timeout: 30000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  servlet:
+    multipart:
+      max-request-size: 200MB
+      max-file-size: 200MB
+  rabbitmq:
+    host: localhost
+
+sclera:
+  chirpstackutils:
+    email: admin
+    password: admin
+    network-server-limit: 100
+    organization-limit: 100
+    application-limit: 100
+    gateway-discovery-enabled: false
+    sensor-is-disabled: false
+    gateway-profile-limit: 100
+    service-profile-limit: 100
+    device-profile-limit: 100
+    device_count_limit: 25000
+  mri:
+    instruction-query-filter-id: 0
+  chirpstack-server-url: http://localhost:8082
+  chirpstack-serverv4-url: http://localhost:8090
+  analytics-server-url: http://localhost:5123
+  cloud-server-ip-address: localhost
+  vdms-server-url: http://localhost:8089/vdms
+  vendor-server-url: http://localhost/vendor
+  product-server-url: http://localhost/stores
+  p2p-web-socket-url: ws://localhost/wsvdms
+  integration-web-socket-url: ws://localhost/wsintegration
+  health-server-url: http://localhost/health
+  services-cloud-server-url: http://localhost
+  global-qrcode-server-url: http://localhost
+  server-qrcode-images-url: http://localhost:8085/images/qrcodes/
+  server-qrcode-images-absolute-path: C:/tmp/sclera/images/qrcodes/
+  server-floor-images-url: http://localhost:8085/images/floors/
+  server-floor-images-absolute-path: C:/tmp/sclera/images/floors/
+  server-checklist-images-url: http://localhost:8085/images/checklist/
+  server-checklist-images-absolute-path: C:/tmp/sclera/images/checklist/
+  server-asset-images-url: http://localhost:8085/images/assets/
+  server-asset-images-absolute-path: C:/tmp/sclera/images/assets/
+  server-asset-ocr-images-url: http://localhost:8085/images/assets/ocr/
+  server-asset-ocr-images-absolute-path: C:/tmp/sclera/images/assets/ocr/
+  server-app-url: http://localhost/
+  auth-server-app-url: http://localhost/auth
+  backup-path: C:/tmp/sclera/backup
+  image-folder-path: C:/tmp/sclera/images
+  analytics-file-path: C:/tmp/sclera/sclera_data.db
+  mysql-container-name: localhost
+  location-server-url: http://localhost/location
+  alert-scheduler-server-url: http://localhost:8081
+  poly-lens-auth-url: https://login.silica-prod01.io.lens.poly.com/oauth/token
+  chat-bot-url: http://localhost/chatbot
+  skill-profiles-server-url: http://localhost/skill-profiles
+  consumable-inventory-server-url: http://localhost/itam-inventory/
+  ai-call-flow-server-url: http://localhost/
+  ws-status-update-url: ws://localhost/wscall-agent/status-updates/
+  ai-call-status-url: http://localhost/
+  syslog_url: http://localhost:7799
+  socket-url: ws://localhost:8085/ws
+  adc-server-url: http://localhost:8085/organisation/
+  adc-document-url: http://localhost:8085/images/
+  secret_url: sclera/dev/edge/sclera-vdms-server/credential/
+  translator-base_url: https://api.cognitive.microsofttranslator.com/translate?api-version=3.0
+
+# Dapr sidecar communication logs — shows every invoke and publish call
+logging:
+  level:
+    io.sclera.client.VdmsClient: INFO
+    io.sclera.service.UserActionLogService: INFO
+    io.sclera.controller: INFO
+    root: INFO

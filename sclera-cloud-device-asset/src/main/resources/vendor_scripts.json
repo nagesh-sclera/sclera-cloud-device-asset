@@ -1,0 +1,58 @@
+[
+    {
+        "mac_by_vendor": "CRESTRON ELECTRONICS, INC.",
+        "script_name": "crestron"
+    },
+    {
+        "mac_by_vendor": "Apple Inc",
+        "script_name": "apple"
+    },
+    {
+        "mac_by_vendor": "LT SECURITY INC",
+        "script_name": "camera"
+    },
+    {
+        "mac_by_vendor": "Hangzhou Hikvision Digital Technology Co.,Ltd.",
+        "script_name": "camera"
+    },
+    {
+        "mac_by_vendor": "Zhejiang Dahua Technology Co., Ltd.",
+        "script_name": "camera"
+    },
+    {
+        "mac_by_vendor": "PRAVIS SYSTEMS Co.Ltd.,",
+        "script_name": "camera"
+    },
+    {
+        "mac_by_vendor": "Hanwha Techwin Security Vietnam",
+        "script_name": "camera"
+    },
+    {
+        "mac_by_vendor": "Cisco Systems, Inc",
+        "script_name": "cdp"
+    },
+    {
+        "mac_by_vendor": "Samsung Electronics Co.,Ltd",
+        "script_name": "iptv"
+    },
+    {
+        "mac_by_vendor": "Routerboard.com",
+        "script_name": "mikrotik"
+    },
+    {
+        "mac_by_vendor": "NETGEAR",
+        "script_name": "netgear"
+    },
+    {
+        "mac_by_vendor": "Xerox Corporation",
+        "script_name": "printer"
+    },
+    {
+        "mac_by_vendor": "CANON INC.",
+        "script_name": "printer"
+    },
+    {
+        "mac_by_vendor": "QSC LLC",
+        "script_name": "qsc"
+    }
+]

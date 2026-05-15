@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sclara 2.0 — Asset Module POC</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; height: 100vh; overflow: hidden; font-size: 14px; }
+.app { display: grid; grid-template-rows: 50px 1fr; height: 100vh; }
+
+/* Topbar */
+.topbar { background: #1a1d27; border-bottom: 1px solid #2d3148; padding: 0 20px; display: flex; align-items: center; gap: 14px; }
+.topbar h1 { font-size: 15px; font-weight: 600; color: #7c8cf8; }
+.svc-strip { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.svc-pill { display: flex; align-items: center; gap: 5px; background: #13151f; border: 1px solid #2d3148; border-radius: 20px; padding: 3px 11px; font-size: 12px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: #475569; }
+.dot.up { background: #22c55e; }
+.dot.down { background: #ef4444; }
+
+/* Layout */
+.body { display: grid; grid-template-columns: 240px 1fr; overflow: hidden; }
+.sidebar { background: #13151f; border-right: 1px solid #2d3148; padding: 12px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+.main { padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+
+/* Sidebar */
+.sb-section { background: #1a1d27; border: 1px solid #2d3148; border-radius: 7px; padding: 12px; }
+.sb-section h4 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #64748b; margin-bottom: 10px; }
+.f { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+.f:last-of-type { margin-bottom: 0; }
+.f label { font-size: 11px; color: #94a3b8; }
+.f input, .f textarea { background: #0f1117; border: 1px solid #2d3148; color: #e2e8f0; border-radius: 5px; padding: 6px 9px; font-size: 12px; font-family: inherit; width: 100%; }
+.f input:focus, .f textarea:focus { outline: none; border-color: #7c8cf8; }
+.f textarea { font-family: 'Consolas', monospace; font-size: 11px; resize: vertical; }
+.hint { font-size: 11px; color: #22c55e; margin-top: 4px; }
+
+/* Tabs */
+.tabs { display: flex; gap: 2px; background: #1a1d27; border: 1px solid #2d3148; border-radius: 7px; padding: 3px; flex-shrink: 0; overflow-x: auto; }
+.tab { padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; color: #64748b; font-weight: 500; white-space: nowrap; }
+.tab:hover { color: #94a3b8; }
+.tab.active { background: #7c8cf8; color: #fff; }
+.panel { display: none; flex-direction: column; gap: 14px; }
+.panel.active { display: flex; }
+
+/* Card */
+.card { background: #1a1d27; border: 1px solid #2d3148; border-radius: 8px; padding: 16px; }
+.card-hdr { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.card-hdr h2 { font-size: 13px; font-weight: 600; color: #c7d2fe; }
+.card-hdr .ep { font-size: 11px; color: #475569; font-family: 'Consolas', monospace; font-weight: 400; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 13px; border-radius: 5px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: inherit; white-space: nowrap; }
+.btn:hover { filter: brightness(1.1); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-primary { background: #7c8cf8; color: #fff; }
+.btn-success { background: #16a34a; color: #fff; }
+.btn-danger  { background: #dc2626; color: #fff; }
+.btn-neutral { background: #2d3148; color: #e2e8f0; }
+.btn-warning { background: #d97706; color: #fff; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Form grid */
+.fg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fg .s2 { grid-column: span 2; }
+.fg .s1 { grid-column: span 1; }
+.ff { display: flex; flex-direction: column; gap: 4px; }
+.ff label { font-size: 11px; color: #94a3b8; }
+.ff input, .ff select, .ff textarea { background: #0f1117; border: 1px solid #2d3148; color: #e2e8f0; border-radius: 5px; padding: 7px 10px; font-size: 13px; font-family: inherit; width: 100%; }
+.ff input:focus, .ff select:focus { outline: none; border-color: #7c8cf8; }
+.ff textarea { font-family: 'Consolas', monospace; font-size: 12px; resize: vertical; }
+.row-actions { grid-column: span 2; display: flex; gap: 8px; margin-top: 2px; flex-wrap: wrap; }
+
+/* Table */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 8px 12px; background: #13151f; color: #64748b; border-bottom: 1px solid #2d3148; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+td { padding: 8px 12px; border-bottom: 1px solid #1e2235; color: #cbd5e1; vertical-align: middle; }
+tr:hover td { background: #181b28; }
+.tbl-empty { text-align: center; color: #475569; padding: 24px; font-size: 13px; }
+
+/* Stats */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.stat { background: #13151f; border: 1px solid #2d3148; border-radius: 8px; padding: 14px; }
+.stat .v { font-size: 28px; font-weight: 700; color: #7c8cf8; line-height: 1; }
+.stat .l { font-size: 10px; color: #64748b; margin-top: 5px; text-transform: uppercase; letter-spacing: .06em; }
+.stat.g .v { color: #22c55e; }
+.stat.r .v { color: #ef4444; }
+.stat.a .v { color: #f59e0b; }
+
+/* Alerts */
+.msg { padding: 9px 13px; border-radius: 6px; font-size: 13px; margin-top: 8px; }
+.msg-ok  { background: #14532d; color: #86efac; border: 1px solid #166534; }
+.msg-err { background: #450a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
+.msg-info { background: #1e3a5f; color: #93c5fd; border: 1px solid #1d4ed8; }
+
+/* Badges */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.badge-blue  { background: #1e3a5f; color: #60a5fa; }
+.badge-green { background: #14532d; color: #4ade80; }
+.badge-red   { background: #450a0a; color: #f87171; }
+.badge-gray  { background: #2d3148; color: #94a3b8; }
+.badge-orange { background: #431407; color: #fdba74; }
+
+/* Raw response */
+.res { background: #0a0c14; border: 1px solid #1e2235; border-radius: 5px; padding: 10px; font-family: 'Consolas', monospace; font-size: 11px; max-height: 280px; overflow-y: auto; white-space: pre-wrap; color: #a5f3fc; margin-top: 10px; }
+
+/* Search input */
+.search-input { width: 100%; background: #0f1117; border: 1px solid #2d3148; color: #e2e8f0; border-radius: 5px; padding: 7px 10px; font-size: 13px; margin-bottom: 10px; }
+.search-input:focus { outline: none; border-color: #7c8cf8; }
+
+/* Endpoint label strip */
+.ep-strip { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.ep-tag { background: #0f1117; border: 1px solid #2d3148; border-radius: 4px; padding: 3px 8px; font-size: 11px; font-family: 'Consolas', monospace; color: #94a3b8; }
+.ep-tag.method-get { border-color: #166534; color: #4ade80; }
+.ep-tag.method-post { border-color: #1d4ed8; color: #60a5fa; }
+.ep-tag.method-put { border-color: #92400e; color: #fbbf24; }
+.ep-tag.method-delete { border-color: #7f1d1d; color: #f87171; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- Top bar -->
+<div class="topbar">
+  <h1>Sclara 2.0 — Asset Module POC</h1>
+  <div class="svc-strip">
+    <div class="svc-pill"><div class="dot" id="dot-gw"></div>Gateway :8080</div>
+    <div class="svc-pill"><div class="dot" id="dot-asset"></div>Device-Asset :8085</div>
+    <div class="svc-pill"><div class="dot" id="dot-vdms"></div>VDMS :8089</div>
+    <button class="btn btn-neutral btn-sm" onclick="ping()">Ping All</button>
+  </div>
+</div>
+
+<div class="body">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sb-section">
+      <h4>Connection</h4>
+      <div class="f"><label>Gateway URL</label><input id="s_gw" value="http://localhost:8080"></div>
+      <div class="f"><label>JWT Token</label><textarea id="s_token" rows="3" placeholder="eyJhbGci… paste JWT here"></textarea></div>
+    </div>
+    <div class="sb-section">
+      <h4>Path Params</h4>
+      <div class="f"><label>Username</label><input id="s_user" value="admin"></div>
+      <div class="f"><label>VDMS ID</label><input id="s_vdms" value="VDMS760"></div>
+      <div class="f"><label>Docker Name</label><input id="s_docker" value="right_wing"></div>
+      <button class="btn btn-neutral btn-sm" style="width:100%;margin-top:6px" onclick="autoFillVdms()">Auto-fill VDMS ID</button>
+      <div id="s_hint" class="hint"></div>
+    </div>
+    <div class="sb-section">
+      <h4>Endpoint Coverage</h4>
+      <div style="font-size:11px;color:#64748b;line-height:1.7">
+        <div>✅ GET devices / count</div>
+        <div>✅ POST add / edit device</div>
+        <div>✅ DELETE devices</div>
+        <div>✅ GET device by ID</div>
+        <div>✅ GET filter devices</div>
+        <div>✅ POST search / sort</div>
+        <div>✅ POST filter devices</div>
+        <div>✅ POST search-sort-filter</div>
+        <div>✅ POST archive devices</div>
+        <div>✅ PUT multi-update</div>
+        <div>✅ POST quick update</div>
+        <div>✅ POST add virtual device</div>
+        <div>✅ POST update virtual device</div>
+        <div>✅ DELETE virtual device</div>
+        <div>✅ PUT sync virtual status</div>
+        <div>✅ GET / POST / DELETE notes</div>
+        <div>✅ GET device sensors</div>
+        <div>✅ GET topology</div>
+        <div>✅ POST update topology</div>
+        <div>✅ POST reset topology</div>
+        <div>✅ POST export devices</div>
+        <div>✅ GET alert messages</div>
+        <div>✅ VDMS ↔ Asset flow</div>
+        <div>✅ Audit log</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="tabs">
+      <div class="tab active" onclick="tab('overview',this)">Overview</div>
+      <div class="tab" onclick="tab('devices',this)">Devices</div>
+      <div class="tab" onclick="tab('search',this)">Search & Filter</div>
+      <div class="tab" onclick="tab('bulk',this)">Bulk Ops</div>
+      <div class="tab" onclick="tab('virtual',this)">Virtual Devices</div>
+      <div class="tab" onclick="tab('notes',this)">Notes</div>
+      <div class="tab" onclick="tab('topology',this)">Topology</div>
+      <div class="tab" onclick="tab('twoway',this)">VDMS ↔ Asset</div>
+      <div class="tab" onclick="tab('audit',this)">Audit Log</div>
+      <div class="tab" onclick="tab('raw',this)">Raw</div>
+    </div>
+
+    <!-- ══ OVERVIEW ══ -->
+    <div id="tab-overview" class="panel active">
+
+      <div class="card">
+        <div class="card-hdr"><h2>Service Health</h2><button class="btn btn-neutral btn-sm" onclick="ping()">Check All</button></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div class="svc-pill"><div class="dot" id="h-gw"></div> Gateway :8080</div>
+          <div class="svc-pill"><div class="dot" id="h-asset"></div> Device-Asset :8085</div>
+          <div class="svc-pill"><div class="dot" id="h-vdms"></div> VDMS :8089</div>
+        </div>
+        <div id="ping-log" class="res" style="display:none"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>VDMS Details</h2><span class="ep">GET /vdms/details</span><button class="btn btn-neutral btn-sm" onclick="loadVdmsDetails()">Load</button></div>
+        <div id="vdms-details-grid" class="fg" style="display:none"></div>
+        <div id="vdms-details-msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr">
+          <h2>Device Count</h2><span class="ep">GET /asset/…/getdevicecount</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="ff" style="flex-direction:row;align-items:center;gap:6px">
+              <label style="font-size:11px;color:#94a3b8;white-space:nowrap">Assignee</label>
+              <input id="ov_assignee" value="all" style="width:90px;background:#0f1117;border:1px solid #2d3148;color:#e2e8f0;border-radius:5px;padding:5px 8px;font-size:12px">
+            </div>
+            <button class="btn btn-neutral btn-sm" onclick="loadDeviceCount()">Load</button>
+          </div>
+        </div>
+        <div id="ov-stats" class="stats-grid"></div>
+        <div id="ov-stats-msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Alert Messages</h2><span class="ep">GET /asset/…/getalertmessages</span><button class="btn btn-neutral btn-sm" onclick="loadAlerts()">Load</button></div>
+        <div id="alerts-res" class="res" style="display:none"></div>
+        <div id="alerts-msg"></div>
+      </div>
+
+    </div>
+
+    <!-- ══ DEVICES ══ -->
+    <div id="tab-devices" class="panel">
+
+      <div class="card">
+        <div class="card-hdr">
+          <h2>Device List</h2><span class="ep">GET /asset/…/devices</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span id="dev-badge" style="font-size:12px;color:#64748b"></span>
+            <button class="btn btn-neutral btn-sm" onclick="loadDevices()">Refresh</button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Type</th><th>IP Address</th><th>Vendor</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="dev-tbody"><tr><td colspan="6" class="tbl-empty">Click Refresh to load devices</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" id="dev-form-card">
+        <div class="card-hdr">
+          <h2 id="dev-form-title">Add Device</h2>
+          <span class="ep" id="dev-form-ep">POST /asset/…/adddevice</span>
+        </div>
+        <div class="fg">
+          <div class="ff s1"><label>Device Name *</label><input id="df_name" placeholder="e.g. Lobby Sensor 01"></div>
+          <div class="ff s1"><label>Type</label><input id="df_type" placeholder="e.g. generic, virtual"></div>
+          <div class="ff s1"><label>IP Address</label><input id="df_ip" placeholder="e.g. 192.168.1.100"></div>
+          <div class="ff s1"><label>MAC Address</label><input id="df_mac" placeholder="e.g. AA:BB:CC:DD:EE:FF"></div>
+          <div class="ff s1"><label>Vendor</label><input id="df_vendor" placeholder="e.g. Cisco, Dell, Hikvision"></div>
+          <div class="ff s1"><label>Description</label><input id="df_desc" placeholder="Short description"></div>
+          <div class="row-actions">
+            <button class="btn btn-success" id="df_submit" onclick="submitDevice()">Add Device</button>
+            <button class="btn btn-neutral" id="df_cancel" style="display:none" onclick="cancelEdit()">Cancel Edit</button>
+            <button class="btn btn-neutral btn-sm" onclick="clearForm()">Clear</button>
+          </div>
+        </div>
+        <div id="df-msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Get Device by ID</h2><span class="ep">GET /asset/…/device/{id}/getdevice</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <div class="ff" style="flex:1"><label>Device ID</label><input id="gd_id" placeholder="device-uuid"></div>
+          <button class="btn btn-primary" onclick="getDeviceById()">Fetch</button>
+        </div>
+        <div id="gd-res" class="res" style="display:none"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Delete Devices</h2><span class="ep">DELETE /asset/…/deletedevices</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <div class="ff" style="flex:1">
+            <label>Device IDs (comma-separated) — click a row above to auto-fill</label>
+            <input id="del_ids" placeholder="id1, id2, id3">
+          </div>
+          <button class="btn btn-danger" onclick="deleteDevices()">Delete</button>
+        </div>
+        <div id="del-msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Device Sensors</h2><span class="ep">GET /asset/…/device/{id}/getalldevicesensors</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <div class="ff" style="flex:1"><label>Device ID</label><input id="sens_id" placeholder="device-uuid"></div>
+          <button class="btn btn-primary" onclick="getDeviceSensors()">Fetch Sensors</button>
+        </div>
+        <div id="sens-res" class="res" style="display:none"></div>
+      </div>
+
+    </div>
+
+    <!-- ══ SEARCH & FILTER ══ -->
+    <div id="tab-search" class="panel">
+
+      <div class="card">
+        <div class="card-hdr"><h2>Quick Filter Devices</h2><span class="ep">GET /asset/…/getfilterdevice</span></div>
+        <div class="fg">
+          <div class="ff s1"><label>Search Key</label><input id="qf_key" placeholder="keyword…"></div>
+          <div class="ff s1"><label>Condition</label>
+            <select id="qf_cond"><option value="all">all</option><option value="online">online</option><option value="offline">offline</option></select>
+          </div>
+          <div class="ff s1"><label>Page</label><input id="qf_pg" value="1"></div>
+          <div class="ff s1"><label>Page Size</label><input id="qf_ps" value="20"></div>
+          <div class="row-actions"><button class="btn btn-primary" onclick="quickFilter()">Filter</button></div>
+        </div>
+        <div id="qf-res" class="res" style="display:none"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Search Devices</h2><span class="ep">POST /asset/…/searchdevices</span></div>
+        <div class="fg">
+          <div class="ff s1"><label>Search Value</label><input id="sr_val" placeholder="e.g. sensor, 192.168, Cisco"></div>
+          <div class="ff s1"><label>Column (or "all")</label><input id="sr_col" value="all" placeholder="user_data_name / type / ip_address / all"></div>
+          <div class="ff s1"><label>Condition</label>
+            <select id="sr_cond"><option value="all">all</option><option value="online">online</option><option value="offline">offline</option></select>
+          </div>
+          <div class="ff s1">
+            <label>Page / Size</label>
+            <div style="display:flex;gap:6px"><input id="sr_pg" value="1" style="width:70px"><input id="sr_ps" value="20" style="width:70px"></div>
+          </div>
+          <div class="row-actions"><button class="btn btn-primary" onclick="doSearch()">Search</button><button class="btn btn-neutral btn-sm" onclick="clearSR()">Clear</button></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Sort Devices</h2><span class="ep">POST /asset/…/sortdevices</span></div>
+        <div class="fg">
+          <div class="ff s1"><label>Sort Column</label><input id="so_col" placeholder="user_data_name / ip_address / type / vendor"></div>
+          <div class="ff s1"><label>Order</label>
+            <select id="so_ord"><option value="asc">Ascending</option><option value="desc">Descending</option></select>
+          </div>
+          <div class="ff s1">
+            <label>Page / Size</label>
+            <div style="display:flex;gap:6px"><input id="so_pg" value="1" style="width:70px"><input id="so_ps" value="20" style="width:70px"></div>
+          </div>
+          <div class="row-actions"><button class="btn btn-primary" onclick="doSort()">Sort</button></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Filter Devices (Body)</h2><span class="ep">POST /asset/…/filterdevices</span></div>
+        <div class="fg">
+          <div class="ff s1"><label>Condition</label>
+            <select id="fd_cond"><option value="all">all</option><option value="online">online</option><option value="offline">offline</option></select>
+          </div>
+          <div class="ff s1">
+            <label>Page / Size</label>
+            <div style="display:flex;gap:6px"><input id="fd_pg" value="1" style="width:70px"><input id="fd_ps" value="20" style="width:70px"></div>
+          </div>
+          <div class="ff s2">
+            <label>Filter JSON (array of {column, value, operator})</label>
+            <textarea id="fd_body" rows="4" placeholder='[{"column":"type","value":"generic","operator":"equals"}]'></textarea>
+          </div>
+          <div class="row-actions"><button class="btn btn-primary" onclick="doFilter()">Filter</button></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Search + Sort + Filter (Combined)</h2><span class="ep">POST /asset/…/searchsortfilterdevices</span></div>
+        <div class="fg">
+          <div class="ff s1"><label>Condition</label>
+            <select id="ssf_cond"><option value="all">all</option><option value="online">online</option><option value="offline">offline</option></select>
+          </div>
+          <div class="ff s1"><label>Onboard Status (123=all)</label><input id="ssf_ob" value="123"></div>
+          <div class="ff s1">
+            <label>Page / Size</label>
+            <div style="display:flex;gap:6px"><input id="ssf_pg" value="1" style="width:70px"><input id="ssf_ps" value="20" style="width:70px"></div>
+          </div>
+          <div class="ff s2">
+            <label>Request JSON (search_sort_filter_details)</label>
+            <textarea id="ssf_body" rows="5" placeholder='{"search":{"column":"all","value":""},"sort":{"column":"","order":"asc"},"filter":[]}'></textarea>
+          </div>
+          <div class="row-actions">
+            <button class="btn btn-primary" onclick="doSSF()">Execute</button>
+            <button class="btn btn-neutral btn-sm" onclick="doSSFCount()">Get Count Only</button>
+          </div>
+        </div>
+        <div id="ssf-count-msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Export Filtered Devices</h2><span class="ep">POST /asset/…/exportfiltereddevices</span></div>
+        <div class="fg">
+          <div class="ff s1"><label>Condition</label>
+            <select id="exp_cond"><option value="all">all</option><option value="online">online</option><option value="offline">offline</option></select>
+          </div>
+          <div class="ff s1"><label>File Type</label>
+            <select id="exp_ft"><option value="excel">excel</option><option value="csv">csv</option><option value="pdf">pdf</option></select>
+          </div>
+          <div class="ff s1"><label>Template Name</label><input id="exp_tpl" value="simple_report"></div>
+          <div class="ff s1"><label>Email (optional)</label><input id="exp_email" placeholder="user@example.com"></div>
+          <div class="ff s2">
+            <label>Filter JSON (search_sort_filter_details)</label>
+            <textarea id="exp_body" rows="3" placeholder='{"search":{"column":"all","value":""},"sort":{},"filter":[]}'></textarea>
+          </div>
+          <div class="row-actions"><button class="btn btn-primary" onclick="doExport()">Export</button></div>
+        </div>
+        <div id="exp-msg"></div>
+      </div>
+
+      <div class="card" id="sr-card" style="display:none">
+        <div class="card-hdr"><h2 id="sr-title">Results</h2></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Type</th><th>IP Address</th><th>Vendor</th><th>Status</th></tr></thead>
+            <tbody id="sr-tbody"><tr><td colspan="5" class="tbl-empty">—</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ BULK OPS ══ -->
+    <div id="tab-bulk" class="panel">
+
+      <div class="card">
+        <div class="card-hdr"><h2>Multi-Update Devices</h2><span class="ep">PUT /asset/…/devices</span></div>
+        <div class="fg">
+          <div class="ff s1"><label>Assignee</label><input id="mu_assignee" value="all"></div>
+          <div class="ff s2">
+            <label>Devices JSON array — each item needs id + fields to update</label>
+            <textarea id="mu_body" rows="6" placeholder='[{"id":"device-id-1","vendor":"Dell","status":"online"},{"id":"device-id-2","type":"sensor"}]'></textarea>
+          </div>
+          <div class="row-actions"><button class="btn btn-primary" onclick="multiUpdate()">Multi-Update</button></div>
+        </div>
+        <div id="mu-msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Quick Update (Tag / Location)</h2><span class="ep">POST /asset/…/devices/quickupdate</span></div>
+        <div class="fg">
+          <div class="ff s1"><label>Assignee</label><input id="qu_assignee" value="all"></div>
+          <div class="ff s2">
+            <label>Request JSON (TagDeviceOrLocationDTO)</label>
+            <textarea id="qu_body" rows="5" placeholder='{"device_ids":["id1","id2"],"tag":"maintenance","field_name":"status","field_value":"offline"}'></textarea>
+          </div>
+          <div class="row-actions"><button class="btn btn-primary" onclick="quickUpdate()">Quick Update</button></div>
+        </div>
+        <div id="qu-msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Archive / Unarchive Devices</h2><span class="ep">POST /asset/…/archivedevices</span></div>
+        <div class="fg">
+          <div class="ff s1"><label>Archive Flag</label>
+            <select id="arc_flag"><option value="1">1 — Archive</option><option value="0">0 — Unarchive</option></select>
+          </div>
+          <div class="ff s1"><label>Assignee</label><input id="arc_assignee" value="all"></div>
+          <div class="ff s2">
+            <label>Device IDs (comma-separated)</label>
+            <input id="arc_ids" placeholder="id1, id2, id3">
+          </div>
+          <div class="row-actions"><button class="btn btn-warning" onclick="archiveDevices()">Archive / Unarchive</button></div>
+        </div>
+        <div id="arc-msg"></div>
+      </div>
+
+    </div>
+
+    <!-- ══ VIRTUAL DEVICES ══ -->
+    <div id="tab-virtual" class="panel">
+
+      <div class="card">
+        <div class="card-hdr"><h2>Add Virtual Device</h2><span class="ep">POST /asset/…/addvirtualdevice</span></div>
+        <div class="fg">
+          <div class="ff s2">
+            <label>Virtual Devices JSON (array of DeviceDTO)</label>
+            <textarea id="vd_add" rows="6" placeholder='[{"user_data_name":"Virtual Cam 01","type":"virtual","ip_address":"192.168.0.50","vendor":"Generic"}]'></textarea>
+          </div>
+          <div class="ff s1"><label>Assignee</label><input id="vd_add_assignee" value="all"></div>
+          <div class="row-actions"><button class="btn btn-success" onclick="addVirtualDevice()">Add Virtual Device</button></div>
+        </div>
+        <div id="vd-add-msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Update Virtual Device</h2><span class="ep">POST /asset/…/updatevirtualdevice</span></div>
+        <div class="fg">
+          <div class="ff s2">
+            <label>Virtual Devices JSON (Set of DeviceDTO with id)</label>
+            <textarea id="vd_upd" rows="5" placeholder='[{"id":"vdev-id","user_data_name":"Updated Cam 01","status":"online"}]'></textarea>
+          </div>
+          <div class="row-actions"><button class="btn btn-primary" onclick="updateVirtualDevice()">Update</button></div>
+        </div>
+        <div id="vd-upd-msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Delete Virtual Device</h2><span class="ep">DELETE /asset/…/virtual-device/{id}</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <div class="ff" style="flex:1"><label>Virtual Device ID</label><input id="vd_del_id" placeholder="virtual-device-uuid"></div>
+          <div class="ff" style="width:120px"><label>Assignee</label><input id="vd_del_assignee" value="all"></div>
+          <button class="btn btn-danger" onclick="deleteVirtualDevice()">Delete</button>
+        </div>
+        <div id="vd-del-msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Sync Virtual Device Status</h2><span class="ep">PUT /asset/…/virtual-device/{id}/syncstatus</span></div>
+        <div class="fg">
+          <div class="ff s1"><label>Virtual Device ID</label><input id="vd_sync_id" placeholder="virtual-device-uuid"></div>
+          <div class="ff s2">
+            <label>DeviceDTO JSON (status fields)</label>
+            <textarea id="vd_sync_body" rows="3" placeholder='{"status":"online","last_seen":"2026-05-15T10:00:00"}'></textarea>
+          </div>
+          <div class="row-actions"><button class="btn btn-primary" onclick="syncVirtualStatus()">Sync Status</button></div>
+        </div>
+        <div id="vd-sync-msg"></div>
+      </div>
+
+    </div>
+
+    <!-- ══ NOTES ══ -->
+    <div id="tab-notes" class="panel">
+
+      <div class="card">
+        <div class="card-hdr"><h2>Get Notes for Device</h2><span class="ep">GET /asset/…/device/{id}/notes</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <div class="ff" style="flex:1"><label>Device ID</label><input id="nt_dev_id" placeholder="device-uuid"></div>
+          <button class="btn btn-primary" onclick="getNotes()">Fetch Notes</button>
+        </div>
+        <div id="nt-list-res" class="res" style="display:none"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Add / Edit Note</h2><span class="ep">POST /asset/…/device/{id}/note</span></div>
+        <div class="fg">
+          <div class="ff s1"><label>Device ID</label><input id="nt_add_dev" placeholder="device-uuid"></div>
+          <div class="ff s1"><label>Note ID (leave blank for new note)</label><input id="nt_add_id" placeholder="note-uuid (for edit)"></div>
+          <div class="ff s2"><label>Note Text</label><textarea id="nt_text" rows="3" placeholder="Enter note content..."></textarea></div>
+          <div class="row-actions"><button class="btn btn-success" onclick="upsertNote()">Save Note</button></div>
+        </div>
+        <div id="nt-add-msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Delete Note</h2><span class="ep">DELETE /asset/…/device/{id}/note/{note_id}</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+          <div class="ff" style="flex:1"><label>Device ID</label><input id="nt_del_dev" placeholder="device-uuid"></div>
+          <div class="ff" style="flex:1"><label>Note ID</label><input id="nt_del_note" placeholder="note-uuid"></div>
+          <button class="btn btn-danger" onclick="deleteNote()">Delete Note</button>
+        </div>
+        <div id="nt-del-msg"></div>
+      </div>
+
+    </div>
+
+    <!-- ══ TOPOLOGY ══ -->
+    <div id="tab-topology" class="panel">
+
+      <div class="card">
+        <div class="card-hdr"><h2>View Device Topology</h2><span class="ep">GET /asset/…/devicetopology</span><button class="btn btn-neutral btn-sm" onclick="loadTopology()">Load</button></div>
+        <div id="topo-res" class="res" style="display:none"></div>
+        <div id="topo-msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Update Topology</h2><span class="ep">POST /asset/…/updatetopology</span></div>
+        <div class="fg">
+          <div class="ff s2">
+            <label>Topology JSON array (List of DeviceTopologyDTO)</label>
+            <textarea id="topo_upd" rows="6" placeholder='[{"device_id":"id1","parent_id":"id2","position_x":100,"position_y":200}]'></textarea>
+          </div>
+          <div class="row-actions"><button class="btn btn-primary" onclick="updateTopology()">Update Topology</button></div>
+        </div>
+        <div id="topo-upd-msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Reset Topology</h2><span class="ep">POST /asset/…/resettopology</span></div>
+        <p style="font-size:13px;color:#94a3b8;margin-bottom:12px">Resets all topology positions and parent-child relationships for this docker to default.</p>
+        <button class="btn btn-danger" onclick="resetTopology()">Reset Topology</button>
+        <div id="topo-reset-msg"></div>
+      </div>
+
+    </div>
+
+    <!-- ══ VDMS ↔ ASSET ══ -->
+    <div id="tab-twoway" class="panel">
+
+      <div class="card">
+        <div class="card-hdr"><h2>Path Params for this tab</h2></div>
+        <div class="fg">
+          <div class="ff s1"><label>Username</label><input id="tw_user" placeholder="auto from sidebar"></div>
+          <div class="ff s1"><label>VDMS ID</label><input id="tw_vdms" placeholder="auto from sidebar"></div>
+          <div class="ff s1"><label>Docker Name</label><input id="tw_docker" placeholder="auto from sidebar"></div>
+          <div class="row-actions"><button class="btn btn-primary" onclick="twAll()">Fetch Both</button></div>
+        </div>
+        <div style="margin-top:12px;font-size:11px;color:#475569;font-family:'Consolas',monospace;background:#0a0c14;border:1px solid #1e2235;border-radius:5px;padding:8px 12px">
+          Client → GET /vdms/asset/{u}/{v}/{d}/device-count → vdms-service :8089 → Dapr → device-asset :8085
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2>Device Count via VDMS</h2><span class="ep">GET /vdms/asset/{u}/{v}/{d}/device-count</span><button class="btn btn-neutral btn-sm" onclick="twCount()">Refresh</button></div>
+        <div id="tw-stats" class="stats-grid"><div style="color:#475569;font-size:13px;padding:8px 0">—</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr">
+          <h2>Devices via VDMS</h2><span class="ep">GET /vdms/asset/{u}/{v}/{d}/devices</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span id="tw-badge" style="font-size:12px;color:#64748b"></span>
+            <button class="btn btn-neutral btn-sm" onclick="twDevices()">Refresh</button>
+          </div>
+        </div>
+        <input id="tw-filter" class="search-input" placeholder="Filter by name, type, IP, vendor…" oninput="twFilter()" disabled>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Type</th><th>IP Address</th><th>Vendor</th><th>Status</th></tr></thead>
+            <tbody id="tw-tbody"><tr><td colspan="5" class="tbl-empty">Click Fetch Both to load</td></tr></tbody>
+          </table>
+        </div>
+        <div id="tw-msg"></div>
+      </div>
+
+    </div>
+
+    <!-- ══ AUDIT LOG ══ -->
+    <div id="tab-audit" class="panel">
+
+      <div class="card">
+        <div class="card-hdr"><h2>Audit Log</h2><span class="ep">GET /vdms/audit-log</span></div>
+        <div class="fg">
+          <div class="ff s1"><label>VDMS ID (leave blank for all)</label><input id="au_vdms" placeholder="auto from sidebar"></div>
+          <div class="ff s1">
+            <label>Page / Page Size</label>
+            <div style="display:flex;gap:6px"><input id="au_pg" value="0" style="width:70px"><input id="au_ps" value="20" style="width:70px"></div>
+          </div>
+          <div class="row-actions"><button class="btn btn-primary" onclick="loadAudit()">Load</button><button class="btn btn-neutral btn-sm" onclick="loadAuditAll()">All Entries</button></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><h2 id="au-title">Results</h2></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Action</th><th>Device ID</th><th>User</th><th>Message</th><th>Time</th></tr></thead>
+            <tbody id="au-tbody"><tr><td colspan="6" class="tbl-empty">Click Load to fetch audit entries</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ RAW ══ -->
+    <div id="tab-raw" class="panel">
+      <div class="card">
+        <div class="card-hdr"><h2>Raw Request</h2></div>
+        <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:10px">
+          <div class="ff" style="width:100px">
+            <label>Method</label>
+            <select id="raw_m" style="background:#0f1117;border:1px solid #2d3148;color:#e2e8f0;border-radius:5px;padding:7px 10px;font-size:13px">
+              <option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option>
+            </select>
+          </div>
+          <div class="ff" style="flex:1">
+            <label>Path (appended to Gateway URL)</label>
+            <input id="raw_path" value="/vdms/id" placeholder="/asset/user/admin/vdms/VDMS760/docker/right_wing/devices">
+          </div>
+        </div>
+        <div class="ff">
+          <label>Body (JSON — leave empty for GET)</label>
+          <textarea id="raw_body" rows="5" placeholder='{"key": "value"}'></textarea>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="sendRaw()">Send</button>
+          <button class="btn btn-neutral btn-sm" onclick="$('raw_res').textContent='';$('raw_res').style.display='none'">Clear</button>
+        </div>
+        <pre id="raw_res" class="res" style="display:none"></pre>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /body -->
+</div><!-- /app -->
+
+<script>
+// ── Core helpers ──────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const gw     = () => $('s_gw').value.replace(/\/$/, '');
+const user   = () => $('s_user').value.trim();
+const vdmsId = () => $('s_vdms').value.trim();
+const docker = () => $('s_docker').value.trim();
+const aBase  = () => `${gw()}/asset/user/${user()}/vdms/${vdmsId()}/docker/${docker()}`;
+
+function hdrs() {
+  const h = { 'Content-Type': 'application/json' };
+  const t = $('s_token').value.trim();
+  if (t) h['Authorization'] = 'Bearer ' + t;
+  return h;
+}
+
+async function go(url, opts = {}) {
+  try {
+    const res = await fetch(url, { headers: hdrs(), ...opts });
+    let body;
+    try { body = await res.json(); } catch { body = await res.text().catch(() => ''); }
+    return { ok: res.ok, status: res.status, body };
+  } catch (e) {
+    return { ok: false, status: 0, body: e.message };
+  }
+}
+
+function showMsg(elId, text, type) {
+  const el = $(elId);
+  if (el) el.innerHTML = `<div class="msg msg-${type}">${text}</div>`;
+}
+
+function showRes(elId, data) {
+  const el = $(elId);
+  el.style.display = 'block';
+  el.textContent = pretty(data);
+}
+
+function pretty(v) {
+  try { return JSON.stringify(typeof v === 'string' ? JSON.parse(v) : v, null, 2); }
+  catch { return String(v); }
+}
+
+function tab(name, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  $('tab-' + name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'twoway') twSync();
+  if (name === 'audit') { if (!$('au_vdms').value) $('au_vdms').value = vdmsId(); }
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+async function autoFillVdms() {
+  const r = await go(gw() + '/vdms/id');
+  if (r.ok && r.body?.vdmsId) {
+    $('s_vdms').value = r.body.vdmsId;
+    $('s_hint').textContent = '✓ Set: ' + r.body.vdmsId;
+  } else {
+    $('s_hint').style.color = '#ef4444';
+    $('s_hint').textContent = 'Error ' + r.status;
+  }
+}
+
+// ── Overview ──────────────────────────────────────────────────────────────────
+async function ping() {
+  const checks = [
+    { url: gw() + '/vdms/id',                                                dots: ['dot-gw',  'h-gw'],    label: 'Gateway :8080'       },
+    { url: gw() + '/asset/user/admin/vdms/test/docker/test/getdevicecount',  dots: ['dot-asset','h-asset'], label: 'Device-Asset :8085'  },
+    { url: gw() + '/vdms/id',                                                dots: ['dot-vdms', 'h-vdms'],  label: 'VDMS :8089'          },
+  ];
+  const log = $('ping-log');
+  log.style.display = 'block'; log.textContent = 'Pinging…';
+  const lines = [];
+  for (const c of checks) {
+    const r = await go(c.url);
+    const up = r.status > 0 && r.status < 500;
+    c.dots.forEach(id => { const d = $(id); if (d) d.className = 'dot ' + (up ? 'up' : 'down'); });
+    lines.push(`${up ? '✓' : '✗'} ${c.label}  →  HTTP ${r.status}`);
+  }
+  log.textContent = lines.join('\n');
+}
+
+async function loadVdmsDetails() {
+  const r = await go(gw() + '/vdms/details');
+  const grid = $('vdms-details-grid');
+  if (!r.ok) { showMsg('vdms-details-msg', `Error ${r.status}`, 'err'); grid.style.display = 'none'; return; }
+  $('vdms-details-msg').innerHTML = '';
+  grid.style.display = 'grid';
+  const d = r.body || {};
+  const keys = ['id','property_name','address','city','state','country','zip','status','activation_status','location','timezone','deployment_type'];
+  grid.innerHTML = keys.filter(k => d[k] != null).map(k =>
+    `<div class="ff"><label>${k}</label><input readonly value="${String(d[k]).replace(/"/g,'&quot;')}"></div>`
+  ).join('');
+}
+
+async function loadDeviceCount() {
+  const r = await go(`${aBase()}/getdevicecount?assignee=${$('ov_assignee').value || 'all'}`);
+  const el = $('ov-stats');
+  if (!r.ok) { showMsg('ov-stats-msg', `Error ${r.status}`, 'err'); return; }
+  $('ov-stats-msg').innerHTML = '';
+  const colors = { online_device_count: 'g', offline_device_count: 'r', archived_device_count: 'a' };
+  el.innerHTML = Object.entries(r.body || {}).map(([k, v]) =>
+    `<div class="stat ${colors[k]||''}"><div class="v">${v}</div><div class="l">${k.replace(/_device_count|_count/g,'').replace(/_/g,' ')}</div></div>`
+  ).join('') || '<div style="color:#475569">No data</div>';
+}
+
+async function loadAlerts() {
+  const r = await go(`${aBase()}/getalertmessages`);
+  if (!r.ok) { showMsg('alerts-msg', `Error ${r.status}: ${JSON.stringify(r.body)}`, 'err'); return; }
+  $('alerts-msg').innerHTML = '';
+  showRes('alerts-res', r.body);
+}
+
+// ── Devices ───────────────────────────────────────────────────────────────────
+let allDevs = [], editId = null;
+
+async function loadDevices() {
+  const r = await go(aBase() + '/devices');
+  const tbody = $('dev-tbody');
+  if (!r.ok) { tbody.innerHTML = `<tr><td colspan="6"><div class="msg msg-err">Error ${r.status}: ${JSON.stringify(r.body)}</div></td></tr>`; return; }
+  allDevs = Array.isArray(r.body) ? r.body : [];
+  $('dev-badge').textContent = `${allDevs.length} device${allDevs.length !== 1 ? 's' : ''}`;
+  renderDevs(allDevs);
+}
+
+function renderDevs(devs) {
+  const tbody = $('dev-tbody');
+  if (!devs.length) { tbody.innerHTML = '<tr><td colspan="6" class="tbl-empty">No devices found</td></tr>'; return; }
+  tbody.innerHTML = devs.map((d, i) => {
+    const name = d.user_data_name || d.display_name || '—';
+    const id   = d.id || d.device_id || '';
+    return `<tr onclick="$('del_ids').value='${id}'" style="cursor:pointer">
+      <td>
+        <div style="font-weight:500">${name}</div>
+        <div style="font-size:10px;color:#475569;font-family:monospace;margin-top:2px">${id}</div>
+      </td>
+      <td><span class="badge badge-blue">${d.type || '—'}</span></td>
+      <td style="font-family:monospace;font-size:12px">${d.ip_address || '—'}</td>
+      <td>${d.vendor || '—'}</td>
+      <td><span class="badge ${d.status==='online'?'badge-green':d.status==='offline'?'badge-red':'badge-gray'}">${d.status || '—'}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-neutral btn-sm" onclick="event.stopPropagation();fillEdit(${i})">Edit</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:4px" onclick="event.stopPropagation();quickDel('${id}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function fillEdit(i) {
+  const d = allDevs[i];
+  editId = d.id || d.device_id || '';
+  $('df_name').value   = d.user_data_name || d.display_name || '';
+  $('df_type').value   = d.type || '';
+  $('df_ip').value     = d.ip_address || '';
+  $('df_mac').value    = d.mac_address || '';
+  $('df_vendor').value = d.vendor || '';
+  $('df_desc').value   = d.description || '';
+  $('dev-form-title').textContent = 'Edit Device';
+  $('dev-form-ep').textContent = `POST /asset/…/device/${editId}/edit`;
+  $('df_submit').textContent = 'Save Changes';
+  $('df_submit').className = 'btn btn-primary';
+  $('df_cancel').style.display = '';
+  $('df_msg').innerHTML = '';
+  $('dev-form-card').scrollIntoView({ behavior: 'smooth' });
+}
+
+function cancelEdit() {
+  editId = null; clearForm();
+  $('dev-form-title').textContent = 'Add Device';
+  $('dev-form-ep').textContent = 'POST /asset/…/adddevice';
+  $('df_submit').textContent = 'Add Device';
+  $('df_submit').className = 'btn btn-success';
+  $('df_cancel').style.display = 'none';
+}
+
+function clearForm() {
+  ['df_name','df_type','df_ip','df_mac','df_vendor','df_desc'].forEach(id => $(id).value = '');
+  $('df_msg').innerHTML = '';
+}
+
+async function submitDevice() {
+  const name = $('df_name').value.trim();
+  if (!name) { showMsg('df-msg', 'Device name is required.', 'err'); return; }
+  const body = {
+    user_data_name: name, display_name: name,
+    type: $('df_type').value.trim() || 'generic',
+    ip_address: $('df_ip').value.trim(),
+    mac_address: $('df_mac').value.trim(),
+    vendor: $('df_vendor').value.trim(),
+    description: $('df_desc').value.trim(),
+    onboard_data: { assignee_email: '', device_onboard_status_assignees: [] }
+  };
+  const url = editId ? `${aBase()}/device/${editId}/edit` : `${aBase()}/adddevice`;
+  const r = await go(url, { method: 'POST', body: JSON.stringify(body) });
+  if (r.ok) { showMsg('df-msg', editId ? 'Device updated.' : 'Device added.', 'ok'); cancelEdit(); loadDevices(); }
+  else showMsg('df-msg', `Error ${r.status}: ${JSON.stringify(r.body)}`, 'err');
+}
+
+async function quickDel(id) {
+  if (!confirm(`Delete device ${id}?`)) return;
+  const r = await go(`${aBase()}/deletedevices`, { method: 'DELETE', body: JSON.stringify([id]) });
+  if (r.ok) loadDevices();
+  else showMsg('del-msg', `Error ${r.status}: ${JSON.stringify(r.body)}`, 'err');
+}
+
+async function deleteDevices() {
+  const raw = $('del_ids').value.trim();
+  if (!raw) { showMsg('del-msg', 'Enter at least one device ID.', 'err'); return; }
+  const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
+  if (!confirm(`Delete ${ids.length} device(s)?`)) return;
+  const r = await go(`${aBase()}/deletedevices`, { method: 'DELETE', body: JSON.stringify(ids) });
+  if (r.ok) { showMsg('del-msg', `${ids.length} device(s) deleted.`, 'ok'); $('del_ids').value = ''; loadDevices(); }
+  else showMsg('del-msg', `Error ${r.status}: ${JSON.stringify(r.body)}`, 'err');
+}
+
+async function getDeviceById() {
+  const id = $('gd_id').value.trim();
+  if (!id) return;
+  const r = await go(`${aBase()}/device/${id}/getdevice`);
+  showRes('gd-res', r.body);
+}
+
+async function getDeviceSensors() {
+  const id = $('sens_id').value.trim();
+  if (!id) return;
+  const r = await go(`${aBase()}/device/${id}/getalldevicesensors`);
+  showRes('sens-res', r.body);
+}
+
+// ── Search & Filter ───────────────────────────────────────────────────────────
+async function quickFilter() {
+  const key  = $('qf_key').value.trim();
+  const url  = `${aBase()}/getfilterdevice?condition=${$('qf_cond').value}&pageno=${$('qf_pg').value}&pagesize=${$('qf_ps').value}${key ? '&searchKey=' + encodeURIComponent(key) : ''}`;
+  const r = await go(url);
+  showRes('qf-res', r.body);
+  renderSRResults(r, `Filter${key ? ' "' + key + '"' : ''}`);
+}
+
+async function doSearch() {
+  const val = $('sr_val').value.trim();
+  if (!val) return;
+  const body = { column: $('sr_col').value.trim() || 'all', value: val };
+  const r = await go(`${aBase()}/searchdevices?condition=${$('sr_cond').value}&pageno=${$('sr_pg').value}&pagesize=${$('sr_ps').value}`, { method: 'POST', body: JSON.stringify(body) });
+  renderSRResults(r, `Search "${val}"`);
+}
+
+async function doSort() {
+  const col = $('so_col').value.trim();
+  if (!col) return;
+  const body = { column: col, order: $('so_ord').value };
+  const r = await go(`${aBase()}/sortdevices?condition=all&pageno=${$('so_pg').value}&pagesize=${$('so_ps').value}`, { method: 'POST', body: JSON.stringify(body) });
+  renderSRResults(r, `Sort by ${col} (${$('so_ord').value})`);
+}
+
+async function doFilter() {
+  let body;
+  try { body = JSON.parse($('fd_body').value || '[]'); } catch { showMsg('sr-card', 'Invalid JSON', 'err'); return; }
+  const r = await go(`${aBase()}/filterdevices?condition=${$('fd_cond').value}&pageno=${$('fd_pg').value}&pagesize=${$('fd_ps').value}`, { method: 'POST', body: JSON.stringify(body) });
+  renderSRResults(r, 'Filter (body)');
+}
+
+async function doSSF() {
+  let body;
+  try { body = JSON.parse($('ssf_body').value || '{}'); } catch { showMsg('ssf-count-msg', 'Invalid JSON', 'err'); return; }
+  const r = await go(`${aBase()}/searchsortfilterdevices?condition=${$('ssf_cond').value}&pageno=${$('ssf_pg').value}&pagesize=${$('ssf_ps').value}&onboard_status=${$('ssf_ob').value}`, { method: 'POST', body: JSON.stringify(body) });
+  renderSRResults(r, 'Search+Sort+Filter');
+}
+
+async function doSSFCount() {
+  let body;
+  try { body = JSON.parse($('ssf_body').value || '{}'); } catch { showMsg('ssf-count-msg', 'Invalid JSON', 'err'); return; }
+  const r = await go(`${aBase()}/searchsortfilterdevicescount?condition=${$('ssf_cond').value}&onboard_status=${$('ssf_ob').value}`, { method: 'POST', body: JSON.stringify(body) });
+  showMsg('ssf-count-msg', `Count result: ${JSON.stringify(r.body)}`, r.ok ? 'info' : 'err');
+}
+
+async function doExport() {
+  let body;
+  try { body = JSON.parse($('exp_body').value || '{}'); } catch { showMsg('exp-msg', 'Invalid JSON', 'err'); return; }
+  const email = $('exp_email').value.trim();
+  const params = new URLSearchParams({ condition: $('exp_cond').value, onboard_status: '123', template_name: $('exp_tpl').value, file_type: $('exp_ft').value });
+  if (email) params.set('email', email);
+  const r = await go(`${aBase()}/exportfiltereddevices?${params}`, { method: 'POST', body: JSON.stringify(body) });
+  showMsg('exp-msg', r.ok ? `Export triggered. ${JSON.stringify(r.body)}` : `Error ${r.status}: ${JSON.stringify(r.body)}`, r.ok ? 'ok' : 'err');
+}
+
+function renderSRResults(r, title) {
+  $('sr-card').style.display = '';
+  const tbody = $('sr-tbody');
+  if (!r.ok) { $('sr-title').textContent = title; tbody.innerHTML = `<tr><td colspan="5"><div class="msg msg-err">Error ${r.status}: ${JSON.stringify(r.body)}</div></td></tr>`; return; }
+  const devs = Array.isArray(r.body) ? r.body : (Array.isArray(r.body?.content) ? r.body.content : []);
+  $('sr-title').textContent = `${title} — ${devs.length} result${devs.length !== 1 ? 's' : ''}`;
+  tbody.innerHTML = devs.length
+    ? devs.map(d => `<tr>
+        <td><strong>${d.user_data_name || d.display_name || '—'}</strong></td>
+        <td><span class="badge badge-blue">${d.type || '—'}</span></td>
+        <td style="font-family:monospace;font-size:12px">${d.ip_address || '—'}</td>
+        <td>${d.vendor || '—'}</td>
+        <td><span class="badge ${d.status==='online'?'badge-green':d.status==='offline'?'badge-red':'badge-gray'}">${d.status || '—'}</span></td>
+      </tr>`).join('')
+    : '<tr><td colspan="5" class="tbl-empty">No results</td></tr>';
+}
+
+function clearSR() {
+  $('sr_val').value = ''; $('sr_col').value = 'all';
+  $('sr-card').style.display = 'none';
+}
+
+// ── Bulk Ops ──────────────────────────────────────────────────────────────────
+async function multiUpdate() {
+  let body;
+  try { body = JSON.parse($('mu_body').value || '[]'); } catch { showMsg('mu-msg', 'Invalid JSON', 'err'); return; }
+  const r = await go(`${aBase()}/devices?assignee=${$('mu_assignee').value}`, { method: 'PUT', body: JSON.stringify(body) });
+  showMsg('mu-msg', r.ok ? `Updated. ${JSON.stringify(r.body)}` : `Error ${r.status}: ${JSON.stringify(r.body)}`, r.ok ? 'ok' : 'err');
+}
+
+async function quickUpdate() {
+  let body;
+  try { body = JSON.parse($('qu_body').value || '{}'); } catch { showMsg('qu-msg', 'Invalid JSON', 'err'); return; }
+  const r = await go(`${aBase()}/devices/quickupdate?assignee=${$('qu_assignee').value}`, { method: 'POST', body: JSON.stringify(body) });
+  showMsg('qu-msg', r.ok ? `Quick update done. ${JSON.stringify(r.body)}` : `Error ${r.status}: ${JSON.stringify(r.body)}`, r.ok ? 'ok' : 'err');
+}
+
+async function archiveDevices() {
+  const raw = $('arc_ids').value.trim();
+  if (!raw) { showMsg('arc-msg', 'Enter at least one device ID.', 'err'); return; }
+  const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
+  const flag = $('arc_flag').value;
+  const r = await go(`${aBase()}/archivedevices?archive=${flag}&assignee=${$('arc_assignee').value}`, { method: 'POST', body: JSON.stringify(ids) });
+  showMsg('arc-msg', r.ok ? `${flag === '1' ? 'Archived' : 'Unarchived'} ${ids.length} device(s).` : `Error ${r.status}: ${JSON.stringify(r.body)}`, r.ok ? 'ok' : 'err');
+}
+
+// ── Virtual Devices ───────────────────────────────────────────────────────────
+async function addVirtualDevice() {
+  let body;
+  try { body = JSON.parse($('vd_add').value || '[]'); } catch { showMsg('vd-add-msg', 'Invalid JSON', 'err'); return; }
+  const formData = new FormData();
+  formData.append('virtual_devices', JSON.stringify(Array.isArray(body) ? body : [body]));
+  formData.append('assignee', $('vd_add_assignee').value);
+  try {
+    const h = {};
+    const t = $('s_token').value.trim();
+    if (t) h['Authorization'] = 'Bearer ' + t;
+    const res = await fetch(`${aBase()}/addvirtualdevice`, { method: 'POST', headers: h, body: formData });
+    const rb = await res.json().catch(() => res.text());
+    showMsg('vd-add-msg', res.ok ? `Virtual device added. ${JSON.stringify(rb)}` : `Error ${res.status}: ${JSON.stringify(rb)}`, res.ok ? 'ok' : 'err');
+  } catch (e) { showMsg('vd-add-msg', e.message, 'err'); }
+}
+
+async function updateVirtualDevice() {
+  let body;
+  try { body = JSON.parse($('vd_upd').value || '[]'); } catch { showMsg('vd-upd-msg', 'Invalid JSON', 'err'); return; }
+  const r = await go(`${aBase()}/updatevirtualdevice`, { method: 'POST', body: JSON.stringify(Array.isArray(body) ? body : [body]) });
+  showMsg('vd-upd-msg', r.ok ? `Updated. ${JSON.stringify(r.body)}` : `Error ${r.status}: ${JSON.stringify(r.body)}`, r.ok ? 'ok' : 'err');
+}
+
+async function deleteVirtualDevice() {
+  const id = $('vd_del_id').value.trim();
+  if (!id) { showMsg('vd-del-msg', 'Enter a virtual device ID.', 'err'); return; }
+  if (!confirm(`Delete virtual device ${id}?`)) return;
+  const r = await go(`${aBase()}/virtual-device/${id}?assignee=${$('vd_del_assignee').value}`, { method: 'DELETE' });
+  showMsg('vd-del-msg', r.ok ? 'Virtual device deleted.' : `Error ${r.status}: ${JSON.stringify(r.body)}`, r.ok ? 'ok' : 'err');
+}
+
+async function syncVirtualStatus() {
+  const id = $('vd_sync_id').value.trim();
+  if (!id) { showMsg('vd-sync-msg', 'Enter a virtual device ID.', 'err'); return; }
+  let body;
+  try { body = JSON.parse($('vd_sync_body').value || '{}'); } catch { showMsg('vd-sync-msg', 'Invalid JSON', 'err'); return; }
+  const r = await go(`${aBase()}/virtual-device/${id}/syncstatus`, { method: 'PUT', body: JSON.stringify(body) });
+  showMsg('vd-sync-msg', r.ok ? `Status synced. ${JSON.stringify(r.body)}` : `Error ${r.status}: ${JSON.stringify(r.body)}`, r.ok ? 'ok' : 'err');
+}
+
+// ── Notes ─────────────────────────────────────────────────────────────────────
+async function getNotes() {
+  const id = $('nt_dev_id').value.trim();
+  if (!id) return;
+  const r = await go(`${aBase()}/device/${id}/notes`);
+  showRes('nt-list-res', r.body);
+}
+
+async function upsertNote() {
+  const devId  = $('nt_add_dev').value.trim();
+  const noteId = $('nt_add_id').value.trim();
+  const text   = $('nt_text').value.trim();
+  if (!devId || !text) { showMsg('nt-add-msg', 'Device ID and note text are required.', 'err'); return; }
+  const body = { note_id: noteId || undefined, note: text };
+  const r = await go(`${aBase()}/device/${devId}/note`, { method: 'POST', body: JSON.stringify(body) });
+  showMsg('nt-add-msg', r.ok ? 'Note saved.' : `Error ${r.status}: ${JSON.stringify(r.body)}`, r.ok ? 'ok' : 'err');
+}
+
+async function deleteNote() {
+  const devId  = $('nt_del_dev').value.trim();
+  const noteId = $('nt_del_note').value.trim();
+  if (!devId || !noteId) { showMsg('nt-del-msg', 'Both Device ID and Note ID are required.', 'err'); return; }
+  if (!confirm(`Delete note ${noteId}?`)) return;
+  const r = await go(`${aBase()}/device/${devId}/note/${noteId}`, { method: 'DELETE' });
+  showMsg('nt-del-msg', r.ok ? 'Note deleted.' : `Error ${r.status}: ${JSON.stringify(r.body)}`, r.ok ? 'ok' : 'err');
+}
+
+// ── Topology ──────────────────────────────────────────────────────────────────
+async function loadTopology() {
+  const r = await go(`${aBase()}/devicetopology`);
+  if (!r.ok) { showMsg('topo-msg', `Error ${r.status}: ${JSON.stringify(r.body)}`, 'err'); return; }
+  $('topo-msg').innerHTML = '';
+  showRes('topo-res', r.body);
+}
+
+async function updateTopology() {
+  let body;
+  try { body = JSON.parse($('topo_upd').value || '[]'); } catch { showMsg('topo-upd-msg', 'Invalid JSON', 'err'); return; }
+  const r = await go(`${aBase()}/updatetopology`, { method: 'POST', body: JSON.stringify(body) });
+  showMsg('topo-upd-msg', r.ok ? 'Topology updated.' : `Error ${r.status}: ${JSON.stringify(r.body)}`, r.ok ? 'ok' : 'err');
+}
+
+async function resetTopology() {
+  if (!confirm('Reset all topology for this docker? This cannot be undone.')) return;
+  const r = await go(`${aBase()}/resettopology`, { method: 'POST' });
+  showMsg('topo-reset-msg', r.ok ? 'Topology reset.' : `Error ${r.status}: ${JSON.stringify(r.body)}`, r.ok ? 'ok' : 'err');
+}
+
+// ── VDMS ↔ Asset ──────────────────────────────────────────────────────────────
+let twCache = [];
+
+function twSync() {
+  if (!$('tw_user').value)   $('tw_user').value   = user();
+  if (!$('tw_vdms').value)   $('tw_vdms').value   = vdmsId();
+  if (!$('tw_docker').value) $('tw_docker').value = docker();
+}
+
+function twBase() {
+  return `${gw()}/vdms/asset/${$('tw_user').value||user()}/${$('tw_vdms').value||vdmsId()}/${$('tw_docker').value||docker()}`;
+}
+
+async function twAll() { twSync(); await Promise.all([twCount(), twDevices()]); }
+
+async function twCount() {
+  twSync();
+  const r = await go(twBase() + '/device-count');
+  const el = $('tw-stats');
+  if (!r.ok) { el.innerHTML = `<div class="msg msg-err">Error ${r.status}: ${JSON.stringify(r.body)}</div>`; return; }
+  const colors = { online_device_count: 'g', offline_device_count: 'r', archived_device_count: 'a' };
+  el.innerHTML = Object.entries(r.body || {}).map(([k, v]) =>
+    `<div class="stat ${colors[k]||''}"><div class="v">${v}</div><div class="l">${k.replace(/_device_count|_count/g,'').replace(/_/g,' ')}</div></div>`
+  ).join('') || '<div style="color:#475569">No data</div>';
+}
+
+async function twDevices() {
+  twSync();
+  const r = await go(twBase() + '/devices');
+  const tbody = $('tw-tbody');
+  $('tw-msg').innerHTML = '';
+  if (!r.ok) {
+    tbody.innerHTML = '<tr><td colspan="5" class="tbl-empty">—</td></tr>';
+    $('tw-msg').innerHTML = `<div class="msg msg-err">Error ${r.status}: ${JSON.stringify(r.body)}</div>`;
+    $('tw-filter').disabled = true; twCache = []; return;
+  }
+  twCache = Array.isArray(r.body) ? r.body : [];
+  $('tw-filter').disabled = false;
+  $('tw-badge').textContent = `${twCache.length} devices`;
+  twRender(twCache);
+}
+
+function twRender(devs) {
+  const tbody = $('tw-tbody');
+  tbody.innerHTML = devs.length
+    ? devs.map(d => `<tr>
+        <td><strong>${d.user_data_name || d.display_name || '—'}</strong></td>
+        <td><span class="badge badge-blue">${d.type || '—'}</span></td>
+        <td style="font-family:monospace;font-size:12px">${d.ip_address || '—'}</td>
+        <td>${d.vendor || '—'}</td>
+        <td><span class="badge ${d.status==='online'?'badge-green':d.status==='offline'?'badge-red':'badge-gray'}">${d.status || '—'}</span></td>
+      </tr>`).join('')
+    : '<tr><td colspan="5" class="tbl-empty">No devices</td></tr>';
+}
+
+function twFilter() {
+  const q = $('tw-filter').value.toLowerCase();
+  if (!q) { twRender(twCache); $('tw-badge').textContent = `${twCache.length} devices`; return; }
+  const f = twCache.filter(d => [d.user_data_name, d.display_name, d.type, d.ip_address, d.vendor].filter(Boolean).join(' ').toLowerCase().includes(q));
+  twRender(f);
+  $('tw-badge').textContent = `${f.length} of ${twCache.length}`;
+}
+
+// ── Audit Log ─────────────────────────────────────────────────────────────────
+async function loadAudit() {
+  const vid = $('au_vdms').value || vdmsId();
+  await renderAudit(`${gw()}/vdms/audit-log?vdmsId=${encodeURIComponent(vid)}&page=${$('au_pg').value}&size=${$('au_ps').value}`, vid);
+}
+
+async function loadAuditAll() {
+  await renderAudit(`${gw()}/vdms/audit-log?page=${$('au_pg').value}&size=${$('au_ps').value}`, null);
+}
+
+async function renderAudit(url, vid) {
+  const r = await go(url);
+  const tbody = $('au-tbody');
+  if (!r.ok) { tbody.innerHTML = `<tr><td colspan="6"><div class="msg msg-err">Error ${r.status}</div></td></tr>`; return; }
+  const rows = Array.isArray(r.body) ? r.body : [];
+  $('au-title').textContent = (vid ? `Audit — ${vid}` : 'All Audit Entries') + ` (${rows.length})`;
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="6" class="tbl-empty">No entries found</td></tr>'; return; }
+  const bc = a => !a ? 'badge-gray' : /add/i.test(a) ? 'badge-green' : /del/i.test(a) ? 'badge-red' : 'badge-blue';
+  tbody.innerHTML = rows.map((e, i) => `<tr>
+    <td style="color:#475569">${e.id || i+1}</td>
+    <td><span class="badge ${bc(e.action)}">${e.action || '—'}</span></td>
+    <td style="font-family:monospace;font-size:11px">${e.affectedRecordId || '—'}</td>
+    <td>${e.userEmail || '—'}</td>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(e.message||'').replace(/"/g,'&quot;')}">${e.message || '—'}</td>
+    <td style="font-family:monospace;font-size:11px;white-space:nowrap">${e.createdAt || '—'}</td>
+  </tr>`).join('');
+}
+
+// ── Raw ───────────────────────────────────────────────────────────────────────
+async function sendRaw() {
+  const method = $('raw_m').value;
+  const body   = $('raw_body').value.trim();
+  const url    = gw() + $('raw_path').value;
+  const opts   = { method };
+  if (body && method !== 'GET') opts.body = body;
+  const r = await go(url, opts);
+  const el = $('raw_res');
+  el.style.display = 'block';
+  el.textContent = `Status: ${r.status}\n\n${pretty(r.body)}`;
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+ping();
+</script>
+</body>
+</html>
