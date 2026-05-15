@@ -8,35 +8,40 @@
 /* ─── Reset & base ─────────────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0b0d14;--surface:#12151f;--card:#1a1d2e;--border:#252840;
-  --text:#e2e8f0;--muted:#64748b;--dim:#94a3b8;
-  --blue:#7c8cf8;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;
-  --purple:#a78bfa;--teal:#2dd4bf;--pink:#f472b6;--orange:#fb923c;
-  --blue-bg:#1e3a5f;--green-bg:#14532d;--red-bg:#450a0a;--amber-bg:#451a03;
-  --purple-bg:#2e1065;--teal-bg:#134e4a;
+  --bg:#ffffff;--surface:#f8fafc;--card:#f1f5f9;--border:#e2e8f0;
+  --text:#1e293b;--muted:#64748b;--dim:#475569;
+  --blue:#4f46e5;--green:#16a34a;--red:#dc2626;--amber:#d97706;
+  --purple:#7c3aed;--teal:#0d9488;--pink:#db2777;--orange:#ea580c;
+  --blue-bg:#dbeafe;--green-bg:#dcfce7;--red-bg:#fee2e2;--amber-bg:#fef3c7;
+  --purple-bg:#ede9fe;--teal-bg:#ccfbf1;
 }
-html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+html,body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:var(--text);font-size:15px}
 
-/* ─── Slide engine ─────────────────────────────────────────────────────── */
-.deck{width:100%;height:100%;position:relative}
+/* ─── Document layout ──────────────────────────────────────────────────── */
+.deck{max-width:1140px;margin:0 auto;padding:40px 24px 80px}
+
 .slide{
-  position:absolute;inset:0;
-  display:none;flex-direction:column;
-  padding:0;overflow:hidden;
+  display:block;
+  margin-bottom:40px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+  background:#fff;
+  box-shadow:0 1px 6px rgba(0,0,0,0.07);
 }
-.slide.active{display:flex}
+.slide.active{display:block}
 
 /* ─── Slide layout ─────────────────────────────────────────────────────── */
 .slide-head{
   background:var(--surface);border-bottom:1px solid var(--border);
-  padding:16px 48px;display:flex;align-items:center;gap:12px;flex-shrink:0
+  padding:16px 40px;display:flex;align-items:center;gap:12px
 }
 .slide-head .num{
   font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--muted);
-  background:var(--card);border:1px solid var(--border);border-radius:4px;
+  background:#fff;border:1px solid var(--border);border-radius:4px;
   padding:3px 8px;white-space:nowrap
 }
-.slide-head h1{font-size:20px;font-weight:700;color:#fff}
+.slide-head h1{font-size:20px;font-weight:700;color:var(--text)}
 .slide-head .tag{
   margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.08em;
   padding:4px 12px;border-radius:20px;white-space:nowrap
@@ -44,39 +49,23 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .tag-dapr   {background:var(--blue-bg);color:var(--blue)}
 .tag-arch   {background:var(--purple-bg);color:var(--purple)}
 .tag-flow   {background:var(--teal-bg);color:var(--teal)}
-.tag-ref    {background:#1a1a2e;color:var(--amber)}
-.tag-infra  {background:#1a1a1a;color:var(--dim)}
+.tag-ref    {background:var(--amber-bg);color:var(--amber)}
+.tag-infra  {background:var(--card);color:var(--dim)}
 
 .slide-body{
-  flex:1;overflow-y:auto;padding:28px 48px;display:flex;flex-direction:column;gap:20px
+  padding:28px 40px;display:flex;flex-direction:column;gap:20px
 }
-.slide-body.cols2{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-content:start}
-.slide-body.cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-content:start}
-
-/* ─── Navigation ───────────────────────────────────────────────────────── */
-.nav{
-  background:var(--surface);border-top:1px solid var(--border);
-  padding:10px 48px;display:flex;align-items:center;gap:14px;flex-shrink:0
-}
-.nav .progress-wrap{flex:1;height:4px;background:var(--border);border-radius:2px}
-.nav .progress-bar{height:4px;background:var(--blue);border-radius:2px;transition:width .3s}
-.nav .counter{font-size:12px;color:var(--muted);white-space:nowrap}
-.nav-btn{
-  background:var(--card);border:1px solid var(--border);color:var(--text);
-  padding:7px 16px;border-radius:5px;cursor:pointer;font-size:13px;font-weight:500;
-  display:flex;align-items:center;gap:5px
-}
-.nav-btn:hover{background:var(--border)}
-.nav-btn:disabled{opacity:.3;cursor:default}
+.slide-body.cols2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.slide-body.cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
 
 /* ─── Cards ────────────────────────────────────────────────────────────── */
-.box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px}
+.box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px}
 .box h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px}
-.box h3{font-size:15px;font-weight:600;color:#c7d2fe;margin-bottom:8px}
+.box h3{font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px}
 .box p{color:var(--dim);line-height:1.6;font-size:14px}
 
 .hero-box{
-  background:linear-gradient(135deg,#1a1d2e 0%,#0f1117 100%);
+  background:linear-gradient(135deg,#eef2ff 0%,#f0fdfa 100%);
   border:1px solid var(--border);border-radius:12px;padding:32px;text-align:center
 }
 .hero-box .big{font-size:52px;font-weight:800;color:var(--blue);line-height:1}
@@ -93,21 +82,21 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .svc .port{font-size:11px;font-family:monospace;opacity:.7}
 .svc .note{font-size:10px;opacity:.6;margin-top:3px}
 
-.svc-gw   {border-color:var(--blue);background:#0d1628;color:var(--blue)}
-.svc-asset{border-color:var(--green);background:#0a1f12;color:var(--green)}
-.svc-vdms {border-color:var(--purple);background:#150d2e;color:var(--purple)}
-.svc-dapr {border-color:var(--orange);background:#1a0f05;color:var(--orange)}
-.svc-redis{border-color:var(--red);background:#1a0505;color:var(--red)}
-.svc-mysql{border-color:var(--amber);background:#1a1005;color:var(--amber)}
-.svc-ui   {border-color:var(--teal);background:#041a18;color:var(--teal)}
-.svc-browser{border-color:var(--pink);background:#1a0815;color:var(--pink)}
+.svc-gw   {border-color:var(--blue);background:#eef2ff;color:var(--blue)}
+.svc-asset{border-color:var(--green);background:#f0fdf4;color:var(--green)}
+.svc-vdms {border-color:var(--purple);background:#f5f3ff;color:var(--purple)}
+.svc-dapr {border-color:var(--orange);background:#fff7ed;color:var(--orange)}
+.svc-redis{border-color:var(--red);background:#fef2f2;color:var(--red)}
+.svc-mysql{border-color:var(--amber);background:#fffbeb;color:var(--amber)}
+.svc-ui   {border-color:var(--teal);background:#f0fdfa;color:var(--teal)}
+.svc-browser{border-color:var(--pink);background:#fdf2f8;color:var(--pink)}
 
 .arrow{
   display:flex;align-items:center;gap:6px;font-size:12px;
   color:var(--muted);padding:3px 6px;
 }
 .arrow .line{flex:1;height:1px;background:var(--border)}
-.arrow .lbl{font-size:10px;white-space:nowrap;font-family:monospace;background:var(--card);padding:1px 5px;border-radius:3px;border:1px solid var(--border)}
+.arrow .lbl{font-size:10px;white-space:nowrap;font-family:monospace;background:#fff;padding:1px 5px;border-radius:3px;border:1px solid var(--border)}
 
 .flow-row{display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto;padding:4px 0}
 .flow-arrow{padding:0 8px;color:var(--muted);font-size:18px;flex-shrink:0}
@@ -135,29 +124,29 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .step-body .desc{font-size:13px;color:var(--dim);line-height:1.5}
 .step-body .url{
   font-family:monospace;font-size:11px;color:var(--teal);
-  background:var(--bg);border:1px solid var(--border);
+  background:var(--surface);border:1px solid var(--border);
   border-radius:4px;padding:4px 8px;margin-top:5px;display:inline-block
 }
 
 /* ─── Code block ─────────────────────────────────────────────────────────── */
 .code{
-  background:var(--bg);border:1px solid var(--border);border-radius:6px;
+  background:var(--surface);border:1px solid var(--border);border-radius:6px;
   padding:12px 16px;font-family:'Consolas',monospace;font-size:12px;
-  line-height:1.6;overflow-x:auto;color:#a5f3fc
+  line-height:1.6;overflow-x:auto;color:var(--text)
 }
-.code .k{color:#c084fc} /* keyword */
-.code .s{color:#86efac} /* string */
-.code .c{color:#475569} /* comment */
-.code .t{color:#fde68a} /* type */
-.code .m{color:#fb923c} /* method */
+.code .k{color:var(--purple)}
+.code .s{color:var(--green)}
+.code .c{color:var(--muted)}
+.code .t{color:var(--amber)}
+.code .m{color:var(--orange)}
 
 /* ─── Table ───────────────────────────────────────────────────────────── */
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;padding:8px 12px;background:var(--bg);color:var(--muted);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+th{text-align:left;padding:8px 12px;background:var(--surface);color:var(--muted);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
 td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--dim);vertical-align:top}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:#181b28}
-td code{font-family:monospace;font-size:11px;color:var(--teal);background:var(--bg);padding:1px 5px;border-radius:3px;border:1px solid var(--border)}
+tr:hover td{background:#f8fafc}
+td code{font-family:monospace;font-size:11px;color:var(--teal);background:var(--teal-bg);padding:1px 5px;border-radius:3px;border:1px solid #a7f3d0}
 td .pill{
   display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600
 }
@@ -172,10 +161,10 @@ td .pill-red   {background:var(--red-bg);color:var(--red)}
   border-left:3px solid;border-radius:0 6px 6px 0;
   padding:12px 16px;font-size:13px;line-height:1.6;margin-top:8px
 }
-.callout.info  {border-color:var(--blue);background:var(--blue-bg);color:#bfdbfe}
-.callout.success{border-color:var(--green);background:var(--green-bg);color:#bbf7d0}
-.callout.warn  {border-color:var(--amber);background:var(--amber-bg);color:#fde68a}
-.callout b{font-weight:700;color:#fff}
+.callout.info  {border-color:var(--blue);background:var(--blue-bg);color:#1e3a8a}
+.callout.success{border-color:var(--green);background:var(--green-bg);color:#14532d}
+.callout.warn  {border-color:var(--amber);background:var(--amber-bg);color:#78350f}
+.callout b{font-weight:700;color:inherit}
 
 /* ─── Badge ───────────────────────────────────────────────────────────── */
 .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
@@ -186,21 +175,20 @@ td .pill-red   {background:var(--red-bg);color:var(--red)}
 .badge-red   {background:var(--red-bg);color:var(--red)}
 .badge-teal  {background:var(--teal-bg);color:var(--teal)}
 
-/* ─── Title slide ─────────────────────────────────────────────────────── */
+/* ─── Title section ───────────────────────────────────────────────────── */
 #s0{
-  background:radial-gradient(ellipse at 30% 40%,#1a1d3f 0%,var(--bg) 60%);
-  display:flex;align-items:center;justify-content:center
+  background:linear-gradient(135deg,#eef2ff 0%,#f0fdfa 100%);
 }
-.title-inner{text-align:center;max-width:700px}
-.title-inner .headline{font-size:58px;font-weight:900;line-height:1;letter-spacing:-.02em}
+.title-inner{text-align:center;max-width:700px;margin:0 auto;padding:48px 24px}
+.title-inner .headline{font-size:52px;font-weight:900;line-height:1;letter-spacing:-.02em;color:var(--text)}
 .title-inner .headline span{color:var(--blue)}
 .title-inner .sub{font-size:18px;color:var(--dim);margin-top:14px;line-height:1.5}
 .title-inner .chips{display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap}
 .title-inner .chip{
   border:1px solid var(--border);border-radius:20px;padding:6px 16px;
-  font-size:13px;color:var(--dim);background:var(--card)
+  font-size:13px;color:var(--dim);background:#fff
 }
-.title-inner .key{font-size:12px;color:var(--muted);margin-top:28px}
+.title-inner .key{display:none}
 
 /* ─── Diagram: full system ────────────────────────────────────────────── */
 .sys-diagram{
@@ -216,15 +204,15 @@ td .pill-red   {background:var(--red-bg);color:var(--red)}
   max-width:500px;margin:0 auto
 }
 .dapr-pair .app-side{
-  flex:1;padding:16px;background:#0a1f12;
+  flex:1;padding:16px;background:#f0fdf4;
   display:flex;flex-direction:column;align-items:center;gap:8px;
   border-right:2px dashed var(--border)
 }
 .dapr-pair .dapr-side{
-  flex:1;padding:16px;background:#1a0f05;
+  flex:1;padding:16px;background:#fff7ed;
   display:flex;flex-direction:column;align-items:center;gap:8px
 }
-.dapr-pair .label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;opacity:.6}
+.dapr-pair .label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
 .dapr-pair .icon{font-size:32px}
 .dapr-pair .name{font-size:14px;font-weight:700}
 .dapr-pair .desc{font-size:11px;color:var(--muted);text-align:center;line-height:1.4}
@@ -236,14 +224,61 @@ td .pill-red   {background:var(--red-bg);color:var(--red)}
 
 /* ─── Scrollbar ───────────────────────────────────────────────────────── */
 ::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-track{background:var(--surface)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ─── Inline code overrides for light theme ───────────────────────────── */
+code{font-family:monospace;font-size:12px;color:var(--teal)}
+
+/* ─── Print / PDF ────────────────────────────────────────────────────── */
+@page{size:A4 landscape;margin:12mm 16mm}
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  html,body{background:#fff!important;font-size:12px}
+  .deck{max-width:100%;padding:0}
+  .slide{
+    page-break-inside:avoid;break-inside:avoid;
+    margin-bottom:14px;box-shadow:none;
+    border:1px solid #cbd5e1;border-radius:8px;overflow:hidden
+  }
+  .slide-head{padding:10px 24px}
+  .slide-head h1{font-size:15px}
+  .slide-body{padding:16px 24px;gap:14px}
+  .slide-body.cols2{grid-template-columns:1fr 1fr;gap:14px}
+  .slide-body.cols3{grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .box{padding:12px;border-radius:6px}
+  .box h3{font-size:13px;margin-bottom:6px}
+  .box p,.step-body .desc,.callout{font-size:11px}
+  .code{font-size:10px;padding:8px 12px}
+  th,td{padding:5px 8px;font-size:11px}
+  .svc{min-width:80px;padding:6px 10px}
+  .svc .name{font-size:11px}
+  .svc .port,.svc .note{font-size:9px}
+  .step{padding:8px 0}
+  .step-n{width:22px;height:22px;font-size:10px}
+  .step-body .title{font-size:12px}
+  .step-body .url{font-size:9px;padding:3px 6px}
+  .flow-arrow{font-size:14px;padding:0 4px}
+  .flow-row{flex-wrap:nowrap}
+  .title-inner{padding:28px 16px}
+  .title-inner .headline{font-size:38px}
+  .title-inner .sub{font-size:14px}
+  .title-inner .chip{font-size:11px;padding:4px 10px}
+  .callout{padding:8px 12px;font-size:11px;margin-top:6px}
+  .same-net{font-size:10px;padding:4px 8px}
+  .dapr-pair .desc{font-size:10px}
+  .dapr-pair .name{font-size:12px}
+  .dapr-pair .icon{font-size:22px}
+  .tag{font-size:10px;padding:3px 8px}
+  .num{font-size:10px}
+  #s0{page-break-after:always}
+}
 </style>
 </head>
 <body>
 <div class="deck" id="deck">
 
-<!-- ══════════════════════════════════════════════════════ SLIDE 0 — TITLE -->
+<!-- ══════════════════════════════════════════════════════ SECTION 0 — TITLE -->
 <div class="slide active" id="s0">
   <div class="title-inner">
     <div class="headline">Sclara <span>2.0</span></div>
@@ -260,7 +295,7 @@ td .pill-red   {background:var(--red-bg);color:var(--red)}
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════ SLIDE 1 — BIG PICTURE -->
+<!-- ════════════════════════════════════════════════ SECTION 1 — BIG PICTURE -->
 <div class="slide" id="s1">
   <div class="slide-head">
     <span class="num">01</span>
@@ -321,7 +356,7 @@ td .pill-red   {background:var(--red-bg);color:var(--red)}
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════ SLIDE 2 — WHAT IS DAPR -->
+<!-- ════════════════════════════════════════════════ SECTION 2 — WHAT IS DAPR -->
 <div class="slide" id="s2">
   <div class="slide-head">
     <span class="num">02</span>
@@ -345,7 +380,7 @@ td .pill-red   {background:var(--red-bg);color:var(--red)}
             <div class="step-n blue">1</div>
             <div class="step-body">
               <div class="title">Service Discovery</div>
-              <div class="desc">You call <code style="font-family:monospace;color:var(--teal);font-size:12px">invoke/vdms-service/method/vdms/id</code> — Dapr finds where that service actually is.</div>
+              <div class="desc">You call <code>invoke/vdms-service/method/vdms/id</code> — Dapr finds where that service actually is.</div>
             </div>
           </div>
           <div class="step">
@@ -411,7 +446,7 @@ td .pill-red   {background:var(--red-bg);color:var(--red)}
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════ SLIDE 3 — SERVICES OVERVIEW -->
+<!-- ═══════════════════════════════════════════ SECTION 3 — SERVICES OVERVIEW -->
 <div class="slide" id="s3">
   <div class="slide-head">
     <span class="num">03</span>
@@ -484,7 +519,7 @@ td .pill-red   {background:var(--red-bg);color:var(--red)}
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════ SLIDE 4 — API GATEWAY -->
+<!-- ═══════════════════════════════════════════════ SECTION 4 — API GATEWAY -->
 <div class="slide" id="s4">
   <div class="slide-head">
     <span class="num">04</span>
@@ -562,7 +597,7 @@ td .pill-red   {background:var(--red-bg);color:var(--red)}
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════ SLIDE 5 — DEVICE ASSET SVC -->
+<!-- ══════════════════════════════════════════ SECTION 5 — DEVICE ASSET SVC -->
 <div class="slide" id="s5">
   <div class="slide-head">
     <span class="num">05</span>
@@ -630,7 +665,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════ SLIDE 6 — VDMS SERVICE -->
+<!-- ══════════════════════════════════════════════ SECTION 6 — VDMS SERVICE -->
 <div class="slide" id="s6">
   <div class="slide-head">
     <span class="num">06</span>
@@ -706,7 +741,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════ SLIDE 7 — CHANNEL 1: INVOKE -->
+<!-- ══════════════════════════════════════════ SECTION 7 — CHANNEL 1: INVOKE -->
 <div class="slide" id="s7">
   <div class="slide-head">
     <span class="num">07</span>
@@ -759,7 +794,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
             <div class="step-n green">1</div>
             <div class="step-body">
               <div class="title">Service calls VdmsClient</div>
-              <div class="desc">e.g., <code style="font-family:monospace;font-size:11px;color:var(--teal)">vdmsClient.getVdmsDetails()</code> inside a service method</div>
+              <div class="desc">e.g., <code>vdmsClient.getVdmsDetails()</code> inside a service method</div>
             </div>
           </div>
           <div class="step">
@@ -773,7 +808,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
             <div class="step-n green">3</div>
             <div class="step-body">
               <div class="title">app-dapr resolves "vdms-service"</div>
-              <div class="desc">Dapr looks up the container with app-id <code style="font-family:monospace;font-size:11px;color:var(--teal)">vdms-service</code> and forwards to its sidecar (vdms-dapr) over the Docker bridge network.</div>
+              <div class="desc">Dapr looks up the container with app-id <code>vdms-service</code> and forwards to its sidecar (vdms-dapr) over the Docker bridge network.</div>
             </div>
           </div>
           <div class="step">
@@ -797,7 +832,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════ SLIDE 8 — CHANNEL 2 PUBSUB -->
+<!-- ════════════════════════════════════════════ SECTION 8 — CHANNEL 2 PUBSUB -->
 <div class="slide" id="s8">
   <div class="slide-head">
     <span class="num">08</span>
@@ -881,7 +916,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
   </div>
 </div>
 
-<!-- ════════════════════════════════════════ SLIDE 9 — CHANNEL 3: 2-WAY -->
+<!-- ════════════════════════════════════════ SECTION 9 — CHANNEL 3: 2-WAY -->
 <div class="slide" id="s9">
   <div class="slide-head">
     <span class="num">09</span>
@@ -942,7 +977,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
   <span class="k">public</span> Object <span class="m">getDevices</span>(String u, String v, String d) {
     <span class="k">return</span> <span class="m">invoke</span>(
       <span class="s">"user/"</span>+u+<span class="s">"/vdms/"</span>+v+<span class="s">"/docker/"</span>+d+<span class="s">"/devices"</span>,
-      Object.class  <span class="c">// device-asset returns JSON array</span>
+      Object.class
     );
   }
 
@@ -975,7 +1010,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
   </div>
 </div>
 
-<!-- ═══════════════════════════════ SLIDE 10 — FLOW: DEVICE LIST QUERY -->
+<!-- ═══════════════════════════════════════ SECTION 10 — FLOW: DEVICE LIST QUERY -->
 <div class="slide" id="s10">
   <div class="slide-head">
     <span class="num">10</span>
@@ -992,14 +1027,14 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
           <div class="step-body">
             <div class="title">Browser / Test UI sends request</div>
             <div class="url">GET http://localhost:8080/asset/user/admin/vdms/VDMS760/docker/right_wing/devices</div>
-            <div class="desc" style="margin-top:5px">With header: <code style="font-family:monospace;font-size:11px;color:var(--teal)">Authorization: Bearer &lt;JWT&gt;</code></div>
+            <div class="desc" style="margin-top:5px">With header: <code>Authorization: Bearer &lt;JWT&gt;</code></div>
           </div>
         </div>
         <div class="step">
           <div class="step-n blue">2</div>
           <div class="step-body">
             <div class="title">API Gateway — route match</div>
-            <div class="desc">Matches <code style="font-family:monospace;color:var(--teal);font-size:11px">/asset/**</code>. Strips the prefix and forwards.</div>
+            <div class="desc">Matches <code>/asset/**</code>. Strips the prefix and forwards.</div>
             <div class="url">GET http://sclera-cloud-device-asset:8085/user/admin/vdms/VDMS760/docker/right_wing/devices</div>
           </div>
         </div>
@@ -1028,7 +1063,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
           <div class="step-n amber">6</div>
           <div class="step-body">
             <div class="title">DeviceService queries MySQL</div>
-            <div class="desc">JDBC query against the <code style="font-family:monospace;color:var(--teal);font-size:11px">vdms</code> schema returns the device list as a <code style="font-family:monospace;color:var(--teal);font-size:11px">Set&lt;DeviceDTO&gt;</code>.</div>
+            <div class="desc">JDBC query against the <code>vdms</code> schema returns the device list as a <code>Set&lt;DeviceDTO&gt;</code>.</div>
           </div>
         </div>
         <div class="step">
@@ -1044,7 +1079,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
     <div>
       <div class="box" style="margin-bottom:16px">
         <h3>As a diagram</h3>
-        <div style="font-family:monospace;font-size:12px;color:var(--dim);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;line-height:2">
+        <div style="font-family:monospace;font-size:12px;color:var(--dim);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px;line-height:2">
           <span style="color:var(--pink)">Browser</span>
           <span style="color:var(--muted)"> → :8080 →</span>
           <span style="color:var(--blue)"> Gateway</span>
@@ -1074,7 +1109,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
             <div class="step-n blue">!</div>
             <div class="step-body">
               <div class="title">Auth happens inside device-asset</div>
-              <div class="desc">The gateway passes the JWT header through. JWT validation is done by the <code style="font-family:monospace;color:var(--teal);font-size:11px">WebSecurityConfig</code> filter chain in device-asset, not the gateway.</div>
+              <div class="desc">The gateway passes the JWT header through. JWT validation is done by the <code>WebSecurityConfig</code> filter chain in device-asset, not the gateway.</div>
             </div>
           </div>
           <div class="step">
@@ -1088,7 +1123,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
             <div class="step-n amber">!</div>
             <div class="step-body">
               <div class="title">Shared MySQL schema</div>
-              <div class="desc">Both services connect to the same MySQL <code style="font-family:monospace;color:var(--teal);font-size:11px">vdms</code> database. They each own their own tables within that schema.</div>
+              <div class="desc">Both services connect to the same MySQL <code>vdms</code> database. They each own their own tables within that schema.</div>
             </div>
           </div>
         </div>
@@ -1098,7 +1133,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
   </div>
 </div>
 
-<!-- ════════════════════════════ SLIDE 11 — FLOW: DEVICE ADD + AUDIT LOG -->
+<!-- ════════════════════════════ SECTION 11 — FLOW: DEVICE ADD + AUDIT LOG -->
 <div class="slide" id="s11">
   <div class="slide-head">
     <span class="num">11</span>
@@ -1115,7 +1150,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
           <div class="step-body">
             <div class="title">Browser POSTs a new device</div>
             <div class="url">POST http://localhost:8080/asset/user/admin/vdms/VDMS760/docker/right_wing/adddevice</div>
-            <div class="desc" style="margin-top:5px">Body: <code style="font-family:monospace;font-size:11px;color:var(--teal)">{"user_data_name":"Lobby Sensor","type":"generic",...}</code></div>
+            <div class="desc" style="margin-top:5px">Body: <code>{"user_data_name":"Lobby Sensor","type":"generic",...}</code></div>
           </div>
         </div>
         <div class="step">
@@ -1136,11 +1171,11 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
           <div class="step-n amber">4</div>
           <div class="step-body">
             <div class="title">MySQL write completes</div>
-            <div class="desc">Device row inserted into the <code style="font-family:monospace;color:var(--teal);font-size:11px">device</code> table in the <code style="font-family:monospace;color:var(--teal);font-size:11px">vdms</code> schema.</div>
+            <div class="desc">Device row inserted into the <code>device</code> table in the <code>vdms</code> schema.</div>
           </div>
         </div>
         <div class="step">
-          <div class="step-n orange" style="background:#1a0f05;color:var(--orange)">5</div>
+          <div class="step-n" style="background:var(--amber-bg);color:var(--orange)">5</div>
           <div class="step-body">
             <div class="title">UserActionLogService publishes audit event</div>
             <div class="url">POST localhost:3500/v1.0/publish/pubsub/device.audit</div>
@@ -1159,7 +1194,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
           <div class="step-body">
             <div class="title">Redis → vdms-dapr → AuditSubscriber</div>
             <div class="url">POST http://localhost:8089/vdms/device-audit  (CloudEvent)</div>
-            <div class="desc" style="margin-top:5px">vdms-service's Dapr sidecar reads from Redis and delivers the CloudEvent. AuditSubscriber unwraps the data and inserts a row into <code style="font-family:monospace;color:var(--teal);font-size:11px">user_action_log</code>.</div>
+            <div class="desc" style="margin-top:5px">vdms-service's Dapr sidecar reads from Redis and delivers the CloudEvent. AuditSubscriber unwraps the data and inserts a row into <code>user_action_log</code>.</div>
           </div>
         </div>
       </div>
@@ -1168,7 +1203,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
     <div>
       <div class="box" style="margin-bottom:16px">
         <h3>Timeline — what happens when</h3>
-        <div style="font-family:monospace;font-size:12px;color:var(--dim);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;line-height:2">
+        <div style="font-family:monospace;font-size:12px;color:var(--dim);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px;line-height:2">
           t=0ms  <span style="color:var(--pink)">Browser POST</span><br>
           t=5ms  <span style="color:var(--blue)">Gateway forwards</span><br>
           t=10ms <span style="color:var(--green)">JWT validated</span><br>
@@ -1199,7 +1234,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
   </div>
 </div>
 
-<!-- ══════════════════════════════════ SLIDE 12 — FLOW: AUDIT LOG QUERY -->
+<!-- ══════════════════════════════════════ SECTION 12 — FLOW: AUDIT LOG QUERY -->
 <div class="slide" id="s12">
   <div class="slide-head">
     <span class="num">12</span>
@@ -1237,7 +1272,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
           <div class="step-n amber">4</div>
           <div class="step-body">
             <div class="title">UserActionLogRepository queries MySQL</div>
-            <div class="desc"><code style="font-family:monospace;color:var(--teal);font-size:11px">findByVdmsIdOrderByCreatedAtDesc(vdmsId, pageable)</code> — returns newest entries first, paginated.</div>
+            <div class="desc"><code>findByVdmsIdOrderByCreatedAtDesc(vdmsId, pageable)</code> — returns newest entries first, paginated.</div>
           </div>
         </div>
         <div class="step">
@@ -1253,7 +1288,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
     <div>
       <div class="box" style="margin-bottom:16px">
         <h3>Closing the loop</h3>
-        <div style="font-family:monospace;font-size:12px;color:var(--dim);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;line-height:1.9">
+        <div style="font-family:monospace;font-size:12px;color:var(--dim);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px;line-height:1.9">
           <span style="color:var(--green)">device-asset</span>  adds device → MySQL<br>
           <span style="color:var(--green)">device-asset</span>  publishes <span style="color:var(--red)">device.audit</span> event<br>
           <span style="color:var(--red)">Redis</span>         stores event<br>
@@ -1305,7 +1340,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════ SLIDE 13 — DOCKER COMPOSE -->
+<!-- ═══════════════════════════════════════ SECTION 13 — DOCKER COMPOSE -->
 <div class="slide" id="s13">
   <div class="slide-head">
     <span class="num">13</span>
@@ -1322,14 +1357,14 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
             <div class="step-n red">1</div>
             <div class="step-body">
               <div class="title">redis (sclera-redis)</div>
-              <div class="desc">Starts first. Health-checked with <code style="font-family:monospace;font-size:11px;color:var(--teal)">redis-cli ping</code>. All other containers wait for it to be healthy.</div>
+              <div class="desc">Starts first. Health-checked with <code>redis-cli ping</code>. All other containers wait for it to be healthy.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-n green">2</div>
             <div class="step-body">
               <div class="title">app (sclera-cloud-device-asset)</div>
-              <div class="desc">Starts after redis. Spring Boot on :8085. Connects to <code style="font-family:monospace;font-size:11px;color:var(--teal)">host.docker.internal:3306</code> for MySQL (MySQL runs on the host machine, not in Docker).</div>
+              <div class="desc">Starts after redis. Spring Boot on :8085. Connects to <code>host.docker.internal:3306</code> for MySQL (MySQL runs on the host machine, not in Docker).</div>
             </div>
           </div>
           <div class="step">
@@ -1340,10 +1375,10 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
             </div>
           </div>
           <div class="step">
-            <div class="step-n orange" style="background:#1a0f05;color:var(--orange)">4</div>
+            <div class="step-n" style="background:var(--amber-bg);color:var(--orange)">4</div>
             <div class="step-body">
               <div class="title">app-dapr &amp; vdms-dapr (sidecars)</div>
-              <div class="desc">Start after their paired service. Use <code style="font-family:monospace;font-size:11px;color:var(--teal)">network_mode: "service:app"</code> / <code style="font-family:monospace;font-size:11px;color:var(--teal)">"service:vdms-service"</code> — they share the network namespace of the service container.</div>
+              <div class="desc">Start after their paired service. Use <code>network_mode: "service:app"</code> / <code>"service:vdms-service"</code> — they share the network namespace of the service container.</div>
             </div>
           </div>
           <div class="step">
@@ -1357,7 +1392,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
             <div class="step-n teal" style="background:var(--teal-bg);color:var(--teal)">6</div>
             <div class="step-body">
               <div class="title">ui (sclera-test-ui)</div>
-              <div class="desc">nginx serving <code style="font-family:monospace;font-size:11px;color:var(--teal)">./test-ui/</code> on :3000. demo.html, architecture.html, etc. are served from here.</div>
+              <div class="desc">nginx serving <code>./test-ui/</code> on :3000. demo.html, architecture.html, etc. are served from here.</div>
             </div>
           </div>
         </div>
@@ -1367,28 +1402,28 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
     <div>
       <div class="box" style="margin-bottom:16px">
         <h3>The <code>network_mode: service:X</code> trick</h3>
-        <p style="margin-bottom:12px">This is the key to how Dapr sidecars work in Docker Compose. When a container uses <code style="font-family:monospace;color:var(--teal);font-size:12px">network_mode: "service:app"</code>, it:</p>
+        <p style="margin-bottom:12px">This is the key to how Dapr sidecars work in Docker Compose. When a container uses <code>network_mode: "service:app"</code>, it:</p>
         <div class="steps">
           <div class="step">
             <div class="step-n amber">✓</div>
             <div class="step-body">
               <div class="title">Shares the same network namespace</div>
-              <div class="desc">The sidecar has the exact same IP address and ports as the main service container. <code style="font-family:monospace;font-size:11px;color:var(--teal)">localhost</code> inside device-asset reaches app-dapr on port 3500.</div>
+              <div class="desc">The sidecar has the exact same IP address and ports as the main service container. <code>localhost</code> inside device-asset reaches app-dapr on port 3500.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-n amber">✓</div>
             <div class="step-body">
               <div class="title">No separate IP needed</div>
-              <div class="desc">The sidecar has no dedicated port mapping. Communication between app and sidecar is purely through <code style="font-family:monospace;font-size:11px;color:var(--teal)">localhost</code>.</div>
+              <div class="desc">The sidecar has no dedicated port mapping. Communication between app and sidecar is purely through <code>localhost</code>.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-n red">!</div>
             <div class="step-body">
               <div class="title">Rebuild caveat</div>
-              <div class="desc">If you rebuild the service container (<code style="font-family:monospace;font-size:11px;color:var(--teal)">docker-compose up --build</code>), the old container is destroyed. The sidecar's <code style="font-family:monospace;font-size:11px;color:var(--teal)">network_mode</code> now points to a dead container — <b style="color:var(--text)">you must recreate the sidecar too</b>:<br>
-              <code style="font-family:monospace;font-size:11px;color:var(--teal)">docker-compose stop vdms-dapr &amp;&amp; docker-compose rm -f vdms-dapr &amp;&amp; docker-compose up -d vdms-dapr</code></div>
+              <div class="desc">If you rebuild the service container (<code>docker-compose up --build</code>), the old container is destroyed. The sidecar's <code>network_mode</code> now points to a dead container — <b style="color:var(--text)">you must recreate the sidecar too</b>:<br>
+              <code>docker-compose stop vdms-dapr &amp;&amp; docker-compose rm -f vdms-dapr &amp;&amp; docker-compose up -d vdms-dapr</code></div>
             </div>
           </div>
         </div>
@@ -1414,7 +1449,7 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
   </div>
 </div>
 
-<!-- ════════════════════════════════════════ SLIDE 14 — QUICK REFERENCE -->
+<!-- ════════════════════════════════════════ SECTION 14 — QUICK REFERENCE -->
 <div class="slide" id="s14">
   <div class="slide-head">
     <span class="num">14</span>
@@ -1503,7 +1538,7 @@ docker-compose up -d vdms-dapr</div>
           <thead><tr><th>URL</th><th>What it is</th></tr></thead>
           <tbody>
             <tr><td><code>localhost:3000/demo.html</code></td><td>Interactive test UI — all flows</td></tr>
-            <tr><td><code>localhost:3000/architecture.html</code></td><td>This presentation</td></tr>
+            <tr><td><code>localhost:3000/architecture.html</code></td><td>This document</td></tr>
             <tr><td><code>localhost:8080/vdms/id</code></td><td>Quick health check</td></tr>
             <tr><td><code>localhost:8080/vdms/details</code></td><td>VDMS config data</td></tr>
             <tr><td><code>localhost:8080/vdms/audit-log?vdmsId=…</code></td><td>Audit log (paginated)</td></tr>
@@ -1515,7 +1550,7 @@ docker-compose up -d vdms-dapr</div>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════ SLIDE 15 — SUMMARY -->
+<!-- ════════════════════════════════════════════════ SECTION 15 — SUMMARY -->
 <div class="slide" id="s15">
   <div class="slide-head">
     <span class="num">15</span>
@@ -1595,7 +1630,7 @@ docker-compose up -d vdms-dapr</div>
     <div>
       <div class="box" style="margin-bottom:16px">
         <h2>The complete message path</h2>
-        <div style="font-family:monospace;font-size:11px;line-height:1.9;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;color:var(--dim)">
+        <div style="font-family:monospace;font-size:11px;line-height:1.9;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px;color:var(--dim)">
           <span style="color:var(--pink)">Browser</span><br>
           &nbsp;&nbsp;↓ HTTP :8080<br>
           <span style="color:var(--blue)">API Gateway</span> (route + strip)<br>
@@ -1626,47 +1661,5 @@ docker-compose up -d vdms-dapr</div>
 </div>
 
 </div><!-- /deck -->
-
-<!-- ════════════════════════ Navigation (outside the slide flow) -->
-<div class="nav" id="nav-bar">
-  <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Prev</button>
-  <div class="progress-wrap"><div class="progress-bar" id="prog"></div></div>
-  <span class="counter" id="counter">1 / 16</span>
-  <button class="nav-btn" id="btn-next" onclick="go(1)">Next →</button>
-</div>
-
-<script>
-const TOTAL = 16;
-let cur = 0;
-
-function show(n) {
-  document.querySelectorAll('.slide').forEach((s, i) => {
-    s.classList.toggle('active', i === n);
-  });
-  cur = n;
-  document.getElementById('counter').textContent = (n + 1) + ' / ' + TOTAL;
-  document.getElementById('prog').style.width = ((n / (TOTAL - 1)) * 100) + '%';
-  document.getElementById('btn-prev').disabled = n === 0;
-  document.getElementById('btn-next').disabled = n === TOTAL - 1;
-}
-
-function go(d) { show(Math.max(0, Math.min(TOTAL - 1, cur + d))); }
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowRight' || e.key === 'ArrowDown')  go(1);
-  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')    go(-1);
-  if (e.key === 'Home') show(0);
-  if (e.key === 'End')  show(TOTAL - 1);
-});
-
-// Make the .deck respect the nav bar height
-function layout() {
-  const nb = document.getElementById('nav-bar');
-  document.getElementById('deck').style.height = 'calc(100vh - ' + nb.offsetHeight + 'px)';
-}
-layout();
-window.addEventListener('resize', layout);
-show(0);
-</script>
 </body>
 </html>
