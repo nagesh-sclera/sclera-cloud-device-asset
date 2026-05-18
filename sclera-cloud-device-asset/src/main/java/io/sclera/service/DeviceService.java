@@ -633,8 +633,8 @@ public class DeviceService {
             }
 
             log.info("location id: : {}", devicedto.getLocation_id());
-
-            deviceRepository.editDeviceByDeviceID(device_id, vdmsid, devicedto.getDocker_name(), devicedto.getMonitor(), devicedto.getNetwork_layer(),
+            log.info("device id " + device_id);
+            deviceRepository.editDeviceByDeviceID(device_id, vdmsid, dockername, devicedto.getMonitor(), devicedto.getNetwork_layer(),
                     devicedto.getUser_data_model(), devicedto.getUser_data_name(), devicedto.getType(),
                     devicedto.getUser_data_vendor(), devicedto.getParent(), devicedto.getRemote_access(),
                     devicedto.getWarranty(), devicedto.getProduct_id(), devicedto.getLocation_id(),
@@ -701,7 +701,7 @@ public class DeviceService {
                     devicedto.getOnboard_data().setField_status(1);
                 } else {
                     // Only downgrade if previously complete
-                    Integer existingStatus = existingDevice.getOnboard_data().getField_status();
+                    Integer existingStatus = existingDevice.getOnboard_data() != null ? existingDevice.getOnboard_data().getField_status() : null;
                     if (existingStatus != null && existingStatus == 1) {
                         devicedto.getOnboard_data().setField_status(0);
                     }
@@ -972,14 +972,14 @@ public class DeviceService {
                 if (multidevicedto.getLocation_id() != null) {
                     locationDTO = locationService.getLocationByLocationId(multidevicedto.getLocation_id());
                 }
-                userActionLogService.addUserAction(username, "asset", "UPDATE", "A Device  name: " + device_name + " and id: " + multidevicedto.getId() + " is updated for network " + multidevicedto.getDocker_name() + (multidevicedto.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + multidevicedto.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_info", multidevicedto.getId());
+                userActionLogService.addUserAction(username, "asset", "UPDATE", "A Device  name: " + device_name + " and id: " + multidevicedto.getId() + " is updated for network " + multidevicedto.getDocker_name() + (multidevicedto.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + multidevicedto.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_info", multidevicedto.getId());
 
                 if (multidevicedto.getOnboard_data() != null && multidevicedto.getOnboard_data().getField_status() == null) {
                     if (((existingDevice.getName() != null && !(existingDevice.getName().isBlank())) || (multidevicedto.getUser_data_name() != null && !(multidevicedto.getUser_data_name().isBlank()))) &&
                             ((existingDevice.getVendor() != null && !(existingDevice.getVendor().isBlank())) || (multidevicedto.getUser_data_vendor() != null && !(multidevicedto.getUser_data_vendor().isBlank()))) &&
                             ((existingDevice.getModel() != null && !(existingDevice.getModel().isBlank())) || (multidevicedto.getUser_data_model() != null && !(multidevicedto.getUser_data_model().isBlank())))) {
                         multidevicedto.getOnboard_data().setField_status(1);
-                    } else if (existingDevice.getOnboard_data().getField_status() == 1) {
+                    } else if (existingDevice.getOnboard_data() != null && existingDevice.getOnboard_data().getField_status() == 1) {
                         multidevicedto.getOnboard_data().setField_status(0);
 
                     }
@@ -992,7 +992,7 @@ public class DeviceService {
 
             } catch (Exception e) {
                 log.error("Exception. Params: multidevicedtos: {}, endpoint : {}", multidevicedtos, httpServletRequest.getRequestURI(), e);
-                userActionLogService.addUserAction(username, "asset", "UPDATE", "Unable to Update Device name: " + device_name + " and id: " + multidevicedto.getId() + " for network " + multidevicedto.getDocker_name() + (multidevicedto.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + multidevicedto.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_info", multidevicedto.getId());
+                userActionLogService.addUserAction(username, "asset", "UPDATE", "Unable to Update Device name: " + device_name + " and id: " + multidevicedto.getId() + " for network " + multidevicedto.getDocker_name() + (multidevicedto.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + multidevicedto.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_info", multidevicedto.getId());
             }
         }
         try {
@@ -1152,7 +1152,7 @@ public class DeviceService {
                         }
 
                         if (updateDevice.getOnboard_data() != null && updateDevice.getOnboard_data().getGeolocation_status() == null) {
-                            if (existingDevice.getOnboard_data().getGeolocation_status() == 1) {
+                            if (existingDevice.getOnboard_data() != null && existingDevice.getOnboard_data().getGeolocation_status() == 1) {
                                 updateDevice.getOnboard_data().setGeolocation_status(0);
                             }
                         }
@@ -1204,10 +1204,10 @@ public class DeviceService {
                 if (location_id != null) {
                     locationDTO = locationService.getLocationByLocationId(location_id);
                 }
-                userActionLogService.addUserAction(username, "asset", "UPDATE", "A Device  name: " + device_name + " and id: " + existingDevice.getId() + " is updated for network " + network_name + (location_id != null && locationDTO.getName() != null ? ", Location id: " + location_id + ", Location name: " + locationDTO.getName() : ""), "success", "asset_info", existingDevice.getId());
+                userActionLogService.addUserAction(username, "asset", "UPDATE", "A Device  name: " + device_name + " and id: " + existingDevice.getId() + " is updated for network " + network_name + (location_id != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + location_id + ", Location name: " + locationDTO.getName() : ""), "success", "asset_info", existingDevice.getId());
 
             } catch (Exception e) {
-                userActionLogService.addUserAction(username, "asset", "UPDATE", "Unable to Update Device  name: " + device_name + " and id: " + existingDevice.getId() + " for network " + network_name + (updateDevice.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + updateDevice.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_info", existingDevice.getId());
+                userActionLogService.addUserAction(username, "asset", "UPDATE", "Unable to Update Device  name: " + device_name + " and id: " + existingDevice.getId() + " for network " + network_name + (updateDevice.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + updateDevice.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_info", existingDevice.getId());
 
             }
             if (existingDevice.getId() != null && existingDevice.getId().equals(updateDevice.getSubsystem_parent_id())) {
@@ -1430,11 +1430,11 @@ public class DeviceService {
                     locationDTO = locationService.getLocationByLocationId(virtualDevice.getLocation_id());
                 }
                 log.info("device id : {}", final_device_id);
-                userActionLogService.addUserAction(username, "asset", "ADD", "A Virtual Device  name: " + virtualDevice.getUser_data_name() + " and id: " + final_device_id + " is added for network " + virtualDevice.getDocker_name() + (virtualDevice.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + virtualDevice.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_info", final_device_id);
+                userActionLogService.addUserAction(username, "asset", "ADD", "A Virtual Device  name: " + virtualDevice.getUser_data_name() + " and id: " + final_device_id + " is added for network " + virtualDevice.getDocker_name() + (virtualDevice.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + virtualDevice.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_info", final_device_id);
 
             } catch (Exception e) {
                 log.error("Exception. Params: virtualDeviceDto: {}, asset images: {}, endpoint : {}", virtualDevicesDTO, asset_images, httpServletRequest.getRequestURI(), e);
-                userActionLogService.addUserAction(username, "asset", "ADD", "Unable to Add Virtual Device name: " + virtualDevice.getUser_data_name() + " and id: " + final_device_id + " for network " + virtualDevice.getDocker_name() + (virtualDevice.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + virtualDevice.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_info", final_device_id);
+                userActionLogService.addUserAction(username, "asset", "ADD", "Unable to Add Virtual Device name: " + virtualDevice.getUser_data_name() + " and id: " + final_device_id + " for network " + virtualDevice.getDocker_name() + (virtualDevice.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + virtualDevice.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_info", final_device_id);
 
             }
 
@@ -1724,6 +1724,7 @@ public class DeviceService {
         for (String deviceId : deviceIds) {
             log.info("Deleting Device Id : " + deviceId);
             Device device = deviceRepository.findById(deviceId).orElse(null);
+            log.info("DEVICE !!!!! " + device.toString());
             DeviceDTO deviceDTO = deviceRepository.getDeviceByDeviceId(deviceId);
             String device_name = deviceDTO.getUser_data_name() == null || deviceDTO.getUser_data_name().equals("") ? deviceDTO.getDisplay_name() : deviceDTO.getUser_data_name();
 
@@ -1910,9 +1911,9 @@ public class DeviceService {
 
                 deviceRepository.deleteById(deviceId);
                 log.info("Deleted device");
-                userActionLogService.addUserAction(username, "asset", "DELETE", "A Device name: " + device_name + " and id: " + deviceId + " is deleted from network " + deviceDTO.getDocker_name() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_info", deviceId);
+                userActionLogService.addUserAction(username, "asset", "DELETE", "A Device name: " + device_name + " and id: " + deviceId + " is deleted from network " + deviceDTO.getDocker_name() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_info", deviceId);
             } catch (Exception e) {
-                userActionLogService.addUserAction(username, "asset", "DELETE", "Unable to delete Device name: " + device_name + " and id: " + deviceId + " from network " + deviceDTO.getDocker_name() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_info", deviceId);
+                userActionLogService.addUserAction(username, "asset", "DELETE", "Unable to delete Device name: " + device_name + " and id: " + deviceId + " from network " + deviceDTO.getDocker_name() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_info", deviceId);
                 log.error("Exception. Params: deviceIds: {}, endpoint : {}", deviceIds, httpServletRequest.getRequestURI(), e);
             }
 
@@ -2046,9 +2047,9 @@ public class DeviceService {
                 log.info("Deleted device");
                 recordChecklistService.deleteAllRecordChecklistImagesByUrls(imageUrls);
                 log.info("Deleting checklist images");
-                userActionLogService.addUserAction(username, "asset", "DELETE", "A Device name: " + device_name + " and id: " + deviceId + " is deleted from network " + deviceDTO.getDocker_name() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_info", deviceId);
+                userActionLogService.addUserAction(username, "asset", "DELETE", "A Device name: " + device_name + " and id: " + deviceId + " is deleted from network " + deviceDTO.getDocker_name() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_info", deviceId);
             } catch (Exception e) {
-                userActionLogService.addUserAction(username, "asset", "DELETE", "Unable to delete Device name: " + device_name + " and id: " + deviceId + " from network " + deviceDTO.getDocker_name() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_info", deviceId);
+                userActionLogService.addUserAction(username, "asset", "DELETE", "Unable to delete Device name: " + device_name + " and id: " + deviceId + " from network " + deviceDTO.getDocker_name() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_info", deviceId);
                 log.error("Exception. Params: deviceIds: {}, endpoint : {}", deviceIds, httpServletRequest.getRequestURI(), e);
             }
             log.info("Came here after all");
@@ -3710,11 +3711,11 @@ public class DeviceService {
                         }
                         locationDTO = locationService.getLocationByLocationId(devicePosition.getLocation_id());
                         log.info("device position : {}", devicePosition.getPosition());
-                        userActionLogService.addUserAction(username, "asset", "UPDATE", "Position details are updated for Device name: " + device_name + " and id: " + devicePosition.getId() + (devicePosition.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + devicePosition.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "geolocation", devicePosition.getId());
+                        userActionLogService.addUserAction(username, "asset", "UPDATE", "Position details are updated for Device name: " + device_name + " and id: " + devicePosition.getId() + (devicePosition.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + devicePosition.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "geolocation", devicePosition.getId());
 
                     } catch (Exception e) {
                         log.error("Exception. Params: devicePositions: {}, endpoint : {}", devicePositions, httpServletRequest.getRequestURI(), e);
-                        userActionLogService.addUserAction(username, "asset", "UPDATE", "Unable Position details are updated for Device name: " + device_name + " and id: " + devicePosition.getId() + (devicePosition.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + devicePosition.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "geolocation", devicePosition.getId());
+                        userActionLogService.addUserAction(username, "asset", "UPDATE", "Unable Position details are updated for Device name: " + device_name + " and id: " + devicePosition.getId() + (devicePosition.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + devicePosition.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "geolocation", devicePosition.getId());
                     }
                 }
 
@@ -3943,16 +3944,16 @@ public class DeviceService {
                     locationDTO = locationService.getLocationByLocationId(device.getLocation_id());
                 }
                 if (archive == 0) {
-                    userActionLogService.addUserAction(username, "asset", "UPDATE", "Device name: " + device.getDisplay_name() + " and id: " + device.getId() + " is unarchived" + (device.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + device.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_info", device.getId());
+                    userActionLogService.addUserAction(username, "asset", "UPDATE", "Device name: " + device.getDisplay_name() + " and id: " + device.getId() + " is unarchived" + (device.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + device.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_info", device.getId());
                 } else if (archive == 1) {
-                    userActionLogService.addUserAction(username, "asset", "UPDATE", "Device name: " + device.getDisplay_name() + " and id: " + device.getId() + " is archived" + (device.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + device.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_info", device.getId());
+                    userActionLogService.addUserAction(username, "asset", "UPDATE", "Device name: " + device.getDisplay_name() + " and id: " + device.getId() + " is archived" + (device.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + device.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_info", device.getId());
                 }
             } catch (Exception e) {
                 log.error("Exception. Params: archive: {}, deviceIds: {}, endpoint : {}", archive, deviceIds, httpServletRequest.getRequestURI(), e);
                 if (archive == 0) {
-                    userActionLogService.addUserAction(username, "asset", "UPDATE", "Unable to unarchive Device name: " + device.getDisplay_name() + " and id: " + device.getId() + (device.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + device.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_info", device.getId());
+                    userActionLogService.addUserAction(username, "asset", "UPDATE", "Unable to unarchive Device name: " + device.getDisplay_name() + " and id: " + device.getId() + (device.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + device.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_info", device.getId());
                 } else if (archive == 1) {
-                    userActionLogService.addUserAction(username, "asset", "UPDATE", "Unable to archive Device name: " + device.getDisplay_name() + " and id: " + device.getId() + (device.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + device.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_info", device.getId());
+                    userActionLogService.addUserAction(username, "asset", "UPDATE", "Unable to archive Device name: " + device.getDisplay_name() + " and id: " + device.getId() + (device.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + device.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_info", device.getId());
                 }
             }
 
@@ -4558,18 +4559,18 @@ public class DeviceService {
                 }
                 if (action.equals("ADD")) {
                     log.info("added device id : {}", device_id);
-                    userActionLogService.addUserAction(username, "asset", action, "Asset images are added for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_image", deviceDTO.getId());
+                    userActionLogService.addUserAction(username, "asset", action, "Asset images are added for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_image", deviceDTO.getId());
                 } else if (action.equals("UPDATE")) {
                     log.info("updated device id : {}", device_id);
-                    userActionLogService.addUserAction(username, "asset", action, "Asset images are updated for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_image", deviceDTO.getId());
+                    userActionLogService.addUserAction(username, "asset", action, "Asset images are updated for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_image", deviceDTO.getId());
                 }
             } catch (RuntimeException e) {
                 if (action.equals("ADD")) {
                     log.error("Exception.  Params: device ids: {}, asset images: {}, endpoint : {}", device_ids, asset_images, httpServletRequest.getRequestURI(), e);
-                    userActionLogService.addUserAction(username, "asset", action, "Unable to add Asset images for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_image", deviceDTO.getId());
+                    userActionLogService.addUserAction(username, "asset", action, "Unable to add Asset images for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_image", deviceDTO.getId());
                 } else if (action.equals("UPDATE")) {
                     log.error("Exception.  Params: device ids: {}, asset images: {}, endpoint : {}", device_ids, asset_images, httpServletRequest.getRequestURI(), e);
-                    userActionLogService.addUserAction(username, "asset", action, "Unable to update Asset images for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_image", deviceDTO.getId());
+                    userActionLogService.addUserAction(username, "asset", action, "Unable to update Asset images for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_image", deviceDTO.getId());
                 }
 
             }
@@ -4600,10 +4601,10 @@ public class DeviceService {
                 }
                 deviceRepository.updateAssetImage(device.getId(), update_array.toJSONString());
                 log.info("device name : {}", device_name);
-                userActionLogService.addUserAction(username, "asset", "DELETE", "Asset images are removed from Device name: " + device_name + " and id: " + device.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_image", device.getId());
+                userActionLogService.addUserAction(username, "asset", "DELETE", "Asset images are removed from Device name: " + device_name + " and id: " + device.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_image", device.getId());
             } catch (Exception e) {
                 log.error("Exception. Params: deviceDTOs: {}, endpoint : {}", deviceDTOS, httpServletRequest.getRequestURI(), e);
-                userActionLogService.addUserAction(username, "asset", "DELETE", "Unable to remove asset images from Device name: " + device_name + " and id: " + device.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_image", device.getId());
+                userActionLogService.addUserAction(username, "asset", "DELETE", "Unable to remove asset images from Device name: " + device_name + " and id: " + device.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_image", device.getId());
 
             }
 
@@ -5838,10 +5839,10 @@ public class DeviceService {
                 if (deviceDTO.getLocation_id() != null) {
                     locationDTO = locationService.getLocationByLocationId(deviceDTO.getLocation_id());
                 }
-                userActionLogService.addUserAction(username, "asset", "ADD", "A Onboarded Device  Model: " + deviceDTO.getModel() + " and id: " + final_device_id + " is added for network " + deviceDTO.getDocker_name() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_info", final_device_id);
+                userActionLogService.addUserAction(username, "asset", "ADD", "A Onboarded Device  Model: " + deviceDTO.getModel() + " and id: " + final_device_id + " is added for network " + deviceDTO.getDocker_name() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_info", final_device_id);
 
             } catch (Exception e) {
-                userActionLogService.addUserAction(username, "asset", "ADD", "Unable to Add onboarded Device name: " + deviceDTO.getModel() + " and id: " + final_device_id + " for network " + deviceDTO.getDocker_name() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_info", final_device_id);
+                userActionLogService.addUserAction(username, "asset", "ADD", "Unable to Add onboarded Device name: " + deviceDTO.getModel() + " and id: " + final_device_id + " for network " + deviceDTO.getDocker_name() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_info", final_device_id);
 
             }
 
@@ -5888,15 +5889,15 @@ public class DeviceService {
                 locationDTO = locationService.getLocationByLocationId(deviceDTO.getLocation_id());
             }
             if (action.equals("ADD")) {
-                userActionLogService.addUserAction(username, "asset", action, "Asset images are added for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_image", deviceDTO.getId());
+                userActionLogService.addUserAction(username, "asset", action, "Asset images are added for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_image", deviceDTO.getId());
             } else if (action.equals("UPDATE")) {
-                userActionLogService.addUserAction(username, "asset", action, "Asset images are updated for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_image", deviceDTO.getId());
+                userActionLogService.addUserAction(username, "asset", action, "Asset images are updated for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_image", deviceDTO.getId());
             }
         } catch (RuntimeException e) {
             if (action.equals("ADD")) {
-                userActionLogService.addUserAction(username, "asset", action, "Unable to add Asset images for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_image", deviceDTO.getId());
+                userActionLogService.addUserAction(username, "asset", action, "Unable to add Asset images for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_image", deviceDTO.getId());
             } else if (action.equals("UPDATE")) {
-                userActionLogService.addUserAction(username, "asset", action, "Unable to update Asset images for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_image", deviceDTO.getId());
+                userActionLogService.addUserAction(username, "asset", action, "Unable to update Asset images for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_image", deviceDTO.getId());
             }
 
         }
@@ -6029,7 +6030,7 @@ public class DeviceService {
                         locationDTO = locationService.getLocationByLocationId(deviceDTO.getLocation_id());
                     }
                     String device_name = deviceDTO.getUser_data_name() == null || deviceDTO.getUser_data_name().equals("") ? deviceDTO.getDisplay_name() : deviceDTO.getUser_data_name();
-                    userActionLogService.addUserAction(username, "asset", "ADD", "Asset onboard completed for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "onboarded", deviceDTO.getId());
+                    userActionLogService.addUserAction(username, "asset", "ADD", "Asset onboard completed for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "onboarded", deviceDTO.getId());
                 }
             } else {
                 log.info("All are not true..");
@@ -6176,7 +6177,7 @@ public class DeviceService {
                     }
                     if (deviceDTO != null) {
                         String device_name = deviceDTO.getUser_data_name() == null || deviceDTO.getUser_data_name().equals("") ? deviceDTO.getDisplay_name() : deviceDTO.getUser_data_name();
-                        userActionLogService.addUserAction(username, "asset", "ADD", "Asset onboard completed for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "onboarded", deviceDTO.getId());
+                        userActionLogService.addUserAction(username, "asset", "ADD", "Asset onboard completed for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "onboarded", deviceDTO.getId());
                     }
                 } else if (onboard_status == 0) {
                     log.info("Moved from not onboarded to completed.");
@@ -6276,18 +6277,18 @@ public class DeviceService {
                 }
                 if (action.equals("ADD")) {
                     log.info("Asset OCR images are added for Device name: {}", device_name);
-                    userActionLogService.addUserAction(username, "asset", action, "Asset OCR images are added for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_ocr_image", deviceDTO.getId());
+                    userActionLogService.addUserAction(username, "asset", action, "Asset OCR images are added for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_ocr_image", deviceDTO.getId());
                 } else if (action.equals("UPDATE")) {
                     log.info("Asset OCR images are updated for Device name: {}", device_name);
-                    userActionLogService.addUserAction(username, "asset", action, "Asset OCR images are updated for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_ocr_image", deviceDTO.getId());
+                    userActionLogService.addUserAction(username, "asset", action, "Asset OCR images are updated for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_ocr_image", deviceDTO.getId());
                 }
             } catch (RuntimeException e) {
                 if (action.equals("ADD")) {
                     log.error("Exception.  Params: device ids: {}, asset ocr images: {}, endpoint : {}", device_ids, asset_ocr_images, httpServletRequest.getRequestURI(), e);
-                    userActionLogService.addUserAction(username, "asset", action, "Unable to add Asset OCR images for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_ocr_image", deviceDTO.getId());
+                    userActionLogService.addUserAction(username, "asset", action, "Unable to add Asset OCR images for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_ocr_image", deviceDTO.getId());
                 } else if (action.equals("UPDATE")) {
                     log.error("Exception.  Params: device ids: {}, asset ocr images: {}, endpoint : {}", device_ids, asset_ocr_images, httpServletRequest.getRequestURI(), e);
-                    userActionLogService.addUserAction(username, "asset", action, "Unable to update Asset OCR images for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_ocr_image", deviceDTO.getId());
+                    userActionLogService.addUserAction(username, "asset", action, "Unable to update Asset OCR images for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_ocr_image", deviceDTO.getId());
                 }
 
             }
@@ -6318,10 +6319,10 @@ public class DeviceService {
                 }
                 deviceRepository.updateAssetOcrImage(device.getId(), update_array.toJSONString());
                 log.info("Asset OCR images are removed from Device name: {}", device_name);
-                userActionLogService.addUserAction(username, "asset", "DELETE", "Asset OCR images are removed from Device name: " + device_name + " and id: " + device.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_ocr_image", device.getId());
+                userActionLogService.addUserAction(username, "asset", "DELETE", "Asset OCR images are removed from Device name: " + device_name + " and id: " + device.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_ocr_image", device.getId());
             } catch (Exception e) {
                 log.error("Exception. Params: deviceDTOs: {}, endpoint : {}", deviceDTOS, httpServletRequest.getRequestURI(), e);
-                userActionLogService.addUserAction(username, "asset", "DELETE", "Unable to remove asset OCR images from Device name: " + device_name + " and id: " + device.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_ocr_image", device.getId());
+                userActionLogService.addUserAction(username, "asset", "DELETE", "Unable to remove asset OCR images from Device name: " + device_name + " and id: " + device.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_ocr_image", device.getId());
 
             }
         }
@@ -8557,15 +8558,15 @@ public String daysCleaned(String input){
                     locationDTO = locationService.getLocationByLocationId(deviceDTO.getLocation_id());
                 }
                 if (action.equals("ADD")) {
-                    userActionLogService.addUserAction(username, "asset", action, "Asset images are added for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_image", deviceDTO.getId());
+                    userActionLogService.addUserAction(username, "asset", action, "Asset images are added for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_image", deviceDTO.getId());
                 } else if (action.equals("UPDATE")) {
-                    userActionLogService.addUserAction(username, "asset", action, "Asset images are updated for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_image", deviceDTO.getId());
+                    userActionLogService.addUserAction(username, "asset", action, "Asset images are updated for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "success", "asset_image", deviceDTO.getId());
                 }
             } catch (RuntimeException e) {
                 if (action.equals("ADD")) {
-                    userActionLogService.addUserAction(username, "asset", action, "Unable to add Asset images for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_image", deviceDTO.getId());
+                    userActionLogService.addUserAction(username, "asset", action, "Unable to add Asset images for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_image", deviceDTO.getId());
                 } else if (action.equals("UPDATE")) {
-                    userActionLogService.addUserAction(username, "asset", action, "Unable to update Asset images for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_image", deviceDTO.getId());
+                    userActionLogService.addUserAction(username, "asset", action, "Unable to update Asset images for Device name: " + device_name + " and id: " + deviceDTO.getId() + (deviceDTO.getLocation_id() != null && locationDTO != null && locationDTO.getName() != null ? ", Location id: " + deviceDTO.getLocation_id() + ", Location name: " + locationDTO.getName() : ""), "failed", "asset_image", deviceDTO.getId());
                 }
 
             }

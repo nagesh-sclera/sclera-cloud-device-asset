@@ -12,10 +12,15 @@ public class History {
     private Long id;
 
     @ManyToOne
+    private Device device;
+
+    @ManyToOne
     private Bacnet_Object bacnet_object;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    public Device getDevice() { return device; }
+    public void setDevice(Device device) { this.device = device; }
     public Bacnet_Object getBacnet_object() { return bacnet_object; }
     public void setBacnet_object(Bacnet_Object bacnet_object) { this.bacnet_object = bacnet_object; }
 }

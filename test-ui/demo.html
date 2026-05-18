@@ -263,11 +263,12 @@ tr:hover td { background: #181b28; }
         </div>
         <div class="fg">
           <div class="ff s1"><label>Device Name *</label><input id="df_name" placeholder="e.g. Lobby Sensor 01"></div>
-          <div class="ff s1"><label>Type</label><input id="df_type" placeholder="e.g. generic, virtual"></div>
+          <div class="ff s1"><label>Type</label><input id="df_type" placeholder="e.g. generic, virtual, sensor"></div>
           <div class="ff s1"><label>IP Address</label><input id="df_ip" placeholder="e.g. 192.168.1.100"></div>
           <div class="ff s1"><label>MAC Address</label><input id="df_mac" placeholder="e.g. AA:BB:CC:DD:EE:FF"></div>
-          <div class="ff s1"><label>Vendor</label><input id="df_vendor" placeholder="e.g. Cisco, Dell, Hikvision"></div>
-          <div class="ff s1"><label>Description</label><input id="df_desc" placeholder="Short description"></div>
+          <div class="ff s1"><label>Vendor (user_data_vendor)</label><input id="df_vendor" placeholder="e.g. Cisco, Dell, Hikvision"></div>
+          <div class="ff s1"><label>Model (user_data_model)</label><input id="df_model" placeholder="e.g. DCS-8300LHV2"></div>
+          <div class="ff s2"><label>Description</label><input id="df_desc" placeholder="Short description"></div>
           <div class="row-actions">
             <button class="btn btn-success" id="df_submit" onclick="submitDevice()">Add Device</button>
             <button class="btn btn-neutral" id="df_cancel" style="display:none" onclick="cancelEdit()">Cancel Edit</button>
@@ -275,6 +276,23 @@ tr:hover td { background: #181b28; }
           </div>
         </div>
         <div id="df-msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr">
+          <h2>Add Device (Raw JSON)</h2>
+          <span class="ep">POST /asset/…/adddevice</span>
+        </div>
+        <div class="ff s2">
+          <label>Request Body</label>
+          <textarea id="ad_body" rows="14" style="font-family:'Consolas',monospace;font-size:12px"></textarea>
+        </div>
+        <div class="row-actions" style="margin-top:8px">
+          <button class="btn btn-success" onclick="addDeviceRaw()">Add Device</button>
+          <button class="btn btn-neutral btn-sm" onclick="fillAddDeviceTemplate()">Fill Template</button>
+        </div>
+        <div id="ad-msg"></div>
+        <div id="ad-res" class="res" style="display:none;margin-top:8px"></div>
       </div>
 
       <div class="card">
@@ -439,7 +457,7 @@ tr:hover td { background: #181b28; }
           <div class="ff s1"><label>Assignee</label><input id="mu_assignee" value="all"></div>
           <div class="ff s2">
             <label>Devices JSON array — each item needs id + fields to update</label>
-            <textarea id="mu_body" rows="6" placeholder='[{"id":"device-id-1","vendor":"Dell","status":"online"},{"id":"device-id-2","type":"sensor"}]'></textarea>
+            <textarea id="mu_body" rows="6" placeholder='[{"id":"device-id-1","user_data_vendor":"Dell","user_data_name":"Updated Name","type":"sensor","monitor":1},{"id":"device-id-2","user_data_model":"Model X"}]'></textarea>
           </div>
           <div class="row-actions"><button class="btn btn-primary" onclick="multiUpdate()">Multi-Update</button></div>
         </div>
@@ -452,7 +470,7 @@ tr:hover td { background: #181b28; }
           <div class="ff s1"><label>Assignee</label><input id="qu_assignee" value="all"></div>
           <div class="ff s2">
             <label>Request JSON (TagDeviceOrLocationDTO)</label>
-            <textarea id="qu_body" rows="5" placeholder='{"device_ids":["id1","id2"],"tag":"maintenance","field_name":"status","field_value":"offline"}'></textarea>
+            <textarea id="qu_body" rows="5" placeholder='{"filter_object":{"docker_name":"right_wing","condition":"all","search":{"column":"all","value":""},"filter":[]},"general_object":{"monitor":1,"type":"sensor"},"select_all_status":0}'></textarea>
           </div>
           <div class="row-actions"><button class="btn btn-primary" onclick="quickUpdate()">Quick Update</button></div>
         </div>
@@ -521,7 +539,7 @@ tr:hover td { background: #181b28; }
           <div class="ff s1"><label>Virtual Device ID</label><input id="vd_sync_id" placeholder="virtual-device-uuid"></div>
           <div class="ff s2">
             <label>DeviceDTO JSON (status fields)</label>
-            <textarea id="vd_sync_body" rows="3" placeholder='{"status":"online","last_seen":"2026-05-15T10:00:00"}'></textarea>
+            <textarea id="vd_sync_body" rows="3" placeholder='{"status":"online","last_seen_on":1747555200}'></textarea>
           </div>
           <div class="row-actions"><button class="btn btn-primary" onclick="syncVirtualStatus()">Sync Status</button></div>
         </div>
@@ -547,7 +565,8 @@ tr:hover td { background: #181b28; }
         <div class="fg">
           <div class="ff s1"><label>Device ID</label><input id="nt_add_dev" placeholder="device-uuid"></div>
           <div class="ff s1"><label>Note ID (leave blank for new note)</label><input id="nt_add_id" placeholder="note-uuid (for edit)"></div>
-          <div class="ff s2"><label>Note Text</label><textarea id="nt_text" rows="3" placeholder="Enter note content..."></textarea></div>
+          <div class="ff s2"><label>Title</label><input id="nt_title" placeholder="Note title"></div>
+          <div class="ff s2"><label>Body</label><textarea id="nt_text" rows="3" placeholder="Enter note content..."></textarea></div>
           <div class="row-actions"><button class="btn btn-success" onclick="upsertNote()">Save Note</button></div>
         </div>
         <div id="nt-add-msg"></div>
@@ -851,7 +870,8 @@ function fillEdit(i) {
   $('df_type').value   = d.type || '';
   $('df_ip').value     = d.ip_address || '';
   $('df_mac').value    = d.mac_address || '';
-  $('df_vendor').value = d.vendor || '';
+  $('df_vendor').value = d.user_data_vendor || d.vendor || '';
+  $('df_model').value  = d.user_data_model || d.model || '';
   $('df_desc').value   = d.description || '';
   $('dev-form-title').textContent = 'Edit Device';
   $('dev-form-ep').textContent = `POST /asset/…/device/${editId}/edit`;
@@ -872,26 +892,141 @@ function cancelEdit() {
 }
 
 function clearForm() {
-  ['df_name','df_type','df_ip','df_mac','df_vendor','df_desc'].forEach(id => $(id).value = '');
+  ['df_name','df_type','df_ip','df_mac','df_vendor','df_model','df_desc'].forEach(id => $(id).value = '');
   $('df_msg').innerHTML = '';
 }
 
 async function submitDevice() {
   const name = $('df_name').value.trim();
   if (!name) { showMsg('df-msg', 'Device name is required.', 'err'); return; }
-  const body = {
-    user_data_name: name, display_name: name,
-    type: $('df_type').value.trim() || 'generic',
-    ip_address: $('df_ip').value.trim(),
-    mac_address: $('df_mac').value.trim(),
-    vendor: $('df_vendor').value.trim(),
-    description: $('df_desc').value.trim(),
-    onboard_data: { assignee_email: '', device_onboard_status_assignees: [] }
-  };
+
+  let body;
+  if (editId) {
+    // Merge with existing so the UPDATE query never null-wipes preserved fields.
+    // editDeviceByDeviceID returns getDeviceByDeviceId(…, devicedto.getDocker_name(), …)
+    // so docker_name MUST be in the body or the response fetch fails with null docker.
+    const ex = allDevs.find(d => (d.id || d.device_id) === editId) || {};
+    body = {
+      // Identity — required for the return-fetch at end of service method
+      docker_name:     docker(),
+      docker_vdms_id:  vdmsId(),
+
+      // Fields the UPDATE query always overwrites — fill from existing to preserve
+      monitor:                  ex.monitor                  ?? 1,
+      remote_access:            ex.remote_access            ?? 1,
+      email_alert:              ex.email_alert              ?? 0,
+      sms_alert:                ex.sms_alert                ?? 0,
+      popup_notification:       ex.popup_notification       ?? 1,
+      local_vendor_email_alert: ex.local_vendor_email_alert ?? 0,
+      local_vendor_sms_alert:   ex.local_vendor_sms_alert   ?? 0,
+      network_layer:            ex.network_layer            || null,
+      parent:                   ex.parent                   || null,
+      warranty:                 ex.warranty                 || null,
+      serial_number:            ex.serial_number            || null,
+      product_id:               ex.product_id               || null,
+      location_id:              ex.location_id              || null,
+      asset_match_status:       ex.asset_match_status       ?? 0,
+      asset_group:              ex.asset_group              || null,
+      category:                 ex.category                 || null,
+      sub_category:             ex.sub_category             || null,
+      location_status:          ex.location_status          || null,
+      cost_value:               ex.cost_value               ?? null,
+      assigned_user_email:      ex.assigned_user_email      || null,
+      ai_call:                  ex.ai_call                  ?? false,
+      cost_unit:                ex.cost_unit                || null,
+      is_dnd_enabled:           ex.is_dnd_enabled           ?? false,
+      operational_status:       ex.operational_status       || null,
+      // adc_json patch with '{}' = no-op (preserves existing JSON)
+      adc_json: '{}',
+
+      // Editable fields — override with form values, fallback to existing
+      user_data_name:   name,
+      display_name:     name,
+      type:             $('df_type').value.trim()   || ex.type             || 'generic',
+      ip_address:       $('df_ip').value.trim()     || ex.ip_address       || null,
+      mac_address:      $('df_mac').value.trim()    || ex.mac_address      || null,
+      user_data_vendor: $('df_vendor').value.trim() || ex.user_data_vendor || ex.vendor || null,
+      user_data_model:  $('df_model').value.trim()  || ex.user_data_model  || ex.model  || null,
+      description:      $('df_desc').value.trim()   || ex.description      || null,
+
+      onboard_data: {
+        assignee_email:      ex.assignee_email      || '',
+        field_status:        ex.field_status        ?? 0,
+        geolocation_status:  ex.geolocation_status  ?? 0,
+        tag_status:          ex.tag_status          ?? 0,
+        image_status:        ex.image_status        ?? 0
+      }
+    };
+  } else {
+    body = {
+      docker_name:    docker(),
+      docker_vdms_id: vdmsId(),
+      user_data_name: name, display_name: name,
+      type:             $('df_type').value.trim()   || 'generic',
+      ip_address:       $('df_ip').value.trim()     || null,
+      mac_address:      $('df_mac').value.trim()    || null,
+      user_data_vendor: $('df_vendor').value.trim() || null,
+      user_data_model:  $('df_model').value.trim()  || null,
+      description:      $('df_desc').value.trim()   || null,
+      monitor: 1, remote_access: 1, email_alert: 0, sms_alert: 0, popup_notification: 1,
+      local_vendor_email_alert: 0, local_vendor_sms_alert: 0,
+      ai_call: false, is_dnd_enabled: false, adc_json: '{}',
+      onboard_data: { assignee_email: '', field_status: 0, geolocation_status: 0, tag_status: 0, image_status: 0 }
+    };
+  }
+
   const url = editId ? `${aBase()}/device/${editId}/edit` : `${aBase()}/adddevice`;
   const r = await go(url, { method: 'POST', body: JSON.stringify(body) });
   if (r.ok) { showMsg('df-msg', editId ? 'Device updated.' : 'Device added.', 'ok'); cancelEdit(); loadDevices(); }
   else showMsg('df-msg', `Error ${r.status}: ${JSON.stringify(r.body)}`, 'err');
+}
+
+function fillAddDeviceTemplate() {
+  const tpl = {
+    docker_name:    docker(),
+    docker_vdms_id: vdmsId(),
+    user_data_name: "New Device",
+    display_name:   "New Device",
+    type:           "generic",
+    ip_address:     null,
+    mac_address:    null,
+    user_data_vendor: null,
+    user_data_model:  null,
+    description:    null,
+    monitor:        1,
+    remote_access:  1,
+    email_alert:    0,
+    sms_alert:      0,
+    popup_notification: 1,
+    local_vendor_email_alert: 0,
+    local_vendor_sms_alert:   0,
+    ai_call:        false,
+    is_dnd_enabled: false,
+    adc_json:       "{}",
+    onboard_data: {
+      assignee_email:     "",
+      field_status:       0,
+      geolocation_status: 0,
+      tag_status:         0,
+      image_status:       0
+    }
+  };
+  $('ad_body').value = JSON.stringify(tpl, null, 2);
+  $('ad-msg').innerHTML = '';
+}
+
+async function addDeviceRaw() {
+  let body;
+  try { body = JSON.parse($('ad_body').value || '{}'); }
+  catch { showMsg('ad-msg', 'Invalid JSON', 'err'); return; }
+  const r = await go(`${aBase()}/adddevice`, { method: 'POST', body: JSON.stringify(body) });
+  if (r.ok) {
+    showMsg('ad-msg', 'Device added.', 'ok');
+    showRes('ad-res', r.body);
+    loadDevices();
+  } else {
+    showMsg('ad-msg', `Error ${r.status}: ${JSON.stringify(r.body)}`, 'err');
+  }
 }
 
 async function quickDel(id) {
@@ -1079,9 +1214,11 @@ async function getNotes() {
 async function upsertNote() {
   const devId  = $('nt_add_dev').value.trim();
   const noteId = $('nt_add_id').value.trim();
+  const title  = $('nt_title').value.trim();
   const text   = $('nt_text').value.trim();
-  if (!devId || !text) { showMsg('nt-add-msg', 'Device ID and note text are required.', 'err'); return; }
-  const body = { note_id: noteId || undefined, note: text };
+  if (!devId || !text) { showMsg('nt-add-msg', 'Device ID and note body are required.', 'err'); return; }
+  const body = { device_id: devId, title: title || 'Note', body: text };
+  if (noteId) body.id = noteId;
   const r = await go(`${aBase()}/device/${devId}/note`, { method: 'POST', body: JSON.stringify(body) });
   showMsg('nt-add-msg', r.ok ? 'Note saved.' : `Error ${r.status}: ${JSON.stringify(r.body)}`, r.ok ? 'ok' : 'err');
 }

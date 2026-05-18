@@ -1,15 +1,9 @@
 package io.sclera.models;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
-
-@Getter
-@Setter
 @Entity
 public class InventoryDevice {
 
@@ -18,5 +12,10 @@ public class InventoryDevice {
 
     @OneToOne
     private Device device;
+
+    public String getTracking_id() { return tracking_id; }
+    public void setTracking_id(String tracking_id) { this.tracking_id = tracking_id; }
+    public Device getDevice() { return device; }
+    public void setDevice(Device device) { this.device = device; }
 
 }

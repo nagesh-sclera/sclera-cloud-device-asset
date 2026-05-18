@@ -12,7 +12,7 @@ import org.hibernate.annotations.ColumnDefault;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 
@@ -2553,7 +2553,176 @@ import java.util.Set;
         resultSetMapping = "deviceImageMapping"
 )
 
+@NamedNativeQuery(
+        name = "Device.mcpSearchDevices",
+        query = "SELECT  d.id, d.status, d.display_name, d.last_seen_on, d.mac_address, d.vendor, d.model,"
+                + " d.type , d.ip_address, d.monitor, l.name as location, d.network_layer, d.user_data_model ,"
+                + " d.user_data_vendor, d.user_data_name, d.parent, d.snmp_parent,  d.docker_vdms_id AS vdms_id, d.docker_name,"
+                + " d.type AS system_type, d.remote_access, b.name as building, f.name as floor, d.local_vendor_id, "
+                + " d.global_vendor_id, d.other_vendor_1_id, d.other_vendor_2_id, d.other_vendor_3_id,"
+                + " d.product_id, d.alarm, d.virtual_device_type, d.warranty, d.quick_link_name, d.quick_link_url, l.id AS location_id, d.email_alert, d.sms_alert,"
+                + " d.popup_notification, d.snmp_count, d.snmp_status, d.interface_count, d.notes_count, d.ticket_count, d.ticket_status, d.serial_number,"
+                + " d.bacnet_count, d.bacnet_status, d.lorawan_count, d.lorawan_status, d.disruptive_count, d.disruptive_status, d.my_devices_count,"
+                + " d.my_devices_status, d.local_vendor_email_alert, d.local_vendor_sms_alert, d.monnit_count, d.monnit_status,"
+                + " d.pelican_count, d.pelican_status,d.knx_count,d.knx_status, d.subsystem_parent_id, d.subsystem_count, d.custom_fields,"
+                + " d.description, d.asset_match_status, d.matched_product_ids, d.latitude, d.longitude,d.measuring_instrument_count,"
+                + " d.document_count,d.media_count,d.checklist_template_count, d.snmp_object_count,d.snmp_object_status, d.position, d.measuring_instrument_status,"
+                + " d.record_checklist_count, d.record_checklist_status, d.daintree_count, d.daintree_status, d.qrcode_count, d.asset_image_url, d.created_timestamp,"
+                + " d.ecobee_count, d.ecobee_status, d.modbus_count, d.modbus_status, f.id as floor_id, d.created_email,d.asset_group, b.id as building_id, d.updated_email,"
+                + " d.updated_timestamp, d.onboard_status , dos.id as device_onboard_status_id, dos.assignee_email, dos.image_status, dos.geolocation_status, "
+                + " dos.tag_status, dos.field_status, d.asset_ocr_image_url, d.category, d.sub_category, d.location_status , d.digital_twin_image_url, d.poly_lens_count,"
+                + " d.cost_value, d.assigned_user_email, d.ai_call, d.cost_unit, d.is_dnd_enabled, d.operational_status, ind.tracking_id AS inventory_tracking_id,"
+                + " d.adc_json, d.system_type_id, d.system_type_name, d.asset_type_id, d.asset_type_name, d.asset_sub_type_id, d.asset_sub_type_name, d.source_type, d.asset_tag_images_url "
+                + " FROM device d"
+                + " LEFT JOIN device_onboard_status dos ON d.id = dos.device_id "
+                + " LEFT JOIN inventory_device ind ON d.id = ind.device_id "
+                + " LEFT JOIN location l ON d.location_id = l.id"
+                + " LEFT JOIN floor f ON l.floor_id = f.id"
+                + " LEFT JOIN building b ON f.building_id = b.id"
+                + " WHERE d.subsystem_parent_id IS NULL AND d.asset_match_status != 3"
+                + " AND d.docker_vdms_id = ?1 AND (?2 = 'all' OR d.docker_name = ?2)"
+                + " AND (?3 = '' OR d.display_name LIKE CONCAT('%',?3,'%')"
+                + "   OR d.user_data_name LIKE CONCAT('%',?3,'%')"
+                + "   OR d.ip_address     LIKE CONCAT('%',?3,'%')"
+                + "   OR d.mac_address    LIKE CONCAT('%',?3,'%'))"
+                + " ORDER BY d.created_timestamp DESC, d.id"
+                + " LIMIT ?4 OFFSET ?5",
+        resultSetMapping = "devicedtomapping"
+)
 
+@NamedNativeQuery(
+        name = "Device.mcpGetUnassignedDevices",
+        query = "SELECT  d.id, d.status, d.display_name, d.last_seen_on, d.mac_address, d.vendor, d.model,"
+                + " d.type , d.ip_address, d.monitor, l.name as location, d.network_layer, d.user_data_model ,"
+                + " d.user_data_vendor, d.user_data_name, d.parent, d.snmp_parent,  d.docker_vdms_id AS vdms_id, d.docker_name,"
+                + " d.type AS system_type, d.remote_access, b.name as building, f.name as floor, d.local_vendor_id, "
+                + " d.global_vendor_id, d.other_vendor_1_id, d.other_vendor_2_id, d.other_vendor_3_id,"
+                + " d.product_id, d.alarm, d.virtual_device_type, d.warranty, d.quick_link_name, d.quick_link_url, l.id AS location_id, d.email_alert, d.sms_alert,"
+                + " d.popup_notification, d.snmp_count, d.snmp_status, d.interface_count, d.notes_count, d.ticket_count, d.ticket_status, d.serial_number,"
+                + " d.bacnet_count, d.bacnet_status, d.lorawan_count, d.lorawan_status, d.disruptive_count, d.disruptive_status, d.my_devices_count,"
+                + " d.my_devices_status, d.local_vendor_email_alert, d.local_vendor_sms_alert, d.monnit_count, d.monnit_status,"
+                + " d.pelican_count, d.pelican_status,d.knx_count,d.knx_status, d.subsystem_parent_id, d.subsystem_count, d.custom_fields,"
+                + " d.description, d.asset_match_status, d.matched_product_ids, d.latitude, d.longitude,d.measuring_instrument_count,"
+                + " d.document_count,d.media_count,d.checklist_template_count, d.snmp_object_count,d.snmp_object_status, d.position, d.measuring_instrument_status,"
+                + " d.record_checklist_count, d.record_checklist_status, d.daintree_count, d.daintree_status, d.qrcode_count, d.asset_image_url, d.created_timestamp,"
+                + " d.ecobee_count, d.ecobee_status, d.modbus_count, d.modbus_status, f.id as floor_id, d.created_email,d.asset_group, b.id as building_id, d.updated_email,"
+                + " d.updated_timestamp, d.onboard_status , dos.id as device_onboard_status_id, dos.assignee_email, dos.image_status, dos.geolocation_status, "
+                + " dos.tag_status, dos.field_status, d.asset_ocr_image_url, d.category, d.sub_category, d.location_status , d.digital_twin_image_url, d.poly_lens_count,"
+                + " d.cost_value, d.assigned_user_email, d.ai_call, d.cost_unit, d.is_dnd_enabled, d.operational_status, ind.tracking_id AS inventory_tracking_id,"
+                + " d.adc_json, d.system_type_id, d.system_type_name, d.asset_type_id, d.asset_type_name, d.asset_sub_type_id, d.asset_sub_type_name, d.source_type, d.asset_tag_images_url "
+                + " FROM device d"
+                + " LEFT JOIN device_onboard_status dos ON d.id = dos.device_id "
+                + " LEFT JOIN inventory_device ind ON d.id = ind.device_id "
+                + " LEFT JOIN location l ON d.location_id = l.id"
+                + " LEFT JOIN floor f ON l.floor_id = f.id"
+                + " LEFT JOIN building b ON f.building_id = b.id"
+                + " WHERE d.subsystem_parent_id IS NULL AND d.asset_match_status != 3"
+                + " AND d.docker_vdms_id = ?1 AND (?2 = 'all' OR d.docker_name = ?2)"
+                + " AND (d.assigned_user_email IS NULL OR d.assigned_user_email = 'null' OR d.assigned_user_email = '')"
+                + " ORDER BY d.created_timestamp DESC, d.id"
+                + " LIMIT ?3 OFFSET ?4",
+        resultSetMapping = "devicedtomapping"
+)
+
+@NamedNativeQuery(
+        name = "Device.mcpGetDndDevices",
+        query = "SELECT  d.id, d.status, d.display_name, d.last_seen_on, d.mac_address, d.vendor, d.model,"
+                + " d.type , d.ip_address, d.monitor, l.name as location, d.network_layer, d.user_data_model ,"
+                + " d.user_data_vendor, d.user_data_name, d.parent, d.snmp_parent,  d.docker_vdms_id AS vdms_id, d.docker_name,"
+                + " d.type AS system_type, d.remote_access, b.name as building, f.name as floor, d.local_vendor_id, "
+                + " d.global_vendor_id, d.other_vendor_1_id, d.other_vendor_2_id, d.other_vendor_3_id,"
+                + " d.product_id, d.alarm, d.virtual_device_type, d.warranty, d.quick_link_name, d.quick_link_url, l.id AS location_id, d.email_alert, d.sms_alert,"
+                + " d.popup_notification, d.snmp_count, d.snmp_status, d.interface_count, d.notes_count, d.ticket_count, d.ticket_status, d.serial_number,"
+                + " d.bacnet_count, d.bacnet_status, d.lorawan_count, d.lorawan_status, d.disruptive_count, d.disruptive_status, d.my_devices_count,"
+                + " d.my_devices_status, d.local_vendor_email_alert, d.local_vendor_sms_alert, d.monnit_count, d.monnit_status,"
+                + " d.pelican_count, d.pelican_status,d.knx_count,d.knx_status, d.subsystem_parent_id, d.subsystem_count, d.custom_fields,"
+                + " d.description, d.asset_match_status, d.matched_product_ids, d.latitude, d.longitude,d.measuring_instrument_count,"
+                + " d.document_count,d.media_count,d.checklist_template_count, d.snmp_object_count,d.snmp_object_status, d.position, d.measuring_instrument_status,"
+                + " d.record_checklist_count, d.record_checklist_status, d.daintree_count, d.daintree_status, d.qrcode_count, d.asset_image_url, d.created_timestamp,"
+                + " d.ecobee_count, d.ecobee_status, d.modbus_count, d.modbus_status, f.id as floor_id, d.created_email,d.asset_group, b.id as building_id, d.updated_email,"
+                + " d.updated_timestamp, d.onboard_status , dos.id as device_onboard_status_id, dos.assignee_email, dos.image_status, dos.geolocation_status, "
+                + " dos.tag_status, dos.field_status, d.asset_ocr_image_url, d.category, d.sub_category, d.location_status , d.digital_twin_image_url, d.poly_lens_count,"
+                + " d.cost_value, d.assigned_user_email, d.ai_call, d.cost_unit, d.is_dnd_enabled, d.operational_status, ind.tracking_id AS inventory_tracking_id,"
+                + " d.adc_json, d.system_type_id, d.system_type_name, d.asset_type_id, d.asset_type_name, d.asset_sub_type_id, d.asset_sub_type_name, d.source_type, d.asset_tag_images_url "
+                + " FROM device d"
+                + " LEFT JOIN device_onboard_status dos ON d.id = dos.device_id "
+                + " LEFT JOIN inventory_device ind ON d.id = ind.device_id "
+                + " LEFT JOIN location l ON d.location_id = l.id"
+                + " LEFT JOIN floor f ON l.floor_id = f.id"
+                + " LEFT JOIN building b ON f.building_id = b.id"
+                + " WHERE d.subsystem_parent_id IS NULL AND d.asset_match_status != 3"
+                + " AND (d.is_dnd_enabled = 1 OR d.system_dnd_enabled = 1)"
+                + " AND d.docker_vdms_id = ?1 AND (?2 = 'all' OR d.docker_name = ?2)"
+                + " ORDER BY d.created_timestamp DESC, d.id"
+                + " LIMIT ?3 OFFSET ?4",
+        resultSetMapping = "devicedtomapping"
+)
+
+@NamedNativeQuery(
+        name = "Device.mcpGetSubsystemDevices",
+        query = "SELECT  d.id, d.status, d.display_name, d.last_seen_on, d.mac_address, d.vendor, d.model,"
+                + " d.type , d.ip_address, d.monitor, l.name as location, d.network_layer, d.user_data_model ,"
+                + " d.user_data_vendor, d.user_data_name, d.parent, d.snmp_parent,  d.docker_vdms_id AS vdms_id, d.docker_name,"
+                + " d.type AS system_type, d.remote_access, b.name as building, f.name as floor, d.local_vendor_id, "
+                + " d.global_vendor_id, d.other_vendor_1_id, d.other_vendor_2_id, d.other_vendor_3_id,"
+                + " d.product_id, d.alarm, d.virtual_device_type, d.warranty, d.quick_link_name, d.quick_link_url, l.id AS location_id, d.email_alert, d.sms_alert,"
+                + " d.popup_notification, d.snmp_count, d.snmp_status, d.interface_count, d.notes_count, d.ticket_count, d.ticket_status, d.serial_number,"
+                + " d.bacnet_count, d.bacnet_status, d.lorawan_count, d.lorawan_status, d.disruptive_count, d.disruptive_status, d.my_devices_count,"
+                + " d.my_devices_status, d.local_vendor_email_alert, d.local_vendor_sms_alert, d.monnit_count, d.monnit_status,"
+                + " d.pelican_count, d.pelican_status,d.knx_count,d.knx_status, d.subsystem_parent_id, d.subsystem_count, d.custom_fields,"
+                + " d.description, d.asset_match_status, d.matched_product_ids, d.latitude, d.longitude,d.measuring_instrument_count,"
+                + " d.document_count,d.media_count,d.checklist_template_count, d.snmp_object_count,d.snmp_object_status, d.position, d.measuring_instrument_status,"
+                + " d.record_checklist_count, d.record_checklist_status, d.daintree_count, d.daintree_status, d.qrcode_count, d.asset_image_url, d.created_timestamp,"
+                + " d.ecobee_count, d.ecobee_status, d.modbus_count, d.modbus_status, f.id as floor_id, d.created_email,d.asset_group, b.id as building_id, d.updated_email,"
+                + " d.updated_timestamp, d.onboard_status , dos.id as device_onboard_status_id, dos.assignee_email, dos.image_status, dos.geolocation_status, "
+                + " dos.tag_status, dos.field_status, d.asset_ocr_image_url, d.category, d.sub_category, d.location_status , d.digital_twin_image_url, d.poly_lens_count,"
+                + " d.cost_value, d.assigned_user_email, d.ai_call, d.cost_unit, d.is_dnd_enabled, d.operational_status, ind.tracking_id AS inventory_tracking_id,"
+                + " d.adc_json, d.system_type_id, d.system_type_name, d.asset_type_id, d.asset_type_name, d.asset_sub_type_id, d.asset_sub_type_name, d.source_type, d.asset_tag_images_url "
+                + " FROM device d"
+                + " LEFT JOIN device_onboard_status dos ON d.id = dos.device_id "
+                + " LEFT JOIN inventory_device ind ON d.id = ind.device_id "
+                + " LEFT JOIN location l ON d.location_id = l.id"
+                + " LEFT JOIN floor f ON l.floor_id = f.id"
+                + " LEFT JOIN building b ON f.building_id = b.id"
+                + " WHERE d.subsystem_parent_id = ?1"
+                + " ORDER BY d.created_timestamp DESC, d.id"
+                + " LIMIT ?2 OFFSET ?3",
+        resultSetMapping = "devicedtomapping"
+)
+
+@NamedNativeQuery(
+        name = "Device.mcpGetRecentDevices",
+        query = "SELECT  d.id, d.status, d.display_name, d.last_seen_on, d.mac_address, d.vendor, d.model,"
+                + " d.type , d.ip_address, d.monitor, l.name as location, d.network_layer, d.user_data_model ,"
+                + " d.user_data_vendor, d.user_data_name, d.parent, d.snmp_parent,  d.docker_vdms_id AS vdms_id, d.docker_name,"
+                + " d.type AS system_type, d.remote_access, b.name as building, f.name as floor, d.local_vendor_id, "
+                + " d.global_vendor_id, d.other_vendor_1_id, d.other_vendor_2_id, d.other_vendor_3_id,"
+                + " d.product_id, d.alarm, d.virtual_device_type, d.warranty, d.quick_link_name, d.quick_link_url, l.id AS location_id, d.email_alert, d.sms_alert,"
+                + " d.popup_notification, d.snmp_count, d.snmp_status, d.interface_count, d.notes_count, d.ticket_count, d.ticket_status, d.serial_number,"
+                + " d.bacnet_count, d.bacnet_status, d.lorawan_count, d.lorawan_status, d.disruptive_count, d.disruptive_status, d.my_devices_count,"
+                + " d.my_devices_status, d.local_vendor_email_alert, d.local_vendor_sms_alert, d.monnit_count, d.monnit_status,"
+                + " d.pelican_count, d.pelican_status,d.knx_count,d.knx_status, d.subsystem_parent_id, d.subsystem_count, d.custom_fields,"
+                + " d.description, d.asset_match_status, d.matched_product_ids, d.latitude, d.longitude,d.measuring_instrument_count,"
+                + " d.document_count,d.media_count,d.checklist_template_count, d.snmp_object_count,d.snmp_object_status, d.position, d.measuring_instrument_status,"
+                + " d.record_checklist_count, d.record_checklist_status, d.daintree_count, d.daintree_status, d.qrcode_count, d.asset_image_url, d.created_timestamp,"
+                + " d.ecobee_count, d.ecobee_status, d.modbus_count, d.modbus_status, f.id as floor_id, d.created_email,d.asset_group, b.id as building_id, d.updated_email,"
+                + " d.updated_timestamp, d.onboard_status , dos.id as device_onboard_status_id, dos.assignee_email, dos.image_status, dos.geolocation_status, "
+                + " dos.tag_status, dos.field_status, d.asset_ocr_image_url, d.category, d.sub_category, d.location_status , d.digital_twin_image_url, d.poly_lens_count,"
+                + " d.cost_value, d.assigned_user_email, d.ai_call, d.cost_unit, d.is_dnd_enabled, d.operational_status, ind.tracking_id AS inventory_tracking_id,"
+                + " d.adc_json, d.system_type_id, d.system_type_name, d.asset_type_id, d.asset_type_name, d.asset_sub_type_id, d.asset_sub_type_name, d.source_type, d.asset_tag_images_url "
+                + " FROM device d"
+                + " LEFT JOIN device_onboard_status dos ON d.id = dos.device_id "
+                + " LEFT JOIN inventory_device ind ON d.id = ind.device_id "
+                + " LEFT JOIN location l ON d.location_id = l.id"
+                + " LEFT JOIN floor f ON l.floor_id = f.id"
+                + " LEFT JOIN building b ON f.building_id = b.id"
+                + " WHERE d.subsystem_parent_id IS NULL AND d.asset_match_status != 3"
+                + " AND d.docker_vdms_id = ?1 AND (?2 = 'all' OR d.docker_name = ?2)"
+                + " AND (d.created_timestamp >= ?3 OR d.updated_timestamp >= ?3)"
+                + " ORDER BY GREATEST(COALESCE(d.updated_timestamp, 0), d.created_timestamp) DESC, d.id"
+                + " LIMIT ?4 OFFSET ?5",
+        resultSetMapping = "devicedtomapping"
+)
 
 
 public class Device {
@@ -2729,9 +2898,9 @@ public class Device {
     @Column(length = 32)
     private Integer checklist_template_count;
 
-    // removed: relation to Docker (edge-only)
-    @javax.persistence.Transient
-    // (Docker relation skipped — Bucket-D)
+    @JsonBackReference
+    @ManyToOne
+    private Docker docker;
 
     //	@OneToOne(cascade = CascadeType.ALL)
     private String parent;
@@ -2849,150 +3018,128 @@ public class Device {
     @ManyToOne
     private Phonebook other_vendor_3;
 
-    // removed: relation to Snmp_Configuration (AP-C2)
-    @javax.persistence.Transient
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "device")
     private Snmp_Configuration snmp_configuration;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
-    private Set<Interface> interfaces;
-
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
-    private Set<Service> service;
+    private Set<Interface> interfaces = new HashSet<>();
 
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
-    private Set<Notes> notes;
+    private Set<Service> service = new HashSet<>();
 
-    // removed: relation to Product_Details (AP-C8)
-    @javax.persistence.Transient
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
+    private Set<Notes> notes = new HashSet<>();
+
+    @ManyToOne
+    @JoinColumn(name = "product_id")
     private Product_Details product_details;
 
-    // removed: relation to RemoteAccessSession (edge-only)
-    @javax.persistence.Transient
-    private RemoteAccessSession remote_access_session;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
+    private Set<RemoteAccessSession> remote_access_session = new HashSet<>();
 
     @ManyToOne
     private Location location;
 
-    // removed: relation to History (AP-C6)
-    @javax.persistence.Transient
-    private java.util.Set<History> history;
+    @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
+    private Set<History> history = new HashSet<>();
 
-    // removed: relation to Ticket (AP-C3)
-    @javax.persistence.Transient
-    private java.util.Set<Ticket> ticket;
-
-    // removed: relation to Lorawan_Sensor (AP-C2)
-    @javax.persistence.Transient
-    private java.util.Set<Lorawan_Sensor> lorawan_sensor;
-
-    // removed: relation to Bacnet_Object (AP-C2)
-    @javax.persistence.Transient
-    private java.util.Set<Bacnet_Object> bacnet_object;
-
-    // removed: relation to DisruptiveSensor (AP-C2)
-    @javax.persistence.Transient
-    private java.util.Set<DisruptiveSensor> disruptive_sensor;
 
     @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
-    private Set<Device_IP_Address> device_ip_address;
+    private Set<Ticket> ticket = new HashSet<>();
 
-    // removed: relation to Datahoist (AP-C2)
-    @javax.persistence.Transient
-    private java.util.Set<Datahoist> datahoist;
+    @OneToMany(mappedBy = "device")
+    private Set<Lorawan_Sensor> lorawan_sensor = new HashSet<>();
 
-    // removed: relation to MyDevicesSensor (AP-C2)
-    @javax.persistence.Transient
-    private java.util.Set<MyDevicesSensor> my_devices_sensor;
+    @OneToMany(mappedBy = "device")
+    private Set<Bacnet_Object> bacnet_object = new HashSet<>();
 
-    // removed: relation to Monnit_Sensor (AP-C2)
-    @javax.persistence.Transient
-    private java.util.Set<Monnit_Sensor> monnit_sensor;
+    @OneToMany(mappedBy = "device")
+    private Set<DisruptiveSensor> disruptive_sensor = new HashSet<>();
 
-    // removed: relation to PelicanSensor (AP-C2)
-    @javax.persistence.Transient
-    private java.util.Set<PelicanSensor> pelican_sensor;
+    @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
+    private Set<Device_IP_Address> device_ip_address = new HashSet<>();
 
-    // removed: relation to Snmp_Dump (AP-C2)
-    @javax.persistence.Transient
-    private java.util.Set<Snmp_Dump> snmp_dump;
+    @OneToMany(mappedBy = "device")
+    private Set<Datahoist> datahoist = new HashSet<>();
 
-    // removed: relation to KNXGroup (AP-C2)
-    @javax.persistence.Transient
-    private java.util.Set<KNXGroup> knx_group;
+    @OneToMany(mappedBy = "device")
+    private Set<MyDevicesSensor> my_devices_sensor = new HashSet<>();
 
-    // removed: relation to SnmpObject (AP-C2)
-    @javax.persistence.Transient
-    private java.util.Set<SnmpObject> snmp_object;
+    @OneToMany(mappedBy = "device")
+    private Set<Monnit_Sensor> monnit_sensor = new HashSet<>();
+
+    @OneToMany(mappedBy = "device")
+    private Set<PelicanSensor> pelican_sensor = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
+    private Set<Snmp_Dump> snmp_dump = new HashSet<>();
+
+
+    @OneToMany(mappedBy = "device")
+    private Set<KNXGroup> knx_group = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
+    private Set<SnmpObject> snmp_object = new HashSet<>();
 
     @ManyToMany()
     @JoinTable(name = "device_document", joinColumns = @JoinColumn(name = "device_id"), inverseJoinColumns = @JoinColumn(name = "document_id"))
-    private Set<Document> document;
+    private Set<Document> document = new HashSet<>();
 
 
     @ManyToMany()
     @JoinTable(name = "device_media", joinColumns = @JoinColumn(name = "device_id"), inverseJoinColumns = @JoinColumn(name = "media_id"))
-    private Set<Media> media;
+    private Set<Media> media = new HashSet<>();
 
-    // removed: relation to CheckListTemplate (AP-C4)
-    @javax.persistence.Transient
-    private java.util.Set<CheckListTemplate> check_list_template;
-
-    // removed: relation to CheckListRecord (AP-C4)
-    @javax.persistence.Transient
-    private java.util.Set<CheckListRecord> check_list_record;
+    @ManyToMany()
+    @JoinTable(name = "device_check_list_template", joinColumns = @JoinColumn(name = "device_id"), inverseJoinColumns = @JoinColumn(name = "check_list_template_id"))
+    private Set<CheckListTemplate> check_list_template = new HashSet<>();
 
     @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
-    private Set<AssetDeviceMapping> asset_device_mapping;
+    private Set<CheckListRecord> check_list_record = new HashSet<>();
+
+    @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
+    private Set<AssetDeviceMapping> asset_device_mapping = new HashSet<>();
 
     @OneToMany(mappedBy = "device", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<MeasuringInstrument> measuring_instrument;
+    private Set<MeasuringInstrument> measuring_instrument = new HashSet<>();
 
-    // removed: relation to Inventory (AP-C8)
-    @javax.persistence.Transient
-    private Inventory inventory;
+    @ManyToMany()
+    @JoinTable(name = "device_inventory", joinColumns = @JoinColumn(name = "device_id"), inverseJoinColumns = @JoinColumn(name = "inventory_id"))
+    private Set<Inventory> inventory = new HashSet<>();
 
     @OneToOne(mappedBy = "device", cascade = CascadeType.ALL)
     private GlobalQrcode global_qrcode;
 
-    // removed: relation to RecordChecklist (AP-C4)
-    @javax.persistence.Transient
-    private java.util.Set<RecordChecklist> record_checklist;
+    @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
+    private Set<RecordChecklist> record_checklist = new HashSet<>();
 
-    // removed: relation to GlobalChecklist (AP-C4)
-    @javax.persistence.Transient
-    private java.util.Set<GlobalChecklist> global_checklist;
-
-    // removed: relation to GlobalInspectionRelation (AP-C4)
-    @javax.persistence.Transient
-    private java.util.Set<GlobalInspectionRelation> global_inspection_relation;
-
-    // removed: relation to GlobalChecklistConditions (AP-C4)
-    @javax.persistence.Transient
-    private java.util.Set<GlobalChecklistConditions> global_checklist_conditions;
-
-    // removed: relation to DaintreeDevice (AP-C2)
-    @javax.persistence.Transient
-    private java.util.Set<DaintreeDevice> daintree_device;
+    @ManyToMany()
+    @JoinTable(name = "device_global_checklist", joinColumns = @JoinColumn(name = "device_id"), inverseJoinColumns = @JoinColumn(name = "global_checklist_id"))
+    private Set<GlobalChecklist> global_checklist = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
-    private Set<DeviceConditions> device_conditions;
+    private Set<GlobalInspectionRelation> global_inspection_relation = new HashSet<>();
 
-    // removed: relation to EcobeeSensor (AP-C2)
-    @javax.persistence.Transient
-    private java.util.Set<EcobeeSensor> ecobee_sensor;
+    @OneToMany(mappedBy = "device")
+    private Set<DaintreeDevice> daintree_device = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
-    private Set<Specifications> specifications;
+    private Set<DeviceConditions> device_conditions = new HashSet<>();
 
-    // removed: relation to ModbusRegister (AP-C2)
-    @javax.persistence.Transient
-    private java.util.Set<ModbusRegister> modbus_register;
+    @OneToMany(mappedBy = "device")
+    private Set<EcobeeSensor> ecobee_sensor = new HashSet<>();
 
-    // removed: relation to SiemensAsset (AP-C2)
-    @javax.persistence.Transient
-    private java.util.Set<SiemensAsset> siemens_asset;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
+    private Set<Specifications> specifications = new HashSet<>();
+
+    @OneToMany(mappedBy = "device")
+    private Set<ModbusRegister> modbus_register = new HashSet<>();
+
+    @OneToMany(mappedBy = "device")
+    private Set<SiemensAsset> siemens_asset = new HashSet<>();
 
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "device")
     private DeviceOnboardStatus device_onboard_status;
@@ -3001,29 +3148,33 @@ public class Device {
     private Integer poly_lens_count;
 
 
-    // removed: relation to Bucket-C entity PolyLensDevice (AP-C2)
-
-    // removed: relation to Bucket-C entity MqttDevice (AP-C2)
+//    @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
+//    private Set<PolyLensDevice> poly_lens_device;
+//
+//
+//    @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
+//    private Set<MqttDevice> mqtt_device;
 
     @Column(length = 32)
     private Integer mqtt_count;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
-    private Set<Nfc> nfc;
+    private Set<Nfc> nfc = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
-    private Set<QrCode> qrcode;
+    private Set<QrCode> qrcode = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
-    private Set<ClientNfc> client_nfc;
+    private Set<ClientNfc> client_nfc = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
-    private Set<ClientQrCode> client_qrcode;
+    private Set<ClientQrCode> client_qrcode = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
-    private Set<ClientBarCode> client_barcode;
+    private Set<ClientBarCode> client_barcode = new HashSet<>();
 
-    // removed: relation to Bucket-C entity GlobalChecklistConditions (AP-C4)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
+    private Set<GlobalChecklistConditions> global_checklist_conditions = new HashSet<>();
 
     @Column(name = "cost_value", precision = 16, scale = 2)
     private BigDecimal cost_value;
@@ -3077,9 +3228,12 @@ public class Device {
     @JoinColumn(name = "assigned_user_email", referencedColumnName = "email")
     User user;
 
-    // removed: relation to Bucket-C entity Technician (AP-C3)
+    @ManyToMany
+    @JoinTable(name = "device_technician", joinColumns = @JoinColumn(name = "device_id"), inverseJoinColumns = @JoinColumn(name = "technician_id"))
+    private Set<Technician> technician = new HashSet<>();
 
-    // removed: relation to Bucket-C entity InventoryDevice (AP-C8)
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "device")
+    private InventoryDevice inventory_device;
 
     public String getOperational_status() {
         return operational_status;
@@ -3129,9 +3283,8 @@ public class Device {
         this.ai_call = ai_call;
     }
 
-    // removed: relation to GaiameshController (AP-C2)
-    @javax.persistence.Transient
-    private java.util.Set<GaiameshController> gaiamesh_controller;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
+    private Set<GaiameshController> gaiamesh_controller = new HashSet<>();
 
     public String getId() {
         return id;
@@ -3141,13 +3294,13 @@ public class Device {
         this.id = id;
     }
 
-    // removed: getter/setter for Bucket-D Docker (edge-only)
-    // stub: added back as @Transient for compile compatibility
-    @javax.persistence.Transient
-    private Docker docker;
+    public Docker getDocker() {
+        return docker;
+    }
 
-    public Docker getDocker() { return docker; }
-    public void setDocker(Docker docker) { this.docker = docker; }
+    public void setDocker(Docker docker) {
+        this.docker = docker;
+    }
 
     public String getParent() {
         return parent;
@@ -3206,7 +3359,16 @@ public class Device {
         this.other_vendor_3 = other_vendor_3;
     }
 
-    // removed: getter/setter for Bucket-C Snmp_Configuration (AP-C2)
+    public Snmp_Configuration getSnmp_configuration() {
+        return snmp_configuration;
+    }
+
+    public void setSnmp_configuration(Snmp_Configuration snmp_configuration) {
+        this.snmp_configuration = snmp_configuration;
+        if (snmp_configuration != null) {
+            snmp_configuration.setDevice(this);
+        }
+    }
 
     public Set<Interface> getInterfaces() {
         return interfaces;
@@ -3547,7 +3709,13 @@ public class Device {
         this.disruptive_status = disruptive_status;
     }
 
-    // removed: getter/setter for Bucket-C Product_Details (AP-C8)
+    public Product_Details getProduct_details() {
+        return product_details;
+    }
+
+    public void setProduct_details(Product_Details product_details) {
+        this.product_details = product_details;
+    }
 
     public String getDisplay_name() {
         return display_name;
@@ -3573,17 +3741,53 @@ public class Device {
         this.snmp_parent_index = snmp_parent_index;
     }
 
-    // removed: getter/setter for Bucket-D RemoteAccessSession (edge-only)
+    public Set<RemoteAccessSession> getRemote_access_session() {
+        return remote_access_session;
+    }
 
-    // removed: getter/setter for Bucket-C History (AP-C6)
+    public void setRemote_access_session(Set<RemoteAccessSession> remote_access_session) {
+        this.remote_access_session = remote_access_session;
+    }
 
-    // removed: getter/setter for Bucket-C Ticket (AP-C3)
+    public Set<History> getHistory() {
+        return history;
+    }
 
-    // removed: getter/setter for Bucket-C Lorawan_Sensor (AP-C2)
+    public void setHistory(Set<History> history) {
+        this.history = history;
+    }
 
-    // removed: getter/setter for Bucket-C Bacnet_Object (AP-C2)
+    public Set<Ticket> getTicket() {
+        return ticket;
+    }
 
-    // removed: getter/setter for Bucket-C DisruptiveSensor (AP-C2)
+    public void setTicket(Set<Ticket> ticket) {
+        this.ticket = ticket;
+    }
+
+    public Set<Lorawan_Sensor> getLorawan_sensor() {
+        return lorawan_sensor;
+    }
+
+    public void setLorawan_sensor(Set<Lorawan_Sensor> lorawan_sensor) {
+        this.lorawan_sensor = lorawan_sensor;
+    }
+
+    public Set<Bacnet_Object> getBacnet_object() {
+        return bacnet_object;
+    }
+
+    public void setBacnet_object(Set<Bacnet_Object> bacnet_object) {
+        this.bacnet_object = bacnet_object;
+    }
+
+    public Set<DisruptiveSensor> getDisruptive_sensor() {
+        return disruptive_sensor;
+    }
+
+    public void setDisruptive_sensor(Set<DisruptiveSensor> disruptive_sensor) {
+        this.disruptive_sensor = disruptive_sensor;
+    }
 
     public Set<Device_IP_Address> getDevice_ip_address() {
         return device_ip_address;
@@ -3602,9 +3806,21 @@ public class Device {
         this.id = id;
     }
 
-    // removed: getter/setter for Bucket-C Datahoist (AP-C2)
+    public Set<Datahoist> getDatahoist() {
+        return datahoist;
+    }
 
-    // removed: getter/setter for Bucket-C MyDevicesSensor (AP-C2)
+    public void setDatahoist(Set<Datahoist> datahoist) {
+        this.datahoist = datahoist;
+    }
+
+    public Set<MyDevicesSensor> getMy_devices_sensor() {
+        return my_devices_sensor;
+    }
+
+    public void setMy_devices_sensor(Set<MyDevicesSensor> my_devices_sensor) {
+        this.my_devices_sensor = my_devices_sensor;
+    }
 
     public Integer getMy_devices_count() {
         return my_devices_count;
@@ -3759,11 +3975,29 @@ public class Device {
         this.local_vendor_sms_alert = local_vendor_sms_alert;
     }
 
-    // removed: getter/setter for Bucket-C Monnit_Sensor (AP-C2)
+    public Set<Monnit_Sensor> getMonnit_sensor() {
+        return monnit_sensor;
+    }
 
-    // removed: getter/setter for Bucket-C PelicanSensor (AP-C2)
+    public void setMonnit_sensor(Set<Monnit_Sensor> monnit_sensor) {
+        this.monnit_sensor = monnit_sensor;
+    }
 
-    // removed: getter/setter for Bucket-C KNXGroup (AP-C2)
+    public Set<PelicanSensor> getPelican_sensor() {
+        return pelican_sensor;
+    }
+
+    public void setPelican_sensor(Set<PelicanSensor> pelican_sensor) {
+        this.pelican_sensor = pelican_sensor;
+    }
+
+    public Set<KNXGroup> getKnx_group() {
+        return knx_group;
+    }
+
+    public void setKnx_group(Set<KNXGroup> knx_group) {
+        this.knx_group = knx_group;
+    }
 
     public Set<Document> getDocument() {
         return document;
@@ -3781,7 +4015,13 @@ public class Device {
         this.media = media;
     }
 
-    // removed: getter/setter for Bucket-C CheckListTemplate (AP-C4)
+    public Set<CheckListTemplate> getCheck_list_template() {
+        return check_list_template;
+    }
+
+    public void setCheck_list_template(Set<CheckListTemplate> check_list_template) {
+        this.check_list_template = check_list_template;
+    }
 
     public String getSubsystem_parent_id() {
         return subsystem_parent_id;
@@ -3799,7 +4039,13 @@ public class Device {
         this.subsystem_count = subsystem_count;
     }
 
-    // removed: getter/setter for Bucket-C CheckListRecord (AP-C4)
+    public Set<CheckListRecord> getCheck_list_record() {
+        return check_list_record;
+    }
+
+    public void setCheck_list_record(Set<CheckListRecord> check_list_record) {
+        this.check_list_record = check_list_record;
+    }
 
     public String getCustom_fields() {
         return custom_fields;
@@ -3881,9 +4127,21 @@ public class Device {
         this.snmp_object_status = snmp_object_status;
     }
 
-    // removed: getter/setter for Bucket-C SnmpObject (AP-C2)
+    public Set<SnmpObject> getSnmp_object() {
+        return snmp_object;
+    }
 
-    // removed: getter/setter for Bucket-C Inventory (AP-C8)
+    public void setSnmp_object(Set<SnmpObject> snmp_object) {
+        this.snmp_object = snmp_object;
+    }
+
+    public Set<Inventory> getInventory() {
+        return inventory;
+    }
+
+    public void setInventory(Set<Inventory> inventory) {
+        this.inventory = inventory;
+    }
 
     public GlobalQrcode getGlobal_qrcode() {
         return global_qrcode;
@@ -3893,7 +4151,13 @@ public class Device {
         this.global_qrcode = global_qrcode;
     }
 
-    // removed: getter/setter for Bucket-C RecordChecklist (AP-C4)
+    public Set<RecordChecklist> getRecord_checklist() {
+        return record_checklist;
+    }
+
+    public void setRecord_checklist(Set<RecordChecklist> record_checklist) {
+        this.record_checklist = record_checklist;
+    }
 
     public Set<GlobalChecklist> getGlobal_checklist() {
         return global_checklist;
@@ -3919,7 +4183,14 @@ public class Device {
         this.record_checklist_count = record_checklist_count;
     }
 
-    // removed: getter/setter for Bucket-C GlobalInspectionRelation (AP-C4)
+    public Set<GlobalInspectionRelation> getGlobal_inspection_relation() {
+        return global_inspection_relation;
+    }
+
+    public void setGlobal_inspection_relation(Set<GlobalInspectionRelation> global_inspection_relation) {
+        this.global_inspection_relation = global_inspection_relation;
+    }
+
 
     public Integer getDaintree_count() {
         return daintree_count;
@@ -3945,7 +4216,13 @@ public class Device {
         this.qrcode_count = qrcode_count;
     }
 
-    // removed: getter/setter for Bucket-C DaintreeDevice (AP-C2)
+    public Set<DaintreeDevice> getDaintree_device() {
+        return daintree_device;
+    }
+
+    public void setDaintree_device(Set<DaintreeDevice> daintree_device) {
+        this.daintree_device = daintree_device;
+    }
 
     public String getAsset_image_url() {
         return asset_image_url;
@@ -3987,7 +4264,14 @@ public class Device {
         this.ecobee_status = ecobee_status;
     }
 
-    // removed: getter/setter for Bucket-C EcobeeSensor (AP-C2)
+    public Set<EcobeeSensor> getEcobee_sensor() {
+        return ecobee_sensor;
+    }
+
+    public void setEcobee_sensor(Set<EcobeeSensor> ecobee_sensor) {
+        this.ecobee_sensor = ecobee_sensor;
+    }
+
 
     public Set<Specifications> getSpecifications() {
         return specifications;
@@ -4013,9 +4297,22 @@ public class Device {
         this.modbus_status = modbus_status;
     }
 
-    // removed: getter/setter for Bucket-C ModbusRegister (AP-C2)
+    public Set<ModbusRegister> getModbus_register() {
+        return modbus_register;
+    }
 
-    // removed: getter/setter for Bucket-C SiemensAsset (AP-C2)
+    public void setModbus_register(Set<ModbusRegister> modbus_register) {
+        this.modbus_register = modbus_register;
+    }
+
+
+    public Set<SiemensAsset> getSiemens_asset() {
+        return siemens_asset;
+    }
+
+    public void setSiemens_asset(Set<SiemensAsset> siemens_asset) {
+        this.siemens_asset = siemens_asset;
+    }
 
     public String getCreated_email() {
         return created_email;
@@ -4114,7 +4411,13 @@ public class Device {
         this.digital_twin_image_url = digital_twin_image_url;
     }
 
-    // removed: getter/setter for Bucket-C PolyLensDevice (AP-C2)
+//    public Set<PolyLensDevice> getPoly_lens_device() {
+//        return poly_lens_device;
+//    }
+//
+//    public void setPoly_lens_device(Set<PolyLensDevice> poly_lens_device) {
+//        this.poly_lens_device = poly_lens_device;
+//    }
 
     public Integer getPoly_lens_count() {
         return poly_lens_count;
@@ -4124,8 +4427,14 @@ public class Device {
         this.poly_lens_count = poly_lens_count;
     }
 
-
-    // removed: getter/setter for Bucket-C MqttDevice (AP-C2)
+//
+//    public Set<MqttDevice> getMqtt_device() {
+//        return mqtt_device;
+//    }
+//
+//    public void setMqtt_device(Set<MqttDevice> mqtt_device) {
+//        this.mqtt_device = mqtt_device;
+//    }
 
     public Integer getMqtt_count() {
         return mqtt_count;
@@ -4175,11 +4484,30 @@ public class Device {
         this.client_barcode = client_barcode;
     }
 
-    // removed: getter/setter for Bucket-C GlobalChecklistConditions (AP-C4)
+    public Set<GlobalChecklistConditions> getGlobal_checklist_conditions() {
+        return global_checklist_conditions;
+    }
 
-    // removed: getter/setter for Bucket-C Technician (AP-C3)
+    public void setGlobal_checklist_conditions(Set<GlobalChecklistConditions> global_checklist_conditions) {
+        this.global_checklist_conditions = global_checklist_conditions;
+    }
 
-    // removed: getter/setter for Bucket-C InventoryDevice (AP-C8)
+
+    public Set<Technician> getTechnician() {
+        return technician;
+    }
+
+    public void setTechnician(Set<Technician> technician) {
+        this.technician = technician;
+    }
+
+    public InventoryDevice getInventory_device() {
+        return inventory_device;
+    }
+
+    public void setInventory_device(InventoryDevice inventory_device) {
+        this.inventory_device = inventory_device;
+    }
 
     public BigInteger getDnd_timestamp() {
         return dnd_timestamp;
@@ -4198,7 +4526,13 @@ public class Device {
     }
 
 
-    // removed: getter/setter for Bucket-C GaiameshController (AP-C2)
+    public Set<GaiameshController> getGaiamesh_controller() {
+        return gaiamesh_controller;
+    }
+
+    public void setGaiamesh_controller(Set<GaiameshController> gaiamesh_controller) {
+        this.gaiamesh_controller = gaiamesh_controller;
+    }
 
     @Override
     public String toString() {
@@ -4259,6 +4593,7 @@ public class Device {
                 ", document_count=" + document_count +
                 ", media_count=" + media_count +
                 ", checklist_template_count=" + checklist_template_count +
+                ", docker=" + docker +
                 ", parent='" + parent + '\'' +
                 ", snmp_parent='" + snmp_parent + '\'' +
                 ", local_vendor_email_alert=" + local_vendor_email_alert +
@@ -4355,64 +4690,4 @@ public class Device {
     public void setAsset_tag_images_url(String asset_tag_images_url) {
         this.asset_tag_images_url = asset_tag_images_url;
     }
-
-    public Snmp_Configuration getSnmp_configuration() { return snmp_configuration; }
-    public void setSnmp_configuration(Snmp_Configuration snmp_configuration) { this.snmp_configuration = snmp_configuration; }
-    public Product_Details getProduct_details() { return product_details; }
-    public void setProduct_details(Product_Details product_details) { this.product_details = product_details; }
-    public RemoteAccessSession getRemote_access_session() { return remote_access_session; }
-    public void setRemote_access_session(RemoteAccessSession remote_access_session) { this.remote_access_session = remote_access_session; }
-    public java.util.Set<History> getHistory() { return history; }
-    public void setHistory(java.util.Set<History> history) { this.history = history; }
-    public java.util.Set<Ticket> getTicket() { return ticket; }
-    public void setTicket(java.util.Set<Ticket> ticket) { this.ticket = ticket; }
-    public java.util.Set<Lorawan_Sensor> getLorawan_sensor() { return lorawan_sensor; }
-    public void setLorawan_sensor(java.util.Set<Lorawan_Sensor> lorawan_sensor) { this.lorawan_sensor = lorawan_sensor; }
-    public java.util.Set<Bacnet_Object> getBacnet_object() { return bacnet_object; }
-    public void setBacnet_object(java.util.Set<Bacnet_Object> bacnet_object) { this.bacnet_object = bacnet_object; }
-    public java.util.Set<DisruptiveSensor> getDisruptive_sensor() { return disruptive_sensor; }
-    public void setDisruptive_sensor(java.util.Set<DisruptiveSensor> disruptive_sensor) { this.disruptive_sensor = disruptive_sensor; }
-    public java.util.Set<Datahoist> getDatahoist() { return datahoist; }
-    public void setDatahoist(java.util.Set<Datahoist> datahoist) { this.datahoist = datahoist; }
-    public java.util.Set<MyDevicesSensor> getMy_devices_sensor() { return my_devices_sensor; }
-    public void setMy_devices_sensor(java.util.Set<MyDevicesSensor> my_devices_sensor) { this.my_devices_sensor = my_devices_sensor; }
-    public java.util.Set<Monnit_Sensor> getMonnit_sensor() { return monnit_sensor; }
-    public void setMonnit_sensor(java.util.Set<Monnit_Sensor> monnit_sensor) { this.monnit_sensor = monnit_sensor; }
-    public java.util.Set<PelicanSensor> getPelican_sensor() { return pelican_sensor; }
-    public void setPelican_sensor(java.util.Set<PelicanSensor> pelican_sensor) { this.pelican_sensor = pelican_sensor; }
-    
-    
-    public java.util.Set<KNXGroup> getKnx_group() { return knx_group; }
-    public void setKnx_group(java.util.Set<KNXGroup> knx_group) { this.knx_group = knx_group; }
-    public java.util.Set<SnmpObject> getSnmp_object() { return snmp_object; }
-    public void setSnmp_object(java.util.Set<SnmpObject> snmp_object) { this.snmp_object = snmp_object; }
-    public java.util.Set<CheckListTemplate> getCheck_list_template() { return check_list_template; }
-    public void setCheck_list_template(java.util.Set<CheckListTemplate> check_list_template) { this.check_list_template = check_list_template; }
-    public java.util.Set<CheckListRecord> getCheck_list_record() { return check_list_record; }
-    public void setCheck_list_record(java.util.Set<CheckListRecord> check_list_record) { this.check_list_record = check_list_record; }
-    public Inventory getInventory() { return inventory; }
-    public void setInventory(Inventory inventory) { this.inventory = inventory; }
-    public java.util.Set<RecordChecklist> getRecord_checklist() { return record_checklist; }
-    public void setRecord_checklist(java.util.Set<RecordChecklist> record_checklist) { this.record_checklist = record_checklist; }
-    
-    
-    public java.util.Set<GlobalInspectionRelation> getGlobal_inspection_relation() { return global_inspection_relation; }
-    public void setGlobal_inspection_relation(java.util.Set<GlobalInspectionRelation> global_inspection_relation) { this.global_inspection_relation = global_inspection_relation; }
-    public java.util.Set<GlobalChecklistConditions> getGlobal_checklist_conditions() { return global_checklist_conditions; }
-    public void setGlobal_checklist_conditions(java.util.Set<GlobalChecklistConditions> global_checklist_conditions) { this.global_checklist_conditions = global_checklist_conditions; }
-    public java.util.Set<DaintreeDevice> getDaintree_device() { return daintree_device; }
-    public void setDaintree_device(java.util.Set<DaintreeDevice> daintree_device) { this.daintree_device = daintree_device; }
-    public java.util.Set<EcobeeSensor> getEcobee_sensor() { return ecobee_sensor; }
-    public void setEcobee_sensor(java.util.Set<EcobeeSensor> ecobee_sensor) { this.ecobee_sensor = ecobee_sensor; }
-    public java.util.Set<ModbusRegister> getModbus_register() { return modbus_register; }
-    public void setModbus_register(java.util.Set<ModbusRegister> modbus_register) { this.modbus_register = modbus_register; }
-    public java.util.Set<SiemensAsset> getSiemens_asset() { return siemens_asset; }
-    public void setSiemens_asset(java.util.Set<SiemensAsset> siemens_asset) { this.siemens_asset = siemens_asset; }
-    public java.util.Set<GaiameshController> getGaiamesh_controller() { return gaiamesh_controller; }
-    public void setGaiamesh_controller(java.util.Set<GaiameshController> gaiamesh_controller) { this.gaiamesh_controller = gaiamesh_controller; }
-
-    public DaintreeDevice getInventory_device() {
-        return new DaintreeDevice();
-    }
-
 }

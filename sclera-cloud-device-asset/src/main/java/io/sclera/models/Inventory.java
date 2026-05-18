@@ -1,13 +1,20 @@
 package io.sclera.models;
 
+import lombok.Data;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import java.util.List;
+import java.util.Set;
 
 /** STUB: non-AP-C1 entity (no @Entity to keep out of schema) */
 @Entity
+@Data
 public class Inventory {
     @Id
     private Long id;
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    @ManyToMany(mappedBy = "inventory")
+    private Set<Device> device;
 }

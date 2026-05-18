@@ -49,6 +49,7 @@ services:
     volumes:
       - ./sclera-cloud-device-asset/dapr:/dapr
     network_mode: "service:app"
+    restart: on-failure
     depends_on:
       - app
       - redis
@@ -88,6 +89,7 @@ services:
     volumes:
       - ./sclera-cloud-device-asset/dapr:/dapr
     network_mode: "service:vdms-service"
+    restart: on-failure
     depends_on:
       - vdms-service
       - redis
