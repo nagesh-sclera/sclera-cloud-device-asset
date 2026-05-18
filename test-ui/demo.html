@@ -345,6 +345,22 @@ tr:hover td { background: #181b28; }
       </div>
 
       <div class="card">
+        <div class="card-hdr"><h2>Subsystem Parent Devices</h2><span class="ep">GET /asset/…/getsubsystemparentdevicesbypagination</span></div>
+        <p style="font-size:12px;color:#64748b;margin-bottom:10px">Returns devices that are subsystem parents (have child subsystem devices), paginated.</p>
+        <div class="fg">
+          <div class="ff s1"><label>Condition</label>
+            <select id="ssp_cond"><option value="all">all</option><option value="online">online</option><option value="offline">offline</option></select>
+          </div>
+          <div class="ff s1"><label>Assignee</label><input id="ssp_assignee" value="all" placeholder="all / email@example.com"></div>
+          <div class="ff s1"><label>Page</label><input id="ssp_pg" value="1"></div>
+          <div class="ff s1"><label>Page Size</label><input id="ssp_ps" value="20"></div>
+          <div class="row-actions"><button class="btn btn-primary" onclick="getSubsystemParents()">Fetch</button></div>
+        </div>
+        <div id="ssp-res" class="res" style="display:none"></div>
+        <div id="ssp-msg"></div>
+      </div>
+
+      <div class="card">
         <div class="card-hdr"><h2>Search Devices</h2><span class="ep">POST /asset/…/searchdevices</span></div>
         <div class="fg">
           <div class="ff s1"><label>Search Value</label><input id="sr_val" placeholder="e.g. sensor, 192.168, Cisco"></div>
@@ -355,6 +371,10 @@ tr:hover td { background: #181b28; }
           <div class="ff s1">
             <label>Page / Size</label>
             <div style="display:flex;gap:6px"><input id="sr_pg" value="1" style="width:70px"><input id="sr_ps" value="20" style="width:70px"></div>
+          </div>
+          <div class="ff s1" style="justify-content:center;flex-direction:row;align-items:center;gap:8px;padding-top:4px">
+            <input type="checkbox" id="sr_custom" style="width:auto">
+            <label for="sr_custom" style="font-size:12px;color:#94a3b8;cursor:pointer">Custom Field</label>
           </div>
           <div class="row-actions"><button class="btn btn-primary" onclick="doSearch()">Search</button><button class="btn btn-neutral btn-sm" onclick="clearSR()">Clear</button></div>
         </div>
@@ -370,6 +390,10 @@ tr:hover td { background: #181b28; }
           <div class="ff s1">
             <label>Page / Size</label>
             <div style="display:flex;gap:6px"><input id="so_pg" value="1" style="width:70px"><input id="so_ps" value="20" style="width:70px"></div>
+          </div>
+          <div class="ff s1" style="justify-content:center;flex-direction:row;align-items:center;gap:8px;padding-top:4px">
+            <input type="checkbox" id="so_custom" style="width:auto">
+            <label for="so_custom" style="font-size:12px;color:#94a3b8;cursor:pointer">Custom Field</label>
           </div>
           <div class="row-actions"><button class="btn btn-primary" onclick="doSort()">Sort</button></div>
         </div>
@@ -406,7 +430,7 @@ tr:hover td { background: #181b28; }
           </div>
           <div class="ff s2">
             <label>Request JSON (search_sort_filter_details)</label>
-            <textarea id="ssf_body" rows="5" placeholder='{"search":{"column":"all","value":""},"sort":{"column":"","order":"asc"},"filter":[]}'></textarea>
+            <textarea id="ssf_body" rows="6" placeholder='{"search_details":[{"column":"all","value":"","custom":false}],"sort_details":{"column":"","order":"asc","custom":false},"filter_details":{"column_details":[],"feature_details":[]}}'></textarea>
           </div>
           <div class="row-actions">
             <button class="btn btn-primary" onclick="doSSF()">Execute</button>
@@ -429,7 +453,7 @@ tr:hover td { background: #181b28; }
           <div class="ff s1"><label>Email (optional)</label><input id="exp_email" placeholder="user@example.com"></div>
           <div class="ff s2">
             <label>Filter JSON (search_sort_filter_details)</label>
-            <textarea id="exp_body" rows="3" placeholder='{"search":{"column":"all","value":""},"sort":{},"filter":[]}'></textarea>
+            <textarea id="exp_body" rows="3" placeholder='{"search_details":[{"column":"all","value":"","custom":false}],"sort_details":{},"filter_details":{"column_details":[]}}'></textarea>
           </div>
           <div class="row-actions"><button class="btn btn-primary" onclick="doExport()">Export</button></div>
         </div>
@@ -1061,6 +1085,18 @@ async function getDeviceSensors() {
 }
 
 // ── Search & Filter ───────────────────────────────────────────────────────────
+async function getSubsystemParents() {
+  const url = `${aBase()}/getsubsystemparentdevicesbypagination?condition=${$('ssp_cond').value}&pageno=${$('ssp_pg').value}&pagesize=${$('ssp_ps').value}&assignee=${$('ssp_assignee').value}`;
+  const r = await go(url);
+  if (r.ok) {
+    showRes('ssp-res', r.body);
+    const count = Array.isArray(r.body) ? r.body.length : (r.body ? Object.keys(r.body).length : 0);
+    showMsg('ssp-msg', `${count} subsystem parent device(s) returned.`, 'info');
+  } else {
+    showMsg('ssp-msg', `Error ${r.status}: ${JSON.stringify(r.body)}`, 'err');
+  }
+}
+
 async function quickFilter() {
   const key  = $('qf_key').value.trim();
   const url  = `${aBase()}/getfilterdevice?condition=${$('qf_cond').value}&pageno=${$('qf_pg').value}&pagesize=${$('qf_ps').value}${key ? '&searchKey=' + encodeURIComponent(key) : ''}`;
@@ -1072,7 +1108,7 @@ async function quickFilter() {
 async function doSearch() {
   const val = $('sr_val').value.trim();
   if (!val) return;
-  const body = { column: $('sr_col').value.trim() || 'all', value: val };
+  const body = { column: $('sr_col').value.trim() || 'all', value: val, custom: $('sr_custom').checked };
   const r = await go(`${aBase()}/searchdevices?condition=${$('sr_cond').value}&pageno=${$('sr_pg').value}&pagesize=${$('sr_ps').value}`, { method: 'POST', body: JSON.stringify(body) });
   renderSRResults(r, `Search "${val}"`);
 }
@@ -1080,7 +1116,7 @@ async function doSearch() {
 async function doSort() {
   const col = $('so_col').value.trim();
   if (!col) return;
-  const body = { column: col, order: $('so_ord').value };
+  const body = { column: col, order: $('so_ord').value, custom: $('so_custom').checked };
   const r = await go(`${aBase()}/sortdevices?condition=all&pageno=${$('so_pg').value}&pagesize=${$('so_ps').value}`, { method: 'POST', body: JSON.stringify(body) });
   renderSRResults(r, `Sort by ${col} (${$('so_ord').value})`);
 }
@@ -1117,20 +1153,34 @@ async function doExport() {
 }
 
 function renderSRResults(r, title) {
-  $('sr-card').style.display = '';
+  const card = $('sr-card');
+  card.style.display = '';
   const tbody = $('sr-tbody');
-  if (!r.ok) { $('sr-title').textContent = title; tbody.innerHTML = `<tr><td colspan="5"><div class="msg msg-err">Error ${r.status}: ${JSON.stringify(r.body)}</div></td></tr>`; return; }
+  if (!r.ok) {
+    $('sr-title').textContent = title;
+    tbody.innerHTML = `<tr><td colspan="5"><div class="msg msg-err">Error ${r.status}: ${JSON.stringify(r.body)}</div></td></tr>`;
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
   const devs = Array.isArray(r.body) ? r.body : (Array.isArray(r.body?.content) ? r.body.content : []);
   $('sr-title').textContent = `${title} — ${devs.length} result${devs.length !== 1 ? 's' : ''}`;
   tbody.innerHTML = devs.length
-    ? devs.map(d => `<tr>
-        <td><strong>${d.user_data_name || d.display_name || '—'}</strong></td>
-        <td><span class="badge badge-blue">${d.type || '—'}</span></td>
-        <td style="font-family:monospace;font-size:12px">${d.ip_address || '—'}</td>
-        <td>${d.vendor || '—'}</td>
-        <td><span class="badge ${d.status==='online'?'badge-green':d.status==='offline'?'badge-red':'badge-gray'}">${d.status || '—'}</span></td>
-      </tr>`).join('')
+    ? devs.map(d => {
+        const name = d.user_data_name || d.display_name || d.name || '—';
+        const vendor = d.user_data_vendor || d.vendor || '—';
+        const statusNum = d.status;
+        const statusLabel = statusNum === 1 ? 'online' : statusNum === 0 ? 'offline' : '—';
+        const statusClass = statusNum === 1 ? 'badge-green' : statusNum === 0 ? 'badge-red' : 'badge-gray';
+        return `<tr>
+          <td><strong>${name}</strong></td>
+          <td><span class="badge badge-blue">${d.type || '—'}</span></td>
+          <td style="font-family:monospace;font-size:12px">${d.ip_address || '—'}</td>
+          <td>${vendor}</td>
+          <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+        </tr>`;
+      }).join('')
     : '<tr><td colspan="5" class="tbl-empty">No results</td></tr>';
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function clearSR() {
