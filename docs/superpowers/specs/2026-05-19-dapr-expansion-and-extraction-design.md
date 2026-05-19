@@ -192,6 +192,8 @@ spec:
 
 ### Phase 4 — Service extraction & DB decoupling
 
+> **Superseded by `2026-05-19-walking-skeleton-extraction-design.md`.** The walking-skeleton approach replaces this phase's "one service at a time" sequence with: (a) Phase A — scaffold all 7 skeleton services in one PR with full Dapr surface and hardcoded defaults; (b) Phase B — per-stub-class client migration in priority order. DB decoupling deferred to per-service real-implementation work. The original Phase 4 table below is retained for historical context only.
+
 Each iteration extracts one stubbed service and carves out its data ownership. Uses the patterns in Sections 4–5.
 
 Source of truth for what's in scope: `migration-notes/stub-inventory.md` (70 stubs total, generated 2026-05-19). Per-service stub counts inform extraction sizing below.
