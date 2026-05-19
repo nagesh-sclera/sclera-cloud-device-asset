@@ -112,6 +112,24 @@ def safe_return_type(t):
     # Unknown bare type (e.g. HistoryDTO, JSONObject) -> String
     return ("String", "NULL_STRING")
 
+def reconcile_default(java_type, default_name):
+    """
+    Ensure the default value matches the return type.
+    If default is NULL_STRING but return type needs a specific value, use a sensible default.
+    """
+    if default_name == "NULL_STRING":
+        if java_type in ("Boolean", "java.lang.Boolean", "boolean"):
+            return "FALSE"
+        elif java_type in ("Integer", "java.lang.Integer", "int", "Long", "java.lang.Long", "long"):
+            return "ZERO"
+        elif java_type.startswith(("List<", "java.util.List<")) or java_type in ("List", "java.util.List"):
+            return "emptyList()"
+        elif java_type.startswith(("Set<", "java.util.Set<")) or java_type in ("Set", "java.util.Set"):
+            return "emptySet()"
+        elif java_type.startswith(("Map<", "java.util.Map<")) or java_type in ("Map", "java.util.Map"):
+            return "emptyMap()"
+    return default_name
+
 for cls in data:
     name = cls["class"].replace("Service", "").replace("Repository", "")
     controller = f"{name}Controller"
@@ -127,6 +145,8 @@ for cls in data:
         java_ret, forced_default = safe_return_type(raw_ret)
         if forced_default is not None:
             default = forced_default
+        # Reconcile default with return type (e.g., Boolean + NULL_STRING -> FALSE)
+        default = reconcile_default(java_ret, default)
         # Void: no return statement, just a comment.
         if java_ret == "void":
             body = "    // no-op\n"

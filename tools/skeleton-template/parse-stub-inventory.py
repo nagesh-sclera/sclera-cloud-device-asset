@@ -5,6 +5,7 @@ import argparse, json, re
 DEFAULT_MAP = {
     "null":                "NULL_STRING",
     "0":                   "ZERO",
+    "1":                   "ZERO",  # Any numeric value defaults to ZERO (walking skeleton)
     "Boolean.FALSE":       "FALSE",
     "false":               "FALSE",
     "empty list":          "emptyList()",
