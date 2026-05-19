@@ -15,6 +15,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.itextpdf.text.pdf.Barcode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.sclera.Repository.VdmsRepository;
+import io.sclera.client.PmsClient;
 import io.sclera.dto.*;
 import io.sclera.dto.touchscreen.settings.VdmsDTO;
 import io.sclera.integration.dto.LocationIntegrationDTO;
@@ -56,7 +57,7 @@ public class LocationService {
     APICallService apicallService;
 
     @Autowired
-    PmsService pmsService;
+    PmsClient pmsService;
 
     @Autowired
     MeasuringInstrumentService measuringInstrumentService;
