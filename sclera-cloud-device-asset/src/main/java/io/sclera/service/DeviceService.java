@@ -282,7 +282,7 @@ public class DeviceService {
     DeviceOnboardStatusAssigneeService deviceOnboardStatusAssigneeService;
 
     @Autowired
-    GlobalInspectionRecordService globalInspectionRecordService;
+    io.sclera.client.GlobalInspectionRecordClient globalInspectionRecordService;
 
     @Autowired
     io.sclera.client.GlobalChecklistClient globalChecklistService;

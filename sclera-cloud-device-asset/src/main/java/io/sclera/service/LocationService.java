@@ -96,7 +96,7 @@ public class LocationService {
     io.sclera.client.ArchivedRecordClient archivedRecordService;
 
     @Autowired
-    GlobalInspectionRecordService globalInspectionRecordService;
+    io.sclera.client.GlobalInspectionRecordClient globalInspectionRecordService;
 
     @Autowired
     InspectionRecordService inspectionRecordService;
