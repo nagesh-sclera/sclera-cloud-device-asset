@@ -133,7 +133,7 @@ public class DeviceService {
     // SnmpDeviceService snmpdeviceService;
 
     @Autowired
-    PhonebookService phonebookService;
+    io.sclera.client.PhonebookClient phonebookService;
 
     @Autowired
     PortService portService;
