@@ -15,6 +15,7 @@ import com.fasterxml.uuid.Generators;
 
 import io.sclera.Repository.ConditionsRepository;
 import io.sclera.client.HistoryClient;
+import io.sclera.client.MyDevicesClient;
 import io.sclera.dto.touchscreen.SensorDTO;
 import io.sclera.rabbitmq.RabbitmqService;
 import io.sclera.sockets.SocketService;
@@ -55,7 +56,7 @@ public class ConditionsService {
     DeviceService deviceService;
 
     @Autowired
-    MyDevicesService myDeviceService;
+    MyDevicesClient myDeviceService;
 
     @Autowired
     ConditionUtils conditionUtils;

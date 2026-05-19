@@ -17,7 +17,7 @@ import io.sclera.dto.LorawanSensorDTO;
 import io.sclera.dto.MyDevicesCompanyDTO;
 import io.sclera.dto.MyDevicesSensorDTO;
 import io.sclera.models.MyDevicesCompany;
-import io.sclera.service.MyDevicesService;
+import io.sclera.client.MyDevicesClient;
 
 import com.alibaba.fastjson.JSONObject;
 
@@ -27,7 +27,7 @@ import com.alibaba.fastjson.JSONObject;
 public class MyDevicesController {
 	
 	@Autowired
-	MyDevicesService myDevicesService;
+	MyDevicesClient myDevicesService;
 	
 	@RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/upsertmydevicescompany")
 	public void upsertMyDevicesCompany(@PathVariable String username, @PathVariable String vdmsid, @RequestBody MyDevicesCompanyDTO myDevicesCompany) {
