@@ -5,7 +5,7 @@ import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.AiCallLogHistoryRepository;
 import io.sclera.Repository.AiCallLogRepository;
 import io.sclera.Repository.CallFlowRuleConditionRepository;
-import io.sclera.Repository.CallFlowRuleRepository;
+import io.sclera.client.CallFlowRuleClient;
 import io.sclera.dto.*;
 import io.sclera.dto.touchscreen.settings.VdmsDTO;
 import io.sclera.integration.dto.ResponseDTO;
@@ -43,7 +43,7 @@ public class AiCallService {
     @Autowired
     DeviceService deviceService;
     @Autowired
-    CallFlowRuleRepository callFlowRuleRepository;
+    CallFlowRuleClient callFlowRuleRepository;
     @Autowired
     CallFlowRuleConditionRepository callFlowRuleConditionRepository;
     @Autowired
