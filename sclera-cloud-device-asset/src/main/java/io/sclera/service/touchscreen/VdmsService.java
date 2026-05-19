@@ -11,6 +11,7 @@ import io.sclera.dto.touchscreen.settings.VdmsConfigurationDTO;
 import io.sclera.dto.touchscreen.settings.VdmsDTO;
 
 import io.sclera.client.CorrigoClient;
+import io.sclera.client.IntegrationClient;
 import io.sclera.rabbitmq.RabbitmqService;
 import io.sclera.service.*;
 
@@ -65,7 +66,7 @@ public class VdmsService {
     CorrigoClient corrigoService;
 
     @Autowired
-    IntegrationService integrationService;
+    IntegrationClient integrationService;
 
 
     @Autowired
