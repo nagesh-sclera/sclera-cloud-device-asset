@@ -92,7 +92,7 @@ public class LocationService {
     ClientBarCodeService clientBarCodeService;
 
     @Autowired
-    ArchivedRecordService archivedRecordService;
+    io.sclera.client.ArchivedRecordClient archivedRecordService;
 
     @Autowired
     GlobalInspectionRecordService globalInspectionRecordService;

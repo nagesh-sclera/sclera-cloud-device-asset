@@ -319,7 +319,7 @@ public class DeviceService {
     ClientBarCodeService clientBarCodeService;
 
     @Autowired
-    ArchivedRecordService archivedRecordService;
+    io.sclera.client.ArchivedRecordClient archivedRecordService;
 
     @Autowired
     InspectionRecordService inspectionRecordService;
