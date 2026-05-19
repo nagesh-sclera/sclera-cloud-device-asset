@@ -1,0 +1,4 @@
+# Pub/sub contract for sclera-{{servicekey}}
+# Filled in per service by scaffold-skeleton.sh
+publishes: []
+subscribes: []
