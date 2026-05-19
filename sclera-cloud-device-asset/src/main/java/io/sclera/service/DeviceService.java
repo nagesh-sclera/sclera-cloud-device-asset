@@ -219,7 +219,7 @@ public class DeviceService {
     io.sclera.client.CheckListTemplateClient checkListTemplateService;
 
     @Autowired
-    RecordChecklistService recordChecklistService;
+    io.sclera.client.RecordChecklistClient recordChecklistService;
 
     @Autowired
     DaintreeService daintreeService;

@@ -63,7 +63,7 @@ public class FloorService {
     WebClientService webClientService;
 
     @Autowired
-    RecordChecklistService recordChecklistService;
+    io.sclera.client.RecordChecklistClient recordChecklistService;
 
     @Autowired
     UserActionLogService userActionLogService;

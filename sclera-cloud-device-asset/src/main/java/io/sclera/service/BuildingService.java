@@ -38,7 +38,7 @@ public class BuildingService {
     @Autowired
     WebClientService webClientService;
     @Autowired
-    RecordChecklistService recordChecklistService;
+    io.sclera.client.RecordChecklistClient recordChecklistService;
     @Autowired
     UserActionLogService userActionLogService;
     @Autowired

@@ -42,7 +42,7 @@ public class LocationService {
     LocationRepository locationRepository;
 
     @Autowired
-    RecordChecklistService recordChecklistService;
+    io.sclera.client.RecordChecklistClient recordChecklistService;
 
     @Autowired
     PropertyQrcodeService propertyQrcodeService;
