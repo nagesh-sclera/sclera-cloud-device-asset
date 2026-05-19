@@ -216,7 +216,7 @@ public class DeviceService {
     MediaService mediaService;
 
     @Autowired
-    CheckListTemplateService checkListTemplateService;
+    io.sclera.client.CheckListTemplateClient checkListTemplateService;
 
     @Autowired
     RecordChecklistService recordChecklistService;
