@@ -285,7 +285,7 @@ public class DeviceService {
     GlobalInspectionRecordService globalInspectionRecordService;
 
     @Autowired
-    GlobalChecklistService globalChecklistService;
+    io.sclera.client.GlobalChecklistClient globalChecklistService;
 
     @Autowired
     SiemensService siemensService;
