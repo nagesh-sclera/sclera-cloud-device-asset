@@ -61,38 +61,94 @@ cp "$TEMPLATE_DIR/src/main/resources/topics.yaml.template" \
 _GEN_PY=$(mktemp /tmp/gen-controllers-XXXXXX.py)
 trap 'rm -f "$_GEN_PY"' EXIT
 cat > "$_GEN_PY" <<'PY'
-import json, sys, pathlib
+import json, sys, pathlib, re
 
 out_dir, pkg = sys.argv[1], sys.argv[2]
 data = json.load(sys.stdin)
+
+# Allow-listed types that are safe as @RequestParam without substitution.
+SAFE_PARAM_TYPES = {
+    "String", "Integer", "Long", "Boolean", "Double", "Float",
+    "int", "long", "boolean", "double", "float",
+    "java.lang.String", "java.lang.Integer", "java.lang.Long", "java.lang.Boolean",
+}
+
+# Allow-listed return types (superset of param types, plus collections and void/Object).
+SAFE_RETURN_TYPES = SAFE_PARAM_TYPES | {
+    "void", "Object",
+    "List", "Set", "Map",
+    "java.util.List", "java.util.Set", "java.util.Map",
+}
+
+COLLECTION_BASES = {"List", "Set", "Map", "java.util.List", "java.util.Set", "java.util.Map"}
+
+def safe_param_type(t):
+    """Return t if it is safe as a @RequestParam type, else String."""
+    return t if t in SAFE_PARAM_TYPES else "String"
+
+def safe_return_type(t):
+    """
+    Return (java_type, default_override_or_None).
+    - void stays void.
+    - Parameterized collection types: sanitise the type arg to String.
+    - Unknown bare types: substitute with String and signal NULL_STRING default.
+    """
+    if "<" in t:
+        # e.g. List<UserActionLogDTO> or Map<String, DeviceDTO>
+        base = t[:t.index("<")]
+        if base in COLLECTION_BASES:
+            # Collapse all type args to String
+            short_base = base.split(".")[-1]  # java.util.List -> List
+            if short_base == "Map":
+                return (f"Map<String, String>", None)
+            else:
+                return (f"{short_base}<String>", None)
+        else:
+            # Unknown parameterized type -> String
+            return ("String", "NULL_STRING")
+    if t in SAFE_RETURN_TYPES:
+        return (t, None)
+    # Unknown bare type (e.g. HistoryDTO, JSONObject) -> String
+    return ("String", "NULL_STRING")
+
 for cls in data:
-    name = cls["class"].replace("Service", "")
+    name = cls["class"].replace("Service", "").replace("Repository", "")
     controller = f"{name}Controller"
     path = f"/{name.lower()}"
     body_lines = []
     for m in cls["methods"]:
         params = ", ".join(
-            f'@org.springframework.web.bind.annotation.RequestParam {p["type"]} {p["name"]}'
+            f'@RequestParam {safe_param_type(p["type"])} {p["name"]}'
             for p in m["params"]
         )
-        ret = m["return"].strip()
+        raw_ret = m["return"].strip()
         default = m["default"]
-        # Void: no return statement, just a comment (avoids `return Defaults.X;` compile error).
-        if ret == "void":
+        java_ret, forced_default = safe_return_type(raw_ret)
+        if forced_default is not None:
+            default = forced_default
+        # Void: no return statement, just a comment.
+        if java_ret == "void":
             body = "    // no-op\n"
         else:
-            body = f'    return io.sclera.{pkg}.defaults.Defaults.{default};\n'
+            body = f'    return Defaults.{default};\n'
         body_lines.append(
-            f'  @org.springframework.web.bind.annotation.GetMapping("/{m["name"]}")\n'
-            f'  public {ret} {m["name"]}({params}) {{\n'
+            f'  @GetMapping("/{m["name"]}")\n'
+            f'  public {java_ret} {m["name"]}({params}) {{\n'
             f'{body}'
             f'  }}\n'
         )
     src = (
         f'package io.sclera.{pkg}.controller;\n'
         f'\n'
-        f'import org.springframework.web.bind.annotation.RestController;\n'
+        f'import org.springframework.web.bind.annotation.GetMapping;\n'
         f'import org.springframework.web.bind.annotation.RequestMapping;\n'
+        f'import org.springframework.web.bind.annotation.RequestParam;\n'
+        f'import org.springframework.web.bind.annotation.RestController;\n'
+        f'import io.sclera.{pkg}.defaults.Defaults;\n'
+        f'\n'
+        f'import java.util.List;\n'
+        f'import java.util.Map;\n'
+        f'import java.util.Set;\n'
         f'\n'
         f'@RestController\n'
         f'@RequestMapping("{path}")\n'
