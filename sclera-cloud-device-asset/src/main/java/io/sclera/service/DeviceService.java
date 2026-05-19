@@ -380,7 +380,7 @@ public class DeviceService {
     DeviceInstalledAppsService deviceInstalledAppsService;
 
     @Autowired
-    HistoryRepository historyRepository;
+    io.sclera.client.HistoryClient historyRepository;
 
     @Autowired
     io.sclera.client.InventoryDeviceClient inventoryDeviceRepository;

@@ -48,6 +48,21 @@ public class VendorAdminClient {
     }
 
     /**
+     * Mirrors {@code VendorOrganisationRepository#addVendor}.
+     * Maps to GET sclera-identity/vendorAdmin/addVendor.
+     */
+    public void addVendor(String vendorOrgId, String vdmsId) {
+        Map<String, String> payload = new HashMap<>();
+        payload.put("vendorOrgId", vendorOrgId);
+        payload.put("vdmsId", vdmsId);
+        try {
+            dapr.invokeMethod(APP_ID, "vendorAdmin/addVendor", payload, HttpExtension.GET).block();
+        } catch (Exception e) {
+            log.warn("VendorAdminClient.addVendor failed; swallowing: {}", e.getMessage());
+        }
+    }
+
+    /**
      * Mirrors {@code VendorAdminService#insertVendors}.
      * Maps to GET sclera-identity/vendorAdmin/insertVendors.
      * NOTE: DTO body is lost under GET-only skeleton routing (needs POST upgrade).

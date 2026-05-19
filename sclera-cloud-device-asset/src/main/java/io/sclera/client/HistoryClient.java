@@ -83,6 +83,20 @@ public class HistoryClient {
     }
 
     /**
+     * Mirrors {@code HistoryRepository#deleteByDeviceId}.
+     * Maps to GET sclera-audit/history/deleteByDeviceId.
+     */
+    public void deleteByDeviceId(String deviceId) {
+        Map<String, String> payload = new HashMap<>();
+        payload.put("deviceId", deviceId);
+        try {
+            dapr.invokeMethod(APP_ID, "history/deleteByDeviceId", payload, HttpExtension.GET).block();
+        } catch (Exception e) {
+            log.warn("HistoryClient.deleteByDeviceId failed; swallowing: {}", e.getMessage());
+        }
+    }
+
+    /**
      * Mirrors {@code HistoryService#updateHistoryDeviceId}.
      * Maps to GET sclera-audit/history/updateHistoryDeviceId.
      */
