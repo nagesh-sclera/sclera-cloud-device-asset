@@ -194,18 +194,21 @@ spec:
 
 Each iteration extracts one stubbed service and carves out its data ownership. Uses the patterns in Sections 4–5.
 
-| Step | Service | Notes |
-|---|---|---|
-| 4.1 | Extraction kit | Maven archetype, `tools/scaffold-service.sh`, template repo |
-| 4.2 | `sclera-audit` (AP-C6) | Proving ground. Moves `AuditSubscriber` out of `vdms-service`. |
-| 4.3 | `sclera-identity` (CP-2) | Cross-cutting; most services depend on user/org resolution |
-| 4.4 | `sclera-alerts` (AP-C5) | Event-driven naturally |
-| 4.5 | `sclera-inventory` (AP-C8) | Few cross-module joins |
-| 4.6 | `sclera-workorders` (AP-C3) | Needs bindings (Corrigo, PMS) from Phase 3.3 |
-| 4.7 | `sclera-inspection` (AP-C4) | Heavier internal surface |
-| 4.8 | `sclera-integrations` (AP-C2) | Largest; optionally split AP-C2a/b/c |
-| 4.9 | `sclera-adc` (AP-C9) | Narrow; flexible slot |
-| 4.X | Cross-instance DB split for stabilized services | Each service to its own MySQL instance. "Stabilized" = no breaking event-contract or schema change for 2+ releases AND no cross-module read-model staleness incidents in the same window |
+Source of truth for what's in scope: `migration-notes/stub-inventory.md` (70 stubs total, generated 2026-05-19). Per-service stub counts inform extraction sizing below.
+
+| Step | Service | Stubs | Notes |
+|---|---|---|---|
+| 4.1 | Extraction kit | – | Maven archetype, `tools/scaffold-service.sh`, template repo |
+| 4.2 | `sclera-audit` (AP-C6) | 4 | Proving ground. Moves `AuditSubscriber` out of `vdms-service`. `UserActionLogService` is already real (no extraction work needed there) — confirm scope before scaffolding. |
+| 4.3 | `sclera-identity` (CP-2) | 5 | Cross-cutting; most services depend on user/org resolution. **Blocker:** top-level `CustomerOrganisationService` source file is missing from the repo (only `touchscreen.CustomerOrganisationService` exists). Resolve before scaffolding: either copy from `sclera-vdms-edge-server` or confirm the touchscreen variant is canonical. |
+| 4.4 | `sclera-alerts` (AP-C5) | 5 | Event-driven naturally |
+| 4.5 | `sclera-inventory` (AP-C8) | 2 | Few cross-module joins. `Product_DetailsService` is already real — scope reduces to `InventoryDeviceService` only. |
+| 4.6 | `sclera-workorders` (AP-C3) | 5 | Needs bindings (Corrigo, PMS) from Phase 3.3 |
+| 4.7 | `sclera-inspection` (AP-C4) | 6 | Heavier internal surface |
+| 4.8 | `sclera-integrations` (AP-C2) | 16 | **Required 3-way split** — AP-C2a poll-based (Bacnet, Modbus, Snmp, Siemens), AP-C2b vendor-cloud (Daintree, Ecobee, Monnit, Pelican, PolyLens, Disruptive), AP-C2c push (KNX, Lorawan, Mqtt) plus AP-C2-core (IntegrationService, PropertyQrcodeService, AssetMapperService). 16 services as one extraction is too large given the kit must be exercised per service. |
+| 4.9 | ~~`sclera-adc` (AP-C9)~~ | 0 | **Blocked / out of scope:** no `ADCService` source class exists in the repo. Either AP-C9 was deferred at the original decomposition or the source was never extracted. Confirm with team; if AP-C9 is real, this slot is gated on copying the source class first. Treat as a separate spec item, not part of this rollout. |
+| 4.X | Cross-instance DB split for stabilized services | – | Each service to its own MySQL instance. "Stabilized" = no breaking event-contract or schema change for 2+ releases AND no cross-module read-model staleness incidents in the same window |
+| 4.Y | Edge-only Bucket-D stubs disposition | 32 | **Separate decision, not extraction.** 32 stubs (`APICallService`, `AsyncService`, `DataHoistService`, `DockerService`, `IOCService`, `JobSchedulerService`, `MasterSlaveAPICallService`, `UtilsService`, `WebClientService`, `RabbitmqService`, `SocketService`, `ProxyService`, touchscreen.*, websocket.client.*) belong to the edge runtime, not extraction targets. Each call site to be evaluated: (a) replaced by a Dapr binding (Phase 3.3), (b) kept as a permanent no-op stub if behavior isn't needed in cloud, or (c) deleted along with the call site. PR per stub, no big-bang. |
 
 ---
 
@@ -240,18 +243,24 @@ Each iteration extracts one stubbed service and carves out its data ownership. U
 
 ### Priority order (advisory)
 
-| Order | Key | Service | Rationale |
-|---|---|---|---|
-| 1 | AP-C6 | `sclera-audit` | Pub/sub side already works; misplaced `AuditSubscriber` corrected. Smallest, highest-confidence. Proves extraction kit. |
-| 2 | CP-2 | `sclera-identity` | Cross-cutting; all downstream services need user/org resolution |
-| 3 | AP-C5 | `sclera-alerts` | Event-driven naturally; few inbound deps after identity |
-| 4 | AP-C8 | `sclera-inventory` | Minimal cross-module joins |
-| 5 | AP-C3 | `sclera-workorders` | Needs bindings (Corrigo, PMS) |
-| 6 | AP-C4 | `sclera-inspection` | Larger surface |
-| 7 | AP-C2 | `sclera-integrations` | Largest; optional 3-way split (poll-based / vendor-cloud / push) |
-| 8 | AP-C9 | `sclera-adc` | Narrow; flexible |
+Stub counts cross-referenced with `migration-notes/stub-inventory.md`. Services already partially-real (UserActionLogService, Product_DetailsService, touchscreen.VdmsService, UserService) are noted in their slot.
+
+| Order | Key | Service | Stubs | Rationale |
+|---|---|---|---|---|
+| 1 | AP-C6 | `sclera-audit` | 4 | Pub/sub side already works; misplaced `AuditSubscriber` corrected. `UserActionLogService` already real — extraction scope is smaller than the count suggests. Smallest, highest-confidence. Proves extraction kit. |
+| 2 | CP-2 | `sclera-identity` | 5 | Cross-cutting. **Blocker:** top-level `CustomerOrganisationService` source missing from repo. Resolve before scaffolding. |
+| 3 | AP-C5 | `sclera-alerts` | 5 | Event-driven naturally; few inbound deps after identity |
+| 4 | AP-C8 | `sclera-inventory` | 2 | `Product_DetailsService` already real — extraction reduces to `InventoryDeviceService` only |
+| 5 | AP-C3 | `sclera-workorders` | 5 | Needs bindings (Corrigo, PMS) |
+| 6 | AP-C4 | `sclera-inspection` | 6 | Larger surface |
+| 7 | AP-C2 | `sclera-integrations` | 16 | **Required 3-way split** AP-C2a/b/c + AP-C2-core. 16 services as one extraction is impractical. |
+| – | AP-C9 | ~~`sclera-adc`~~ | 0 | **Blocked / out of scope** — no source class in repo. Confirm scope with team. |
 
 AP-C7 absent from the current decomposition — confirm with team whether it was renamed/merged/dropped.
+
+**Caveats:**
+- Stub counts are upper bounds — some classes mix real and stub methods; only stub methods need extraction or stay-as-stub decisions.
+- 32 edge-only Bucket-D stubs are NOT in this priority list (see Phase 4.Y). They are evaluated per call site.
 
 ---
 
@@ -332,8 +341,12 @@ One MySQL 8 instance, schema `vdms`, shared by both services. Cross-module FKs a
 13. Phase 3.4 — configuration API (narrow scope)
 14. Phase 4.1 — extraction kit
 15. Phase 4.2 — extract `sclera-audit` (proving ground)
-16. Phase 4.3–4.9 — remaining services in priority order
-17. Phase 4.X — cross-instance DB split for stabilized services
+16. Phase 4.3 — extract `sclera-identity` (gated on CP-2 source resolution)
+17. Phase 4.4–4.7 — `sclera-alerts`, `sclera-inventory`, `sclera-workorders`, `sclera-inspection`
+18. Phase 4.8 — AP-C2 sub-extractions (4.8a poll-based, 4.8b vendor-cloud, 4.8c push, 4.8d core)
+19. Phase 4.Y — edge-only Bucket-D stub disposition (per call site, parallel to extractions)
+20. Phase 4.X — cross-instance DB split for stabilized services
+21. ~~Phase 4.9~~ — AP-C9 `sclera-adc` blocked pending source confirmation; tracked separately
 
 ### Top risks
 
@@ -348,7 +361,12 @@ One MySQL 8 instance, schema `vdms`, shared by both services. Cross-module FKs a
 | Dual-publish during RabbitMQ migration doubles traffic | Acceptable for one-release window; broker sizing pre-confirmed |
 | Multi-month roadmap for extractions; priorities will shift | Re-evaluate priority list after every 2 extractions; treat ordering as advisory |
 | AP-C7 missing from decomposition list | Confirm with team; document in `APP_IDS.md` |
+| **AP-C9 (`sclera-adc`) source class missing from repo** | Confirm whether AP-C9 is a real target; if yes, copy `ADCService` from `sclera-vdms-edge-server` before slot 4.9; otherwise drop from roadmap. Blocking precondition documented in `stub-inventory.md`. |
+| **CP-2 top-level `CustomerOrganisationService` source missing** | Resolve before Phase 4.3: copy from source repo or formally adopt `touchscreen.CustomerOrganisationService` as canonical. Failing to resolve means `sclera-identity` extraction is missing a core dependency. |
+| **AP-C2 has 16 stub services — one extraction is impractical** | Split AP-C2 into AP-C2a (poll-based), AP-C2b (vendor-cloud), AP-C2c (push), and AP-C2-core. Treat each sub-service as its own slot 4.8a/4.8b/4.8c/4.8d. |
 | Stubs may not faithfully represent monolith behavior | Per-extraction fidelity check against `sclera-vdms-edge-server` before scaffolding |
+| Several "stubs" per migration notes are now real implementations (`touchscreen.VdmsService`, `UserService`, `UserActionLogService`, `Product_DetailsService`) | Always cross-reference `stub-inventory.md` before scoping an extraction; the inventory is the source of truth, status-2026-05-13.md is now stale on these |
+| 32 edge-only Bucket-D stubs have no extraction target | Per-call-site disposition (Phase 4.Y): Dapr binding, permanent no-op, or delete with the call site. No big-bang. |
 | Schema renames across active DB | Maintenance window per service; rollback = reverse Flyway script + redeploy stubs |
 | Read-model staleness vs UI expectations | Per-projection staleness SLO; explicit UI "syncing" states |
 
