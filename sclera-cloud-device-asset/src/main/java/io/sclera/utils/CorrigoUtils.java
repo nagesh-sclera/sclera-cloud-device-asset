@@ -4,7 +4,7 @@ package io.sclera.utils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.sclera.dto.DeviceAlertDTO;
 import io.sclera.dto.LocationAlertDTO;
-import io.sclera.service.WorkorderTemplateService;
+import io.sclera.client.WorkorderTemplateClient;
 import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -23,7 +23,7 @@ import org.json.JSONObject;
 public class CorrigoUtils {
 
     @Autowired
-    WorkorderTemplateService workorderTemplateService;
+    WorkorderTemplateClient workorderTemplateService;
 
     private String oauth_token;
 
