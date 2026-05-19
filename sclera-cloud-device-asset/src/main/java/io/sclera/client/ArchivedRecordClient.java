@@ -15,6 +15,10 @@ import java.util.List;
  * Replaces the no-op {@code io.sclera.service.ArchivedRecordService} stub.
  * The single void method swallows any exception (sidecar-down, network error)
  * with a WARN log so that call sites are never interrupted by audit failures.
+ *
+ * Path and verb are aligned with ArchivedRecordController (GET-only camelCase
+ * skeleton endpoint). NOTE: the List body is lost under GET-only routing —
+ * this is a known PoC limitation; real POST routing is a Wave-2 prerequisite.
  */
 @Component
 public class ArchivedRecordClient {
@@ -30,12 +34,13 @@ public class ArchivedRecordClient {
 
     /**
      * Mirrors {@code ArchivedRecordService#batchUpdateArchivedRecords}.
-     * Maps to POST sclera-audit/archived-records/batch-update.
+     * Maps to GET sclera-audit/archivedrecord/batchUpdateArchivedRecords.
      * Documented default: void (no return value); exceptions are swallowed.
+     * NOTE: List body is lost under GET-only skeleton routing (Wave-2: needs POST).
      */
     public void batchUpdateArchivedRecords(List<UserActionLogDTO> logs) {
         try {
-            dapr.invokeMethod(APP_ID, "archived-records/batch-update", logs, HttpExtension.POST).block();
+            dapr.invokeMethod(APP_ID, "archivedrecord/batchUpdateArchivedRecords", logs, HttpExtension.GET).block();
         } catch (Exception e) {
             log.warn("ArchivedRecordClient.batchUpdateArchivedRecords failed; swallowing: {}", e.getMessage());
         }

@@ -17,6 +17,9 @@ import java.util.Map;
  * Returns an empty {@link JSONObject} on any exception (sidecar-down,
  * network error) so that call sites receive the same documented default
  * as the original stub.
+ *
+ * Path and verb are aligned with SyslogController (GET-only camelCase
+ * skeleton endpoint).
  */
 @Component
 public class SyslogClient {
@@ -32,7 +35,7 @@ public class SyslogClient {
 
     /**
      * Mirrors {@code SyslogService#getSyslogExcludeDeviceIds}.
-     * Maps to POST sclera-audit/syslog/exclude-device-ids.
+     * Maps to GET sclera-audit/syslog/getSyslogExcludeDeviceIds.
      * Documented default on failure: {@code new JSONObject()} (empty object).
      */
     public JSONObject getSyslogExcludeDeviceIds(String username, String vdmsid,
@@ -43,8 +46,8 @@ public class SyslogClient {
         payload.put("docker_name", dockerName);
         payload.put("profile_type", profileType);
         try {
-            JSONObject result = dapr.invokeMethod(APP_ID, "syslog/exclude-device-ids",
-                    payload, HttpExtension.POST, JSONObject.class).block();
+            JSONObject result = dapr.invokeMethod(APP_ID, "syslog/getSyslogExcludeDeviceIds",
+                    payload, HttpExtension.GET, JSONObject.class).block();
             return result != null ? result : new JSONObject();
         } catch (Exception e) {
             log.warn("SyslogClient.getSyslogExcludeDeviceIds failed; swallowing: {}", e.getMessage());

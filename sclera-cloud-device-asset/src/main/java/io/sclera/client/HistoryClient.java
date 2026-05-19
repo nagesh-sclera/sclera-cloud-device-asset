@@ -17,6 +17,12 @@ import java.util.Map;
  * All methods are void: they invoke the remote endpoint and swallow any
  * exception (sidecar-down, network error) with a WARN log so that AP-C1
  * call sites are never interrupted by audit failures.
+ *
+ * Paths and verbs are aligned with HistoryController (GET-only camelCase
+ * skeleton endpoints). Params are passed as query-params via Dapr's HTTP
+ * wrapper. NOTE: methods that originally took a DTO body (addHistory,
+ * addHistoryWithTimestamp) lose the body under GET routing — this is a
+ * known PoC limitation; real POST routing is a Wave-2 prerequisite.
  */
 @Component
 public class HistoryClient {
@@ -32,7 +38,7 @@ public class HistoryClient {
 
     /**
      * Mirrors {@code HistoryService#insertDeviceStatusHistory}.
-     * Maps to POST sclera-audit/history/device-status.
+     * Maps to GET sclera-audit/history/insertDeviceStatusHistory.
      */
     public void insertDeviceStatusHistory(Integer alarm, String ipAddress,
                                           Object extra1, Object extra2,
@@ -44,7 +50,7 @@ public class HistoryClient {
         payload.put("extra2", extra2);
         payload.put("deviceId", finalDeviceId);
         try {
-            dapr.invokeMethod(APP_ID, "history/device-status", payload, HttpExtension.POST).block();
+            dapr.invokeMethod(APP_ID, "history/insertDeviceStatusHistory", payload, HttpExtension.GET).block();
         } catch (Exception e) {
             log.warn("HistoryClient.insertDeviceStatusHistory failed; swallowing: {}", e.getMessage());
         }
@@ -52,11 +58,12 @@ public class HistoryClient {
 
     /**
      * Mirrors {@code HistoryService#addHistory}.
-     * Maps to POST sclera-audit/history/add.
+     * Maps to GET sclera-audit/history/addHistory.
+     * NOTE: DTO body is lost under GET-only skeleton routing (Wave-2: needs POST).
      */
     public void addHistory(HistoryDTO historyDTO) {
         try {
-            dapr.invokeMethod(APP_ID, "history/add", historyDTO, HttpExtension.POST).block();
+            dapr.invokeMethod(APP_ID, "history/addHistory", historyDTO, HttpExtension.GET).block();
         } catch (Exception e) {
             log.warn("HistoryClient.addHistory failed; swallowing: {}", e.getMessage());
         }
@@ -64,11 +71,12 @@ public class HistoryClient {
 
     /**
      * Mirrors {@code HistoryService#addHistoryWithTimestamp}.
-     * Maps to POST sclera-audit/history/add-with-timestamp.
+     * Maps to GET sclera-audit/history/addHistoryWithTimestamp.
+     * NOTE: DTO body is lost under GET-only skeleton routing (Wave-2: needs POST).
      */
     public void addHistoryWithTimestamp(HistoryDTO historyDTO) {
         try {
-            dapr.invokeMethod(APP_ID, "history/add-with-timestamp", historyDTO, HttpExtension.POST).block();
+            dapr.invokeMethod(APP_ID, "history/addHistoryWithTimestamp", historyDTO, HttpExtension.GET).block();
         } catch (Exception e) {
             log.warn("HistoryClient.addHistoryWithTimestamp failed; swallowing: {}", e.getMessage());
         }
@@ -76,14 +84,14 @@ public class HistoryClient {
 
     /**
      * Mirrors {@code HistoryService#updateHistoryDeviceId}.
-     * Maps to POST sclera-audit/history/update-device-id.
+     * Maps to GET sclera-audit/history/updateHistoryDeviceId.
      */
     public void updateHistoryDeviceId(String oldId, String newId) {
         Map<String, String> payload = new HashMap<>();
         payload.put("oldId", oldId);
         payload.put("newId", newId);
         try {
-            dapr.invokeMethod(APP_ID, "history/update-device-id", payload, HttpExtension.POST).block();
+            dapr.invokeMethod(APP_ID, "history/updateHistoryDeviceId", payload, HttpExtension.GET).block();
         } catch (Exception e) {
             log.warn("HistoryClient.updateHistoryDeviceId failed; swallowing: {}", e.getMessage());
         }
