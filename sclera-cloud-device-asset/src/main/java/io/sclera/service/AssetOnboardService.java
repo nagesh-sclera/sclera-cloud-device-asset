@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import io.sclera.Repository.AssetRepository;
 import io.sclera.Repository.VdmsRepository;
+import io.sclera.client.CorrigoClient;
 import io.sclera.dto.CorrigoConfigurationDTO;
 import io.sclera.dto.DeviceDTO;
 import io.sclera.dto.DeviceOnboardStatusDTO;
@@ -37,7 +38,7 @@ public class AssetOnboardService {
     @Autowired
     AssetRepository assetRepository;
     @Autowired
-    CorrigoService corrigoService;
+    CorrigoClient corrigoService;
     @Autowired
     VdmsRepository vdmsRepository;
 

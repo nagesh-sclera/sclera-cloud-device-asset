@@ -1,5 +1,6 @@
 package io.sclera.service;
 
+import io.sclera.client.CorrigoClient;
 import io.sclera.dto.DeviceDTO;
 import io.sclera.dto.MeasuringInstrumentDTO;
 import org.json.JSONArray;
@@ -28,7 +29,7 @@ public class ChatGPTService {
     APICallService apiCallService;
 
     @Autowired
-    CorrigoService corrigoService;
+    CorrigoClient corrigoService;
 
     private static final Logger logger = LoggerFactory.getLogger(ChatGPTService.class);
 
