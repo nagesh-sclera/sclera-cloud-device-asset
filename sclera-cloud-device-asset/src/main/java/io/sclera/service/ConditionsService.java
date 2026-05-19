@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.uuid.Generators;
 
 import io.sclera.Repository.ConditionsRepository;
+import io.sclera.client.HistoryClient;
 import io.sclera.dto.touchscreen.SensorDTO;
 import io.sclera.rabbitmq.RabbitmqService;
 import io.sclera.sockets.SocketService;
@@ -45,7 +46,7 @@ public class ConditionsService {
     DisruptiveService disruptiveService;
 
     @Autowired
-    HistoryService historyService;
+    HistoryClient historyClient;
 
     @Autowired
     AlertService alertService;
@@ -988,7 +989,7 @@ public class ConditionsService {
 //                    snmpService.updateSnmpDeviceAlert(snmp_device_id, newAlert);
                     //					if(newAlert){
                     //						//insert snmp alert into history
-                    //						historyService.insertSnmpAlertHistory(snmp_device_id, value, user_data_value, alert_message);
+                    //						historyClient.insertSnmpAlertHistory(snmp_device_id, value, user_data_value, alert_message);
                     //					}
                 } else {
                     if (conditionType.equals("delete")) {
@@ -1880,7 +1881,7 @@ public class ConditionsService {
             //send bacnet alert socket event
 //            sockertService.sockertBacnetAlert(bacnetObjectDetails);
             //insert bacnet alertinto history
-//            historyService.insertBacnetAlertHistory(bacnetObjectDetails);
+//            historyClient.insertBacnetAlertHistory(bacnetObjectDetails);
             //send bacnet alert email and sms
 //            alertService.sendBacnetAlert(bacnetObjectDetails);
             //send bacnet alert info to rabbitmq
@@ -1901,7 +1902,7 @@ public class ConditionsService {
             //send lorawan alert socket event
 //            sockertService.socketLorawanAlert(lorawanSensorDetails);
             //insert lorawan alertinto history
-//            historyService.insertLorawanAlertHistory(lorawanSensorDetails, lorawan_sensor_attributes_name);
+//            historyClient.insertLorawanAlertHistory(lorawanSensorDetails, lorawan_sensor_attributes_name);
             //send lorawan alert email and sms
 //            alertService.sendLorawanAlert(lorawanSensorDetails, lorawan_sensor_attributes_name);
             //send lorawan alert info to rabbitmq
@@ -1922,7 +1923,7 @@ public class ConditionsService {
 //            //send disruptive alert socket event
 //          //  sockertService.socketDisruptiveSensorAlert(disruptiveSensorDetails);
 //            //insert disruptive alert into history
-//            historyService.insertDisruptiveSensorAlertHistory(disruptiveSensorDetails);
+//            historyClient.insertDisruptiveSensorAlertHistory(disruptiveSensorDetails);
 //            //send disruptive alert email and sms
 ////            alertService.sendDisruptiveSensorAlert(disruptiveSensorDetails);
 //            //send disruptive alert info to rabbitmq
@@ -1943,7 +1944,7 @@ public class ConditionsService {
             //send mydevices alert socket event
 //            sockertService.socketMyDevicesAlert(myDevicesSensorDetails);
 //            //insert mydevices alert into history
-//            historyService.insertMyDevicesAlertHistory(myDevicesSensorDetails, my_devices_sensor_attributes_name);
+//            historyClient.insertMyDevicesAlertHistory(myDevicesSensorDetails, my_devices_sensor_attributes_name);
 //            //send mydevices alert email and sms
 ////            alertService.sendMyDevicesAlert(myDevicesSensorDetails, my_devices_sensor_attributes_name);
 //            //send myedevices alert info to rabbitmq
@@ -1964,7 +1965,7 @@ public class ConditionsService {
 //            //send monnit alert socket event
 //            sockertService.socketMonnitSensorAlert(monnitSensorDetails);
 //            //insert monnit alert into history
-//            historyService.insertMonnitSensorAlertHistory(monnitSensorDetails);
+//            historyClient.insertMonnitSensorAlertHistory(monnitSensorDetails);
 //            //send monnit email and sms alert
 ////            alertService.sendMonnitSensorAlert(monnitSensorDetails);
 //            //send monnit alert info to rabbitmq
@@ -1985,7 +1986,7 @@ public class ConditionsService {
 //            //send pelican alert socket event
 //            sockertService.socketPelicanAlert(pelicanSensorDetails);
 //            //insert pelican alert into history
-//            historyService.insertPelicanAlertHistory(pelicanSensorDetails, pelican_sensor_attributes_name);
+//            historyClient.insertPelicanAlertHistory(pelicanSensorDetails, pelican_sensor_attributes_name);
 //            //send pelican alert email and sms
 ////            alertService.sendPelicanAlert(pelicanSensorDetails, pelican_sensor_attributes_name);
 //            //send pelican alert info to rabbitmq
@@ -2006,7 +2007,7 @@ public class ConditionsService {
 //            //send knx alert socket event
 //            sockertService.socketKNXAlert(knxGroupDetails);
 //            //insert knx alertinto history
-//            historyService.insertKNXAlertHistory(knxGroupDetails);
+//            historyClient.insertKNXAlertHistory(knxGroupDetails);
 //            //send knx alert email and sms
 ////            alertService.sendKNXAlert(knxGroupDetails);
 //            //send bacnet alert info to rabbitmq
@@ -2025,7 +2026,7 @@ public class ConditionsService {
 //        //send snmp alert socket event
 //        sockertService.socketSnmpObjectAlert(snmpObjectDetails);
 //        //insert snmp alert into history
-//        historyService.insertSnmpObjectAlertHistory(snmpObjectDetails);
+//        historyClient.insertSnmpObjectAlertHistory(snmpObjectDetails);
 //        //send snmp alert email and sms
 ////        alertService.sendSnmpObjectAlert(snmpObjectDetails);
 //        //send bacnet alert info to rabbitmq
@@ -2042,7 +2043,7 @@ public class ConditionsService {
             //send measuring instrument alert socket event
 //            sockertService.socketMeasuringInstrumentSensorAlert(measuringInstrumentDetails);
 //            //insert measuring instrument alert into history
-//            historyService.insertMeasuringInstrumentSensorAlertHistory(measuringInstrumentDetails);
+//            historyClient.insertMeasuringInstrumentSensorAlertHistory(measuringInstrumentDetails);
 //            //send measuring instrument and sms alert
 ////            alertService.sendMeasuringInstrumentSensorAlert(measuringInstrumentDetails);
 //            //send measuring instrument alert info to rabbitmq
@@ -2062,7 +2063,7 @@ public class ConditionsService {
 //            sockertService.socketDaintreeDevicesAlert(daintreeDetails);
 //
 //            //insert daintree alert into history
-//            historyService.insertDaintreeDevicesAlertHistory(daintreeDetails, daintree_point_id);
+//            historyClient.insertDaintreeDevicesAlertHistory(daintreeDetails, daintree_point_id);
 //
 //            //send daintree and sms alert
 ////            alertService.sendDaintreenDeviceAlert(daintreeDetails, daintree_point_id);
@@ -2204,7 +2205,7 @@ public class ConditionsService {
 //            sockertService.socketEcobeeAlert(ecobeeSensorDetails);
 //
 //            //insert ecobee alert into history
-//            historyService.insertEcobeeAlertHistory(ecobeeSensorDetails, ecobee_sensor_attributes_name);
+//            historyClient.insertEcobeeAlertHistory(ecobeeSensorDetails, ecobee_sensor_attributes_name);
 //
 //            //send ecobee alert info to rabbitmq
 //            rabbitmqService.rabbitmqEcobeeAlertData(ecobeeSensorDetails, ecobee_sensor_attributes_name);
@@ -2221,7 +2222,7 @@ public class ConditionsService {
 //            //send Modbus alert socket event
 //            sockertService.sockertModbusAlert(modbusRegisterDetails);
 //            //insert Modbus alertinto history
-//            historyService.insertModbusAlertHistory(modbusRegisterDetails);
+//            historyClient.insertModbusAlertHistory(modbusRegisterDetails);
 //            //send Modbus alert info to rabbitmq
 //            rabbitmqService.rabbitmqModbusAlertData(modbusRegisterDetails);
 //        } catch (Exception e) {

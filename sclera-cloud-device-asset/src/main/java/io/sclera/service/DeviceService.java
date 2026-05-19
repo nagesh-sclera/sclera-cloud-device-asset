@@ -22,6 +22,7 @@ import io.sclera.enums.JacksCodeMapping;
 import io.sclera.integration.dto.ResponseDTO;
 import io.sclera.models.*;
 import io.sclera.queryrepository.DeviceQueryRepository;
+import io.sclera.client.HistoryClient;
 import io.sclera.rabbitmq.RabbitmqService;
 //import io.sclera.service.touchscreen.VdmsService;
 import io.sclera.service.touchscreen.VdmsService;
@@ -153,7 +154,7 @@ public class DeviceService {
     Product_DetailsService product_detailsService;
 
     @Autowired
-    HistoryService historyService;
+    HistoryClient historyClient;
 
     @Autowired
     Utils utils;
@@ -1417,7 +1418,7 @@ public class DeviceService {
                     if (device_status == 1) {
                         alarm = 2;
                     }
-                    historyService.insertDeviceStatusHistory(alarm, virtualDevice.getIp_address(), null, null,
+                    historyClient.insertDeviceStatusHistory(alarm, virtualDevice.getIp_address(), null, null,
                             final_device_id);
                 }
 
@@ -2106,7 +2107,7 @@ public class DeviceService {
                     if (status == 1) {
                         alarm = 2;
                     }
-                    historyService.insertDeviceStatusHistory(alarm, virtualdevicedto.getIp_address(), null, null,
+                    historyClient.insertDeviceStatusHistory(alarm, virtualdevicedto.getIp_address(), null, null,
                             virtual_device_id);
                 }
             } catch (Exception e) {
@@ -2750,7 +2751,7 @@ public class DeviceService {
     //
     // try {
     //
-    // historyService.insertDeviceStatusHistory(device.getAlarm(), device.getId());
+    // historyClient.insertDeviceStatusHistory(device.getAlarm(), device.getId());
     //
     // if(device.getAlarm() == 7 )
     // {
@@ -2913,7 +2914,7 @@ public class DeviceService {
     public void insertDevicesHistory(String dockername, List<DeviceHistoryDTO> devicesHistory) {
         for (DeviceHistoryDTO deviceHistory : devicesHistory) {
             try {
-                historyService.insertDeviceStatusHistory(deviceHistory.getAlarm(), deviceHistory.getIp_address(),
+                historyClient.insertDeviceStatusHistory(deviceHistory.getAlarm(), deviceHistory.getIp_address(),
                         deviceHistory.getOld_ip_address(), deviceHistory.getTimestamp(), deviceHistory.getId());
                 rabbitmqService.rabbitmqDeviceEvent(dockername, deviceHistory);
             } catch (Exception e) {
@@ -3964,7 +3965,7 @@ public class DeviceService {
             history.setAlert_message(AlertMessage);
             history.setDevice_id(deviceId);
             history.setCreated_email(username);
-            historyService.addHistory(history);
+            historyClient.addHistory(history);
         }
 
         try {
@@ -6206,7 +6207,7 @@ public class DeviceService {
         history.setDevice_id(device_id);
         history.setSub_type(sub_type);
         history.setAlert_message(alert_message);
-        historyService.addHistory(history);
+        historyClient.addHistory(history);
 
         log.info("Added onboard history:{}", history);
 
@@ -8583,7 +8584,7 @@ public String daysCleaned(String input){
 
     private void updateHistoryDeviceId(String primaryDeviceId, Set<String> existingDeviceIds) {
         for (String existingDeviceId : existingDeviceIds) {
-            historyService.updateHistoryDeviceId(primaryDeviceId, existingDeviceId);
+            historyClient.updateHistoryDeviceId(primaryDeviceId, existingDeviceId);
         }
     }
 
@@ -9790,7 +9791,7 @@ public String daysCleaned(String input){
         history.setSub_type(sub_type);
         history.setAlert_message(alert_message);
         history.setTimestamp(timestamp);
-        historyService.addHistoryWithTimestamp(history);
+        historyClient.addHistoryWithTimestamp(history);
 
         log.info("Method: updateOnboardAssetHistoryDetailsWithTimestamp. Added onboard history:{}", history);
 
