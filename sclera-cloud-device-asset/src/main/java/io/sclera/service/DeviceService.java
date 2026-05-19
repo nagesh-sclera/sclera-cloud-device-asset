@@ -23,6 +23,7 @@ import io.sclera.integration.dto.ResponseDTO;
 import io.sclera.models.*;
 import io.sclera.queryrepository.DeviceQueryRepository;
 import io.sclera.client.HistoryClient;
+import io.sclera.client.TicketClient;
 import io.sclera.rabbitmq.RabbitmqService;
 //import io.sclera.service.touchscreen.VdmsService;
 import io.sclera.service.touchscreen.VdmsService;
@@ -163,7 +164,7 @@ public class DeviceService {
     io.sclera.client.AlertClient alertClient;
 
     @Autowired
-    TicketService ticketService;
+    TicketClient ticketService;
 
     @Autowired
     BacnetService bacnetService;
