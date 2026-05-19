@@ -229,7 +229,7 @@ public class DeviceService {
     DeviceConditionsService deviceConditionsService;
 
     @Autowired
-    AlertProfileService alertProfileService;
+    io.sclera.client.AlertProfileClient alertProfileClient;
 
     @Autowired
     EcobeeService ecobeeService;
@@ -4971,7 +4971,7 @@ public class DeviceService {
 
         Set<DeviceConditionsDTO> deviceConditions = deviceConditionsService.getDeviceConditions(null, null, null, deviceId);
         for (DeviceConditionsDTO deviceCondition : deviceConditions) {
-            AlertProfileDTO alertProfile = alertProfileService.getAlertProfileById(deviceCondition.getAlert_profile_id());
+            AlertProfileDTO alertProfile = alertProfileClient.getAlertProfileById(deviceCondition.getAlert_profile_id());
 
             DeviceAlertDTO deviceAlert = this.getDeviceConditionAlertInfoById(deviceCondition.getDevice_id());
 

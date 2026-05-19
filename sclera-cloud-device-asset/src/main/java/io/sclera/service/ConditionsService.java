@@ -80,7 +80,7 @@ public class ConditionsService {
     DaintreeService daintreeService;
 
     @Autowired
-    AlertProfileService alertProfileService;
+    io.sclera.client.AlertProfileClient alertProfileClient;
 
     @Autowired
     EcobeeService ecobeeService;
@@ -1430,7 +1430,7 @@ public class ConditionsService {
                 knx_group_address, knx_device_address, snmp_device_configuration_id, snmp_object_oid, measuring_instrument_id, daintree_device_id, ecobee_sensor_id, modbus_register_id);
         for (ConditionsDTO condition : conditions) {
             if (condition.getAlert_profile_id() != null) {
-                condition.setAlert_profile(alertProfileService.getAlertProfileDetailsById(null, null,
+                condition.setAlert_profile(alertProfileClient.getAlertProfileDetailsById(null, null,
                         condition.getAlert_profile_id()));
             }
         }

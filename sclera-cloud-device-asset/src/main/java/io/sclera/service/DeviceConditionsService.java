@@ -24,7 +24,7 @@ public class DeviceConditionsService {
     DeviceConditionsRepository deviceConditionsRepository;
 
     @Autowired
-    AlertProfileService alertProfileService;
+    io.sclera.client.AlertProfileClient alertProfileClient;
 
     @Autowired
     DeviceService deviceService;
@@ -118,7 +118,7 @@ public class DeviceConditionsService {
         Set<DeviceConditionsDTO> deviceConditions = deviceConditionsRepository.getDeviceConditions(device_id);
         for (DeviceConditionsDTO deviceCondition : deviceConditions) {
             if (deviceCondition.getAlert_profile_id() != null) {
-                deviceCondition.setAlert_profile(alertProfileService.getAlertProfileDetailsById(null, null, deviceCondition.getAlert_profile_id()));
+                deviceCondition.setAlert_profile(alertProfileClient.getAlertProfileDetailsById(null, null, deviceCondition.getAlert_profile_id()));
             }
         }
         return deviceConditions;
@@ -135,7 +135,7 @@ public class DeviceConditionsService {
     public DeviceConditionsDTO getDeviceConditionsById(String username, String vdmsid, String device_condition_id) {
         DeviceConditionsDTO deviceConditions = deviceConditionsRepository.getDeviceConditionsById(device_condition_id);
         if (deviceConditions.getAlert_profile_id() != null) {
-            deviceConditions.setAlert_profile(alertProfileService.getAlertProfileDetailsById(null, null, deviceConditions.getAlert_profile_id()));
+            deviceConditions.setAlert_profile(alertProfileClient.getAlertProfileDetailsById(null, null, deviceConditions.getAlert_profile_id()));
         }
         return deviceConditions;
     }
