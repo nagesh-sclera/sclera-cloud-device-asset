@@ -14,8 +14,19 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.uuid.Generators;
 
 import io.sclera.Repository.ConditionsRepository;
+import io.sclera.client.BacnetClient;
+import io.sclera.client.DaintreeClient;
+import io.sclera.client.DisruptiveClient;
+import io.sclera.client.EcobeeClient;
 import io.sclera.client.HistoryClient;
+import io.sclera.client.KNXClient;
+import io.sclera.client.LorawanClient;
+import io.sclera.client.ModbusClient;
+import io.sclera.client.MonnitClient;
 import io.sclera.client.MyDevicesClient;
+import io.sclera.client.PelicanClient;
+import io.sclera.client.SiemensClient;
+import io.sclera.client.SnmpClient;
 import io.sclera.dto.touchscreen.SensorDTO;
 import io.sclera.rabbitmq.RabbitmqService;
 import io.sclera.sockets.SocketService;
@@ -35,16 +46,16 @@ public class ConditionsService {
     ConditionsRepository conditionsRepository;
 
     @Autowired
-    LorawanService lorawanService;
+    LorawanClient lorawanService;
 
     @Autowired
-    BacnetService bacnetService;
+    BacnetClient bacnetService;
 
     @Autowired
-    SnmpService snmpService;
+    SnmpClient snmpService;
 
     @Autowired
-    DisruptiveService disruptiveService;
+    DisruptiveClient disruptiveService;
 
     @Autowired
     HistoryClient historyClient;
@@ -66,29 +77,29 @@ public class ConditionsService {
     RabbitmqService rabbitmqService;
 
     @Autowired
-    MonnitService monnitService;
+    MonnitClient monnitService;
 
     @Autowired
-    PelicanService pelicanService;
+    PelicanClient pelicanService;
 
     @Autowired
-    KNXService knxService;
+    KNXClient knxService;
 
     @Autowired
     MeasuringInstrumentService measuringInstrumentService;
 
     @Autowired
-    DaintreeService daintreeService;
+    DaintreeClient daintreeService;
 
     @Autowired
     io.sclera.client.AlertProfileClient alertProfileClient;
 
     @Autowired
-    EcobeeService ecobeeService;
+    EcobeeClient ecobeeService;
 
 
     @Autowired
-    ModbusService modbusService;
+    ModbusClient modbusService;
 
     @Autowired
     IOCService iocService;
@@ -104,7 +115,7 @@ public class ConditionsService {
     io.sclera.client.AlertDowntimeScheduleClient alertDowntimeScheduleClient;
 
     @Autowired
-    SiemensService siemensService;
+    SiemensClient siemensService;
 
 
     public void upsertConditions(String username, String vdmsid, String dockername, String conditionGroup, Set<ConditionsDTO> conditions, HttpServletRequest httpServletRequest) {

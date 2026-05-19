@@ -22,13 +22,27 @@ import io.sclera.enums.JacksCodeMapping;
 import io.sclera.integration.dto.ResponseDTO;
 import io.sclera.models.*;
 import io.sclera.queryrepository.DeviceQueryRepository;
+import io.sclera.client.AssetMapperClient;
+import io.sclera.client.BacnetClient;
+import io.sclera.client.DaintreeClient;
+import io.sclera.client.DisruptiveClient;
+import io.sclera.client.EcobeeClient;
 import io.sclera.client.HistoryClient;
+import io.sclera.client.KNXClient;
+import io.sclera.client.LorawanClient;
+import io.sclera.client.ModbusClient;
+import io.sclera.client.MonnitClient;
+import io.sclera.client.MqttClient;
 import io.sclera.client.MyDevicesClient;
+import io.sclera.client.PelicanClient;
+import io.sclera.client.PolyLensClient;
+import io.sclera.client.SiemensClient;
+import io.sclera.client.SnmpClient;
 import io.sclera.client.TicketClient;
 import io.sclera.rabbitmq.RabbitmqService;
 //import io.sclera.service.touchscreen.VdmsService;
 import io.sclera.service.touchscreen.VdmsService;
-import io.sclera.service.touchscreen.assetmapper.AssetMapperService;
+// AssetMapperService replaced by AssetMapperClient
 import io.sclera.sockets.SocketService;
 import io.sclera.utils.*;
 import org.slf4j.Logger;
@@ -124,7 +138,7 @@ public class DeviceService {
     // SnmpConfigurationService snmpconfigurationService;
 
     @Autowired
-    SnmpService snmpService;
+    SnmpClient snmpService;
     @Autowired
     VdmsService vdmsService;
 
@@ -168,13 +182,13 @@ public class DeviceService {
     TicketClient ticketService;
 
     @Autowired
-    BacnetService bacnetService;
+    BacnetClient bacnetService;
 
     @Autowired
-    LorawanService lorawanService;
+    LorawanClient lorawanService;
 
     @Autowired
-    DisruptiveService disruptiveService;
+    DisruptiveClient disruptiveService;
 
     @Autowired
     DeviceIPAddressRepository deviceIPAddressRepository;
@@ -192,10 +206,10 @@ public class DeviceService {
     DockerService dockerService;
 
     @Autowired
-    MonnitService monnitService;
+    MonnitClient monnitService;
 
     @Autowired
-    PelicanService pelicanService;
+    PelicanClient pelicanService;
 
     @Autowired
     DataHoistService dataHoistService;
@@ -204,7 +218,7 @@ public class DeviceService {
     LocationService locationService;
 
     @Autowired
-    KNXService knxService;
+    KNXClient knxService;
 
     @Autowired
     MeasuringInstrumentService measuringInstrumentService;
@@ -222,7 +236,7 @@ public class DeviceService {
     io.sclera.client.RecordChecklistClient recordChecklistService;
 
     @Autowired
-    DaintreeService daintreeService;
+    DaintreeClient daintreeService;
 
     @Autowired
     GlobalQrcodeService globalQrcodeService;
@@ -234,7 +248,7 @@ public class DeviceService {
     io.sclera.client.AlertProfileClient alertProfileClient;
 
     @Autowired
-    EcobeeService ecobeeService;
+    EcobeeClient ecobeeService;
 
     @Autowired
     ConnectedDevicesService connectedDevicesService;
@@ -246,7 +260,7 @@ public class DeviceService {
     UserActionLogService userActionLogService;
 
     @Autowired
-    ModbusService modbusService;
+    ModbusClient modbusService;
 
     @Autowired
     IOCService iocService;
@@ -288,16 +302,16 @@ public class DeviceService {
     io.sclera.client.GlobalChecklistClient globalChecklistService;
 
     @Autowired
-    SiemensService siemensService;
+    SiemensClient siemensService;
 
     @Autowired
     APICallService apiCallService;
 
     @Autowired
-    PolyLensService polyLensService;
+    PolyLensClient polyLensService;
 
     @Autowired
-    MqttService mqttService;
+    MqttClient mqttService;
 
     @Autowired
     QrCodeService qrCodeService;
@@ -342,7 +356,7 @@ public class DeviceService {
     private DeviceTypeService deviceTypeService;
 
     @Autowired
-    private AssetMapperService assetMapperService;
+    private AssetMapperClient assetMapperService;
 
     @Autowired
     DeviceLifecycleHistoryService deviceLifecycleHistoryService;

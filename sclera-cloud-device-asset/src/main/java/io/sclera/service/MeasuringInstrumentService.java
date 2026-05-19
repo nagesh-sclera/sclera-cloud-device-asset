@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.uuid.Generators;
 
 import io.sclera.Repository.MeasuringInstrumentRepository;
+import io.sclera.client.DaintreeClient;
 import io.sclera.rabbitmq.RabbitmqService;
 import io.sclera.utils.InstrumentFormula;
 
@@ -53,7 +54,7 @@ public class MeasuringInstrumentService {
     SocketService socketService;
 
     @Autowired
-    DaintreeService daintreeService;
+    DaintreeClient daintreeService;
 
     @Autowired
     DataSource dataSource;
