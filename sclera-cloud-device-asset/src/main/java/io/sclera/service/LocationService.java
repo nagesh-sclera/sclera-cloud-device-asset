@@ -102,7 +102,7 @@ public class LocationService {
     InspectionRecordService inspectionRecordService;
 
     @Autowired
-    GlobalChecklistConditionsService globalChecklistConditionsService;
+    io.sclera.client.GlobalChecklistConditionsClient globalChecklistConditionsService;
 
     @Autowired
     VdmsRepository vdmsRepository;

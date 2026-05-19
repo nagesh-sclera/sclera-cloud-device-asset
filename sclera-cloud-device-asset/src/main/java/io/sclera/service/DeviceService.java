@@ -327,7 +327,7 @@ public class DeviceService {
     InspectionRecordService inspectionRecordService;
 
     @Autowired
-    GlobalChecklistConditionsService globalChecklistConditionsService;
+    io.sclera.client.GlobalChecklistConditionsClient globalChecklistConditionsService;
 
     @Autowired
     private QrCodeRepository qrCodeRepository;
