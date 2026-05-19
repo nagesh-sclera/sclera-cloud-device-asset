@@ -61,7 +61,7 @@ cp "$TEMPLATE_DIR/src/main/resources/topics.yaml.template" \
 _GEN_PY=$(mktemp /tmp/gen-controllers-XXXXXX.py)
 trap 'rm -f "$_GEN_PY"' EXIT
 cat > "$_GEN_PY" <<'PY'
-import json, sys, pathlib, re
+import json, sys, pathlib
 
 out_dir, pkg = sys.argv[1], sys.argv[2]
 data = json.load(sys.stdin)
@@ -71,6 +71,7 @@ SAFE_PARAM_TYPES = {
     "String", "Integer", "Long", "Boolean", "Double", "Float",
     "int", "long", "boolean", "double", "float",
     "java.lang.String", "java.lang.Integer", "java.lang.Long", "java.lang.Boolean",
+    "java.lang.Double", "java.lang.Float",
 }
 
 # Allow-listed return types (superset of param types, plus collections and void/Object).
