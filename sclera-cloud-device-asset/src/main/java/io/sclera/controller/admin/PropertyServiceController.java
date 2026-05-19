@@ -1,7 +1,7 @@
 package io.sclera.controller.admin;
 
 import io.sclera.dto.*;
-import io.sclera.service.PropertyQrcodeService;
+import io.sclera.client.PropertyQrcodeClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,7 +12,7 @@ import java.util.Set;
 public class PropertyServiceController {
 
     @Autowired
-    PropertyQrcodeService propertyQrcodeService;
+    PropertyQrcodeClient propertyQrcodeService;
 
     // Upsert Property service and Property Service Requests
     @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/upsertpropertyservice")
