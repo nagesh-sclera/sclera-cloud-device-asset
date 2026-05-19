@@ -99,7 +99,7 @@ public class LocationService {
     io.sclera.client.GlobalInspectionRecordClient globalInspectionRecordService;
 
     @Autowired
-    InspectionRecordService inspectionRecordService;
+    io.sclera.client.InspectionRecordClient inspectionRecordService;
 
     @Autowired
     io.sclera.client.GlobalChecklistConditionsClient globalChecklistConditionsService;

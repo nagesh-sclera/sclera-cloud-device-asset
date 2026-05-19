@@ -324,7 +324,7 @@ public class DeviceService {
     io.sclera.client.ArchivedRecordClient archivedRecordService;
 
     @Autowired
-    InspectionRecordService inspectionRecordService;
+    io.sclera.client.InspectionRecordClient inspectionRecordService;
 
     @Autowired
     io.sclera.client.GlobalChecklistConditionsClient globalChecklistConditionsService;
