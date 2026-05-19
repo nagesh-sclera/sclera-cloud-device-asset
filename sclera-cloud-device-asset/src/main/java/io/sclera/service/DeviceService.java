@@ -376,7 +376,7 @@ public class DeviceService {
     RemoteDesktopSessionRepository remoteDesktopSessionRepository;
 
     @Autowired
-    private SyslogService syslogService;
+    private io.sclera.client.SyslogClient syslogService;
 
 
     private String server_asset_images_absolute_path;
