@@ -1,28 +1,35 @@
 package io.sclera.audit.controller;
 
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import io.sclera.audit.defaults.Defaults;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/history")
 public class HistoryController {
-  @org.springframework.web.bind.annotation.GetMapping("/insertDeviceStatusHistory")
-  public void insertDeviceStatusHistory(@org.springframework.web.bind.annotation.RequestParam Integer alarm, @org.springframework.web.bind.annotation.RequestParam String ipAddress, @org.springframework.web.bind.annotation.RequestParam String o, @org.springframework.web.bind.annotation.RequestParam String o1, @org.springframework.web.bind.annotation.RequestParam String finalDeviceId) {
+  @GetMapping("/insertDeviceStatusHistory")
+  public void insertDeviceStatusHistory(@RequestParam Integer alarm, @RequestParam String ipAddress, @RequestParam String o, @RequestParam String o1, @RequestParam String finalDeviceId) {
     // no-op
   }
 
-  @org.springframework.web.bind.annotation.GetMapping("/addHistory")
-  public void addHistory(@org.springframework.web.bind.annotation.RequestParam String historyDTO) {
+  @GetMapping("/addHistory")
+  public void addHistory(@RequestParam String historyDTO) {
     // no-op
   }
 
-  @org.springframework.web.bind.annotation.GetMapping("/addHistoryWithTimestamp")
-  public void addHistoryWithTimestamp(@org.springframework.web.bind.annotation.RequestParam String historyDTO) {
+  @GetMapping("/addHistoryWithTimestamp")
+  public void addHistoryWithTimestamp(@RequestParam String historyDTO) {
     // no-op
   }
 
-  @org.springframework.web.bind.annotation.GetMapping("/updateHistoryDeviceId")
-  public void updateHistoryDeviceId(@org.springframework.web.bind.annotation.RequestParam String oldId, @org.springframework.web.bind.annotation.RequestParam String newId) {
+  @GetMapping("/updateHistoryDeviceId")
+  public void updateHistoryDeviceId(@RequestParam String oldId, @RequestParam String newId) {
     // no-op
   }
 }

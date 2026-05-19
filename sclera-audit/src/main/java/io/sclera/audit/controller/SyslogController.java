@@ -1,18 +1,25 @@
 package io.sclera.audit.controller;
 
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import io.sclera.audit.defaults.Defaults;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/syslog")
 public class SyslogController {
-  @org.springframework.web.bind.annotation.GetMapping("/getSyslogExcludeDeviceIds")
-  public String getSyslogExcludeDeviceIds(@org.springframework.web.bind.annotation.RequestParam String a, @org.springframework.web.bind.annotation.RequestParam String b, @org.springframework.web.bind.annotation.RequestParam String c, @org.springframework.web.bind.annotation.RequestParam String d) {
-    return io.sclera.audit.defaults.Defaults.NULL_STRING;
+  @GetMapping("/getSyslogExcludeDeviceIds")
+  public String getSyslogExcludeDeviceIds(@RequestParam String a, @RequestParam String b, @RequestParam String c, @RequestParam String d) {
+    return Defaults.NULL_STRING;
   }
 
-  @org.springframework.web.bind.annotation.GetMapping("/deleteByDeviceId")
-  public void deleteByDeviceId(@org.springframework.web.bind.annotation.RequestParam String deviceId) {
+  @GetMapping("/deleteByDeviceId")
+  public void deleteByDeviceId(@RequestParam String deviceId) {
     // no-op
   }
 }
