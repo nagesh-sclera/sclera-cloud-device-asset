@@ -94,6 +94,174 @@ services:
       - vdms-service
       - redis
 
+  sclera-audit:
+    build: ./sclera-audit
+    container_name: sclera-audit
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DAPR_HTTP_PORT: "3500"
+      DAPR_GRPC_PORT: "50001"
+    ports: ["8090:8090"]
+    networks: [sclera-net]
+    restart: on-failure
+
+  sclera-audit-dapr:
+    image: daprio/daprd:1.12.0
+    command: ["./daprd",
+      "--app-id", "sclera-audit", "--app-port", "8090",
+      "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
+      "--placement-host-address", "",
+      "--components-path", "/dapr/components/local",
+      "--log-level", "info"]
+    volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
+    network_mode: "service:sclera-audit"
+    restart: on-failure
+    depends_on: [sclera-audit, redis]
+
+  sclera-identity:
+    build: ./sclera-identity
+    container_name: sclera-identity
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DAPR_HTTP_PORT: "3500"
+      DAPR_GRPC_PORT: "50001"
+    ports: ["8091:8091"]
+    networks: [sclera-net]
+    restart: on-failure
+
+  sclera-identity-dapr:
+    image: daprio/daprd:1.12.0
+    command: ["./daprd",
+      "--app-id", "sclera-identity", "--app-port", "8091",
+      "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
+      "--placement-host-address", "",
+      "--components-path", "/dapr/components/local",
+      "--log-level", "info"]
+    volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
+    network_mode: "service:sclera-identity"
+    restart: on-failure
+    depends_on: [sclera-identity, redis]
+
+  sclera-alerts:
+    build: ./sclera-alerts
+    container_name: sclera-alerts
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DAPR_HTTP_PORT: "3500"
+      DAPR_GRPC_PORT: "50001"
+    ports: ["8092:8092"]
+    networks: [sclera-net]
+    restart: on-failure
+
+  sclera-alerts-dapr:
+    image: daprio/daprd:1.12.0
+    command: ["./daprd",
+      "--app-id", "sclera-alerts", "--app-port", "8092",
+      "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
+      "--placement-host-address", "",
+      "--components-path", "/dapr/components/local",
+      "--log-level", "info"]
+    volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
+    network_mode: "service:sclera-alerts"
+    restart: on-failure
+    depends_on: [sclera-alerts, redis]
+
+  sclera-inventory:
+    build: ./sclera-inventory
+    container_name: sclera-inventory
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DAPR_HTTP_PORT: "3500"
+      DAPR_GRPC_PORT: "50001"
+    ports: ["8093:8093"]
+    networks: [sclera-net]
+    restart: on-failure
+
+  sclera-inventory-dapr:
+    image: daprio/daprd:1.12.0
+    command: ["./daprd",
+      "--app-id", "sclera-inventory", "--app-port", "8093",
+      "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
+      "--placement-host-address", "",
+      "--components-path", "/dapr/components/local",
+      "--log-level", "info"]
+    volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
+    network_mode: "service:sclera-inventory"
+    restart: on-failure
+    depends_on: [sclera-inventory, redis]
+
+  sclera-workorders:
+    build: ./sclera-workorders
+    container_name: sclera-workorders
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DAPR_HTTP_PORT: "3500"
+      DAPR_GRPC_PORT: "50001"
+    ports: ["8094:8094"]
+    networks: [sclera-net]
+    restart: on-failure
+
+  sclera-workorders-dapr:
+    image: daprio/daprd:1.12.0
+    command: ["./daprd",
+      "--app-id", "sclera-workorders", "--app-port", "8094",
+      "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
+      "--placement-host-address", "",
+      "--components-path", "/dapr/components/local",
+      "--log-level", "info"]
+    volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
+    network_mode: "service:sclera-workorders"
+    restart: on-failure
+    depends_on: [sclera-workorders, redis]
+
+  sclera-inspection:
+    build: ./sclera-inspection
+    container_name: sclera-inspection
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DAPR_HTTP_PORT: "3500"
+      DAPR_GRPC_PORT: "50001"
+    ports: ["8095:8095"]
+    networks: [sclera-net]
+    restart: on-failure
+
+  sclera-inspection-dapr:
+    image: daprio/daprd:1.12.0
+    command: ["./daprd",
+      "--app-id", "sclera-inspection", "--app-port", "8095",
+      "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
+      "--placement-host-address", "",
+      "--components-path", "/dapr/components/local",
+      "--log-level", "info"]
+    volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
+    network_mode: "service:sclera-inspection"
+    restart: on-failure
+    depends_on: [sclera-inspection, redis]
+
+  sclera-integrations:
+    build: ./sclera-integrations
+    container_name: sclera-integrations
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DAPR_HTTP_PORT: "3500"
+      DAPR_GRPC_PORT: "50001"
+    ports: ["8096:8096"]
+    networks: [sclera-net]
+    restart: on-failure
+
+  sclera-integrations-dapr:
+    image: daprio/daprd:1.12.0
+    command: ["./daprd",
+      "--app-id", "sclera-integrations", "--app-port", "8096",
+      "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
+      "--placement-host-address", "",
+      "--components-path", "/dapr/components/local",
+      "--log-level", "info"]
+    volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
+    network_mode: "service:sclera-integrations"
+    restart: on-failure
+    depends_on: [sclera-integrations, redis]
+
   api-gateway:
     build: ./sclera-api-gateway
     container_name: sclera-api-gateway
