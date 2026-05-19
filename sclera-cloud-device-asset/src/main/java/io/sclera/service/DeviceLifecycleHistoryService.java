@@ -2,6 +2,7 @@ package io.sclera.service;
 
 import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.DeviceRepository;
+import io.sclera.client.InventoryDeviceClient;
 import io.sclera.dto.DeviceDTO;
 import io.sclera.dto.DeviceLifecycleHistoryDTO;
 import io.sclera.Repository.DeviceLifeCycleHistoryRepository;
@@ -25,7 +26,7 @@ public class DeviceLifecycleHistoryService {
     DeviceService deviceService;
 
     @Autowired
-    InventoryDeviceService inventoryDeviceService;
+    InventoryDeviceClient inventoryDeviceClient;
 
     public void addDeviceHistory(String username, String vdmsid, DeviceLifecycleHistoryDTO deviceLifecycleHistoryDTO, String retireStatus) {
 
@@ -104,7 +105,7 @@ public class DeviceLifecycleHistoryService {
             if(deviceDTO.getInventory_tracking_id() != null){
                 System.out.println("Please make device archive based on Inventory_tracking_id");
                 deviceService.archiveDevicesForInventoryDevice(username, vdmsid, 1, Collections.singleton(device_id));
-                inventoryDeviceService.retireInventoryDevice(vdmsid, device_id, username, description, deviceDTO.getInventory_tracking_id());
+                inventoryDeviceClient.retireInventoryDevice(vdmsid, device_id, username, description, deviceDTO.getInventory_tracking_id());
 
             }
         }
