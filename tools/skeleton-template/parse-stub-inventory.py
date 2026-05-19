@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Read migration-notes/stub-inventory.md, emit structured stub class data for a given target."""
-import argparse, json, re, sys
-from pathlib import Path
+import argparse, json, re
 
 DEFAULT_MAP = {
     "null":                "NULL_STRING",
