@@ -49,7 +49,7 @@ public class ConditionsService {
     HistoryClient historyClient;
 
     @Autowired
-    AlertService alertService;
+    io.sclera.client.AlertClient alertClient;
 
     @Autowired
     DeviceService deviceService;

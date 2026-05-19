@@ -160,7 +160,7 @@ public class DeviceService {
     Utils utils;
 
     @Autowired
-    AlertService alertService;
+    io.sclera.client.AlertClient alertClient;
 
     @Autowired
     TicketService ticketService;
@@ -5185,7 +5185,7 @@ public class DeviceService {
             deviceAlert.setAlert_time(current_timestamp);
             deviceAlert.setAlert_message(deviceConditionsDTO.getAlert_message());
 
-            alertService.sendDeviceConditionsAlertInfo(deviceAlert, alertProfile, current_timestamp);
+            alertClient.sendDeviceConditionsAlertInfo(deviceAlert, alertProfile, current_timestamp);
 
             if (alertProfile.getIoc() != null && alertProfile.getIoc() == 1 && status == 0) {
                 iocService.sendDeviceAlertDataIOC(deviceConditionsDTO, deviceAlert, status, alertProfile, current_timestamp);
@@ -6469,7 +6469,7 @@ public class DeviceService {
         body.put("report_name", reportName);
         body.put("file_name", filename);
         MultipartFile file = new ConvertByteArrayToMultipartFile(bytes, filename + ".xlsx", filename, null);
-        alertService.sendDownloadEmail(body, file, "excel", vdmsid);
+        alertClient.sendDownloadEmail(body, file, "excel", vdmsid);
     }
 
 
@@ -9511,7 +9511,7 @@ public String daysCleaned(String input){
         body.put("report_name", reportName);
         body.put("file_name", filename);
         MultipartFile file = new ConvertByteArrayToMultipartFile(bytes, filename + ".pdf", filename, null);
-        alertService.sendDownloadEmail(body, file, "pdf", vdmsid);
+        alertClient.sendDownloadEmail(body, file, "pdf", vdmsid);
     }
 
     public void updateAllRecordChecklistStatusInBatchForDevice(List<DeviceDTO> updatedDeviceStatus) {
