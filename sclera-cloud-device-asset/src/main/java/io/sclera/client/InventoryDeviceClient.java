@@ -56,6 +56,20 @@ public class InventoryDeviceClient {
     }
 
     /**
+     * Mirrors {@code InventoryDeviceRepository#deleteByDeviceId}.
+     * Maps to GET sclera-inventory/inventoryDevice/deleteByDeviceId.
+     */
+    public void deleteByDeviceId(String deviceId) {
+        Map<String, String> payload = new HashMap<>();
+        payload.put("deviceId", deviceId);
+        try {
+            dapr.invokeMethod(APP_ID, "inventoryDevice/deleteByDeviceId", payload, HttpExtension.GET).block();
+        } catch (Exception e) {
+            log.warn("InventoryDeviceClient.deleteByDeviceId failed; swallowing: {}", e.getMessage());
+        }
+    }
+
+    /**
      * Mirrors {@code InventoryDeviceService#upsertInventoryDevices}.
      * Maps to GET sclera-inventory/inventoryDevice/upsertInventoryDevices.
      * Returns empty set on sidecar failure (documented stub default).

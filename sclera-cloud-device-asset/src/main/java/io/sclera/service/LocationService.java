@@ -49,7 +49,7 @@ public class LocationService {
     PropertyQrcodeClient propertyQrcodeService;
 
     @Autowired
-    GlobalQrcodeService globalQrcodeService;
+    io.sclera.client.GlobalQrcodeClient globalQrcodeService;
 
     @Autowired
     DeviceService deviceService;
@@ -73,16 +73,16 @@ public class LocationService {
     Utils utils;
 
     @Autowired
-    QrCodeService qrCodeService;
+    io.sclera.client.QrCodeClient qrCodeService;
 
     @Autowired
-    ClientQrCodeService clientQrCodeService;
+    io.sclera.client.ClientQrCodeClient clientQrCodeService;
 
     @Autowired
-    NfcService nfcService;
+    io.sclera.client.NfcClient nfcService;
 
     @Autowired
-    ClientNfcService clientNfcService;
+    io.sclera.client.ClientNfcClient clientNfcService;
 
     @Autowired
     DataSource dataSource;

@@ -4,7 +4,7 @@ package io.sclera.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import io.sclera.Repository.ConnectedDevicesRepository;
+import io.sclera.client.ConnectedDevicesClient;
 import io.sclera.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 public class ConnectedDevicesService {
 
     @Autowired
-    ConnectedDevicesRepository connectedDevicesRepository;
+    ConnectedDevicesClient connectedDevicesRepository;
 
     @Autowired
     DeviceService deviceService;

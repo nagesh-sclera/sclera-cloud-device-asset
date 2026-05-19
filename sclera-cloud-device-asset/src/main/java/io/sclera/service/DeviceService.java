@@ -239,7 +239,7 @@ public class DeviceService {
     DaintreeClient daintreeService;
 
     @Autowired
-    GlobalQrcodeService globalQrcodeService;
+    io.sclera.client.GlobalQrcodeClient globalQrcodeService;
 
     @Autowired
     DeviceConditionsService deviceConditionsService;
@@ -314,16 +314,16 @@ public class DeviceService {
     MqttClient mqttService;
 
     @Autowired
-    QrCodeService qrCodeService;
+    io.sclera.client.QrCodeClient qrCodeService;
 
     @Autowired
-    ClientQrCodeService clientQrCodeService;
+    io.sclera.client.ClientQrCodeClient clientQrCodeService;
 
     @Autowired
-    NfcService nfcService;
+    io.sclera.client.NfcClient nfcService;
 
     @Autowired
-    ClientNfcService clientNfcService;
+    io.sclera.client.ClientNfcClient clientNfcService;
 
     @Autowired
     DataSource dataSource;
@@ -344,10 +344,10 @@ public class DeviceService {
     io.sclera.client.GlobalChecklistConditionsClient globalChecklistConditionsService;
 
     @Autowired
-    private QrCodeRepository qrCodeRepository;
+    private io.sclera.client.QrCodeClient qrCodeRepository;
 
     @Autowired
-    private ClientQrCodeRepository clientQrCodeRepository;
+    private io.sclera.client.ClientQrCodeClient clientQrCodeRepository;
 
     @Autowired
     private DeviceTypesRepository deviceTypesRepository;
@@ -383,7 +383,7 @@ public class DeviceService {
     HistoryRepository historyRepository;
 
     @Autowired
-    InventoryDeviceRepository inventoryDeviceRepository;
+    io.sclera.client.InventoryDeviceClient inventoryDeviceRepository;
 
     @Autowired
     DeviceNetworkSpecificationRepository deviceNetworkSpecificationRepository;
