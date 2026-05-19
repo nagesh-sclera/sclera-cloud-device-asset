@@ -265,7 +265,7 @@ public class DeviceService {
     AuthenticationUtils authenticationUtils;
 
     @Autowired
-    AlertDowntimeScheduleService alertDowntimeScheduleService;
+    io.sclera.client.AlertDowntimeScheduleClient alertDowntimeScheduleClient;
 
     @Autowired
     DeviceOnboardStatusRepository deviceOnboardStatusRepository;
@@ -5175,7 +5175,7 @@ public class DeviceService {
     public void sendDeviceEmailAlerts(DeviceConditionsDTO deviceConditionsDTO, DeviceAlertDTO
             deviceAlert, AlertProfileDTO alertProfile, BigInteger current_timestamp, Integer status) {
         log.info("Checking AlertDownTimeState for DeviceId: {} and AlertProfileId: {}",deviceConditionsDTO.getDevice_id(), alertProfile.getId());
-        Boolean alertDowntimeState = alertDowntimeScheduleService.checkAlertDowntime(deviceConditionsDTO.getDevice_id(), alertProfile.getId());
+        Boolean alertDowntimeState = alertDowntimeScheduleClient.checkAlertDowntime(deviceConditionsDTO.getDevice_id(), alertProfile.getId());
         log.info("AlertDownTimeState {}",alertDowntimeState);
         if (!(alertDowntimeState)) {
             if (deviceAlert.getLocal_vendor_id() != null) {

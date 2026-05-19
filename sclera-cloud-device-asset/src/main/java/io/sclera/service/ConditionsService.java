@@ -100,7 +100,7 @@ public class ConditionsService {
     ScheduledJobRepository scheduledJobRepository;
 
     @Autowired
-    AlertDowntimeScheduleService alertDowntimeScheduleService;
+    io.sclera.client.AlertDowntimeScheduleClient alertDowntimeScheduleClient;
 
     @Autowired
     SiemensService siemensService;
