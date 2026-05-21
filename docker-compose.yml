@@ -351,6 +351,22 @@ services:
       - sclera-net
     restart: on-failure
 
+  httpbin:
+    image: kennethreitz/httpbin:latest
+    container_name: sclera-httpbin
+    networks:
+      - sclera-net
+    restart: on-failure
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: sclera-mailhog
+    ports:
+      - "8025:8025"
+    networks:
+      - sclera-net
+    restart: on-failure
+
   ui:
     image: nginx:alpine
     container_name: sclera-test-ui

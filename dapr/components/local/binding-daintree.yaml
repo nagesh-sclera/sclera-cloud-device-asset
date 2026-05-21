@@ -1,0 +1,16 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: binding-daintree
+spec:
+  type: bindings.http
+  version: v1
+  metadata:
+    - name: url
+      value: "http://httpbin:80/anything/daintree"
+    - name: method
+      value: POST
+    - name: responseTimeout
+      value: "10s"
+auth:
+  secretStore: secretstore

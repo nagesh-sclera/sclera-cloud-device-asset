@@ -25,7 +25,19 @@ Topics = `<domain>.<event-past-tense>`.
 
 ## Sidecar flags (standardized Phase 1)
 All sidecars run with: `--config /dapr/config.yaml --resources-path /dapr/components/local`.
-Resources path loads: `pubsub.yaml`, `secretstore.yaml`, `resiliency.yaml`.
+Resources path loads:
+- `pubsub.yaml` (state.redis dev pub/sub; swap to `dapr/components/k8s/pubsub.yaml` for RabbitMQ in prod)
+- `secretstore.yaml` (secretstores.local.file)
+- `resiliency.yaml` (timeouts, retries, circuit-breakers)
+- `statestore-idempotency.yaml` (subscriber dedupe, 24h TTL)
+- `statestore-vdmscache.yaml` (VDMS read-through cache, 5min TTL)
+- `binding-corrigo.yaml`, `binding-daintree.yaml`, `binding-smtp.yaml` (output bindings)
+
+## Topics
+- `device.audit-recorded` — published by cloud-device-asset; consumed by sclera-audit (idempotency-aware)
+- `device.event-recorded` — published by cloud-device-asset RabbitmqClient (RabbitMQ replacement)
+- `device.sensor-reading` — published by cloud-device-asset RabbitmqClient (sensor measurements)
+- `vdms.*` — VDMS-related events between cloud-device-asset and vdms-service
 
 ## Observability
 - OTel Collector: `otel-collector:4317` (OTLP gRPC), `:4318` (OTLP HTTP), `:9464` (Prometheus scrape)

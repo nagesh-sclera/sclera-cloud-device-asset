@@ -30,9 +30,11 @@ public class APICallClient {
     private static final String APP_ID = "sclera-edge";
 
     private final DaprClient dapr;
+    private final OutputBindingClient bindings;
 
-    public APICallClient(DaprClient dapr) {
+    public APICallClient(DaprClient dapr, OutputBindingClient bindings) {
         this.dapr = dapr;
+        this.bindings = bindings;
     }
 
     public List<UserDTO> getUsersByOrgId(String organisation_id, String vdms_id) {
@@ -66,11 +68,10 @@ public class APICallClient {
     }
 
     public ResponseEntity<String> sendCallFlowMail(JSONObject payload) {
-        try {
-            dapr.invokeMethod(APP_ID, "apicall/sendCallFlowMail", null, HttpExtension.GET).block();
-        } catch (Exception e) {
-            log.warn("APICallClient.sendCallFlowMail failed; returning default", e);
-        }
+        String to      = payload != null && payload.containsKey("to")      ? String.valueOf(payload.get("to"))      : "noreply@sclera.local";
+        String subject = payload != null && payload.containsKey("subject") ? String.valueOf(payload.get("subject")) : "Call Flow Notification";
+        String body    = payload != null && payload.containsKey("body")    ? String.valueOf(payload.get("body"))    : (payload != null ? payload.toJSONString() : "");
+        bindings.sendEmail(to, subject, body);
         return ResponseEntity.ok("");
     }
 
@@ -168,12 +169,7 @@ public class APICallClient {
     }
 
     public Boolean syncBuildingToADC(Object dto, String orgId, String configId) {
-        try {
-            dapr.invokeMethod(APP_ID, "apicall/syncBuildingToADC", null, HttpExtension.GET).block();
-        } catch (Exception e) {
-            log.warn("APICallClient.syncBuildingToADC failed; returning false", e);
-        }
-        return Boolean.FALSE;
+        return bindings.pushToCorrigo(dto, orgId, configId);
     }
 
     public BuildingDTO addSingleBuildingObject(String locationId, String vdmsId) {

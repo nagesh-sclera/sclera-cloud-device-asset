@@ -1,0 +1,22 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: binding-smtp
+spec:
+  type: bindings.smtp
+  version: v1
+  metadata:
+    - name: host
+      value: "mailhog"
+    - name: port
+      value: "1025"
+    - name: user
+      value: ""
+    - name: password
+      value: ""
+    - name: skipTLSVerify
+      value: "true"
+    - name: emailFrom
+      value: "noreply@sclera.local"
+auth:
+  secretStore: secretstore

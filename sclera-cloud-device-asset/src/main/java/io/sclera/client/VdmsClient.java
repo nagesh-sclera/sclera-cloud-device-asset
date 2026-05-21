@@ -1,24 +1,20 @@
 package io.sclera.client;
 
+import io.dapr.client.DaprClient;
+import io.dapr.client.domain.HttpExtension;
+import io.dapr.client.domain.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
 /**
- * Internal client for vdms-service.
+ * Internal client for vdms-service. Calls are routed via the local Dapr sidecar.
  *
- * Calls are routed via the local Dapr sidecar:
- *   GET  http://localhost:{DAPR_HTTP_PORT}/v1.0/invoke/vdms-service/method/{path}
- *   POST http://localhost:{DAPR_HTTP_PORT}/v1.0/publish/pubsub/{topic}
- *
- * Inject this bean wherever device-asset needs data from vdms-service.
+ * <p>Read-through cache: each GET call first checks the {@code statestore-vdmscache}
+ * Dapr state store (Redis-backed, 5-min TTL). On miss it invokes vdms-service and
+ * writes the response back to the cache. Pub/sub continues to use the {@code pubsub} component.
  */
 @Service
 public class VdmsClient {
@@ -26,53 +22,43 @@ public class VdmsClient {
     private static final Logger log = LoggerFactory.getLogger(VdmsClient.class);
     private static final String VDMS_APP_ID = "vdms-service";
     private static final String PUBSUB_NAME = "pubsub";
+    private static final String CACHE_STORE = "statestore-vdmscache";
 
-    private final RestTemplate rest = new RestTemplate();
-    private final String daprBaseUrl = "http://localhost:" +
-        (System.getenv("DAPR_HTTP_PORT") != null ? System.getenv("DAPR_HTTP_PORT") : "3500");
+    private final DaprClient dapr;
 
-    // ── Service invocation ────────────────────────────────────────────────────
+    public VdmsClient(DaprClient dapr) {
+        this.dapr = dapr;
+    }
 
-    /** GET /vdms/id → {"vdmsId": "..."} */
-    @SuppressWarnings("unchecked")
+    // ── Service invocation (cached) ───────────────────────────────────────────
+
     public Map<String, Object> getVdmsId() {
-        return invoke("vdms/id", Map.class);
+        return readThroughCache("vdms-id", "vdms/id");
     }
 
-    /** GET /vdms/details → full VdmsDTO as map */
-    @SuppressWarnings("unchecked")
     public Map<String, Object> getVdmsDetails() {
-        return invoke("vdms/details", Map.class);
+        return readThroughCache("vdms-details", "vdms/details");
     }
 
-    /** GET /vdms/master → {"isMaster": 0|1} */
-    @SuppressWarnings("unchecked")
     public Map<String, Object> getMaster() {
-        return invoke("vdms/master", Map.class);
+        return readThroughCache("vdms-master", "vdms/master");
     }
 
-    /** GET /vdms/has-secondary-device → {"hasSecondaryDevice": 0|1} */
-    @SuppressWarnings("unchecked")
     public Map<String, Object> getHasSecondaryDevice() {
-        return invoke("vdms/has-secondary-device", Map.class);
+        return readThroughCache("vdms-has-secondary-device", "vdms/has-secondary-device");
     }
 
-    /** GET /vdms/secondary-device-id → {"secondaryDeviceId": "..."} */
-    @SuppressWarnings("unchecked")
     public Map<String, Object> getSecondaryDeviceId() {
-        return invoke("vdms/secondary-device-id", Map.class);
+        return readThroughCache("vdms-secondary-device-id", "vdms/secondary-device-id");
     }
 
-    /** GET /vdms/customer-org-id/{vdmsId} → {"customerOrgId": "..."} */
-    @SuppressWarnings("unchecked")
     public Map<String, Object> getCustomerOrgId(String vdmsId) {
-        return invoke("vdms/customer-org-id/" + vdmsId, Map.class);
+        return readThroughCache("vdms-customer-org-id:" + vdmsId,
+                                "vdms/customer-org-id/" + vdmsId);
     }
 
-    /** GET /vdms/sync-details-for-adc → subset VdmsDTO as map */
-    @SuppressWarnings("unchecked")
     public Map<String, Object> getSyncDetailsForAdc() {
-        return invoke("vdms/sync-details-for-adc", Map.class);
+        return readThroughCache("vdms-sync-details-for-adc", "vdms/sync-details-for-adc");
     }
 
     // ── Pub/Sub ───────────────────────────────────────────────────────────────
@@ -80,36 +66,47 @@ public class VdmsClient {
     /**
      * Publish an event to a Dapr topic.
      *
-     * Topics consumed by vdms-service:
-     *   vdms.update-property-details, vdms.update-customer-org-id,
-     *   vdms.set-agent-permission, device.audit
-     *
-     * <p>Best-effort: exceptions are logged and swallowed. Dapr/Redis guarantees at-least-once
-     * delivery once the sidecar accepts the event. Callers that need delivery confirmation
-     * should use synchronous service invocation instead.
+     * <p>Best-effort: exceptions are logged and swallowed.
      */
     public void publishEvent(String topic, Object payload) {
-        String url = daprBaseUrl + "/v1.0/publish/" + PUBSUB_NAME + "/" + topic;
-        log.info("[Dapr sidecar →] publish topic={} | url={}", topic, url);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Object> request = new HttpEntity<>(payload, headers);
         try {
-            rest.postForEntity(url, request, Void.class);
-            log.info("[Dapr sidecar ←] publish accepted topic={}", topic);
+            dapr.publishEvent(PUBSUB_NAME, topic, payload).block();
         } catch (Exception e) {
-            log.error("[Dapr sidecar ✗] publish failed topic={}: {}", topic, e.getMessage());
+            log.warn("VdmsClient publishEvent failed topic={}: {}", topic, e.getMessage());
         }
     }
 
     // ── Internal helpers ──────────────────────────────────────────────────────
 
-    private <T> T invoke(String vdmsPath, Class<T> responseType) {
-        String url = daprBaseUrl + "/v1.0/invoke/" + VDMS_APP_ID + "/method/" + vdmsPath;
-        log.info("[Dapr sidecar →] invoke  path={} | url={}", vdmsPath, url);
-        ResponseEntity<T> response = rest.getForEntity(url, responseType);
-        log.info("[Dapr sidecar ←] respond path={} | status={}", vdmsPath, response.getStatusCode());
-        return response.getBody();
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private Map<String, Object> readThroughCache(String cacheKey, String vdmsPath) {
+        // 1. Cache lookup
+        try {
+            State cached = dapr.getState(CACHE_STORE, cacheKey, Map.class).block();
+            if (cached != null && cached.getValue() != null) {
+                return (Map<String, Object>) cached.getValue();
+            }
+        } catch (Exception e) {
+            log.debug("VdmsClient cache lookup failed for {}: {}", cacheKey, e.getMessage());
+        }
+        // 2. Origin invoke
+        Map<String, Object> fresh;
+        try {
+            fresh = (Map<String, Object>) dapr.invokeMethod(
+                VDMS_APP_ID, vdmsPath, null, HttpExtension.GET, Map.class
+            ).block();
+        } catch (Exception e) {
+            log.warn("VdmsClient invoke failed for {}: {}", vdmsPath, e.getMessage());
+            return null;
+        }
+        // 3. Cache write (best-effort)
+        if (fresh != null) {
+            try {
+                dapr.saveState(CACHE_STORE, cacheKey, fresh).block();
+            } catch (Exception e) {
+                log.debug("VdmsClient cache write failed for {}: {}", cacheKey, e.getMessage());
+            }
+        }
+        return fresh;
     }
-
 }
