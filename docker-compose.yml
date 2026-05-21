@@ -262,6 +262,30 @@ services:
     restart: on-failure
     depends_on: [sclera-integrations, redis]
 
+  sclera-edge:
+    build: ./sclera-edge
+    container_name: sclera-edge
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DAPR_HTTP_PORT: "3500"
+      DAPR_GRPC_PORT: "50001"
+    ports: ["8097:8097"]
+    networks: [sclera-net]
+    restart: on-failure
+
+  sclera-edge-dapr:
+    image: daprio/daprd:1.12.0
+    command: ["./daprd",
+      "--app-id", "sclera-edge", "--app-port", "8097",
+      "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
+      "--placement-host-address", "",
+      "--components-path", "/dapr/components/local",
+      "--log-level", "info"]
+    volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
+    network_mode: "service:sclera-edge"
+    restart: on-failure
+    depends_on: [sclera-edge, redis]
+
   api-gateway:
     build: ./sclera-api-gateway
     container_name: sclera-api-gateway

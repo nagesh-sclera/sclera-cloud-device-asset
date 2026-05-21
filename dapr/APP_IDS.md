@@ -12,6 +12,7 @@
 | `sclera-workorders` | sclera-workorders (skeleton) | 8094 | — | — | platform |
 | `sclera-inspection` | sclera-inspection (skeleton) | 8095 | — | — | platform |
 | `sclera-integrations` | sclera-integrations (skeleton) | 8096 | — | — | platform |
+| `sclera-edge` | sclera-edge (skeleton) | 8097 | — | — | platform |
 
 ## Port range
 - 8080–8089: existing services
