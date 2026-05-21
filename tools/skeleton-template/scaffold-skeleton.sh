@@ -83,6 +83,29 @@ SAFE_RETURN_TYPES = SAFE_PARAM_TYPES | {
 
 COLLECTION_BASES = {"List", "Set", "Map", "java.util.List", "java.util.Set", "java.util.Map"}
 
+# Method name prefixes that indicate a write/mutation operation -> POST.
+POST_VERB_PREFIXES = (
+    "update", "insert", "upsert", "delete", "add", "batch", "save", "create",
+    "set", "multi", "sync", "remove", "register", "unregister", "publish",
+    "send", "dispatch", "process", "handle", "notify", "emit", "push",
+)
+
+def is_post_method(method_name, params):
+    """
+    Return True if this method should be a POST endpoint.
+    POST if:
+      - method name starts with one of the write verb prefixes, OR
+      - any parameter type is NOT in SAFE_PARAM_TYPES (i.e. it is a complex/DTO type)
+    """
+    lower_name = method_name.lower()
+    for prefix in POST_VERB_PREFIXES:
+        if lower_name.startswith(prefix):
+            return True
+    for p in params:
+        if p["type"] not in SAFE_PARAM_TYPES:
+            return True
+    return False
+
 def safe_param_type(t):
     """Return t if it is safe as a @RequestParam type, else String."""
     return t if t in SAFE_PARAM_TYPES else "String"
@@ -135,11 +158,11 @@ for cls in data:
     controller = f"{name}Controller"
     path = f"/{name.lower()}"
     body_lines = []
+    has_post = False
     for m in cls["methods"]:
-        params = ", ".join(
-            f'@RequestParam {safe_param_type(p["type"])} {p["name"]}'
-            for p in m["params"]
-        )
+        post = is_post_method(m["name"], m["params"])
+        if post:
+            has_post = True
         raw_ret = m["return"].strip()
         default = m["default"]
         java_ret, forced_default = safe_return_type(raw_ret)
@@ -152,16 +175,54 @@ for cls in data:
             body = "    // no-op\n"
         else:
             body = f'    return Defaults.{default};\n'
-        body_lines.append(
-            f'  @GetMapping("/{m["name"]}")\n'
-            f'  public {java_ret} {m["name"]}({params}) {{\n'
-            f'{body}'
-            f'  }}\n'
+
+        if post:
+            # For POST: first complex param becomes @RequestBody String body;
+            # remaining simple params become @RequestParam(required=false) String paramN.
+            complex_params = [p for p in m["params"] if p["type"] not in SAFE_PARAM_TYPES]
+            simple_params  = [p for p in m["params"] if p["type"] in SAFE_PARAM_TYPES]
+            param_parts = []
+            if complex_params:
+                # First complex param -> @RequestBody String body
+                first = complex_params[0]
+                param_parts.append(f'@RequestBody String {first["name"]}')
+                # Additional complex params -> @RequestParam(required=false) String paramN
+                for cp in complex_params[1:]:
+                    param_parts.append(f'@RequestParam(required=false) String {cp["name"]}')
+            # Simple params keep their type as @RequestParam(required=false)
+            for sp in simple_params:
+                param_parts.append(f'@RequestParam(required=false) {safe_param_type(sp["type"])} {sp["name"]}')
+            params = ", ".join(param_parts)
+            body_lines.append(
+                f'  @PostMapping("/{m["name"]}")\n'
+                f'  public {java_ret} {m["name"]}({params}) {{\n'
+                f'{body}'
+                f'  }}\n'
+            )
+        else:
+            params = ", ".join(
+                f'@RequestParam {safe_param_type(p["type"])} {p["name"]}'
+                for p in m["params"]
+            )
+            body_lines.append(
+                f'  @GetMapping("/{m["name"]}")\n'
+                f'  public {java_ret} {m["name"]}({params}) {{\n'
+                f'{body}'
+                f'  }}\n'
+            )
+
+    # Build import block: always include GetMapping; add PostMapping+RequestBody if needed.
+    post_imports = ""
+    if has_post:
+        post_imports = (
+            f'import org.springframework.web.bind.annotation.PostMapping;\n'
+            f'import org.springframework.web.bind.annotation.RequestBody;\n'
         )
     src = (
         f'package io.sclera.{pkg}.controller;\n'
         f'\n'
         f'import org.springframework.web.bind.annotation.GetMapping;\n'
+        f'{post_imports}'
         f'import org.springframework.web.bind.annotation.RequestMapping;\n'
         f'import org.springframework.web.bind.annotation.RequestParam;\n'
         f'import org.springframework.web.bind.annotation.RestController;\n'

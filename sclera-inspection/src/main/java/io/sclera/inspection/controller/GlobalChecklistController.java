@@ -1,6 +1,8 @@
 package io.sclera.inspection.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,13 +15,13 @@ import java.util.Set;
 @RestController
 @RequestMapping("/globalchecklist")
 public class GlobalChecklistController {
-  @GetMapping("/updateDeviceGlobalChecklistDeviceId")
-  public void updateDeviceGlobalChecklistDeviceId(@RequestParam String oldId, @RequestParam String newId) {
+  @PostMapping("/updateDeviceGlobalChecklistDeviceId")
+  public void updateDeviceGlobalChecklistDeviceId(@RequestParam(required=false) String oldId, @RequestParam(required=false) String newId) {
     // no-op
   }
 
-  @GetMapping("/deleteGlobalChecklistByDeviceId")
-  public void deleteGlobalChecklistByDeviceId(@RequestParam String deviceId) {
+  @PostMapping("/deleteGlobalChecklistByDeviceId")
+  public void deleteGlobalChecklistByDeviceId(@RequestParam(required=false) String deviceId) {
     // no-op
   }
 }

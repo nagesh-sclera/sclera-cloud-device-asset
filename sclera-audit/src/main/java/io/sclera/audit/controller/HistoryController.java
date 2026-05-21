@@ -1,6 +1,8 @@
 package io.sclera.audit.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,23 +15,23 @@ import java.util.Set;
 @RestController
 @RequestMapping("/history")
 public class HistoryController {
-  @GetMapping("/insertDeviceStatusHistory")
-  public void insertDeviceStatusHistory(@RequestParam Integer alarm, @RequestParam String ipAddress, @RequestParam String o, @RequestParam String o1, @RequestParam String finalDeviceId) {
+  @PostMapping("/insertDeviceStatusHistory")
+  public void insertDeviceStatusHistory(@RequestBody String o, @RequestParam(required=false) String o1, @RequestParam(required=false) Integer alarm, @RequestParam(required=false) String ipAddress, @RequestParam(required=false) String finalDeviceId) {
     // no-op
   }
 
-  @GetMapping("/addHistory")
-  public void addHistory(@RequestParam String historyDTO) {
+  @PostMapping("/addHistory")
+  public void addHistory(@RequestBody String historyDTO) {
     // no-op
   }
 
-  @GetMapping("/addHistoryWithTimestamp")
-  public void addHistoryWithTimestamp(@RequestParam String historyDTO) {
+  @PostMapping("/addHistoryWithTimestamp")
+  public void addHistoryWithTimestamp(@RequestBody String historyDTO) {
     // no-op
   }
 
-  @GetMapping("/updateHistoryDeviceId")
-  public void updateHistoryDeviceId(@RequestParam String oldId, @RequestParam String newId) {
+  @PostMapping("/updateHistoryDeviceId")
+  public void updateHistoryDeviceId(@RequestParam(required=false) String oldId, @RequestParam(required=false) String newId) {
     // no-op
   }
 }

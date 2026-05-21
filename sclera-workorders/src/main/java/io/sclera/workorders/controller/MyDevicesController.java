@@ -1,6 +1,8 @@
 package io.sclera.workorders.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,13 +20,13 @@ public class MyDevicesController {
     // no-op
   }
 
-  @GetMapping("/upsertMyDevicesCompany")
-  public void upsertMyDevicesCompany(@RequestParam String username, @RequestParam String vdmsid, @RequestParam String myDevicesCompany) {
+  @PostMapping("/upsertMyDevicesCompany")
+  public void upsertMyDevicesCompany(@RequestBody String myDevicesCompany, @RequestParam(required=false) String username, @RequestParam(required=false) String vdmsid) {
     // no-op
   }
 
-  @GetMapping("/updateMyDevicesEventData")
-  public void updateMyDevicesEventData(@RequestParam String myDevicesEventData) {
+  @PostMapping("/updateMyDevicesEventData")
+  public void updateMyDevicesEventData(@RequestBody String myDevicesEventData) {
     // no-op
   }
 
@@ -38,13 +40,13 @@ public class MyDevicesController {
     return Defaults.emptyList();
   }
 
-  @GetMapping("/deleteMyDevicesCompany")
-  public void deleteMyDevicesCompany(@RequestParam String username, @RequestParam String vdmsid, @RequestParam String id) {
+  @PostMapping("/deleteMyDevicesCompany")
+  public void deleteMyDevicesCompany(@RequestParam(required=false) String username, @RequestParam(required=false) String vdmsid, @RequestParam(required=false) String id) {
     // no-op
   }
 
-  @GetMapping("/deleteMyDevicesSensor")
-  public void deleteMyDevicesSensor(@RequestParam String id) {
+  @PostMapping("/deleteMyDevicesSensor")
+  public void deleteMyDevicesSensor(@RequestParam(required=false) String id) {
     // no-op
   }
 
@@ -73,13 +75,13 @@ public class MyDevicesController {
     return Defaults.emptyList();
   }
 
-  @GetMapping("/listmydevicesDeviceAlertMessagesByDeviceIds")
-  public String listmydevicesDeviceAlertMessagesByDeviceIds(@RequestParam String deviceIds) {
+  @PostMapping("/listmydevicesDeviceAlertMessagesByDeviceIds")
+  public String listmydevicesDeviceAlertMessagesByDeviceIds(@RequestBody String deviceIds) {
     return Defaults.NULL_STRING;
   }
 
-  @GetMapping("/updateMyDevicesSensorDeviceId")
-  public void updateMyDevicesSensorDeviceId(@RequestParam String oldDeviceId, @RequestParam String newDeviceId, @RequestParam String sensorIds) {
+  @PostMapping("/updateMyDevicesSensorDeviceId")
+  public void updateMyDevicesSensorDeviceId(@RequestBody String sensorIds, @RequestParam(required=false) String oldDeviceId, @RequestParam(required=false) String newDeviceId) {
     // no-op
   }
 
@@ -98,23 +100,23 @@ public class MyDevicesController {
     return Defaults.NULL_STRING;
   }
 
-  @GetMapping("/updateMyDevicesSensors")
-  public void updateMyDevicesSensors(@RequestParam String username, @RequestParam String vdmsId, @RequestParam String sensors) {
+  @PostMapping("/updateMyDevicesSensors")
+  public void updateMyDevicesSensors(@RequestBody String sensors, @RequestParam(required=false) String username, @RequestParam(required=false) String vdmsId) {
     // no-op
   }
 
-  @GetMapping("/deleteMyDevicesSensors")
-  public void deleteMyDevicesSensors(@RequestParam String username, @RequestParam String vdmsId, @RequestParam String sensors) {
+  @PostMapping("/deleteMyDevicesSensors")
+  public void deleteMyDevicesSensors(@RequestBody String sensors, @RequestParam(required=false) String username, @RequestParam(required=false) String vdmsId) {
     // no-op
   }
 
-  @GetMapping("/updateDeviceMyDevicesSensors")
-  public void updateDeviceMyDevicesSensors(@RequestParam String username, @RequestParam String vdmsId, @RequestParam String sensors) {
+  @PostMapping("/updateDeviceMyDevicesSensors")
+  public void updateDeviceMyDevicesSensors(@RequestBody String sensors, @RequestParam(required=false) String username, @RequestParam(required=false) String vdmsId) {
     // no-op
   }
 
-  @GetMapping("/deleteDeviceMyDevicesSensors")
-  public void deleteDeviceMyDevicesSensors(@RequestParam String username, @RequestParam String vdmsId, @RequestParam String sensors) {
+  @PostMapping("/deleteDeviceMyDevicesSensors")
+  public void deleteDeviceMyDevicesSensors(@RequestBody String sensors, @RequestParam(required=false) String username, @RequestParam(required=false) String vdmsId) {
     // no-op
   }
 
@@ -133,8 +135,8 @@ public class MyDevicesController {
     return Defaults.emptySet();
   }
 
-  @GetMapping("/updateMyDevicesSensorAttributes")
-  public void updateMyDevicesSensorAttributes(@RequestParam String username, @RequestParam String vdmsId, @RequestParam String attrs) {
+  @PostMapping("/updateMyDevicesSensorAttributes")
+  public void updateMyDevicesSensorAttributes(@RequestBody String attrs, @RequestParam(required=false) String username, @RequestParam(required=false) String vdmsId) {
     // no-op
   }
 }

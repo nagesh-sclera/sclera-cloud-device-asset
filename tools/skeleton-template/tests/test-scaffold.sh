@@ -50,9 +50,17 @@ if grep -q "return io.sclera.audit_test.defaults.Defaults\." "$CTRL"; then
   echo "FAIL: controller still uses fully-qualified Defaults reference" >&2; exit 1
 fi
 
-# Improvement 1: non-allowlisted param type (HistoryDTO) must be substituted with String
-# addHistory(HistoryDTO historyDTO) -> should become @RequestParam String historyDTO
-grep -q "@RequestParam String historyDTO" "$CTRL"
+# Verb-aware: addHistory starts with "add" -> must use @PostMapping and @RequestBody
+grep -q '@PostMapping("/addHistory")'    "$CTRL"
+grep -q '@RequestBody String historyDTO' "$CTRL"
+grep -q 'import org.springframework.web.bind.annotation.PostMapping;'  "$CTRL"
+grep -q 'import org.springframework.web.bind.annotation.RequestBody;'  "$CTRL"
+
+# Read methods must still use @GetMapping
+grep -q '@GetMapping("/getDeviceIdByHistoryId")' "$CTRL"
+grep -q '@GetMapping("/getHistoryCount")'        "$CTRL"
+grep -q '@GetMapping("/getAuditLogs")'           "$CTRL"
+grep -q '@GetMapping("/getSyslogConfig")'        "$CTRL"
 
 # Improvement 1: parameterized return type with non-allowlisted inner type
 # getAuditLogs returns List<UserActionLogDTO> -> should become List<String>

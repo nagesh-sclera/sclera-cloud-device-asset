@@ -1,6 +1,8 @@
 package io.sclera.workorders.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,13 +20,13 @@ public class PmsController {
     return Defaults.emptySet();
   }
 
-  @GetMapping("/getPmsAttributesByLocationIds")
-  public Set<String> getPmsAttributesByLocationIds(@RequestParam String locationIds) {
+  @PostMapping("/getPmsAttributesByLocationIds")
+  public Set<String> getPmsAttributesByLocationIds(@RequestBody String locationIds) {
     return Defaults.emptySet();
   }
 
-  @GetMapping("/updatePmsAttributesByLocationId")
-  public void updatePmsAttributesByLocationId(@RequestParam String locationId) {
+  @PostMapping("/updatePmsAttributesByLocationId")
+  public void updatePmsAttributesByLocationId(@RequestParam(required=false) String locationId) {
     // no-op
   }
 }

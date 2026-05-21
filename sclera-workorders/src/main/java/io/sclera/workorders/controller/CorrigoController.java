@@ -1,6 +1,8 @@
 package io.sclera.workorders.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,28 +20,28 @@ public class CorrigoController {
     return Defaults.NULL_STRING;
   }
 
-  @GetMapping("/updateCorrigoAssets")
-  public void updateCorrigoAssets(@RequestParam String username, @RequestParam String vdmsid, @RequestParam Integer pageNo, @RequestParam Integer pageSize, @RequestParam String searchKey, @RequestParam String config) {
+  @PostMapping("/updateCorrigoAssets")
+  public void updateCorrigoAssets(@RequestBody String config, @RequestParam(required=false) String username, @RequestParam(required=false) String vdmsid, @RequestParam(required=false) Integer pageNo, @RequestParam(required=false) Integer pageSize, @RequestParam(required=false) String searchKey) {
     // no-op
   }
 
-  @GetMapping("/getWorkordersByAssetIdForBot")
-  public String getWorkordersByAssetIdForBot(@RequestParam String device) {
+  @PostMapping("/getWorkordersByAssetIdForBot")
+  public String getWorkordersByAssetIdForBot(@RequestBody String device) {
     return Defaults.NULL_STRING;
   }
 
-  @GetMapping("/corrigoUrlSync")
-  public void corrigoUrlSync(@RequestParam String url, @RequestParam String vdmsId) {
+  @PostMapping("/corrigoUrlSync")
+  public void corrigoUrlSync(@RequestBody String url, @RequestParam(required=false) String vdmsId) {
     // no-op
   }
 
-  @GetMapping("/updateCorrigoCredentialsFromCloud")
-  public void updateCorrigoCredentialsFromCloud(@RequestParam String vdmsId) {
+  @PostMapping("/updateCorrigoCredentialsFromCloud")
+  public void updateCorrigoCredentialsFromCloud(@RequestParam(required=false) String vdmsId) {
     // no-op
   }
 
-  @GetMapping("/updateCorrigoCredentialsMigration")
-  public void updateCorrigoCredentialsMigration(@RequestParam String vdmsId) {
+  @PostMapping("/updateCorrigoCredentialsMigration")
+  public void updateCorrigoCredentialsMigration(@RequestParam(required=false) String vdmsId) {
     // no-op
   }
 }

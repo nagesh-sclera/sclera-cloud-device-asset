@@ -1,6 +1,8 @@
 package io.sclera.inspection.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,18 +15,18 @@ import java.util.Set;
 @RestController
 @RequestMapping("/inspectionrecord")
 public class InspectionRecordController {
-  @GetMapping("/updateInspectionRecordStatus")
-  public void updateInspectionRecordStatus(@RequestParam String a, @RequestParam String b, @RequestParam String id, @RequestParam boolean status) {
+  @PostMapping("/updateInspectionRecordStatus")
+  public void updateInspectionRecordStatus(@RequestParam(required=false) String a, @RequestParam(required=false) String b, @RequestParam(required=false) String id, @RequestParam(required=false) boolean status) {
     // no-op
   }
 
-  @GetMapping("/updateInspectionStatusOnDeviceArchive")
-  public void updateInspectionStatusOnDeviceArchive(@RequestParam String ids) {
+  @PostMapping("/updateInspectionStatusOnDeviceArchive")
+  public void updateInspectionStatusOnDeviceArchive(@RequestBody String ids) {
     // no-op
   }
 
-  @GetMapping("/updateInspectionRecord")
-  public void updateInspectionRecord(@RequestParam String email) {
+  @PostMapping("/updateInspectionRecord")
+  public void updateInspectionRecord(@RequestParam(required=false) String email) {
     // no-op
   }
 }

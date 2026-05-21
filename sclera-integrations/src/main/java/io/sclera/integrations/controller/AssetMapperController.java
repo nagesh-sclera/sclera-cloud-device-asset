@@ -1,6 +1,8 @@
 package io.sclera.integrations.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,28 +15,28 @@ import java.util.Set;
 @RestController
 @RequestMapping("/assetmapper")
 public class AssetMapperController {
-  @GetMapping("/updateDeviceTypeForAllAsset")
-  public void updateDeviceTypeForAllAsset(@RequestParam String deviceTypes) {
+  @PostMapping("/updateDeviceTypeForAllAsset")
+  public void updateDeviceTypeForAllAsset(@RequestBody String deviceTypes) {
     // no-op
   }
 
-  @GetMapping("/updatePropertyServiceLocations")
-  public void updatePropertyServiceLocations(@RequestParam String locationId) {
+  @PostMapping("/updatePropertyServiceLocations")
+  public void updatePropertyServiceLocations(@RequestParam(required=false) String locationId) {
     // no-op
   }
 
-  @GetMapping("/upsertPropertyServiceDetails")
-  public String upsertPropertyServiceDetails(@RequestParam String username, @RequestParam String vdmsId, @RequestParam String dto) {
+  @PostMapping("/upsertPropertyServiceDetails")
+  public String upsertPropertyServiceDetails(@RequestBody String dto, @RequestParam(required=false) String username, @RequestParam(required=false) String vdmsId) {
     return Defaults.NULL_STRING;
   }
 
-  @GetMapping("/addPropertyServiceLocations")
-  public void addPropertyServiceLocations(@RequestParam String username, @RequestParam String vdmsId, @RequestParam String serviceId, @RequestParam String locations) {
+  @PostMapping("/addPropertyServiceLocations")
+  public void addPropertyServiceLocations(@RequestBody String locations, @RequestParam(required=false) String username, @RequestParam(required=false) String vdmsId, @RequestParam(required=false) String serviceId) {
     // no-op
   }
 
-  @GetMapping("/multiUpdatePropertyServiceResponse")
-  public void multiUpdatePropertyServiceResponse(@RequestParam String username, @RequestParam String vdmsId, @RequestParam String responses) {
+  @PostMapping("/multiUpdatePropertyServiceResponse")
+  public void multiUpdatePropertyServiceResponse(@RequestBody String responses, @RequestParam(required=false) String username, @RequestParam(required=false) String vdmsId) {
     // no-op
   }
 
@@ -48,18 +50,18 @@ public class AssetMapperController {
     return Defaults.emptySet();
   }
 
-  @GetMapping("/deletePropertyServiceRequests")
-  public void deletePropertyServiceRequests(@RequestParam String username, @RequestParam String vdmsId, @RequestParam String requests) {
+  @PostMapping("/deletePropertyServiceRequests")
+  public void deletePropertyServiceRequests(@RequestBody String requests, @RequestParam(required=false) String username, @RequestParam(required=false) String vdmsId) {
     // no-op
   }
 
-  @GetMapping("/deletePropertyServiceLocations")
-  public void deletePropertyServiceLocations(@RequestParam String username, @RequestParam String vdmsId, @RequestParam String serviceId, @RequestParam String locations) {
+  @PostMapping("/deletePropertyServiceLocations")
+  public void deletePropertyServiceLocations(@RequestBody String locations, @RequestParam(required=false) String username, @RequestParam(required=false) String vdmsId, @RequestParam(required=false) String serviceId) {
     // no-op
   }
 
-  @GetMapping("/deletePropertyService")
-  public void deletePropertyService(@RequestParam String username, @RequestParam String vdmsId, @RequestParam String serviceId) {
+  @PostMapping("/deletePropertyService")
+  public void deletePropertyService(@RequestParam(required=false) String username, @RequestParam(required=false) String vdmsId, @RequestParam(required=false) String serviceId) {
     // no-op
   }
 
@@ -68,8 +70,8 @@ public class AssetMapperController {
     return Defaults.emptySet();
   }
 
-  @GetMapping("/syncServiceValue")
-  public void syncServiceValue(@RequestParam String vdmsId) {
+  @PostMapping("/syncServiceValue")
+  public void syncServiceValue(@RequestParam(required=false) String vdmsId) {
     // no-op
   }
 }

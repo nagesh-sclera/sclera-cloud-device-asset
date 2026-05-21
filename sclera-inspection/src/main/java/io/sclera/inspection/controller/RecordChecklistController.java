@@ -1,6 +1,8 @@
 package io.sclera.inspection.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,23 +15,23 @@ import java.util.Set;
 @RestController
 @RequestMapping("/recordchecklist")
 public class RecordChecklistController {
-  @GetMapping("/updateRecordChecklistDeviceAndIsRemoved")
-  public void updateRecordChecklistDeviceAndIsRemoved(@RequestParam String ids) {
+  @PostMapping("/updateRecordChecklistDeviceAndIsRemoved")
+  public void updateRecordChecklistDeviceAndIsRemoved(@RequestBody String ids) {
     // no-op
   }
 
-  @GetMapping("/deleteRecordChecklistInBatch")
-  public void deleteRecordChecklistInBatch(@RequestParam String ids) {
+  @PostMapping("/deleteRecordChecklistInBatch")
+  public void deleteRecordChecklistInBatch(@RequestBody String ids) {
     // no-op
   }
 
-  @GetMapping("/deleteAllRecordChecklistByDeviceId")
-  public List<String> deleteAllRecordChecklistByDeviceId(@RequestParam String deviceId) {
+  @PostMapping("/deleteAllRecordChecklistByDeviceId")
+  public List<String> deleteAllRecordChecklistByDeviceId(@RequestParam(required=false) String deviceId) {
     return Defaults.emptyList();
   }
 
-  @GetMapping("/deleteAllRecordChecklistImagesByUrls")
-  public void deleteAllRecordChecklistImagesByUrls(@RequestParam String urls) {
+  @PostMapping("/deleteAllRecordChecklistImagesByUrls")
+  public void deleteAllRecordChecklistImagesByUrls(@RequestBody String urls) {
     // no-op
   }
 
@@ -43,13 +45,13 @@ public class RecordChecklistController {
     return Defaults.ZERO;
   }
 
-  @GetMapping("/updateRecordChecklistByDeviceId")
-  public void updateRecordChecklistByDeviceId(@RequestParam String oldId, @RequestParam String newId, @RequestParam String ids) {
+  @PostMapping("/updateRecordChecklistByDeviceId")
+  public void updateRecordChecklistByDeviceId(@RequestBody String ids, @RequestParam(required=false) String oldId, @RequestParam(required=false) String newId) {
     // no-op
   }
 
-  @GetMapping("/getAllRecordChecklistByBuildings")
-  public Set<String> getAllRecordChecklistByBuildings(@RequestParam String buildingIds, @RequestParam String floorIds, @RequestParam String locationIds) {
+  @PostMapping("/getAllRecordChecklistByBuildings")
+  public Set<String> getAllRecordChecklistByBuildings(@RequestBody String buildingIds, @RequestParam(required=false) String floorIds, @RequestParam(required=false) String locationIds) {
     return Defaults.emptySet();
   }
 
@@ -63,23 +65,23 @@ public class RecordChecklistController {
     return Defaults.ZERO;
   }
 
-  @GetMapping("/updateRecordChecklistLocationAndIsRemoved")
-  public void updateRecordChecklistLocationAndIsRemoved(@RequestParam String locationIds) {
+  @PostMapping("/updateRecordChecklistLocationAndIsRemoved")
+  public void updateRecordChecklistLocationAndIsRemoved(@RequestBody String locationIds) {
     // no-op
   }
 
-  @GetMapping("/deleteRecordChecklistByLocationId")
-  public void deleteRecordChecklistByLocationId(@RequestParam String locationId) {
+  @PostMapping("/deleteRecordChecklistByLocationId")
+  public void deleteRecordChecklistByLocationId(@RequestParam(required=false) String locationId) {
     // no-op
   }
 
-  @GetMapping("/deleteAllRecordChecklistByLocationId")
-  public List<String> deleteAllRecordChecklistByLocationId(@RequestParam String locationId) {
+  @PostMapping("/deleteAllRecordChecklistByLocationId")
+  public List<String> deleteAllRecordChecklistByLocationId(@RequestParam(required=false) String locationId) {
     return Defaults.emptyList();
   }
 
-  @GetMapping("/updateRecordChecklist")
-  public void updateRecordChecklist(@RequestParam String email) {
+  @PostMapping("/updateRecordChecklist")
+  public void updateRecordChecklist(@RequestParam(required=false) String email) {
     // no-op
   }
 }

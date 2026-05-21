@@ -1,6 +1,8 @@
 package io.sclera.inspection.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,28 +15,28 @@ import java.util.Set;
 @RestController
 @RequestMapping("/globalinspectionrecord")
 public class GlobalInspectionRecordController {
-  @GetMapping("/updateGlobalInspectionRelationDeviceAndIsRemoved")
-  public void updateGlobalInspectionRelationDeviceAndIsRemoved(@RequestParam String ids) {
+  @PostMapping("/updateGlobalInspectionRelationDeviceAndIsRemoved")
+  public void updateGlobalInspectionRelationDeviceAndIsRemoved(@RequestBody String ids) {
     // no-op
   }
 
-  @GetMapping("/deleteGlobalInspectionRelationInBatch")
-  public void deleteGlobalInspectionRelationInBatch(@RequestParam String ids) {
+  @PostMapping("/deleteGlobalInspectionRelationInBatch")
+  public void deleteGlobalInspectionRelationInBatch(@RequestBody String ids) {
     // no-op
   }
 
-  @GetMapping("/updateGlobalInspectionByDeviceId")
-  public void updateGlobalInspectionByDeviceId(@RequestParam String primaryDeviceId, @RequestParam String existingDeviceId) {
+  @PostMapping("/updateGlobalInspectionByDeviceId")
+  public void updateGlobalInspectionByDeviceId(@RequestParam(required=false) String primaryDeviceId, @RequestParam(required=false) String existingDeviceId) {
     // no-op
   }
 
-  @GetMapping("/updateGlobalInspectionRelationLocationAndIsRemoved")
-  public void updateGlobalInspectionRelationLocationAndIsRemoved(@RequestParam String locationIds) {
+  @PostMapping("/updateGlobalInspectionRelationLocationAndIsRemoved")
+  public void updateGlobalInspectionRelationLocationAndIsRemoved(@RequestBody String locationIds) {
     // no-op
   }
 
-  @GetMapping("/updateGlobalInspectionRecord")
-  public void updateGlobalInspectionRecord(@RequestParam String email) {
+  @PostMapping("/updateGlobalInspectionRecord")
+  public void updateGlobalInspectionRecord(@RequestParam(required=false) String email) {
     // no-op
   }
 }

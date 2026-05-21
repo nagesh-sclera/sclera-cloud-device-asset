@@ -1,6 +1,8 @@
 package io.sclera.identity.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,13 +15,13 @@ import java.util.Set;
 @RestController
 @RequestMapping("/customerorganisation")
 public class CustomerOrganisationController {
-  @GetMapping("/upsertCustomerByOrganisationIdSync")
-  public void upsertCustomerByOrganisationIdSync(@RequestParam String orgId) {
+  @PostMapping("/upsertCustomerByOrganisationIdSync")
+  public void upsertCustomerByOrganisationIdSync(@RequestParam(required=false) String orgId) {
     // no-op
   }
 
-  @GetMapping("/deleteCustomerOrgById")
-  public void deleteCustomerOrgById(@RequestParam String orgId) {
+  @PostMapping("/deleteCustomerOrgById")
+  public void deleteCustomerOrgById(@RequestParam(required=false) String orgId) {
     // no-op
   }
 
@@ -33,18 +35,18 @@ public class CustomerOrganisationController {
     return Defaults.ZERO;
   }
 
-  @GetMapping("/insertUser")
-  public void insertUser(@RequestParam String email, @RequestParam String company_name, @RequestParam String created_by, @RequestParam String creation_timestamp, @RequestParam String name, @RequestParam String phone, @RequestParam String phone_type, @RequestParam String value, @RequestParam String website, @RequestParam String organisation_id, @RequestParam String image_url, @RequestParam String language, @RequestParam String role) {
+  @PostMapping("/insertUser")
+  public void insertUser(@RequestBody String creation_timestamp, @RequestParam(required=false) String email, @RequestParam(required=false) String company_name, @RequestParam(required=false) String created_by, @RequestParam(required=false) String name, @RequestParam(required=false) String phone, @RequestParam(required=false) String phone_type, @RequestParam(required=false) String value, @RequestParam(required=false) String website, @RequestParam(required=false) String organisation_id, @RequestParam(required=false) String image_url, @RequestParam(required=false) String language, @RequestParam(required=false) String role) {
     // no-op
   }
 
-  @GetMapping("/updateUser")
-  public void updateUser(@RequestParam String company_name, @RequestParam String created_by, @RequestParam String name, @RequestParam String phone, @RequestParam String phone_type, @RequestParam String value, @RequestParam String website, @RequestParam String organisation_id, @RequestParam String email) {
+  @PostMapping("/updateUser")
+  public void updateUser(@RequestParam(required=false) String company_name, @RequestParam(required=false) String created_by, @RequestParam(required=false) String name, @RequestParam(required=false) String phone, @RequestParam(required=false) String phone_type, @RequestParam(required=false) String value, @RequestParam(required=false) String website, @RequestParam(required=false) String organisation_id, @RequestParam(required=false) String email) {
     // no-op
   }
 
-  @GetMapping("/deleteUsersByOrganisationId")
-  public void deleteUsersByOrganisationId(@RequestParam String customer_org_id) {
+  @PostMapping("/deleteUsersByOrganisationId")
+  public void deleteUsersByOrganisationId(@RequestParam(required=false) String customer_org_id) {
     // no-op
   }
 
@@ -53,8 +55,8 @@ public class CustomerOrganisationController {
     return Defaults.emptySet();
   }
 
-  @GetMapping("/deleteById")
-  public void deleteById(@RequestParam String email) {
+  @PostMapping("/deleteById")
+  public void deleteById(@RequestParam(required=false) String email) {
     // no-op
   }
 
@@ -83,8 +85,8 @@ public class CustomerOrganisationController {
     return Defaults.emptySet();
   }
 
-  @GetMapping("/updateAllUser")
-  public void updateAllUser(@RequestParam String company_name, @RequestParam String created_by, @RequestParam String name, @RequestParam String phone, @RequestParam String phone_type, @RequestParam String value, @RequestParam String website, @RequestParam String organisation_id, @RequestParam String email, @RequestParam String image_url, @RequestParam String language, @RequestParam String role, @RequestParam String creation_timestamp) {
+  @PostMapping("/updateAllUser")
+  public void updateAllUser(@RequestBody String creation_timestamp, @RequestParam(required=false) String company_name, @RequestParam(required=false) String created_by, @RequestParam(required=false) String name, @RequestParam(required=false) String phone, @RequestParam(required=false) String phone_type, @RequestParam(required=false) String value, @RequestParam(required=false) String website, @RequestParam(required=false) String organisation_id, @RequestParam(required=false) String email, @RequestParam(required=false) String image_url, @RequestParam(required=false) String language, @RequestParam(required=false) String role) {
     // no-op
   }
 
@@ -93,8 +95,8 @@ public class CustomerOrganisationController {
     return Defaults.emptyList();
   }
 
-  @GetMapping("/updateCustomerOrgIdForUsers")
-  public void updateCustomerOrgIdForUsers(@RequestParam String existing_customer_org_id, @RequestParam String new_customer_org_id) {
+  @PostMapping("/updateCustomerOrgIdForUsers")
+  public void updateCustomerOrgIdForUsers(@RequestParam(required=false) String existing_customer_org_id, @RequestParam(required=false) String new_customer_org_id) {
     // no-op
   }
 
@@ -123,8 +125,8 @@ public class CustomerOrganisationController {
     return Defaults.NULL_STRING;
   }
 
-  @GetMapping("/addVendor")
-  public void addVendor(@RequestParam String vendorOrgId, @RequestParam String vdmsId) {
+  @PostMapping("/addVendor")
+  public void addVendor(@RequestParam(required=false) String vendorOrgId, @RequestParam(required=false) String vdmsId) {
     // no-op
   }
 }

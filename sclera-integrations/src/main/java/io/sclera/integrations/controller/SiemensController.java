@@ -1,6 +1,8 @@
 package io.sclera.integrations.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,8 +30,8 @@ public class SiemensController {
     return Defaults.emptyList();
   }
 
-  @GetMapping("/updateSiemensDeviceId")
-  public void updateSiemensDeviceId(@RequestParam String oldId, @RequestParam String newId) {
+  @PostMapping("/updateSiemensDeviceId")
+  public void updateSiemensDeviceId(@RequestParam(required=false) String oldId, @RequestParam(required=false) String newId) {
     // no-op
   }
 }

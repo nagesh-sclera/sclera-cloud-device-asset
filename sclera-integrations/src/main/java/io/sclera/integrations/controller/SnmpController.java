@@ -1,6 +1,8 @@
 package io.sclera.integrations.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,18 +55,18 @@ public class SnmpController {
     return Defaults.emptyList();
   }
 
-  @GetMapping("/deleteGlobalSnmpByDeviceId")
-  public void deleteGlobalSnmpByDeviceId(@RequestParam String deviceId) {
+  @PostMapping("/deleteGlobalSnmpByDeviceId")
+  public void deleteGlobalSnmpByDeviceId(@RequestParam(required=false) String deviceId) {
     // no-op
   }
 
-  @GetMapping("/upsertGlobalSnmpByDeviceId")
-  public void upsertGlobalSnmpByDeviceId(@RequestParam String snmpSet, @RequestParam String deviceId) {
+  @PostMapping("/upsertGlobalSnmpByDeviceId")
+  public void upsertGlobalSnmpByDeviceId(@RequestBody String snmpSet, @RequestParam(required=false) String deviceId) {
     // no-op
   }
 
-  @GetMapping("/updateSnmpObjectDeviceId")
-  public void updateSnmpObjectDeviceId(@RequestParam String oldId, @RequestParam String newId, @RequestParam String ids) {
+  @PostMapping("/updateSnmpObjectDeviceId")
+  public void updateSnmpObjectDeviceId(@RequestBody String ids, @RequestParam(required=false) String oldId, @RequestParam(required=false) String newId) {
     // no-op
   }
 
