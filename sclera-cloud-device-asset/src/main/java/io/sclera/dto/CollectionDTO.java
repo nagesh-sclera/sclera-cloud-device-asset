@@ -28,7 +28,6 @@ public class CollectionDTO {
     private String assetSubTypeId;
     private String locationId;
     private String networkName;
-    private List<CollectionFileDTO> collectionFiles;
     private String qrCodeData;
     private String barCodeData;
     private String nfcData;

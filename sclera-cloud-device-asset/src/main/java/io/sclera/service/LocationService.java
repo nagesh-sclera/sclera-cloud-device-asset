@@ -1316,7 +1316,7 @@ public class LocationService {
     /******************************** Integration **************************************************/
 
     public List<LocationIntegrationDTO> getIntegrationByLocationId(String locationId) {
-        log.warn("[STUB] getIntegrationByLocationId locationId={}", locationId);
+        // TODO: delegate to integration service via Dapr when available
         return java.util.Collections.emptyList();
     }
 

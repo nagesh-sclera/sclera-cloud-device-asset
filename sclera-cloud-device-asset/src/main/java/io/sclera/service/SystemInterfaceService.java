@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import io.sclera.Repository.SystemInterfaceRepository;
 import io.sclera.dto.DockerInfoDto;
 import io.sclera.dto.VlanDTO;
-import io.sclera.sockets.SocketService;
+import io.sclera.client.SocketClient;
 
 @Service
 public class SystemInterfaceService {
@@ -27,7 +27,7 @@ public class SystemInterfaceService {
 	SystemInterfaceRepository systemInterfaceRepository;
 
 	@Autowired
-	SocketService socketService;
+	SocketClient socketService;
 
 	@Autowired
 	DockerService dockerService;

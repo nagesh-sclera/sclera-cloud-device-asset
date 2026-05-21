@@ -1,4 +1,5 @@
 package io.sclera.service;
+import io.sclera.client.IOCClient;
 import io.sclera.client.APICallClient;
 
 import java.math.BigInteger;
@@ -14,7 +15,7 @@ import io.sclera.dto.*;
 import io.sclera.dto.touchscreen.SensorDTO;
 import io.sclera.models.MeasuringInstrument;
 import io.sclera.queryrepository.MeasuringInstrumentsQueryRepository;
-import io.sclera.sockets.SocketService;
+import io.sclera.client.SocketClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ import com.fasterxml.uuid.Generators;
 
 import io.sclera.Repository.MeasuringInstrumentRepository;
 import io.sclera.client.DaintreeClient;
-import io.sclera.rabbitmq.RabbitmqService;
+import io.sclera.client.RabbitmqClient;
 import io.sclera.utils.InstrumentFormula;
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,7 +44,7 @@ public class MeasuringInstrumentService {
     DeviceService deviceService;
 
     @Autowired
-    RabbitmqService rabbitmqService;
+    RabbitmqClient rabbitmqService;
 
     @Autowired
     APICallClient apiCallService;
@@ -52,7 +53,7 @@ public class MeasuringInstrumentService {
     ConditionsService conditionsService;
 
     @Autowired
-    SocketService socketService;
+    SocketClient socketService;
 
     @Autowired
     DaintreeClient daintreeService;
@@ -76,7 +77,7 @@ public class MeasuringInstrumentService {
     LocationService locationService;
 
     @Autowired
-    IOCService iocService;
+    IOCClient iocService;
 
 
     public void upsertInstrument(String username, String vdmsid, String share_method, Set<MeasuringInstrumentDTO> instruments, HttpServletRequest httpServletRequest) {

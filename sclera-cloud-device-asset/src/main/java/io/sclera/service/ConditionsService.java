@@ -1,4 +1,5 @@
 package io.sclera.service;
+import io.sclera.client.IOCClient;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -28,8 +29,8 @@ import io.sclera.client.PelicanClient;
 import io.sclera.client.SiemensClient;
 import io.sclera.client.SnmpClient;
 import io.sclera.dto.touchscreen.SensorDTO;
-import io.sclera.rabbitmq.RabbitmqService;
-import io.sclera.sockets.SocketService;
+import io.sclera.client.RabbitmqClient;
+import io.sclera.client.SocketClient;
 import io.sclera.utils.ConditionUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -40,7 +41,7 @@ public class ConditionsService {
     private static final Logger log = LoggerFactory.getLogger(ConditionsService.class);
 
     @Autowired
-    SocketService sockertService;
+    SocketClient sockertService;
 
     @Autowired
     ConditionsRepository conditionsRepository;
@@ -74,7 +75,7 @@ public class ConditionsService {
 
 
     @Autowired
-    RabbitmqService rabbitmqService;
+    RabbitmqClient rabbitmqService;
 
     @Autowired
     MonnitClient monnitService;
@@ -102,7 +103,7 @@ public class ConditionsService {
     ModbusClient modbusService;
 
     @Autowired
-    IOCService iocService;
+    IOCClient iocService;
 
 
     @Autowired

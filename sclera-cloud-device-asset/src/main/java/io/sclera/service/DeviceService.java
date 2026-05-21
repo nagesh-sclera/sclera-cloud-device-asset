@@ -1,4 +1,5 @@
 package io.sclera.service;
+import io.sclera.client.IOCClient;
 import io.sclera.client.APICallClient;
 
 import com.alibaba.fastjson.JSON;
@@ -40,11 +41,11 @@ import io.sclera.client.PolyLensClient;
 import io.sclera.client.SiemensClient;
 import io.sclera.client.SnmpClient;
 import io.sclera.client.TicketClient;
-import io.sclera.rabbitmq.RabbitmqService;
+import io.sclera.client.RabbitmqClient;
 //import io.sclera.service.touchscreen.VdmsService;
 import io.sclera.service.touchscreen.VdmsService;
 // AssetMapperService replaced by AssetMapperClient
-import io.sclera.sockets.SocketService;
+import io.sclera.client.SocketClient;
 import io.sclera.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,7 +128,7 @@ public class DeviceService {
     private static final Logger log = LoggerFactory.getLogger(DeviceService.class);
 
     @Autowired
-    SocketService socketservice;
+    SocketClient socketservice;
 
     @Autowired
     DeviceRepository deviceRepository;
@@ -198,7 +199,7 @@ public class DeviceService {
     MyDevicesClient myDevicesService;
 
     @Autowired
-    RabbitmqService rabbitmqService;
+    RabbitmqClient rabbitmqService;
 
     @Autowired
     AsyncService asyncService;
@@ -264,7 +265,7 @@ public class DeviceService {
     ModbusClient modbusService;
 
     @Autowired
-    IOCService iocService;
+    IOCClient iocService;
 
     @Autowired
     JobSchedulerService jobSchedulerService;

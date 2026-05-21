@@ -3,7 +3,7 @@ package io.sclera.utils;
 import io.sclera.dto.touchscreen.DeviceHistoryDTO;
 import io.sclera.dto.touchscreen.DeviceMonitorDTO;
 import io.sclera.client.APICallClient;
-import io.sclera.service.touchscreen.MonitorService;
+import io.sclera.client.MonitorClient;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,7 @@ import java.util.List;
 public class UDPReceive {
 
 	@Autowired
-	MonitorService monitorService;
+	MonitorClient monitorService;
 
 	@Autowired
 	APICallClient apiCallService;

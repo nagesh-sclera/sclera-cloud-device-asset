@@ -7,7 +7,7 @@ import io.sclera.dto.DeviceSpecificationDTO;
 import io.sclera.dto.RemoteAgentServerDetailsDTO;
 import io.sclera.service.DeviceInstalledAppsService;
 import io.sclera.service.DeviceSpecificationService;
-import io.sclera.service.RemoteDesktopSessionService;
+import io.sclera.client.RemoteDesktopSessionClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,10 +23,10 @@ public class DeviceSpecificationController {
 
     private final DeviceInstalledAppsService deviceInstalledAppsService;
 
-    private final RemoteDesktopSessionService remoteDesktopSessionService;
+    private final RemoteDesktopSessionClient remoteDesktopSessionService;
 
     public DeviceSpecificationController(DeviceSpecificationService deviceSpecificationService,
-                                         DeviceInstalledAppsService deviceInstalledAppsService, RemoteDesktopSessionService remoteDesktopSessionService) {
+                                         DeviceInstalledAppsService deviceInstalledAppsService, RemoteDesktopSessionClient remoteDesktopSessionService) {
         this.deviceSpecificationService = deviceSpecificationService;
         this.deviceInstalledAppsService = deviceInstalledAppsService;
         this.remoteDesktopSessionService = remoteDesktopSessionService;

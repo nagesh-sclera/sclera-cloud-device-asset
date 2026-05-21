@@ -11,7 +11,7 @@ import io.sclera.dto.*;
 import io.sclera.dto.touchscreen.settings.VdmsDTO;
 import io.sclera.integration.dto.ResponseDTO;
 //import io.sclera.service.touchscreen.VdmsService;
-import io.sclera.sockets.SocketService;
+import io.sclera.client.SocketClient;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -58,7 +58,7 @@ public class AiCallService {
     @Autowired
     TechnicianService technicianService;
     @Autowired
-    SocketService socketService;
+    SocketClient socketService;
     @Autowired
     DeviceConditionsService deviceConditionsService;
 

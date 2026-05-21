@@ -1,7 +1,7 @@
 package io.sclera.utils;
 
 import io.sclera.dto.touchscreen.RemoteAccessSessionDTO;
-import io.sclera.service.touchscreen.RemoteAccessSessionService;
+import io.sclera.client.RemoteAccessSessionClient;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.BufferedReader;
@@ -81,7 +81,7 @@ public class RemoteAccessProcessParser {
                 .collect(Collectors.toList());
     }
 
-    public void performRemoteAccessCleanup(String vdms_id, RemoteAccessSessionService remoteAccessSessionService) {
+    public void performRemoteAccessCleanup(String vdms_id, RemoteAccessSessionClient remoteAccessSessionService) {
         StringBuilder cmd = new StringBuilder("ps -e -o command | less | grep tcptunnel | grep -v \"127.0.0.1\" | grep -v \"grep\" | grep -v \"docker\"");
         System.out.println(cmd.toString());
         try {
