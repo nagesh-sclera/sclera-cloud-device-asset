@@ -1,4 +1,5 @@
 package io.sclera.service;
+import io.sclera.client.APICallClient;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,7 +69,7 @@ public class FloorService {
     @Autowired
     UserActionLogService userActionLogService;
     @Autowired
-    APICallService apicallService;
+    APICallClient apicallService;
 
     @Autowired
     VdmsRepository vdmsRepository;

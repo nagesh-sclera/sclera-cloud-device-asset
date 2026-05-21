@@ -1,4 +1,5 @@
 package io.sclera.service;
+import io.sclera.client.APICallClient;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class DeviceSearchService {
     DeviceService deviceService;
 
     @Autowired
-    APICallService apiCallService;
+    APICallClient apiCallService;
 
     /**************************************************Search Devices Method************************************************************/
     //sort method for now not used

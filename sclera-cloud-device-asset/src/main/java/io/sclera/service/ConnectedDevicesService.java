@@ -1,5 +1,6 @@
 
 package io.sclera.service;
+import io.sclera.client.APICallClient;
 
 
 import com.alibaba.fastjson.JSONArray;
@@ -27,7 +28,7 @@ public class ConnectedDevicesService {
     SpecificationsService specificationsService;
 
     @Autowired
-    APICallService apiCallService;
+    APICallClient apiCallService;
 
 
     public void addConnectedDevices(ConnectedDevicesDTO connectedDevicesDTO) {

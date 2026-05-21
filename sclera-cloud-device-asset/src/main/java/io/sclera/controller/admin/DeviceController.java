@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
-import io.sclera.service.APICallService;
+import io.sclera.client.APICallClient;
 import io.sclera.service.DeviceSearchService;
 import io.sclera.service.DeviceService;
 import io.sclera.utils.APIRequest;
@@ -44,7 +44,7 @@ public class DeviceController {
     APIRequest apiRequest;
 
     @Autowired
-    APICallService apicallService;
+    APICallClient apicallService;
 
     @Autowired
     DeviceSearchService deviceSearchService;

@@ -1,4 +1,5 @@
 package io.sclera.service;
+import io.sclera.client.APICallClient;
 
 import io.sclera.client.CorrigoClient;
 import io.sclera.dto.DeviceDTO;
@@ -26,7 +27,7 @@ public class ChatGPTService {
     MeasuringInstrumentService measuringInstrumentService;
 
     @Autowired
-    APICallService apiCallService;
+    APICallClient apiCallService;
 
     @Autowired
     CorrigoClient corrigoService;

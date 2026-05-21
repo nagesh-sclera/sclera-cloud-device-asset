@@ -1,4 +1,5 @@
 package io.sclera.service;
+import io.sclera.client.APICallClient;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -45,7 +46,7 @@ public class MeasuringInstrumentService {
     RabbitmqService rabbitmqService;
 
     @Autowired
-    APICallService apiCallService;
+    APICallClient apiCallService;
 
     @Autowired
     ConditionsService conditionsService;

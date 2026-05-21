@@ -1,4 +1,5 @@
 package io.sclera.service;
+import io.sclera.client.APICallClient;
 
 import java.math.BigInteger;
 import java.sql.Connection;
@@ -55,7 +56,7 @@ public class LocationService {
     DeviceService deviceService;
 
     @Autowired
-    APICallService apicallService;
+    APICallClient apicallService;
 
     @Autowired
     PmsClient pmsService;

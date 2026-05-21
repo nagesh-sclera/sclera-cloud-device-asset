@@ -50,7 +50,7 @@
 //    DeviceService deviceService;
 //
 //    @Autowired
-//    APICallService apiCallService;
+//    APICallClient apiCallService;
 //
 //    @Autowired
 //    Utils utils;

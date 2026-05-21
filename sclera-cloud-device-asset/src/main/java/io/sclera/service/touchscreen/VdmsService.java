@@ -1,4 +1,5 @@
 package io.sclera.service.touchscreen;
+import io.sclera.client.APICallClient;
 
 import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.*;
@@ -51,7 +52,7 @@ public class VdmsService {
     VdmsconfigurationRepository vdmsconfigurationRepository;
 
     @Autowired
-    APICallService apiCallService;
+    APICallClient apiCallService;
 
     @Autowired
     Utils utils;

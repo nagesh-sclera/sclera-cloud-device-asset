@@ -56,7 +56,7 @@ public class Utils {
     @Autowired
     DockerUtils dockerUtils;
     // removed: @Autowired WebClientService webClientService (Bucket D)
-    // removed: @Autowired MasterSlaveAPICallService masterSlaveAPICallService (Bucket D)
+    // removed: @Autowired MasterSlaveAPICallService masterSlaveAPICallClient (Bucket D)
     //    private final String UUIDFilePath = "/home/rajath/Desktop/.sclera";
     private final String UUIDFilePath = "/home/sclera/.sclera";
 
@@ -244,12 +244,12 @@ public class Utils {
         boolean isContainerPresent;
         boolean isNetworkPresent;
         if (network_origin == 0) {
-            isContainerPresent = false /* stubbed: masterSlaveAPICallService removed (Bucket D) */;
+            isContainerPresent = false /* stubbed: masterSlaveAPICallClient removed (Bucket D) */;
         } else {
             isContainerPresent = false /* stubbed: restartNetworkService removed (Bucket D) */;
         }
         if (network_origin == 0) {
-            isNetworkPresent = false /* stubbed: masterSlaveAPICallService removed (Bucket D) */;
+            isNetworkPresent = false /* stubbed: masterSlaveAPICallClient removed (Bucket D) */;
         } else {
             isNetworkPresent = false /* stubbed: restartNetworkService removed (Bucket D) */;
         }
@@ -488,14 +488,14 @@ public class Utils {
             isContainerPresent = false /* stubbed: restartNetworkService removed (Bucket D) */;
             log.info("Is Container Present.... {}", isContainerPresent);
         } else if (network_origin == 0) {
-            isContainerPresent = false /* stubbed: masterSlaveAPICallService removed (Bucket D) */;
+            isContainerPresent = false /* stubbed: masterSlaveAPICallClient removed (Bucket D) */;
             log.info("Is Container Present..... {}", isContainerPresent);
         }
         var isNetworkPresent = false;
         if (network_origin == 1) {
             isNetworkPresent = false /* stubbed: restartNetworkService removed (Bucket D) */;
         } else if (network_origin == 0) {
-            isNetworkPresent = false /* stubbed: masterSlaveAPICallService removed (Bucket D) */;
+            isNetworkPresent = false /* stubbed: masterSlaveAPICallClient removed (Bucket D) */;
         }
         //If container and network is already deleted return true
         //If network is not deleted but container is deleted run one command

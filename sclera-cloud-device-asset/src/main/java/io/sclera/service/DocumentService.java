@@ -1,4 +1,5 @@
 package io.sclera.service;
+import io.sclera.client.APICallClient;
 
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -45,7 +46,7 @@ public class DocumentService {
     DeviceService deviceService;
 
     @Autowired
-    APICallService apiCallService;
+    APICallClient apiCallService;
 
     @Autowired
     AuthenticationUtils authenticationUtils;

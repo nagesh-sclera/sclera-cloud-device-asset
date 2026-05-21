@@ -1,4 +1,5 @@
 package io.sclera.service;
+import io.sclera.client.APICallClient;
 
 import io.sclera.Repository.DeviceRepository;
 import io.sclera.Repository.DeviceTypesRepository;
@@ -27,7 +28,7 @@ public class DeviceTypeService {
 
     private final DeviceTypesRepository deviceTypesRepository;
     @Autowired
-    APICallService apiCallService;
+    APICallClient apiCallService;
     @Autowired
     DataSource dataSource;
     @Autowired

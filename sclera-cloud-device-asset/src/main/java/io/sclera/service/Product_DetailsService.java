@@ -1,4 +1,5 @@
 package io.sclera.service;
+import io.sclera.client.APICallClient;
 
 import java.io.IOException;
 import java.util.List;
@@ -26,7 +27,7 @@ public class Product_DetailsService {
     DeviceService deviceService;
 
     @Autowired
-    APICallService apiCallService;
+    APICallClient apiCallService;
 
     @Autowired
     Utils utils;

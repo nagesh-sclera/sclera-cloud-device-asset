@@ -1,4 +1,5 @@
 package io.sclera.service;
+import io.sclera.client.APICallClient;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -40,7 +41,7 @@ public class DeviceSpecificationService {
   
     private final RemoteAgentServerDetailsRepository remoteAgentServerDetailsRepository;
 
-    private final APICallService apiCallService;
+    private final APICallClient apiCallService;
 
     private final DeviceNetworkSpecificationRepository deviceNetworkSpecificationRepository;
 
@@ -53,7 +54,7 @@ public class DeviceSpecificationService {
     private final RemoteDesktopSessionRepository remoteDesktopSessionRepository;
 
     public DeviceSpecificationService(DeviceSpecificationRepository deviceSpecificationRepository, DeviceInstalledAppsRepository deviceInstalledAppsRepository,
-                                      DeviceRepository deviceRepository, DeviceService deviceService, RemoteAgentServerDetailsRepository remoteAgentServerDetailsRepository, APICallService apiCallService, DeviceNetworkSpecificationRepository deviceNetworkSpecificationRepository, Utils utils, ManagedSoftwareService managedSoftwareService, UserRepository userRepository, RemoteDesktopSessionRepository remoteDesktopSessionRepository) {
+                                      DeviceRepository deviceRepository, DeviceService deviceService, RemoteAgentServerDetailsRepository remoteAgentServerDetailsRepository, APICallClient apiCallService, DeviceNetworkSpecificationRepository deviceNetworkSpecificationRepository, Utils utils, ManagedSoftwareService managedSoftwareService, UserRepository userRepository, RemoteDesktopSessionRepository remoteDesktopSessionRepository) {
 
         this.deviceSpecificationRepository = deviceSpecificationRepository;
         this.deviceInstalledAppsRepository = deviceInstalledAppsRepository;

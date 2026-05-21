@@ -1,4 +1,5 @@
 package io.sclera.service;
+import io.sclera.client.APICallClient;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -158,7 +159,7 @@ public class DeviceService {
     APIRequest apiRequest;
 
     @Autowired
-    APICallService apicallService;
+    APICallClient apicallService;
 
     @Autowired
     BuildingService buildingService;
@@ -305,7 +306,7 @@ public class DeviceService {
     SiemensClient siemensService;
 
     @Autowired
-    APICallService apiCallService;
+    APICallClient apiCallService;
 
     @Autowired
     PolyLensClient polyLensService;

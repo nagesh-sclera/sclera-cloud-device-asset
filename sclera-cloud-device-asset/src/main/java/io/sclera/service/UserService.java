@@ -1,4 +1,5 @@
 package io.sclera.service;
+import io.sclera.client.APICallClient;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -18,7 +19,7 @@ public class UserService {
     UserRepository userRepository;
 
     @Autowired
-    APICallService apicallService;
+    APICallClient apicallService;
 
     @Autowired
     VdmsRepository vdmsRepository;

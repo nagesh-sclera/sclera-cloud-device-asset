@@ -1,4 +1,5 @@
 package io.sclera.service;
+import io.sclera.client.APICallClient;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -36,7 +37,7 @@ public class ManagedSoftwareService {
     DeviceInstalledAppsRepository deviceInstalledAppsRepository;
     DeviceSpecificationRepository deviceSpecificationRepository;
     ApplicationUserRepository applicationUserRepository;
-    APICallService apiCallService;
+    APICallClient apiCallService;
     JdbcTemplate jdbcTemplate;
 
     public ManagedSoftwareService(ManagedSoftwareRepository managedSoftwareRepository,
@@ -44,7 +45,7 @@ public class ManagedSoftwareService {
                                   DeviceInstalledAppsRepository deviceInstalledAppsRepository,
                                   DeviceSpecificationRepository deviceSpecificationRepository,
                                   ApplicationUserRepository applicationUserRepository,
-                                  APICallService apiCallService,
+                                  APICallClient apiCallService,
                                   JdbcTemplate jdbcTemplate) {
         this.managedSoftwareRepository = managedSoftwareRepository;
         this.deviceInstalledAppsService = deviceInstalledAppsService;
