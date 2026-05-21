@@ -1,0 +1,85 @@
+apiVersion: dapr.io/v1alpha1
+kind: Resiliency
+metadata:
+  name: sclera-resiliency
+scopes:
+  - sclera-api-gateway
+  - sclera-cloud-device-asset
+  - vdms-service
+  - sclera-audit
+  - sclera-identity
+  - sclera-alerts
+  - sclera-inventory
+  - sclera-workorders
+  - sclera-inspection
+  - sclera-integrations
+  - sclera-edge
+spec:
+  policies:
+    timeouts:
+      default: 5s
+      pubsub-publish: 3s
+    retries:
+      default:
+        policy: exponential
+        duration: 200ms
+        maxInterval: 5s
+        maxRetries: 3
+        retryableHTTPStatusCodes: "408,500,502,503,504"
+      pubsub-retry:
+        policy: exponential
+        duration: 500ms
+        maxInterval: 10s
+        maxRetries: 5
+    circuitBreakers:
+      default:
+        maxRequests: 1
+        timeout: 30s
+        trip: consecutiveFailures >= 5
+  targets:
+    apps:
+      vdms-service:
+        timeout: default
+        retry: default
+        circuitBreaker: default
+      sclera-cloud-device-asset:
+        timeout: default
+        retry: default
+        circuitBreaker: default
+      sclera-audit:
+        timeout: default
+        retry: default
+        circuitBreaker: default
+      sclera-identity:
+        timeout: default
+        retry: default
+        circuitBreaker: default
+      sclera-alerts:
+        timeout: default
+        retry: default
+        circuitBreaker: default
+      sclera-inventory:
+        timeout: default
+        retry: default
+        circuitBreaker: default
+      sclera-workorders:
+        timeout: default
+        retry: default
+        circuitBreaker: default
+      sclera-inspection:
+        timeout: default
+        retry: default
+        circuitBreaker: default
+      sclera-integrations:
+        timeout: default
+        retry: default
+        circuitBreaker: default
+      sclera-edge:
+        timeout: default
+        retry: default
+        circuitBreaker: default
+    components:
+      pubsub:
+        outbound:
+          timeout: pubsub-publish
+          retry: pubsub-retry
