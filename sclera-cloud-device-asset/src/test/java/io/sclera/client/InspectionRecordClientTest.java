@@ -44,7 +44,7 @@ class InspectionRecordClientTest {
                 eq("inspectionRecord/updateInspectionRecordStatus"),
                 any(),
                 extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
+        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.POST);
     }
 
     @Test
@@ -66,7 +66,7 @@ class InspectionRecordClientTest {
                 eq("inspectionRecord/updateInspectionRecord"),
                 any(),
                 extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
+        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.POST);
     }
 
     @Test

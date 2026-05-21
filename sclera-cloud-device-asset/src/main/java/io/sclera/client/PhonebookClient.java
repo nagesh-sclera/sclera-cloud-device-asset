@@ -46,7 +46,7 @@ public class PhonebookClient {
         payload.put("dockername", dockername);
         payload.put("deviceId", deviceId);
         try {
-            dapr.invokeMethod(APP_ID, "phonebook/addPhoneBookByDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "phonebook/addPhoneBookByDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("PhonebookClient.addPhoneBookByDeviceId failed; swallowing: {}", e.getMessage());
         }

@@ -35,7 +35,7 @@ public class GlobalChecklistConditionsClient {
      */
     public void updateGlobalChecklistConditionsDeviceAndIsRemoved(Set<String> ids) {
         try {
-            dapr.invokeMethod(APP_ID, "globalChecklistConditions/updateGlobalChecklistConditionsDeviceAndIsRemoved", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "globalChecklistConditions/updateGlobalChecklistConditionsDeviceAndIsRemoved", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("GlobalChecklistConditionsClient.updateGlobalChecklistConditionsDeviceAndIsRemoved failed; swallowing: {}", e.getMessage());
         }
@@ -47,7 +47,7 @@ public class GlobalChecklistConditionsClient {
      */
     public void updateGlobalChecklistConditionsLocationAndIsRemoved(Set<String> locationIds) {
         try {
-            dapr.invokeMethod(APP_ID, "globalChecklistConditions/updateGlobalChecklistConditionsLocationAndIsRemoved", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "globalChecklistConditions/updateGlobalChecklistConditionsLocationAndIsRemoved", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("GlobalChecklistConditionsClient.updateGlobalChecklistConditionsLocationAndIsRemoved failed; swallowing: {}", e.getMessage());
         }

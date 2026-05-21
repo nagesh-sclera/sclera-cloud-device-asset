@@ -102,7 +102,7 @@ public class LorawanClient {
     /** Mirrors {@code LorawanService#listLorawanDevicesAlertMessagesByDeviceIds}. Returns empty list on failure. */
     public List<ConditionsDTO> listLorawanDevicesAlertMessagesByDeviceIds(List<String> ids) {
         try {
-            dapr.invokeMethod(APP_ID, "lorawan/listLorawanDevicesAlertMessagesByDeviceIds", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "lorawan/listLorawanDevicesAlertMessagesByDeviceIds", null, HttpExtension.POST).block();
             return Collections.emptyList();
         } catch (Exception e) {
             log.warn("LorawanClient.listLorawanDevicesAlertMessagesByDeviceIds failed; returning stub default: {}", e.getMessage());
@@ -119,7 +119,7 @@ public class LorawanClient {
         payload.put("oldId", oldId);
         payload.put("newId", newId);
         try {
-            dapr.invokeMethod(APP_ID, "lorawan/updateLorawanSensorDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "lorawan/updateLorawanSensorDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("LorawanClient.updateLorawanSensorDeviceId failed; swallowing: {}", e.getMessage());
         }

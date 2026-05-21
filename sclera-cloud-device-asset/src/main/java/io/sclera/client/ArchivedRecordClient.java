@@ -40,7 +40,7 @@ public class ArchivedRecordClient {
      */
     public void batchUpdateArchivedRecords(List<UserActionLogDTO> logs) {
         try {
-            dapr.invokeMethod(APP_ID, "archivedrecord/batchUpdateArchivedRecords", logs, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "archivedrecord/batchUpdateArchivedRecords", logs, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("ArchivedRecordClient.batchUpdateArchivedRecords failed; swallowing: {}", e.getMessage());
         }

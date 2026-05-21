@@ -104,7 +104,7 @@ public class BacnetClient {
     /** Mirrors {@code BacnetService#listBacnetDevicesAlertMessagesByDeviceIds}. Returns empty list on failure. */
     public List<ConditionsDTO> listBacnetDevicesAlertMessagesByDeviceIds(List<String> ids) {
         try {
-            dapr.invokeMethod(APP_ID, "bacnet/listBacnetDevicesAlertMessagesByDeviceIds", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "bacnet/listBacnetDevicesAlertMessagesByDeviceIds", null, HttpExtension.POST).block();
             return Collections.emptyList();
         } catch (Exception e) {
             log.warn("BacnetClient.listBacnetDevicesAlertMessagesByDeviceIds failed; returning stub default: {}", e.getMessage());
@@ -136,7 +136,7 @@ public class BacnetClient {
         payload.put("oldId", oldId);
         payload.put("newId", newId);
         try {
-            dapr.invokeMethod(APP_ID, "bacnet/updateBacnetObjectDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "bacnet/updateBacnetObjectDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("BacnetClient.updateBacnetObjectDeviceId failed; swallowing: {}", e.getMessage());
         }

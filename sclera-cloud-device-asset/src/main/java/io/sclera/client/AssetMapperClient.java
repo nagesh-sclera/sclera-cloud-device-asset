@@ -31,7 +31,7 @@ public class AssetMapperClient {
      */
     public void updateDeviceTypeForAllAsset(List<DeviceTypesDTO> deviceTypes) {
         try {
-            dapr.invokeMethod(APP_ID, "assetMapper/updateDeviceTypeForAllAsset", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "assetMapper/updateDeviceTypeForAllAsset", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("AssetMapperClient.updateDeviceTypeForAllAsset failed; swallowing: {}", e.getMessage());
         }

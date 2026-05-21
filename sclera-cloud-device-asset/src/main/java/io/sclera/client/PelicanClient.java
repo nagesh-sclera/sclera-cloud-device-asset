@@ -101,7 +101,7 @@ public class PelicanClient {
     /** Mirrors {@code PelicanService#listpelicanDevicesAlertMessagesByDeviceIds}. Returns empty list on failure. */
     public List<ConditionsDTO> listpelicanDevicesAlertMessagesByDeviceIds(List<String> ids) {
         try {
-            dapr.invokeMethod(APP_ID, "pelican/listpelicanDevicesAlertMessagesByDeviceIds", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "pelican/listpelicanDevicesAlertMessagesByDeviceIds", null, HttpExtension.POST).block();
             return Collections.emptyList();
         } catch (Exception e) {
             log.warn("PelicanClient.listpelicanDevicesAlertMessagesByDeviceIds failed; returning stub default: {}", e.getMessage());
@@ -118,7 +118,7 @@ public class PelicanClient {
         payload.put("oldId", oldId);
         payload.put("newId", newId);
         try {
-            dapr.invokeMethod(APP_ID, "pelican/updatePelicanSensorDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "pelican/updatePelicanSensorDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("PelicanClient.updatePelicanSensorDeviceId failed; swallowing: {}", e.getMessage());
         }

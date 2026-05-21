@@ -89,7 +89,7 @@ public class DaintreeClient {
     /** Mirrors {@code DaintreeService#listDaintreeDevicesAlertMessagesByDeviceIds}. Returns empty list on failure. */
     public List<ConditionsDTO> listDaintreeDevicesAlertMessagesByDeviceIds(List<String> ids) {
         try {
-            dapr.invokeMethod(APP_ID, "daintree/listDaintreeDevicesAlertMessagesByDeviceIds", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "daintree/listDaintreeDevicesAlertMessagesByDeviceIds", null, HttpExtension.POST).block();
             return Collections.emptyList();
         } catch (Exception e) {
             log.warn("DaintreeClient.listDaintreeDevicesAlertMessagesByDeviceIds failed; returning stub default: {}", e.getMessage());
@@ -106,7 +106,7 @@ public class DaintreeClient {
         payload.put("oldId", oldId);
         payload.put("newId", newId);
         try {
-            dapr.invokeMethod(APP_ID, "daintree/updateDaintreeDeviceByDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "daintree/updateDaintreeDeviceByDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("DaintreeClient.updateDaintreeDeviceByDeviceId failed; swallowing: {}", e.getMessage());
         }

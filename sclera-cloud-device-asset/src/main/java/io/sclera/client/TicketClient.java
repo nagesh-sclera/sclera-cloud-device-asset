@@ -70,7 +70,7 @@ public class TicketClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("email", email);
         try {
-            dapr.invokeMethod(APP_ID, "ticket/updateTicketAssigneeByUserEmail", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "ticket/updateTicketAssigneeByUserEmail", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("TicketClient.updateTicketAssigneeByUserEmail failed; swallowing: {}", e.getMessage());
         }

@@ -44,7 +44,7 @@ class GlobalInspectionRecordClientTest {
                 eq("globalInspectionRecord/updateGlobalInspectionByDeviceId"),
                 any(),
                 extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
+        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.POST);
     }
 
     @Test
@@ -66,7 +66,7 @@ class GlobalInspectionRecordClientTest {
                 eq("globalInspectionRecord/updateGlobalInspectionRecord"),
                 any(),
                 extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
+        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.POST);
     }
 
     @Test

@@ -48,7 +48,7 @@ public class AlertClient {
         payload.put("alertProfile", alertProfile);
         payload.put("timestamp", timestamp);
         try {
-            dapr.invokeMethod(APP_ID, "alert/sendDeviceConditionsAlertInfo", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "alert/sendDeviceConditionsAlertInfo", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("AlertClient.sendDeviceConditionsAlertInfo failed; swallowing: {}", e.getMessage());
         }
@@ -64,7 +64,7 @@ public class AlertClient {
         payload.put("alertProfile", alertProfile);
         payload.put("timestamp", timestamp);
         try {
-            dapr.invokeMethod(APP_ID, "alert/sendSensorAlertInfo", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "alert/sendSensorAlertInfo", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("AlertClient.sendSensorAlertInfo failed; swallowing: {}", e.getMessage());
         }
@@ -80,7 +80,7 @@ public class AlertClient {
         payload.put("type", type);
         payload.put("vdmsId", vdmsId);
         try {
-            dapr.invokeMethod(APP_ID, "alert/sendDownloadEmail", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "alert/sendDownloadEmail", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("AlertClient.sendDownloadEmail failed; swallowing: {}", e.getMessage());
         }

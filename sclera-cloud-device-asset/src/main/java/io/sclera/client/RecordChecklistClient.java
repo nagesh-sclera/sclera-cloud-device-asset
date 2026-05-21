@@ -43,7 +43,7 @@ public class RecordChecklistClient {
      */
     public void updateRecordChecklistDeviceAndIsRemoved(Set<String> ids) {
         try {
-            dapr.invokeMethod(APP_ID, "recordChecklist/updateRecordChecklistDeviceAndIsRemoved", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "recordChecklist/updateRecordChecklistDeviceAndIsRemoved", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("RecordChecklistClient.updateRecordChecklistDeviceAndIsRemoved failed; swallowing: {}", e.getMessage());
         }
@@ -55,7 +55,7 @@ public class RecordChecklistClient {
      */
     public void deleteRecordChecklistInBatch(List<String> ids) {
         try {
-            dapr.invokeMethod(APP_ID, "recordChecklist/deleteRecordChecklistInBatch", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "recordChecklist/deleteRecordChecklistInBatch", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("RecordChecklistClient.deleteRecordChecklistInBatch failed; swallowing: {}", e.getMessage());
         }
@@ -66,7 +66,7 @@ public class RecordChecklistClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("deviceId", deviceId);
         try {
-            dapr.invokeMethod(APP_ID, "recordChecklist/deleteAllRecordChecklistByDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "recordChecklist/deleteAllRecordChecklistByDeviceId", payload, HttpExtension.POST).block();
             return Collections.emptyList();
         } catch (Exception e) {
             log.warn("RecordChecklistClient.deleteAllRecordChecklistByDeviceId failed; returning stub default: {}", e.getMessage());
@@ -80,7 +80,7 @@ public class RecordChecklistClient {
      */
     public void deleteAllRecordChecklistImagesByUrls(List<String> urls) {
         try {
-            dapr.invokeMethod(APP_ID, "recordChecklist/deleteAllRecordChecklistImagesByUrls", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "recordChecklist/deleteAllRecordChecklistImagesByUrls", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("RecordChecklistClient.deleteAllRecordChecklistImagesByUrls failed; swallowing: {}", e.getMessage());
         }
@@ -124,7 +124,7 @@ public class RecordChecklistClient {
         payload.put("oldId", oldId);
         payload.put("newId", newId);
         try {
-            dapr.invokeMethod(APP_ID, "recordChecklist/updateRecordChecklistByDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "recordChecklist/updateRecordChecklistByDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("RecordChecklistClient.updateRecordChecklistByDeviceId failed; swallowing: {}", e.getMessage());
         }
@@ -137,7 +137,7 @@ public class RecordChecklistClient {
      */
     public Set<RecordChecklistDTO> getAllRecordChecklistByBuildings(List<String> buildingIds, List<String> floorIds, List<String> locationIds) {
         try {
-            dapr.invokeMethod(APP_ID, "recordChecklist/getAllRecordChecklistByBuildings", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "recordChecklist/getAllRecordChecklistByBuildings", null, HttpExtension.POST).block();
             return new HashSet<>();
         } catch (Exception e) {
             log.warn("RecordChecklistClient.getAllRecordChecklistByBuildings failed; returning stub default: {}", e.getMessage());
@@ -180,7 +180,7 @@ public class RecordChecklistClient {
      */
     public void updateRecordChecklistLocationAndIsRemoved(Set<String> locationIds) {
         try {
-            dapr.invokeMethod(APP_ID, "recordChecklist/updateRecordChecklistLocationAndIsRemoved", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "recordChecklist/updateRecordChecklistLocationAndIsRemoved", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("RecordChecklistClient.updateRecordChecklistLocationAndIsRemoved failed; swallowing: {}", e.getMessage());
         }
@@ -191,7 +191,7 @@ public class RecordChecklistClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("locationId", locationId);
         try {
-            dapr.invokeMethod(APP_ID, "recordChecklist/deleteRecordChecklistByLocationId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "recordChecklist/deleteRecordChecklistByLocationId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("RecordChecklistClient.deleteRecordChecklistByLocationId failed; swallowing: {}", e.getMessage());
         }
@@ -202,7 +202,7 @@ public class RecordChecklistClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("locationId", locationId);
         try {
-            dapr.invokeMethod(APP_ID, "recordChecklist/deleteAllRecordChecklistByLocationId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "recordChecklist/deleteAllRecordChecklistByLocationId", payload, HttpExtension.POST).block();
             return null;
         } catch (Exception e) {
             log.warn("RecordChecklistClient.deleteAllRecordChecklistByLocationId failed; returning stub default: {}", e.getMessage());
@@ -215,7 +215,7 @@ public class RecordChecklistClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("email", email);
         try {
-            dapr.invokeMethod(APP_ID, "recordChecklist/updateRecordChecklist", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "recordChecklist/updateRecordChecklist", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("RecordChecklistClient.updateRecordChecklist failed; swallowing: {}", e.getMessage());
         }

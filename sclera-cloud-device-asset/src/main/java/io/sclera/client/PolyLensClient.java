@@ -53,7 +53,7 @@ public class PolyLensClient {
         payload.put("oldId", oldId);
         payload.put("newId", newId);
         try {
-            dapr.invokeMethod(APP_ID, "polyLens/updatePolyLensDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "polyLens/updatePolyLensDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("PolyLensClient.updatePolyLensDeviceId failed; swallowing: {}", e.getMessage());
         }

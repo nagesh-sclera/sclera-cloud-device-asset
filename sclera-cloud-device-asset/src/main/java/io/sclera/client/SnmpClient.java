@@ -144,7 +144,7 @@ public class SnmpClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("deviceId", deviceId);
         try {
-            dapr.invokeMethod(APP_ID, "snmp/deleteGlobalSnmpByDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "snmp/deleteGlobalSnmpByDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("SnmpClient.deleteGlobalSnmpByDeviceId failed; swallowing: {}", e.getMessage());
         }
@@ -158,7 +158,7 @@ public class SnmpClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("deviceId", deviceId);
         try {
-            dapr.invokeMethod(APP_ID, "snmp/upsertGlobalSnmpByDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "snmp/upsertGlobalSnmpByDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("SnmpClient.upsertGlobalSnmpByDeviceId failed; swallowing: {}", e.getMessage());
         }
@@ -173,7 +173,7 @@ public class SnmpClient {
         payload.put("oldId", oldId);
         payload.put("newId", newId);
         try {
-            dapr.invokeMethod(APP_ID, "snmp/updateSnmpObjectDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "snmp/updateSnmpObjectDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("SnmpClient.updateSnmpObjectDeviceId failed; swallowing: {}", e.getMessage());
         }

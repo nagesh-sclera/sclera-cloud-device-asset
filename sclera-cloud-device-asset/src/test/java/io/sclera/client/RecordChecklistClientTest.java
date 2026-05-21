@@ -93,7 +93,7 @@ class RecordChecklistClientTest {
                 eq("recordChecklist/deleteAllRecordChecklistByDeviceId"),
                 any(),
                 extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
+        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.POST);
         assertThat(result).isEmpty();
     }
 

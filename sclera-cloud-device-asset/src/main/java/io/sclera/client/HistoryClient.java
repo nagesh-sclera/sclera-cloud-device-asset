@@ -18,11 +18,8 @@ import java.util.Map;
  * exception (sidecar-down, network error) with a WARN log so that AP-C1
  * call sites are never interrupted by audit failures.
  *
- * Paths and verbs are aligned with HistoryController (GET-only camelCase
- * skeleton endpoints). Params are passed as query-params via Dapr's HTTP
- * wrapper. NOTE: methods that originally took a DTO body (addHistory,
- * addHistoryWithTimestamp) lose the body under GET routing — this is a
- * known PoC limitation; real POST routing is a Wave-2 prerequisite.
+ * Paths and verbs are aligned with HistoryController. Write methods use
+ * HttpExtension.POST with the body serialized; read-only methods use GET.
  */
 @Component
 public class HistoryClient {
@@ -50,7 +47,7 @@ public class HistoryClient {
         payload.put("extra2", extra2);
         payload.put("deviceId", finalDeviceId);
         try {
-            dapr.invokeMethod(APP_ID, "history/insertDeviceStatusHistory", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "history/insertDeviceStatusHistory", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("HistoryClient.insertDeviceStatusHistory failed; swallowing: {}", e.getMessage());
         }
@@ -63,7 +60,7 @@ public class HistoryClient {
      */
     public void addHistory(HistoryDTO historyDTO) {
         try {
-            dapr.invokeMethod(APP_ID, "history/addHistory", historyDTO, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "history/addHistory", historyDTO, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("HistoryClient.addHistory failed; swallowing: {}", e.getMessage());
         }
@@ -76,7 +73,7 @@ public class HistoryClient {
      */
     public void addHistoryWithTimestamp(HistoryDTO historyDTO) {
         try {
-            dapr.invokeMethod(APP_ID, "history/addHistoryWithTimestamp", historyDTO, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "history/addHistoryWithTimestamp", historyDTO, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("HistoryClient.addHistoryWithTimestamp failed; swallowing: {}", e.getMessage());
         }
@@ -90,7 +87,7 @@ public class HistoryClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("deviceId", deviceId);
         try {
-            dapr.invokeMethod(APP_ID, "history/deleteByDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "history/deleteByDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("HistoryClient.deleteByDeviceId failed; swallowing: {}", e.getMessage());
         }
@@ -105,7 +102,7 @@ public class HistoryClient {
         payload.put("oldId", oldId);
         payload.put("newId", newId);
         try {
-            dapr.invokeMethod(APP_ID, "history/updateHistoryDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "history/updateHistoryDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("HistoryClient.updateHistoryDeviceId failed; swallowing: {}", e.getMessage());
         }

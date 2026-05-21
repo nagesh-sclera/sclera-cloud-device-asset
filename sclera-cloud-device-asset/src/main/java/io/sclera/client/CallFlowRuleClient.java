@@ -62,7 +62,7 @@ public class CallFlowRuleClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("id", id);
         try {
-            dapr.invokeMethod(APP_ID, "callFlowRule/deleteById", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "callFlowRule/deleteById", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("CallFlowRuleClient.deleteById failed; swallowing: {}", e.getMessage());
         }
@@ -100,7 +100,7 @@ public class CallFlowRuleClient {
         payload.put("updatedAt", updatedAt);
         payload.put("deviceId", deviceId);
         try {
-            dapr.invokeMethod(APP_ID, "callFlowRule/upsertAiCallFlow", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "callFlowRule/upsertAiCallFlow", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("CallFlowRuleClient.upsertAiCallFlow failed; swallowing: {}", e.getMessage());
         }

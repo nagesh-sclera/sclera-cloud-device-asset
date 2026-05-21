@@ -50,7 +50,7 @@ public class CallFlowRuleConditionClient {
         payload.put("actionMessage", actionMessage);
         payload.put("callFlowRuleId", callFlowRuleId);
         try {
-            dapr.invokeMethod(APP_ID, "callFlowRuleCondition/upsertCallFlowRuleCondition", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "callFlowRuleCondition/upsertCallFlowRuleCondition", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("CallFlowRuleConditionClient.upsertCallFlowRuleCondition failed; swallowing: {}", e.getMessage());
         }
@@ -98,7 +98,7 @@ public class CallFlowRuleConditionClient {
         Map<String, Object> payload = new HashMap<>();
         payload.put("ids", ids);
         try {
-            dapr.invokeMethod(APP_ID, "callFlowRuleCondition/deleteCallFlowRuleConditionById", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "callFlowRuleCondition/deleteCallFlowRuleConditionById", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("CallFlowRuleConditionClient.deleteCallFlowRuleConditionById failed; swallowing: {}", e.getMessage());
         }

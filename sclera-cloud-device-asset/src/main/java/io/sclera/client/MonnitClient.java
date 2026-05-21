@@ -101,7 +101,7 @@ public class MonnitClient {
     /** Mirrors {@code MonnitService#listmonnitDevicesAlertMessagesByDeviceIds}. Returns empty list on failure. */
     public List<ConditionsDTO> listmonnitDevicesAlertMessagesByDeviceIds(List<String> ids) {
         try {
-            dapr.invokeMethod(APP_ID, "monnit/listmonnitDevicesAlertMessagesByDeviceIds", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "monnit/listmonnitDevicesAlertMessagesByDeviceIds", null, HttpExtension.POST).block();
             return Collections.emptyList();
         } catch (Exception e) {
             log.warn("MonnitClient.listmonnitDevicesAlertMessagesByDeviceIds failed; returning stub default: {}", e.getMessage());
@@ -118,7 +118,7 @@ public class MonnitClient {
         payload.put("oldId", oldId);
         payload.put("newId", newId);
         try {
-            dapr.invokeMethod(APP_ID, "monnit/updateMonnitSensorDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "monnit/updateMonnitSensorDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("MonnitClient.updateMonnitSensorDeviceId failed; swallowing: {}", e.getMessage());
         }

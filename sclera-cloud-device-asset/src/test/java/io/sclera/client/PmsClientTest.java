@@ -71,7 +71,7 @@ class PmsClientTest {
                 eq("pms/getPmsAttributesByLocationIds"),
                 any(),
                 extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
+        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.POST);
         assertThat(result).isEmpty();
     }
 
@@ -94,7 +94,7 @@ class PmsClientTest {
                 eq("pms/updatePmsAttributesByLocationId"),
                 any(),
                 extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
+        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.POST);
     }
 
     // ── resilience: exception swallowing ─────────────────────────────────────

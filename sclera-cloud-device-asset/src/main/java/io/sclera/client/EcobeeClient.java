@@ -92,7 +92,7 @@ public class EcobeeClient {
         payload.put("oldId", oldId);
         payload.put("newId", newId);
         try {
-            dapr.invokeMethod(APP_ID, "ecobee/updateEcobeeSensorDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "ecobee/updateEcobeeSensorDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("EcobeeClient.updateEcobeeSensorDeviceId failed; swallowing: {}", e.getMessage());
         }

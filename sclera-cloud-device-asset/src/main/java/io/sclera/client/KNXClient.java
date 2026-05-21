@@ -103,7 +103,7 @@ public class KNXClient {
     /** Mirrors {@code KNXService#listKNXDevicesAlertMessagesByDeviceIds}. Returns empty list on failure. */
     public List<ConditionsDTO> listKNXDevicesAlertMessagesByDeviceIds(List<String> ids) {
         try {
-            dapr.invokeMethod(APP_ID, "kNX/listKNXDevicesAlertMessagesByDeviceIds", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "kNX/listKNXDevicesAlertMessagesByDeviceIds", null, HttpExtension.POST).block();
             return Collections.emptyList();
         } catch (Exception e) {
             log.warn("KNXClient.listKNXDevicesAlertMessagesByDeviceIds failed; returning stub default: {}", e.getMessage());
@@ -120,7 +120,7 @@ public class KNXClient {
         payload.put("oldId", oldId);
         payload.put("newId", newId);
         try {
-            dapr.invokeMethod(APP_ID, "kNX/updateKnxGroupDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "kNX/updateKnxGroupDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("KNXClient.updateKnxGroupDeviceId failed; swallowing: {}", e.getMessage());
         }

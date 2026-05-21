@@ -77,7 +77,7 @@ public class APICallClient {
 
     public ResponseEntity<String> sendCallFlowMessage(JSONObject payload) {
         try {
-            dapr.invokeMethod(APP_ID, "apicall/sendCallFlowMessage", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/sendCallFlowMessage", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.sendCallFlowMessage failed; returning default", e);
         }
@@ -145,7 +145,7 @@ public class APICallClient {
 
     public void deleteDigitalTwinImageUrl(Set<String> imageUrls, String username, String vdmsId) {
         try {
-            dapr.invokeMethod(APP_ID, "apicall/deleteDigitalTwinImageUrl", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/deleteDigitalTwinImageUrl", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.deleteDigitalTwinImageUrl failed; swallowing", e);
         }
@@ -162,7 +162,7 @@ public class APICallClient {
 
     public void deleteTemporaryProductByIds(Object ids) {
         try {
-            dapr.invokeMethod(APP_ID, "apicall/deleteTemporaryProductByIds", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/deleteTemporaryProductByIds", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.deleteTemporaryProductByIds failed; swallowing", e);
         }
@@ -177,7 +177,7 @@ public class APICallClient {
             Map<String, String> p = new HashMap<>();
             p.put("locationId", locationId);
             p.put("vdmsId", vdmsId);
-            return dapr.invokeMethod(APP_ID, "apicall/addSingleBuildingObject", p, HttpExtension.GET, BuildingDTO.class).block();
+            return dapr.invokeMethod(APP_ID, "apicall/addSingleBuildingObject", p, HttpExtension.POST, BuildingDTO.class).block();
         } catch (Exception e) {
             log.warn("APICallClient.addSingleBuildingObject failed; returning null", e);
         }
@@ -186,7 +186,7 @@ public class APICallClient {
 
     public Boolean deleteBuildingFromADC(String orgId, String configId, List<String> propertyIds) {
         try {
-            dapr.invokeMethod(APP_ID, "apicall/deleteBuildingFromADC", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/deleteBuildingFromADC", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.deleteBuildingFromADC failed; returning false", e);
         }
@@ -223,7 +223,7 @@ public class APICallClient {
 
     public void updateChatbotDeviceData(JSONArray bodyArray) {
         try {
-            dapr.invokeMethod(APP_ID, "apicall/updateChatbotDeviceData", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/updateChatbotDeviceData", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.updateChatbotDeviceData failed; swallowing", e);
         }
@@ -249,7 +249,7 @@ public class APICallClient {
 
     public void sendAgentDataToInventory(Object obj) {
         try {
-            dapr.invokeMethod(APP_ID, "apicall/sendAgentDataToInventory", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/sendAgentDataToInventory", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.sendAgentDataToInventory failed; swallowing", e);
         }
@@ -268,7 +268,7 @@ public class APICallClient {
         try {
             Map<String, String> p = new HashMap<>();
             p.put("vdmsId", vdmsId);
-            return dapr.invokeMethod(APP_ID, "apicall/updatePropertyDetails", p, HttpExtension.GET, PropertyAddressDTO.class).block();
+            return dapr.invokeMethod(APP_ID, "apicall/updatePropertyDetails", p, HttpExtension.POST, PropertyAddressDTO.class).block();
         } catch (Exception e) {
             log.warn("APICallClient.updatePropertyDetails failed; returning null", e);
         }
@@ -277,7 +277,7 @@ public class APICallClient {
 
     public void updateVdmsDetailCloud(String vdmsId, VdmsSyncDTO dto) {
         try {
-            dapr.invokeMethod(APP_ID, "apicall/updateVdmsDetailCloud", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/updateVdmsDetailCloud", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.updateVdmsDetailCloud failed; swallowing", e);
         }
@@ -298,7 +298,7 @@ public class APICallClient {
         try {
             Map<String, String> p = new HashMap<>();
             p.put("ip", ip);
-            dapr.invokeMethod(APP_ID, "apicall/syncAllAttribute", p, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/syncAllAttribute", p, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.syncAllAttribute failed; swallowing", e);
         }
@@ -308,7 +308,7 @@ public class APICallClient {
         try {
             Map<String, String> p = new HashMap<>();
             p.put("ip", ip);
-            dapr.invokeMethod(APP_ID, "apicall/syncBacnet", p, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/syncBacnet", p, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.syncBacnet failed; swallowing", e);
         }
@@ -318,7 +318,7 @@ public class APICallClient {
         try {
             Map<String, String> p = new HashMap<>();
             p.put("ip", ip);
-            dapr.invokeMethod(APP_ID, "apicall/syncSnmpWalk", p, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/syncSnmpWalk", p, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.syncSnmpWalk failed; swallowing", e);
         }
@@ -387,7 +387,7 @@ public class APICallClient {
         try {
             Map<String, String> p = new HashMap<>();
             p.put("vdmsId", vdmsId);
-            dapr.invokeMethod(APP_ID, "apicall/updateVdmsTranfer", p, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/updateVdmsTranfer", p, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.updateVdmsTranfer failed; swallowing", e);
         }
@@ -397,7 +397,7 @@ public class APICallClient {
         try {
             Map<String, String> p = new HashMap<>();
             p.put("vdmsId", vdmsId);
-            return dapr.invokeMethod(APP_ID, "apicall/updateVdmsStatus", p, HttpExtension.GET, VdmsSyncDTO.class).block();
+            return dapr.invokeMethod(APP_ID, "apicall/updateVdmsStatus", p, HttpExtension.POST, VdmsSyncDTO.class).block();
         } catch (Exception e) {
             log.warn("APICallClient.updateVdmsStatus failed; returning null", e);
         }
@@ -408,7 +408,7 @@ public class APICallClient {
         try {
             Map<String, String> p = new HashMap<>();
             p.put("vdmsId", vdmsId);
-            dapr.invokeMethod(APP_ID, "apicall/updateQrCodeSyncByVdmsId", p, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/updateQrCodeSyncByVdmsId", p, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.updateQrCodeSyncByVdmsId failed; swallowing", e);
         }
@@ -418,7 +418,7 @@ public class APICallClient {
         try {
             Map<String, String> p = new HashMap<>();
             p.put("vdmsId", vdmsId);
-            dapr.invokeMethod(APP_ID, "apicall/updateNfcSyncByVdmsId", p, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/updateNfcSyncByVdmsId", p, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.updateNfcSyncByVdmsId failed; swallowing", e);
         }
@@ -430,7 +430,7 @@ public class APICallClient {
 
     public void syncSnmpInterfacebyDeviceId(String deviceId, SnmpValuesDTO dto) {
         try {
-            dapr.invokeMethod(APP_ID, "apicall/syncSnmpInterfacebyDeviceId", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/syncSnmpInterfacebyDeviceId", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.syncSnmpInterfacebyDeviceId failed; swallowing", e);
         }
@@ -447,7 +447,7 @@ public class APICallClient {
 
     public Boolean syncLocationToADC(List<LocationDTO> locations, String orgId, String configId, String vdmsId) {
         try {
-            dapr.invokeMethod(APP_ID, "apicall/syncLocationToADC", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/syncLocationToADC", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.syncLocationToADC failed; returning true", e);
         }
@@ -457,7 +457,7 @@ public class APICallClient {
     public Boolean deleteLocationFromADC(String orgId, String configId, String vdmsId, String buildingId,
             java.util.List<String> locationIds) {
         try {
-            dapr.invokeMethod(APP_ID, "apicall/deleteLocationFromADC", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/deleteLocationFromADC", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.deleteLocationFromADC failed; returning true", e);
         }
@@ -466,7 +466,7 @@ public class APICallClient {
 
     public Boolean syncFloorToADC(String orgId, java.util.List<FloorDTO> floors, String configId, String vdmsId) {
         try {
-            dapr.invokeMethod(APP_ID, "apicall/syncFloorToADC", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/syncFloorToADC", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.syncFloorToADC failed; returning false", e);
         }
@@ -476,7 +476,7 @@ public class APICallClient {
     public Boolean deleteFloorFromADC(String orgId, String configId, String buildingId,
             java.util.List<String> floorIds) {
         try {
-            dapr.invokeMethod(APP_ID, "apicall/deleteFloorFromADC", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/deleteFloorFromADC", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.deleteFloorFromADC failed; returning false", e);
         }
@@ -514,7 +514,7 @@ public class APICallClient {
         try {
             Map<String, String> p = new HashMap<>();
             p.put("vdmsId", vdmsId);
-            dapr.invokeMethod(APP_ID, "apicall/updateBarCodeSyncByVdmsId", p, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/updateBarCodeSyncByVdmsId", p, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.updateBarCodeSyncByVdmsId failed; swallowing", e);
         }
@@ -616,7 +616,7 @@ public class APICallClient {
 
     public void updateTaggedInventoryItems(java.util.Set<DeviceDTO> devices) {
         try {
-            dapr.invokeMethod(APP_ID, "apicall/updateTaggedInventoryItems", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/updateTaggedInventoryItems", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.updateTaggedInventoryItems failed; swallowing", e);
         }
@@ -644,7 +644,7 @@ public class APICallClient {
 
     public void syncApplicationUsers(java.util.Set<String> ids, String status) {
         try {
-            dapr.invokeMethod(APP_ID, "apicall/syncApplicationUsers", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/syncApplicationUsers", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.syncApplicationUsers failed; swallowing", e);
         }
@@ -652,7 +652,7 @@ public class APICallClient {
 
     public void syncApplication(java.util.Set<String> ids, String status) {
         try {
-            dapr.invokeMethod(APP_ID, "apicall/syncApplication", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "apicall/syncApplication", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("APICallClient.syncApplication failed; swallowing", e);
         }

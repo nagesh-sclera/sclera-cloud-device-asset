@@ -70,7 +70,7 @@ class CorrigoClientTest {
                 eq("corrigo/updateCorrigoAssets"),
                 any(),
                 extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
+        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.POST);
     }
 
     @Test
@@ -92,7 +92,7 @@ class CorrigoClientTest {
                 eq("corrigo/getWorkordersByAssetIdForBot"),
                 any(),
                 extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
+        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.POST);
         assertThat(result).isNull();
     }
 
@@ -115,7 +115,7 @@ class CorrigoClientTest {
                 eq("corrigo/corrigoUrlSync"),
                 any(),
                 extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
+        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.POST);
     }
 
     @Test
@@ -137,7 +137,7 @@ class CorrigoClientTest {
                 eq("corrigo/updateCorrigoCredentialsFromCloud"),
                 any(),
                 extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
+        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.POST);
     }
 
     @Test
@@ -159,7 +159,7 @@ class CorrigoClientTest {
                 eq("corrigo/updateCorrigoCredentialsMigration"),
                 any(),
                 extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
+        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.POST);
     }
 
     // ── resilience: exception swallowing ─────────────────────────────────────

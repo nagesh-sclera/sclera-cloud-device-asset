@@ -80,7 +80,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         payload.put("name", name);
         payload.put("role", role);
         try {
-            dapr.invokeMethod(APP_ID, "user/insertUser", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "user/insertUser", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("UserRepositoryClient.insertUser failed; swallowing: {}", e.getMessage());
         }
@@ -93,7 +93,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         payload.put("email", email);
         payload.put("organisation_id", organisation_id);
         try {
-            dapr.invokeMethod(APP_ID, "user/updateUser", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "user/updateUser", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("UserRepositoryClient.updateUser failed; swallowing: {}", e.getMessage());
         }
@@ -104,7 +104,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         Map<String, String> payload = new HashMap<>();
         payload.put("customer_org_id", customer_org_id);
         try {
-            dapr.invokeMethod(APP_ID, "user/deleteUsersByOrganisationId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "user/deleteUsersByOrganisationId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("UserRepositoryClient.deleteUsersByOrganisationId failed; swallowing: {}", e.getMessage());
         }
@@ -129,7 +129,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         Map<String, String> payload = new HashMap<>();
         payload.put("email", email);
         try {
-            dapr.invokeMethod(APP_ID, "user/deleteById", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "user/deleteById", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("UserRepositoryClient.deleteById failed; swallowing: {}", e.getMessage());
         }
@@ -206,7 +206,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         payload.put("email", email);
         payload.put("organisation_id", organisation_id);
         try {
-            dapr.invokeMethod(APP_ID, "user/updateAllUser", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "user/updateAllUser", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("UserRepositoryClient.updateAllUser failed; swallowing: {}", e.getMessage());
         }
@@ -230,7 +230,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         payload.put("existing_customer_org_id", existing_customer_org_id);
         payload.put("new_customer_org_id", new_customer_org_id);
         try {
-            dapr.invokeMethod(APP_ID, "user/updateCustomerOrgIdForUsers", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "user/updateCustomerOrgIdForUsers", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("UserRepositoryClient.updateCustomerOrgIdForUsers failed; swallowing: {}", e.getMessage());
         }

@@ -38,7 +38,7 @@ public class GlobalInspectionRecordClient {
      */
     public void updateGlobalInspectionRelationDeviceAndIsRemoved(Set<String> ids) {
         try {
-            dapr.invokeMethod(APP_ID, "globalInspectionRecord/updateGlobalInspectionRelationDeviceAndIsRemoved", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "globalInspectionRecord/updateGlobalInspectionRelationDeviceAndIsRemoved", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("GlobalInspectionRecordClient.updateGlobalInspectionRelationDeviceAndIsRemoved failed; swallowing: {}", e.getMessage());
         }
@@ -50,7 +50,7 @@ public class GlobalInspectionRecordClient {
      */
     public void deleteGlobalInspectionRelationInBatch(List<String> ids) {
         try {
-            dapr.invokeMethod(APP_ID, "globalInspectionRecord/deleteGlobalInspectionRelationInBatch", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "globalInspectionRecord/deleteGlobalInspectionRelationInBatch", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("GlobalInspectionRecordClient.deleteGlobalInspectionRelationInBatch failed; swallowing: {}", e.getMessage());
         }
@@ -62,7 +62,7 @@ public class GlobalInspectionRecordClient {
         payload.put("primaryDeviceId", primaryDeviceId);
         payload.put("existingDeviceId", existingDeviceId);
         try {
-            dapr.invokeMethod(APP_ID, "globalInspectionRecord/updateGlobalInspectionByDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "globalInspectionRecord/updateGlobalInspectionByDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("GlobalInspectionRecordClient.updateGlobalInspectionByDeviceId failed; swallowing: {}", e.getMessage());
         }
@@ -74,7 +74,7 @@ public class GlobalInspectionRecordClient {
      */
     public void updateGlobalInspectionRelationLocationAndIsRemoved(Set<String> locationIds) {
         try {
-            dapr.invokeMethod(APP_ID, "globalInspectionRecord/updateGlobalInspectionRelationLocationAndIsRemoved", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "globalInspectionRecord/updateGlobalInspectionRelationLocationAndIsRemoved", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("GlobalInspectionRecordClient.updateGlobalInspectionRelationLocationAndIsRemoved failed; swallowing: {}", e.getMessage());
         }
@@ -85,7 +85,7 @@ public class GlobalInspectionRecordClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("email", email);
         try {
-            dapr.invokeMethod(APP_ID, "globalInspectionRecord/updateGlobalInspectionRecord", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "globalInspectionRecord/updateGlobalInspectionRecord", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("GlobalInspectionRecordClient.updateGlobalInspectionRecord failed; swallowing: {}", e.getMessage());
         }

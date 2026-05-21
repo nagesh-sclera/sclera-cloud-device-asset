@@ -60,7 +60,7 @@ public class MyDevicesClient {
         payload.put("username", username);
         payload.put("vdmsid", vdmsid);
         try {
-            dapr.invokeMethod(APP_ID, "myDevices/upsertMyDevicesCompany", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "myDevices/upsertMyDevicesCompany", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("MyDevicesClient.upsertMyDevicesCompany failed; swallowing: {}", e.getMessage());
         }
@@ -72,7 +72,7 @@ public class MyDevicesClient {
      */
     public void updateMyDevicesEventData(JSONObject myDevicesEventData) {
         try {
-            dapr.invokeMethod(APP_ID, "myDevices/updateMyDevicesEventData", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "myDevices/updateMyDevicesEventData", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("MyDevicesClient.updateMyDevicesEventData failed; swallowing: {}", e.getMessage());
         }
@@ -116,7 +116,7 @@ public class MyDevicesClient {
         payload.put("vdmsid", vdmsid);
         payload.put("id", id);
         try {
-            dapr.invokeMethod(APP_ID, "myDevices/deleteMyDevicesCompany", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "myDevices/deleteMyDevicesCompany", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("MyDevicesClient.deleteMyDevicesCompany failed; swallowing: {}", e.getMessage());
         }
@@ -127,7 +127,7 @@ public class MyDevicesClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("id", id);
         try {
-            dapr.invokeMethod(APP_ID, "myDevices/deleteMyDevicesSensor", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "myDevices/deleteMyDevicesSensor", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("MyDevicesClient.deleteMyDevicesSensor failed; swallowing: {}", e.getMessage());
         }
@@ -206,7 +206,7 @@ public class MyDevicesClient {
      */
     public Collection<? extends ConditionsDTO> listmydevicesDeviceAlertMessagesByDeviceIds(List<String> deviceIds) {
         try {
-            dapr.invokeMethod(APP_ID, "myDevices/listmydevicesDeviceAlertMessagesByDeviceIds", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "myDevices/listmydevicesDeviceAlertMessagesByDeviceIds", null, HttpExtension.POST).block();
             return Collections.emptyList();
         } catch (Exception e) {
             log.warn("MyDevicesClient.listmydevicesDeviceAlertMessagesByDeviceIds failed; returning stub default: {}", e.getMessage());
@@ -223,7 +223,7 @@ public class MyDevicesClient {
         payload.put("oldDeviceId", oldDeviceId);
         payload.put("newDeviceId", newDeviceId);
         try {
-            dapr.invokeMethod(APP_ID, "myDevices/updateMyDevicesSensorDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "myDevices/updateMyDevicesSensorDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("MyDevicesClient.updateMyDevicesSensorDeviceId failed; swallowing: {}", e.getMessage());
         }
@@ -285,7 +285,7 @@ public class MyDevicesClient {
         payload.put("username", username);
         payload.put("vdmsId", vdmsId);
         try {
-            dapr.invokeMethod(APP_ID, "myDevices/updateMyDevicesSensors", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "myDevices/updateMyDevicesSensors", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("MyDevicesClient.updateMyDevicesSensors failed; swallowing: {}", e.getMessage());
         }
@@ -300,7 +300,7 @@ public class MyDevicesClient {
         payload.put("username", username);
         payload.put("vdmsId", vdmsId);
         try {
-            dapr.invokeMethod(APP_ID, "myDevices/deleteMyDevicesSensors", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "myDevices/deleteMyDevicesSensors", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("MyDevicesClient.deleteMyDevicesSensors failed; swallowing: {}", e.getMessage());
         }
@@ -315,7 +315,7 @@ public class MyDevicesClient {
         payload.put("username", username);
         payload.put("vdmsId", vdmsId);
         try {
-            dapr.invokeMethod(APP_ID, "myDevices/updateDeviceMyDevicesSensors", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "myDevices/updateDeviceMyDevicesSensors", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("MyDevicesClient.updateDeviceMyDevicesSensors failed; swallowing: {}", e.getMessage());
         }
@@ -330,7 +330,7 @@ public class MyDevicesClient {
         payload.put("username", username);
         payload.put("vdmsId", vdmsId);
         try {
-            dapr.invokeMethod(APP_ID, "myDevices/deleteDeviceMyDevicesSensors", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "myDevices/deleteDeviceMyDevicesSensors", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("MyDevicesClient.deleteDeviceMyDevicesSensors failed; swallowing: {}", e.getMessage());
         }
@@ -397,7 +397,7 @@ public class MyDevicesClient {
         payload.put("username", username);
         payload.put("vdmsId", vdmsId);
         try {
-            dapr.invokeMethod(APP_ID, "myDevices/updateMyDevicesSensorAttributes", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "myDevices/updateMyDevicesSensorAttributes", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("MyDevicesClient.updateMyDevicesSensorAttributes failed; swallowing: {}", e.getMessage());
         }

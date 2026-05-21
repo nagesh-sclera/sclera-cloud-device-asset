@@ -40,7 +40,7 @@ public class CustomerOrganisationClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("orgId", orgId);
         try {
-            dapr.invokeMethod(APP_ID, "customerOrganisation/upsertCustomerByOrganisationIdSync", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "customerOrganisation/upsertCustomerByOrganisationIdSync", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("CustomerOrganisationClient.upsertCustomerByOrganisationIdSync failed; swallowing: {}", e.getMessage());
         }
@@ -54,7 +54,7 @@ public class CustomerOrganisationClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("orgId", orgId);
         try {
-            dapr.invokeMethod(APP_ID, "customerOrganisation/deleteCustomerOrgById", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "customerOrganisation/deleteCustomerOrgById", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("CustomerOrganisationClient.deleteCustomerOrgById failed; swallowing: {}", e.getMessage());
         }

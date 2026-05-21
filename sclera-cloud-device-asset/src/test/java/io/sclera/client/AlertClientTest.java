@@ -49,7 +49,7 @@ class AlertClientTest {
                 any(),
                 extCaptor.capture());
         assertThat(extCaptor.getValue().getMethod())
-                .isEqualTo(DaprHttp.HttpMethods.GET);
+                .isEqualTo(DaprHttp.HttpMethods.POST);
     }
 
     @Test
@@ -72,7 +72,7 @@ class AlertClientTest {
                 any(),
                 extCaptor.capture());
         assertThat(extCaptor.getValue().getMethod())
-                .isEqualTo(DaprHttp.HttpMethods.GET);
+                .isEqualTo(DaprHttp.HttpMethods.POST);
     }
 
     @Test
@@ -95,7 +95,7 @@ class AlertClientTest {
                 any(),
                 extCaptor.capture());
         assertThat(extCaptor.getValue().getMethod())
-                .isEqualTo(DaprHttp.HttpMethods.GET);
+                .isEqualTo(DaprHttp.HttpMethods.POST);
     }
 
     // ── resilience: exception swallowing ─────────────────────────────────────

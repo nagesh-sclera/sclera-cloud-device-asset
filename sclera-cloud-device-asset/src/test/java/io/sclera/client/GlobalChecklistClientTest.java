@@ -42,7 +42,7 @@ class GlobalChecklistClientTest {
                 eq("globalChecklist/updateDeviceGlobalChecklistDeviceId"),
                 any(),
                 extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
+        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.POST);
     }
 
     @Test
@@ -64,7 +64,7 @@ class GlobalChecklistClientTest {
                 eq("globalChecklist/deleteGlobalChecklistByDeviceId"),
                 any(),
                 extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
+        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.POST);
     }
 
     @Test

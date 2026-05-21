@@ -63,7 +63,7 @@ public class CorrigoClient {
         payload.put("pageSize", pageSize);
         payload.put("searchKey", searchKey);
         try {
-            dapr.invokeMethod(APP_ID, "corrigo/updateCorrigoAssets", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "corrigo/updateCorrigoAssets", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("CorrigoClient.updateCorrigoAssets failed; swallowing: {}", e.getMessage());
         }
@@ -77,7 +77,7 @@ public class CorrigoClient {
      */
     public JSONArray getWorkordersByAssetIdForBot(DeviceDTO device) {
         try {
-            dapr.invokeMethod(APP_ID, "corrigo/getWorkordersByAssetIdForBot", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "corrigo/getWorkordersByAssetIdForBot", null, HttpExtension.POST).block();
             return null;
         } catch (Exception e) {
             log.warn("CorrigoClient.getWorkordersByAssetIdForBot failed; returning stub default: {}", e.getMessage());
@@ -94,7 +94,7 @@ public class CorrigoClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("vdmsId", vdmsId);
         try {
-            dapr.invokeMethod(APP_ID, "corrigo/corrigoUrlSync", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "corrigo/corrigoUrlSync", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("CorrigoClient.corrigoUrlSync failed; swallowing: {}", e.getMessage());
         }
@@ -108,7 +108,7 @@ public class CorrigoClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("vdmsId", vdmsId);
         try {
-            dapr.invokeMethod(APP_ID, "corrigo/updateCorrigoCredentialsFromCloud", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "corrigo/updateCorrigoCredentialsFromCloud", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("CorrigoClient.updateCorrigoCredentialsFromCloud failed; swallowing: {}", e.getMessage());
         }
@@ -122,7 +122,7 @@ public class CorrigoClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("vdmsId", vdmsId);
         try {
-            dapr.invokeMethod(APP_ID, "corrigo/updateCorrigoCredentialsMigration", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "corrigo/updateCorrigoCredentialsMigration", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("CorrigoClient.updateCorrigoCredentialsMigration failed; swallowing: {}", e.getMessage());
         }

@@ -30,7 +30,7 @@ public class IntegrationClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("customerOrgId", customerOrgId);
         try {
-            dapr.invokeMethod(APP_ID, "integration/updateCustomerOrgByIntegrationId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "integration/updateCustomerOrgByIntegrationId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("IntegrationClient.updateCustomerOrgByIntegrationId failed; swallowing: {}", e.getMessage());
         }

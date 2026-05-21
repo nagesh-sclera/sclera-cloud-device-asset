@@ -63,7 +63,7 @@ public class InventoryDeviceClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("deviceId", deviceId);
         try {
-            dapr.invokeMethod(APP_ID, "inventoryDevice/deleteByDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "inventoryDevice/deleteByDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("InventoryDeviceClient.deleteByDeviceId failed; swallowing: {}", e.getMessage());
         }
@@ -81,7 +81,7 @@ public class InventoryDeviceClient {
         payload.put("vdmsId", vdmsId);
         payload.put("email", email);
         try {
-            dapr.invokeMethod(APP_ID, "inventoryDevice/upsertInventoryDevices", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "inventoryDevice/upsertInventoryDevices", payload, HttpExtension.POST).block();
             return Collections.emptySet();
         } catch (Exception e) {
             log.warn("InventoryDeviceClient.upsertInventoryDevices failed; returning empty set: {}", e.getMessage());

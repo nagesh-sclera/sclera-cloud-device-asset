@@ -63,7 +63,7 @@ public class ModbusClient {
     /** Mirrors {@code ModbusService#listModbusDevicesAlertMessagesByDeviceIds}. Returns empty list on failure. */
     public List<ConditionsDTO> listModbusDevicesAlertMessagesByDeviceIds(List<String> ids) {
         try {
-            dapr.invokeMethod(APP_ID, "modbus/listModbusDevicesAlertMessagesByDeviceIds", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "modbus/listModbusDevicesAlertMessagesByDeviceIds", null, HttpExtension.POST).block();
             return Collections.emptyList();
         } catch (Exception e) {
             log.warn("ModbusClient.listModbusDevicesAlertMessagesByDeviceIds failed; returning stub default: {}", e.getMessage());
@@ -119,7 +119,7 @@ public class ModbusClient {
         payload.put("oldId", oldId);
         payload.put("newId", newId);
         try {
-            dapr.invokeMethod(APP_ID, "modbus/updateModbusRegisterDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "modbus/updateModbusRegisterDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("ModbusClient.updateModbusRegisterDeviceId failed; swallowing: {}", e.getMessage());
         }

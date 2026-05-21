@@ -41,7 +41,7 @@ public class VendorAdminClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("vendorOrgId", vendorOrgId);
         try {
-            dapr.invokeMethod(APP_ID, "vendorAdmin/deleteVendorsByOrganisationId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "vendorAdmin/deleteVendorsByOrganisationId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("VendorAdminClient.deleteVendorsByOrganisationId failed; swallowing: {}", e.getMessage());
         }
@@ -56,7 +56,7 @@ public class VendorAdminClient {
         payload.put("vendorOrgId", vendorOrgId);
         payload.put("vdmsId", vdmsId);
         try {
-            dapr.invokeMethod(APP_ID, "vendorAdmin/addVendor", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "vendorAdmin/addVendor", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("VendorAdminClient.addVendor failed; swallowing: {}", e.getMessage());
         }
@@ -69,7 +69,7 @@ public class VendorAdminClient {
      */
     public void insertVendors(VendorDTO vendor) {
         try {
-            dapr.invokeMethod(APP_ID, "vendorAdmin/insertVendors", vendor, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "vendorAdmin/insertVendors", vendor, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("VendorAdminClient.insertVendors failed; swallowing: {}", e.getMessage());
         }

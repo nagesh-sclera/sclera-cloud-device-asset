@@ -81,7 +81,7 @@ public class SiemensClient {
         payload.put("oldId", oldId);
         payload.put("newId", newId);
         try {
-            dapr.invokeMethod(APP_ID, "siemens/updateSiemensDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "siemens/updateSiemensDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("SiemensClient.updateSiemensDeviceId failed; swallowing: {}", e.getMessage());
         }

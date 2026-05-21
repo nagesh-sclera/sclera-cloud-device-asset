@@ -60,7 +60,7 @@ public class PmsClient {
      */
     public Set<PmsAttributesDTO> getPmsAttributesByLocationIds(Set<String> locationIds) {
         try {
-            dapr.invokeMethod(APP_ID, "pms/getPmsAttributesByLocationIds", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "pms/getPmsAttributesByLocationIds", null, HttpExtension.POST).block();
             return Collections.emptySet();
         } catch (Exception e) {
             log.warn("PmsClient.getPmsAttributesByLocationIds failed; returning stub default: {}", e.getMessage());
@@ -76,7 +76,7 @@ public class PmsClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("locationId", locationId);
         try {
-            dapr.invokeMethod(APP_ID, "pms/updatePmsAttributesByLocationId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "pms/updatePmsAttributesByLocationId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("PmsClient.updatePmsAttributesByLocationId failed; swallowing: {}", e.getMessage());
         }

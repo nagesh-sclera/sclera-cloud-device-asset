@@ -39,7 +39,7 @@ public class InspectionRecordClient {
         payload.put("id", id);
         payload.put("status", status);
         try {
-            dapr.invokeMethod(APP_ID, "inspectionRecord/updateInspectionRecordStatus", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "inspectionRecord/updateInspectionRecordStatus", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("InspectionRecordClient.updateInspectionRecordStatus failed; swallowing: {}", e.getMessage());
         }
@@ -51,7 +51,7 @@ public class InspectionRecordClient {
      */
     public void updateInspectionStatusOnDeviceArchive(Set<String> ids) {
         try {
-            dapr.invokeMethod(APP_ID, "inspectionRecord/updateInspectionStatusOnDeviceArchive", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "inspectionRecord/updateInspectionStatusOnDeviceArchive", null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("InspectionRecordClient.updateInspectionStatusOnDeviceArchive failed; swallowing: {}", e.getMessage());
         }
@@ -62,7 +62,7 @@ public class InspectionRecordClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("email", email);
         try {
-            dapr.invokeMethod(APP_ID, "inspectionRecord/updateInspectionRecord", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "inspectionRecord/updateInspectionRecord", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("InspectionRecordClient.updateInspectionRecord failed; swallowing: {}", e.getMessage());
         }

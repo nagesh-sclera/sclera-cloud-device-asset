@@ -74,7 +74,7 @@ class InventoryDeviceClientTest {
                 any(),
                 extCaptor.capture());
         assertThat(extCaptor.getValue().getMethod())
-                .isEqualTo(DaprHttp.HttpMethods.GET);
+                .isEqualTo(DaprHttp.HttpMethods.POST);
         assertThat(result).isEmpty();
     }
 

@@ -33,7 +33,7 @@ public class GlobalChecklistClient {
         payload.put("oldId", oldId);
         payload.put("newId", newId);
         try {
-            dapr.invokeMethod(APP_ID, "globalChecklist/updateDeviceGlobalChecklistDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "globalChecklist/updateDeviceGlobalChecklistDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("GlobalChecklistClient.updateDeviceGlobalChecklistDeviceId failed; swallowing: {}", e.getMessage());
         }
@@ -44,7 +44,7 @@ public class GlobalChecklistClient {
         Map<String, String> payload = new HashMap<>();
         payload.put("deviceId", deviceId);
         try {
-            dapr.invokeMethod(APP_ID, "globalChecklist/deleteGlobalChecklistByDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "globalChecklist/deleteGlobalChecklistByDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("GlobalChecklistClient.deleteGlobalChecklistByDeviceId failed; swallowing: {}", e.getMessage());
         }

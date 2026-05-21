@@ -87,7 +87,7 @@ public class DisruptiveClient {
     /** Mirrors {@code DisruptiveService#listDisruptiveDevicesAlertMessagesByDeviceIds}. Returns empty list on failure. */
     public List<ConditionsDTO> listDisruptiveDevicesAlertMessagesByDeviceIds(List<String> ids) {
         try {
-            dapr.invokeMethod(APP_ID, "disruptive/listDisruptiveDevicesAlertMessagesByDeviceIds", null, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "disruptive/listDisruptiveDevicesAlertMessagesByDeviceIds", null, HttpExtension.POST).block();
             return Collections.emptyList();
         } catch (Exception e) {
             log.warn("DisruptiveClient.listDisruptiveDevicesAlertMessagesByDeviceIds failed; returning stub default: {}", e.getMessage());
@@ -104,7 +104,7 @@ public class DisruptiveClient {
         payload.put("oldId", oldId);
         payload.put("newId", newId);
         try {
-            dapr.invokeMethod(APP_ID, "disruptive/updateDisruptiveSensorDeviceId", payload, HttpExtension.GET).block();
+            dapr.invokeMethod(APP_ID, "disruptive/updateDisruptiveSensorDeviceId", payload, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("DisruptiveClient.updateDisruptiveSensorDeviceId failed; swallowing: {}", e.getMessage());
         }
