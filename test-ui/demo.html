@@ -128,7 +128,9 @@ tr:hover td { background: #181b28; }
     <div class="svc-pill"><div class="dot" id="dot-gw"></div>Gateway :8080</div>
     <div class="svc-pill"><div class="dot" id="dot-asset"></div>Device-Asset :8085</div>
     <div class="svc-pill"><div class="dot" id="dot-vdms"></div>VDMS :8089</div>
+    <div class="svc-pill" title="Skeletons: audit, identity, alerts, inventory, workorders, inspection, integrations, edge"><div class="dot" id="dot-sk"></div><span id="dot-sk-text">Skeletons</span></div>
     <button class="btn btn-neutral btn-sm" onclick="ping()">Ping All</button>
+    <a class="btn btn-primary btn-sm" href="traces.html" style="text-decoration:none">Traces ↗</a>
   </div>
 </div>
 
@@ -809,6 +811,11 @@ async function ping() {
     { url: gw() + '/asset/user/admin/vdms/test/docker/test/getdevicecount',  dots: ['dot-asset','h-asset'], label: 'Device-Asset :8085'  },
     { url: gw() + '/vdms/id',                                                dots: ['dot-vdms', 'h-vdms'],  label: 'VDMS :8089'          },
   ];
+  const skeletons = [
+    { id: 'audit', port: 8090 }, { id: 'identity', port: 8091 }, { id: 'alerts', port: 8092 },
+    { id: 'inventory', port: 8093 }, { id: 'workorders', port: 8094 }, { id: 'inspection', port: 8095 },
+    { id: 'integrations', port: 8096 }, { id: 'edge', port: 8097 },
+  ];
   const log = $('ping-log');
   log.style.display = 'block'; log.textContent = 'Pinging…';
   const lines = [];
@@ -818,6 +825,17 @@ async function ping() {
     c.dots.forEach(id => { const d = $(id); if (d) d.className = 'dot ' + (up ? 'up' : 'down'); });
     lines.push(`${up ? '✓' : '✗'} ${c.label}  →  HTTP ${r.status}`);
   }
+  let skUp = 0;
+  for (const s of skeletons) {
+    try {
+      const r = await fetch(`http://${location.hostname}:${s.port}/actuator/health`, { method: 'GET' });
+      const up = r.ok; if (up) skUp++;
+      lines.push(`${up ? '✓' : '✗'} ${s.id} :${s.port}  →  HTTP ${r.status}`);
+    } catch (e) { lines.push(`✗ ${s.id} :${s.port}  →  ${e.message}`); }
+  }
+  const skDot = $('dot-sk'); const skTxt = $('dot-sk-text');
+  if (skDot) skDot.className = 'dot ' + (skUp === skeletons.length ? 'up' : skUp === 0 ? 'down' : 'up');
+  if (skTxt) skTxt.textContent = `Skeletons ${skUp}/${skeletons.length}`;
   log.textContent = lines.join('\n');
 }
 
