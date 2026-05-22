@@ -1,12 +1,14 @@
-# Java 21 + Spring Boot 3.4.x + PostgreSQL Migration Implementation Plan
+# Java 21 + Spring Boot 4.0.6 + PostgreSQL Migration Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Move all 11 Maven modules to Java 21 + Spring Boot 3.4.x, then migrate the two data services from MySQL to PostgreSQL 16 (greenfield dev — schema recreates, no data copy).
+**Goal:** Move all 11 Maven modules to Java 21 + Spring Boot 4.0.6, then migrate the two data services from MySQL to PostgreSQL 16 (greenfield dev — schema recreates, no data copy).
 
-**Architecture:** Three strictly-sequential phases, each ending GREEN (build + tests pass, containers boot) before the next starts. Phase 1 = Java 21 everywhere. Phase 2 = Boot 3.4.x everywhere (`javax→jakarta`, Hibernate 6, security/springdoc/caffeine/hibernate-types swaps). Phase 3 = PostgreSQL for `sclera-cloud-device-asset` + `sclera-vdms-service`. The codebase is **partially pre-migrated** (e.g. `WebSecurityConfig` already uses `SecurityFilterChain`, Dockerfiles on temurin:17), so each phase begins with a discovery/audit step that produces the true work list before any edit.
+**Architecture:** Three strictly-sequential phases, each ending GREEN (build + tests pass, containers boot) before the next starts. Phase 1 = Java 21 everywhere. Phase 2 = Boot 4.0.6 everywhere — built on Spring Framework 7 + Jakarta EE 11, this lands `javax→jakarta`, Hibernate 7, **Jackson 3** (`com.fasterxml.jackson` → `tools.jackson`), JUnit 6, Servlet 6.1, plus security/springdoc/caffeine/hibernate-types swaps, all at once. Phase 3 = PostgreSQL for `sclera-cloud-device-asset` + `sclera-vdms-service`. The codebase is **partially pre-migrated** (e.g. `WebSecurityConfig` already uses `SecurityFilterChain`, Dockerfiles on temurin:17), so each phase begins with a discovery/audit step that produces the true work list before any edit.
 
-**Tech Stack:** Java 21 (eclipse-temurin), Spring Boot 3.4.x, Hibernate 6, Maven, Dapr 1.12, Docker Compose, PostgreSQL 16, Flyway, OpenRewrite (migration tooling).
+**Why Boot 4.0.6 (not 3.4.x):** the user requires the latest line. Boot 4.0 (GA Nov 2025) requires Java 17+ (our Java 21 from Phase 1 is comfortably in range, supported through Java 26). The added cost over 3.4.x is real and concentrated in **Jackson 2→3** (new group/package + silent serialization-default changes) and **Hibernate 6→7**; the plan calls these out as their own tasks.
+
+**Tech Stack:** Java 21 (eclipse-temurin), Spring Boot 4.0.6, Spring Framework 7, Jakarta EE 11, Hibernate ORM 7, Jackson 3, JUnit 6, Maven, Dapr 1.12, Docker Compose, PostgreSQL 16, Flyway, OpenRewrite (migration tooling).
 
 **Spec:** `docs/superpowers/specs/2026-05-22-java21-springboot3-postgres-migration-design.md`
 
@@ -63,7 +65,7 @@ Record the result of each in a scratch note. This is the reference: a module tha
 - [ ] **Step 4: Commit a baseline marker (notes only)**
 
 ```bash
-cd "$REPO" && git add migration-notes/ 2>/dev/null; git commit --allow-empty -m "chore(migration): baseline marker before Java 21 / Boot 3.4 / PG migration
+cd "$REPO" && git add migration-notes/ 2>/dev/null; git commit --allow-empty -m "chore(migration): baseline marker before Java 21 / Boot 4.0 / PG migration
 
 Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ```
@@ -262,23 +264,31 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
 ---
 
-## PHASE 2 — Spring Boot 2.6.5 → 3.4.x
+## PHASE 2 — Spring Boot 2.6.5 → 4.0.6
 
-Goal of phase: every module on Boot 3.4.x, all `javax.*` jakarta-ized, Hibernate 6, security/springdoc/hibernate-types swapped, E2E smoke green. **DB stays MySQL in this phase.**
+Goal of phase: every module on Boot **4.0.6** (Spring Framework 7, Jakarta EE 11), all `javax.*` jakarta-ized, **Hibernate 7**, **Jackson 3**, security/springdoc/hibernate-types swapped, E2E smoke green. **DB stays MySQL in this phase.**
 
-> **Pin the exact version once.** Use the latest 3.4.x patch available in the local Maven repo / Maven Central. Throughout this phase, `3.4.x` means that one chosen patch (e.g. `3.4.5`). Pick it in Task 2.1 Step 1 and use it verbatim everywhere.
+> **Boot version is fixed at `4.0.6`** (the user-requested latest line). Every parent-version edit in this phase uses `4.0.6` verbatim. Boot 4.0 requires Java 17+ — Phase 1 already put us on Java 21, which is in range (supported through Java 26).
+>
+> **Two changes are unique to the 4.x line and do not exist in a 3.x upgrade — treat them as first-class tasks, not afterthoughts:**
+> - **Jackson 2 → 3** (Task 2.8): the JSON group/package moves `com.fasterxml.jackson` → `tools.jackson`, the entry point becomes `JsonMapper`, the customizer becomes `JsonMapperBuilderCustomizer`, and **defaults flip silently** (`WRITE_DATES_AS_TIMESTAMPS` is now `false` → dates serialize as ISO-8601 strings, not epoch millis). `jackson-annotations` is the one module that keeps the `com.fasterxml.jackson.annotation` package.
+> - **Hibernate 6 → 7** (Task 2.7): managed by the Boot 4 BOM; the `hypersistence-utils` artifact must be its Hibernate-7 variant.
 
 ### Task 2.1: Discovery — measure the true migration surface
 
 **Files:** Create `migration-notes/phase2-surface.md`
 
-- [ ] **Step 1: Choose the Boot 3.4.x patch**
+- [ ] **Step 1: Confirm Boot 4.0.6 resolves + record the managed Hibernate version**
 
 Run:
 ```bash
-cd "$REPO/sclera-vdms-service" && mvn -o help:evaluate -Dexpression=spring-boot.version -q -DforceStdout 2>/dev/null; echo
+cd "$REPO/sclera-vdms-service" && mvn -o dependency:get -Dartifact=org.springframework.boot:spring-boot-starter-parent:4.0.6:pom 2>&1 | tail -5
 ```
-If offline resolution is unavailable, pick the latest 3.4.x from Maven Central (e.g. `3.4.5`). Write the chosen value at the top of `migration-notes/phase2-surface.md` as `BOOT_VERSION=3.4.x`.
+Write `BOOT_VERSION=4.0.6` at the top of `migration-notes/phase2-surface.md`. Then, after Task 2.2 bumps one pom, record the Hibernate version the BOM manages (drives the hypersistence-utils coordinate in Task 2.7):
+```bash
+cd "$REPO/sclera-vdms-service" && mvn -o dependency:tree -Dincludes=org.hibernate.orm:hibernate-core 2>&1 | grep hibernate-core
+```
+Expected: a `7.x` Hibernate version. Record it under "## managed versions".
 
 - [ ] **Step 2: Inventory remaining `javax.*` imports (the jakarta surface)**
 
@@ -292,7 +302,7 @@ Paste the file list into `migration-notes/phase2-surface.md` under "## javax imp
 
 Run:
 ```bash
-cd "$REPO" && grep -rn "hibernate-types-52\|springdoc-openapi-ui\|spring-security-config\|spring-security-web\|oauth2-resource-server\|mysql-connector-java\|javax.websocket-api" --include=pom.xml .
+cd "$REPO" && grep -rn "hibernate-types-52\|springdoc-openapi-ui\|spring-security-config\|spring-security-web\|oauth2-resource-server\|mysql-connector-java\|javax.websocket-api\|jackson-core\|jackson-databind\|jackson-dataformat\|caffeine" --include=pom.xml .
 ```
 Record each hit and its required replacement in `migration-notes/phase2-surface.md` under "## dependency swaps".
 
@@ -312,10 +322,18 @@ cd "$REPO" && grep -rn "spring.redis\|spring:\s*$" --include=*.yml --include=*.p
 ```
 Record any `spring.redis.*` that must become `spring.data.redis.*`.
 
-- [ ] **Step 6: Commit the surface note**
+- [ ] **Step 6: Inventory Jackson 2 code usage (the Jackson 3 surface)**
+
+Run:
+```bash
+cd "$REPO" && grep -rln "com\.fasterxml\.jackson\.\(databind\|core\|dataformat\)\|new ObjectMapper\|Jackson2ObjectMapperBuilder" --include=*.java . | grep -v sclera-vdms-edge-server
+```
+Record every hit in `migration-notes/phase2-surface.md` under "## jackson 2->3". These files use the Jackson 2 package and need the `tools.jackson` migration in Task 2.8. (Note: `com.fasterxml.jackson.annotation.*` — `@JsonProperty`, `@JsonIgnore`, etc. — stays unchanged; exclude those from the count by eye.)
+
+- [ ] **Step 7: Commit the surface note**
 
 ```bash
-cd "$REPO" && git add migration-notes/phase2-surface.md && git commit -m "docs(migration): Phase 2 Boot 3.4 migration surface inventory
+cd "$REPO" && git add migration-notes/phase2-surface.md && git commit -m "docs(migration): Phase 2 Boot 4.0 migration surface inventory
 
 Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ```
@@ -333,9 +351,9 @@ In `sclera-vdms-service/pom.xml`, change:
 ```xml
 <version>2.6.5</version>
 ```
-to (using the chosen patch):
+to:
 ```xml
-<version>3.4.x</version>
+<version>4.0.6</version>
 ```
 
 - [ ] **Step 2: Jakarta-ize vdms-service entities**
@@ -357,21 +375,21 @@ Expected: BUILD SUCCESS. (vdms-service still points at MySQL — that's fine; Ph
 - [ ] **Step 4: Commit**
 
 ```bash
-cd "$REPO" && git add sclera-vdms-service && git commit -m "feat(boot3): migrate sclera-vdms-service to Spring Boot 3.4.x + jakarta
+cd "$REPO" && git add sclera-vdms-service && git commit -m "feat(boot4): migrate sclera-vdms-service to Spring Boot 4.0.6 + jakarta
 
 Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ```
 
-### Task 2.3: Migrate the 8 skeleton modules to Boot 3.4.x
+### Task 2.3: Migrate the 8 skeleton modules to Boot 4.0.6
 
 **Files:**
-- Modify each: `sclera-audit/pom.xml`, `sclera-identity/pom.xml`, `sclera-alerts/pom.xml`, `sclera-inventory/pom.xml`, `sclera-workorders/pom.xml`, `sclera-inspection/pom.xml`, `sclera-integrations/pom.xml`, `sclera-edge/pom.xml` (parent version → 3.4.x)
+- Modify each: `sclera-audit/pom.xml`, `sclera-identity/pom.xml`, `sclera-alerts/pom.xml`, `sclera-inventory/pom.xml`, `sclera-workorders/pom.xml`, `sclera-inspection/pom.xml`, `sclera-integrations/pom.xml`, `sclera-edge/pom.xml` (parent version → 4.0.6)
 - Modify: any `import javax.*` under each module's `src` (skeletons are thin; expect few/none)
 - Modify: `sclera-audit` Dapr subscriber if it imports `javax.*`
 
-- [ ] **Step 1: Bump each skeleton's parent to 3.4.x**
+- [ ] **Step 1: Bump each skeleton's parent to 4.0.6**
 
-In each of the 8 skeleton poms, set the `spring-boot-starter-parent` `<version>` to the chosen `3.4.x`.
+In each of the 8 skeleton poms, set the `spring-boot-starter-parent` `<version>` to `4.0.6`.
 
 - [ ] **Step 2: Jakarta-ize per skeleton**
 
@@ -400,28 +418,28 @@ Expected: all assertions pass (PostMapping/RequestBody for writes, GetMapping fo
 - [ ] **Step 5: Commit**
 
 ```bash
-cd "$REPO" && git add sclera-audit sclera-identity sclera-alerts sclera-inventory sclera-workorders sclera-inspection sclera-integrations sclera-edge tools/skeleton-template && git commit -m "feat(boot3): migrate 8 skeleton modules + scaffold template to Boot 3.4.x + jakarta
+cd "$REPO" && git add sclera-audit sclera-identity sclera-alerts sclera-inventory sclera-workorders sclera-inspection sclera-integrations sclera-edge tools/skeleton-template && git commit -m "feat(boot4): migrate 8 skeleton modules + scaffold template to Boot 4.0.6 + jakarta
 
 Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ```
 
-### Task 2.4: Align sclera-api-gateway to Boot 3.4.x
+### Task 2.4: Align sclera-api-gateway to Boot 4.0.6
 
 **Files:**
-- Modify: `sclera-api-gateway/pom.xml` (parent 3.2.5 → 3.4.x)
+- Modify: `sclera-api-gateway/pom.xml` (parent 3.2.5 → 4.0.6)
 - Modify: any `import javax.*` under `sclera-api-gateway/src`
 
-- [ ] **Step 1: Bump parent**
-
-In `sclera-api-gateway/pom.xml` set the parent `<version>` from `3.2.5` to the chosen `3.4.x`. If the gateway uses Spring Cloud Gateway, also bump the `spring-cloud.version` property to the release train matching Boot 3.4.x (`2024.0.x`).
-
-- [ ] **Step 2: Find the Spring Cloud train if present**
+- [ ] **Step 1: Find the Spring Cloud train if present (do this first — it gates the parent bump)**
 
 Run:
 ```bash
 grep -n "spring-cloud" "$REPO/sclera-api-gateway/pom.xml"
 ```
-If a `spring-cloud-dependencies` BOM is imported, set its version to `2024.0.0` (the train for Boot 3.4.x).
+If a `spring-cloud-dependencies` BOM is imported, it MUST move to the release train that targets Boot 4.0 / Spring Framework 7 (the `2024.0.x`/`2025.0.x` trains target Boot 3.4/3.5 and are NOT compatible). Find the correct train on the Spring Cloud compatibility matrix (https://spring.io/projects/spring-cloud#overview) and record it in `migration-notes/phase2-surface.md` as `SPRING_CLOUD_TRAIN=...`. If the gateway does NOT use Spring Cloud (plain Boot web/webflux), skip the BOM bump entirely.
+
+- [ ] **Step 2: Bump parent (and the Spring Cloud BOM if present)**
+
+In `sclera-api-gateway/pom.xml` set the parent `<version>` from `3.2.5` to `4.0.6`. If a `spring-cloud-dependencies` BOM is present, set its version to the `SPRING_CLOUD_TRAIN` recorded in Step 1.
 
 - [ ] **Step 3: Jakarta-ize gateway sources**
 
@@ -442,7 +460,7 @@ Expected: BUILD SUCCESS.
 - [ ] **Step 5: Commit**
 
 ```bash
-cd "$REPO" && git add sclera-api-gateway && git commit -m "feat(boot3): align sclera-api-gateway to Boot 3.4.x + Spring Cloud 2024.0.x
+cd "$REPO" && git add sclera-api-gateway && git commit -m "feat(boot4): align sclera-api-gateway to Boot 4.0.6 (+ matching Spring Cloud train)
 
 Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ```
@@ -452,21 +470,42 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 **Files:**
 - Modify: `sclera-cloud-device-asset/pom.xml` extensively
 
-- [ ] **Step 1: Bump parent to 3.4.x**
+- [ ] **Step 1: Bump parent to 4.0.6**
 
-Change the `spring-boot-starter-parent` `<version>` from `2.6.5` to the chosen `3.4.x`.
+Change the `spring-boot-starter-parent` `<version>` from `2.6.5` to `4.0.6`.
 
-- [ ] **Step 2: Drop pinned versions now managed by the 3.4.x parent**
+- [ ] **Step 2a: Drop pinned versions now managed by the 4.0.6 parent**
 
 Remove the `<version>` element (let it inherit) from these dependencies in `sclera-cloud-device-asset/pom.xml`:
 - `spring-security-config` (was 5.7.3)
 - `spring-security-web` (was 5.7.3)
-- `jackson-core` (was 2.12.0)
-- `jackson-databind` (was 2.11.3)
-- `jackson-dataformat-yaml` (was 2.12.0)
 - `micrometer-registry-prometheus` (was 1.9.7)
 
-And replace the pinned Boot-3 oauth2 starter:
+- [ ] **Step 2b: REMOVE the hardcoded Jackson 2 dependencies entirely**
+
+Boot 4 manages **Jackson 3** under the new `tools.jackson` group — the old `com.fasterxml.jackson.core:*` 2.x artifacts are not what the parent manages, so don't just unversion them, **delete these three `<dependency>` blocks** (the starters pull Jackson 3 transitively):
+```xml
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-core</artifactId>
+    <version>2.12.0</version>
+</dependency>
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.11.3</version>
+</dependency>
+<dependency>
+    <groupId>com.fasterxml.jackson.dataformat</groupId>
+    <artifactId>jackson-dataformat-yaml</artifactId>
+    <version>2.12.0</version>
+</dependency>
+```
+(The code-side migration of any `com.fasterxml.jackson.databind` usages happens in Task 2.8.)
+
+- [ ] **Step 2c: Replace the pinned oauth2 starter**
+
+Replace the pinned Boot-3 oauth2 starter:
 ```xml
 <dependency>
     <groupId>org.springframework.boot</groupId>
@@ -499,7 +538,7 @@ with:
 </dependency>
 ```
 
-- [ ] **Step 4: Swap springdoc for the Boot 3 starter**
+- [ ] **Step 4: Swap springdoc for the Boot 4-compatible starter**
 
 Replace:
 ```xml
@@ -509,18 +548,18 @@ Replace:
     <version>1.6.4</version>
 </dependency>
 ```
-with:
+with (2.8.17 is the springdoc release validated against Boot 4.0):
 ```xml
 <dependency>
     <groupId>org.springdoc</groupId>
     <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-    <version>2.6.0</version>
+    <version>2.8.17</version>
 </dependency>
 ```
 
-- [ ] **Step 5: Swap hibernate-types for hypersistence-utils**
+- [ ] **Step 5: Swap hibernate-types for hypersistence-utils (Hibernate 7 variant)**
 
-Replace:
+Boot 4 manages Hibernate ORM 7 (the version recorded in Task 2.1 Step 1), so use the `hibernate-70` artifact, NOT `-63`. Replace:
 ```xml
 <dependency>
     <groupId>com.vladmihalcea</groupId>
@@ -532,15 +571,16 @@ with:
 ```xml
 <dependency>
     <groupId>io.hypersistence</groupId>
-    <artifactId>hypersistence-utils-hibernate-63</artifactId>
-    <version>3.8.3</version>
+    <artifactId>hypersistence-utils-hibernate-70</artifactId>
+    <version>3.10.3</version>
 </dependency>
 ```
+If `3.10.3` does not yet expose the `-hibernate-70` artifact, pick the latest `hypersistence-utils-hibernate-70` from Maven Central (`mvn -o dependency:get -Dartifact=io.hypersistence:hypersistence-utils-hibernate-70:<v>`) and record it in `migration-notes/phase2-surface.md`.
 
 - [ ] **Step 6: Commit the pom (will not yet compile — that's expected)**
 
 ```bash
-cd "$REPO" && git add sclera-cloud-device-asset/pom.xml && git commit -m "build(boot3): cloud-device-asset pom -> Boot 3.4.x, drop pinned versions, swap jakarta/springdoc/hypersistence
+cd "$REPO" && git add sclera-cloud-device-asset/pom.xml && git commit -m "build(boot4): cloud-device-asset pom -> Boot 4.0.6, drop pinned/Jackson2 versions, swap jakarta/springdoc/hypersistence-hibernate70
 
 Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ```
@@ -577,15 +617,15 @@ Expected: `CLEAN`. (Note: `javax.crypto`, `javax.net`, `javax.imageio` are JDK p
 - [ ] **Step 4: Commit**
 
 ```bash
-cd "$REPO" && git add sclera-cloud-device-asset/src && git commit -m "refactor(boot3): javax->jakarta namespace sweep in cloud-device-asset
+cd "$REPO" && git add sclera-cloud-device-asset/src && git commit -m "refactor(boot4): javax->jakarta namespace sweep in cloud-device-asset
 
 Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ```
 
-### Task 2.7: cloud-device-asset — Hibernate 6 + security DSL fixes
+### Task 2.7: cloud-device-asset — Hibernate 7 + security DSL fixes
 
 **Files:**
-- Modify: every `@Type`/`@TypeDef` JSON-mapped entity (hypersistence 3.x API)
+- Modify: every `@Type`/`@TypeDef` JSON-mapped entity (hypersistence 3.x / Hibernate 7 API)
 - Modify: `sclera-cloud-device-asset/src/main/java/io/sclera/config/WebSecurityConfig.java:156` (`.authorizeRequests()` → `.authorizeHttpRequests()`)
 - Modify: `sclera-cloud-device-asset/src/main/java/io/sclera/config/DockerSecurityConfig.java` (same DSL fix if present)
 
@@ -595,11 +635,11 @@ Run:
 ```bash
 cd "$REPO" && grep -rln "com.vladmihalcea\|@TypeDef\|@Type(type" sclera-cloud-device-asset/src
 ```
-For each file: replace `import com.vladmihalcea.hibernate.type...` with `io.hypersistence.utils.hibernate.type...`, and convert `@Type(type = "jsonb")` / `@TypeDef(...)` to the Hibernate 6 form `@Type(JsonType.class)` (import `io.hypersistence.utils.hibernate.type.json.JsonType`). Remove now-unused `@TypeDef` class-level annotations.
+For each file: replace `import com.vladmihalcea.hibernate.type...` with `io.hypersistence.utils.hibernate.type...`, and convert `@Type(type = "jsonb")` / `@TypeDef(...)` to the Hibernate 7 form `@Type(JsonType.class)` (import `io.hypersistence.utils.hibernate.type.json.JsonType`). Remove now-unused `@TypeDef` class-level annotations. (The `@Type(JsonType.class)` form is identical across hypersistence's Hibernate 6 and 7 artifacts; the difference is the dependency coordinate from Task 2.5 Step 5.)
 
-- [ ] **Step 2: Fix the security DSL deprecation**
+- [ ] **Step 2: Fix the security DSL — `.authorizeRequests()` is REMOVED in Security 7**
 
-In `WebSecurityConfig.java`, change line 156 area:
+In Spring Security 7 (shipped with Boot 4) `.authorizeRequests()` is not merely deprecated — it is removed, so this is a hard compile failure until fixed. In `WebSecurityConfig.java`, change line 156 area:
 ```java
 .authorizeRequests()
 .requestMatchers(this::allowAccess)
@@ -608,7 +648,7 @@ In `WebSecurityConfig.java`, change line 156 area:
 .authenticated()
 .and()
 ```
-to the Boot 3 lambda DSL:
+to the lambda DSL:
 ```java
 .authorizeHttpRequests(auth -> auth
         .requestMatchers(this::allowAccess).permitAll()
@@ -623,7 +663,7 @@ Run:
 cd "$REPO/sclera-cloud-device-asset" && mvn -q -o clean compile 2>&1 | tail -40
 ```
 Expected: BUILD SUCCESS. Common remaining failures and fixes:
-- `RequestMatcher` ambiguity on `.requestMatchers(this::allowAccess)` — the predicate overload still exists in Boot 3; if the compiler complains, wrap as `.requestMatchers(new RequestMatcher() { public boolean matches(HttpServletRequest r){ return allowAccess(r);} })`.
+- `.requestMatchers(this::allowAccess)` predicate overload — the `RequestMatcher` functional interface still exists in Security 7; if the compiler can't infer it, wrap explicitly as `.requestMatchers(new RequestMatcher() { public boolean matches(HttpServletRequest r){ return allowAccess(r);} })`.
 - Hibernate `NoSuchMethodError`/mapping errors surface at test time, not compile — caught in Step 4.
 
 - [ ] **Step 4: Run tests**
@@ -632,17 +672,70 @@ Run:
 ```bash
 cd "$REPO/sclera-cloud-device-asset" && mvn -q -o test 2>&1 | tail -40
 ```
-Expected: BUILD SUCCESS (still against MySQL config). Fix any Hibernate mapping failures (usually a JSON column still on the old `@Type(type=...)` form).
+Expected: BUILD SUCCESS (still against MySQL config). Fix any Hibernate 7 mapping failures (usually a JSON column still on the old `@Type(type=...)` form, or a sequence/identifier generator that Hibernate 7 treats differently — note these for the Phase 3 schema baseline).
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd "$REPO" && git add sclera-cloud-device-asset/src && git commit -m "refactor(boot3): Hibernate 6 (hypersistence) JSON types + authorizeHttpRequests DSL
+cd "$REPO" && git add sclera-cloud-device-asset/src && git commit -m "refactor(boot4): Hibernate 7 (hypersistence) JSON types + authorizeHttpRequests DSL
 
 Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ```
 
-### Task 2.8: cloud-device-asset — property + redis namespace fixes
+### Task 2.8: cloud-device-asset — Jackson 2 → 3 migration
+
+**Files:** every file recorded under "## jackson 2->3" in `migration-notes/phase2-surface.md` (Task 2.1 Step 6) — typically custom `ObjectMapper` config beans, serializers/deserializers, and any direct `new ObjectMapper()` usage.
+
+> Why this is its own task: the failure mode is **silent**. Most code compiles after a package rename, but Jackson 3 flips `WRITE_DATES_AS_TIMESTAMPS` to `false`, so date fields that used to serialize as epoch millis (`1699257000000`) now serialize as ISO-8601 strings (`"2025-11-06T05:30:00"`). Any client/test asserting the old shape breaks at runtime, not compile time.
+
+- [ ] **Step 1: Rename Jackson core/databind/dataformat imports**
+
+For each recorded file, replace the package prefix on **databind/core/dataformat** imports only:
+```
+com.fasterxml.jackson.databind.   ->  tools.jackson.databind.
+com.fasterxml.jackson.core.       ->  tools.jackson.core.
+com.fasterxml.jackson.dataformat. ->  tools.jackson.dataformat.
+```
+**Do NOT touch** `com.fasterxml.jackson.annotation.*` (`@JsonProperty`, `@JsonIgnore`, `@JsonFormat`, etc.) — that module keeps the `com.fasterxml` group/package in Jackson 3.
+
+- [ ] **Step 2: Switch entry point to JsonMapper + customizer**
+
+Replace `new ObjectMapper()` construction with `tools.jackson.databind.json.JsonMapper.builder()...build()` (or inject the Boot-provided `JsonMapper`). If any bean implements `Jackson2ObjectMapperBuilderCustomizer`, change it to implement `org.springframework.boot.jackson.JsonMapperBuilderCustomizer`.
+
+- [ ] **Step 3: Preserve the old date-serialization shape if clients depend on it**
+
+If any API contract relies on epoch-millis timestamps, restore the Jackson 2 behavior explicitly rather than inheriting the new default. On the mapper/customizer set:
+```java
+builder.configure(tools.jackson.databind.SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS, false);
+builder.enable(tools.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+```
+If clients are fine with ISO-8601 (the new default), skip this and note the contract change in `migration-notes/phase2-surface.md`.
+
+- [ ] **Step 4: Verify no stray Jackson 2 databind imports remain**
+
+Run:
+```bash
+cd "$REPO" && grep -rln "com\.fasterxml\.jackson\.\(databind\|core\|dataformat\)" sclera-cloud-device-asset/src || echo "CLEAN"
+```
+Expected: `CLEAN`.
+
+- [ ] **Step 5: Build + test**
+
+Run:
+```bash
+cd "$REPO/sclera-cloud-device-asset" && mvn -q -o clean test 2>&1 | tail -40
+```
+Expected: BUILD SUCCESS. Pay attention to any serialization assertions in tests — a green build with a changed JSON shape is the silent-break case from the task note.
+
+- [ ] **Step 6: Commit**
+
+```bash
+cd "$REPO" && git add sclera-cloud-device-asset/src migration-notes/phase2-surface.md && git commit -m "refactor(boot4): migrate Jackson 2 -> 3 (tools.jackson, JsonMapper) in cloud-device-asset
+
+Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
+```
+
+### Task 2.9: cloud-device-asset — property + redis namespace fixes
 
 **Files:**
 - Modify: `sclera-cloud-device-asset/src/main/resources/application*.yml` (the `spring.redis.*` → `spring.data.redis.*` rename, and any deprecated keys)
@@ -669,12 +762,12 @@ Watch for `Property '...' is deprecated` / failed-to-bind messages. Fix each, Ct
 - [ ] **Step 4: Commit**
 
 ```bash
-cd "$REPO" && git add sclera-cloud-device-asset/src/main/resources && git commit -m "fix(boot3): rename spring.redis->spring.data.redis and clear deprecated properties
+cd "$REPO" && git add sclera-cloud-device-asset/src/main/resources && git commit -m "fix(boot4): rename spring.redis->spring.data.redis and clear deprecated properties
 
 Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ```
 
-### Task 2.9: PHASE 2 GATE — full build + E2E smoke
+### Task 2.10: PHASE 2 GATE — full build + E2E smoke
 
 **Files:** none (verification)
 
@@ -707,7 +800,7 @@ Then confirm: (a) `sclera-audit` logs show it consumed `device.audit-recorded` (
 - [ ] **Step 4: Tear down + tag**
 
 ```bash
-cd "$REPO" && docker compose down && git tag phase2-boot34-green && git commit --allow-empty -m "chore(migration): PHASE 2 GREEN — all modules on Spring Boot 3.4.x
+cd "$REPO" && docker compose down && git tag phase2-boot40-green && git commit --allow-empty -m "chore(migration): PHASE 2 GREEN — all modules on Spring Boot 4.0.6
 
 Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ```
@@ -769,7 +862,7 @@ In both poms, replace:
     <scope>runtime</scope>
 </dependency>
 ```
-with (version managed by the 3.4.x parent):
+with (version managed by the 4.0.6 parent):
 ```xml
 <dependency>
     <groupId>org.postgresql</groupId>
@@ -1055,7 +1148,7 @@ cd "$REPO" && docker compose down && git add docker-compose.yml && git commit -m
 
 - [ ] **Step 1: Update APP_IDS / docs**
 
-Update `dapr/APP_IDS.md` observability/notes if any ports or DB facts changed (PG on 5432). Update `sclera-cloud-device-asset/CLAUDE.md` "Project identity" line — it currently says "Spring Boot 2.6.5, Java 11. Do not modernize without an explicit Phase-2 plan." Change to "Spring Boot 3.4.x, Java 21, PostgreSQL 16."
+Update `dapr/APP_IDS.md` observability/notes if any ports or DB facts changed (PG on 5432). Update `sclera-cloud-device-asset/CLAUDE.md` "Project identity" line — it currently says "Spring Boot 2.6.5, Java 11. Do not modernize without an explicit Phase-2 plan." Change to "Spring Boot 4.0.6, Java 21, PostgreSQL 16."
 
 - [ ] **Step 2: Final full build**
 
@@ -1064,7 +1157,7 @@ Run per module: `mvn -q -o clean test`. Expected: all 11 GREEN.
 - [ ] **Step 3: Commit docs**
 
 ```bash
-cd "$REPO" && git add dapr/APP_IDS.md sclera-cloud-device-asset/CLAUDE.md migration-notes/ && git commit -m "docs(migration): record Java 21 + Boot 3.4 + PostgreSQL final state
+cd "$REPO" && git add dapr/APP_IDS.md sclera-cloud-device-asset/CLAUDE.md migration-notes/ && git commit -m "docs(migration): record Java 21 + Boot 4.0.6 + PostgreSQL final state
 
 Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ```
@@ -1073,17 +1166,21 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
 ## Self-review notes (spec coverage)
 
-- Spec §3 Phase 1 (Java 21) → Tasks 1.1–1.5 ✔
-- Spec §5.1 parent/properties → Tasks 2.2–2.5 ✔
-- Spec §5.2 javax→jakarta → Tasks 2.2/2.3/2.4 Step 2, 2.6 ✔
-- Spec §5.3 Hibernate 6 (hibernate-types→hypersistence) → Tasks 2.5 Step 5, 2.7 Step 1 ✔
-- Spec §5.4 security rewrite → Task 2.7 Step 2 (note: WebSecurityConfig already SecurityFilterChain; only DSL deprecation + javax import remained) ✔
-- Spec §5.5 springdoc/redis/caffeine/trailing-slash → Tasks 1.2 (caffeine), 2.5 Step 4 (springdoc), 2.8 (redis) ✔
+> **Target updated to Spring Boot 4.0.6** (was 3.4.x). The spec's §5 still names Boot 3.4.x / Hibernate 6; this plan supersedes it to the 4.0 line per the user's request. The two deltas the spec did not anticipate — **Jackson 2→3** and **Hibernate 6→7** (vs 6) — are covered by new/updated tasks below. Update the spec on the next pass to match.
+
+- Spec §3 Phase 1 (Java 21) → Tasks 1.1–1.5 ✔ (Java 21 also satisfies Boot 4's Java 17+ floor)
+- Spec §5.1 parent/properties (now → Boot 4.0.6) → Tasks 2.2–2.5 ✔
+- Spec §5.2 javax→jakarta (Jakarta EE 11) → Tasks 2.2/2.3/2.4 Step 2/3, 2.6 ✔
+- Spec §5.3 Hibernate (now 6→**7**, hibernate-types→hypersistence `-hibernate-70`) → Tasks 2.5 Step 5, 2.7 Step 1 ✔
+- Spec §5.4 security rewrite → Task 2.7 Step 2 (WebSecurityConfig already SecurityFilterChain; `.authorizeRequests()` is *removed* in Security 7, so the DSL fix is mandatory, not optional) ✔
+- Spec §5.5 springdoc/redis/caffeine/trailing-slash → Tasks 1.2 (caffeine), 2.5 Step 4 (springdoc 2.8.17), 2.9 (redis) ✔
+- **NEW (Boot 4 only) Jackson 2→3** (`tools.jackson`, `JsonMapper`, silent date-default flip) → Task 2.5 Step 2b (pom) + Task 2.8 (code) ✔
 - Spec §5.6 skeletons + scaffold tests → Task 2.3 ✔
 - Spec §6.1 driver swap → Task 3.2 ✔
 - Spec §6.2 connection/dialect → Task 3.4 ✔
 - Spec §6.3 schema strategy (Option A) → Task 3.5 ✔
 - Spec §6.4 SQL-dialect differences → Tasks 3.1 + 3.6 ✔
 - Spec §6.5 compose PG service → Task 3.3 ✔
-- Spec §7 testing gates → Tasks 1.5, 2.9, 3.7 ✔
-- Spec §8 rollback (per-phase commits/tags) → tags at each gate ✔
+- Spec §7 testing gates → Tasks 1.5, 2.10, 3.7 ✔
+- Spec §8 rollback (per-phase commits/tags) → tags at each gate (`phase1-java21-green`, `phase2-boot40-green`, `phase3-postgres-green`) ✔
+- Spring Cloud train alignment (Boot 4 needs a newer train than 2024.0.x/2025.0.x) → Task 2.4 Step 1 (discovery-verified) ✔
