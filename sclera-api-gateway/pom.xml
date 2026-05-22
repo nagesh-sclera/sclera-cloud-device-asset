@@ -13,7 +13,7 @@
     <artifactId>sclera-api-gateway</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <properties>
-        <java.version>11</java.version>
+        <java.version>21</java.version>
         <spring-cloud.version>2023.0.1</spring-cloud.version>
     </properties>
     <dependencyManagement>
