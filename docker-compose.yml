@@ -29,7 +29,7 @@ services:
       retries: 10
 
   pgadmin:
-    image: dpage/pgadmin4:latest
+    image: dpage/pgadmin4:8.6
     container_name: sclera-pgadmin
     env_file: .env
     ports:
@@ -41,6 +41,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    restart: on-failure
 
   app:
     build: ./sclera-cloud-device-asset
@@ -52,9 +53,9 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_URL: jdbc:postgresql://postgres:5432/vdms
-      DB_USER: sclera
-      DB_PASS: sclera123
+      DB_URL: ${DB_URL}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
       DAPR_HTTP_PORT: "3500"
       DAPR_GRPC_PORT: "50001"
       SPRING_FLYWAY_ENABLED: "false"
@@ -95,9 +96,9 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_URL: jdbc:postgresql://postgres:5432/vdms
-      DB_USER: sclera
-      DB_PASS: sclera123
+      DB_URL: ${DB_URL}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
     ports:
       - "8089:8089"
     networks:
