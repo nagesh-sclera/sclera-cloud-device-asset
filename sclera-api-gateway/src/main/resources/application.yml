@@ -4,39 +4,41 @@ server:
 spring:
   cloud:
     gateway:
-      globalcors:
-        corsConfigurations:
-          '[/**]':
-            allowedOriginPatterns:
-              - "http://localhost:3000"
-              - "http://localhost:8080"
-              - "http://127.0.0.1:3000"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
-              - PATCH
-            allowedHeaders:
-              - "*"
-            exposedHeaders:
-              - "*"
-            allowCredentials: false
-            maxAge: 3600
-      default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
-      routes:
-        - id: asset-route
-          uri: http://sclera-cloud-device-asset:8085
-          predicates:
-            - Path=/asset/**
-          filters:
-            - StripPrefix=1
-        - id: vdms-route
-          uri: http://vdms-service:8089
-          predicates:
-            - Path=/vdms/**
+      server:
+        webflux:
+          globalcors:
+            corsConfigurations:
+              '[/**]':
+                allowedOriginPatterns:
+                  - "http://localhost:3000"
+                  - "http://localhost:8080"
+                  - "http://127.0.0.1:3000"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - OPTIONS
+                  - PATCH
+                allowedHeaders:
+                  - "*"
+                exposedHeaders:
+                  - "*"
+                allowCredentials: false
+                maxAge: 3600
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+          routes:
+            - id: asset-route
+              uri: http://sclera-cloud-device-asset:8085
+              predicates:
+                - Path=/asset/**
+              filters:
+                - StripPrefix=1
+            - id: vdms-route
+              uri: http://vdms-service:8089
+              predicates:
+                - Path=/vdms/**
 
 management:
   endpoints:
