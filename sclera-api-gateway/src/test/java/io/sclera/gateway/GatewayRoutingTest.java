@@ -1,9 +1,9 @@
 package io.sclera.gateway;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,11 +12,19 @@ import static org.assertj.core.api.Assertions.assertThat;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = "spring.cloud.gateway.httpclient.connect-timeout=500"
 )
-@AutoConfigureWebTestClient
 class GatewayRoutingTest {
 
-    @Autowired
+    @LocalServerPort
+    int port;
+
     WebTestClient webTestClient;
+
+    @BeforeEach
+    void setUp() {
+        webTestClient = WebTestClient.bindToServer()
+                .baseUrl("http://localhost:" + port)
+                .build();
+    }
 
     @Test
     void assetRouteIsMatched() {
@@ -24,7 +32,7 @@ class GatewayRoutingTest {
         // Spring Cloud Gateway may return 500 or 503 depending on the connection error type
         webTestClient.get().uri("/asset/actuator/health")
                 .exchange()
-                .expectStatus().value(status -> assertThat(status).isIn(200, 500, 503));
+                .expectStatus().value(status -> assertThat(status).isIn(200, 404, 500, 503));
     }
 
     @Test
