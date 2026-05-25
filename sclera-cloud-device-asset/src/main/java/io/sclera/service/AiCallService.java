@@ -799,7 +799,7 @@ public class AiCallService {
                             emailRequestBody.put("alert_type", "email");
                             log.info("Sending email request body: {}", emailRequestBody);
                             ResponseEntity<String> emailResponse = apiCallService.sendCallFlowMail(emailRequestBody);
-                            if (emailResponse != null && emailResponse.getStatusCodeValue() == 200) {
+                            if (emailResponse != null && emailResponse.getStatusCode().value() == 200) {
                                 log.info("Email sent successfully");
                                 insertCallFlowResponse("Email sent to " + condition.getActionValue(), "Email sent to " + condition.getActionValue(), callLogId);
                             } else {
@@ -824,7 +824,7 @@ public class AiCallService {
                             messageBody.put("alert_type", "sms");
                             log.info("Sending SMS request body: {}", messageBody);
                             ResponseEntity<String> smsResponse = apiCallService.sendCallFlowMessage(messageBody);
-                            if (smsResponse != null && smsResponse.getStatusCodeValue() == 200) {
+                            if (smsResponse != null && smsResponse.getStatusCode().value() == 200) {
                                 log.info("SMS sent successfully");
                                 insertCallFlowResponse("SMS sent to " + phoneNo, "SMS sent to " + phoneNo, callLogId);
                             } else {

@@ -6,9 +6,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.fasterxml.uuid.Generators;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.*;
@@ -1089,7 +1088,7 @@ public class DeviceService {
                     this.quickUpdateForDevices(username, vdmsid, dockername, updateDevice, devices, assignee);
                 }
             }
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             log.error("Exception. Params: tagDeviceOrLocationDTO: {}, endpoint : {}", tagDeviceOrLocationDTO, httpServletRequest.getRequestURI(), e);
         }
         return devices;
@@ -5929,7 +5928,7 @@ public class DeviceService {
             for (String device_id : device_ids) {
                 this.upsertOnboardAsset(username, vdmsid, deviceOnboardStatusDTO, device_id, onboard_asset_data.getString("onboard_type"));
             }
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             System.out.println("Unable to upsert onboard assets");
         }
 
@@ -8403,7 +8402,7 @@ public String daysCleaned(String input){
     }
 
 
-    public DeviceDTO updateAssetMatchDetails(String username, String vdmsid, String dockername, JSONObject deviceObject, HttpServletRequest httpServletRequest,String assignee) throws JsonProcessingException {
+    public DeviceDTO updateAssetMatchDetails(String username, String vdmsid, String dockername, JSONObject deviceObject, HttpServletRequest httpServletRequest,String assignee) {
         log.info("updateAssetMatchDetails, Params: deviceObject: {}, endpoint : {}", deviceObject, httpServletRequest.getRequestURI());
         JSONArray featuresArray = deviceObject.getJSONArray("features");
         String primaryDeviceId = deviceObject.getString("primary_device_id");
@@ -8739,7 +8738,7 @@ public String daysCleaned(String input){
         iocService.sendDigitalTwinData(new HashSet<>(Collections.singleton(device_id)));
     }
 
-    public void multiEditDigitalTwin(String username, String vdmsid, String data, String image_url, MultipartFile multipartFile, HttpServletRequest httpServletRequest) throws JsonProcessingException {
+    public void multiEditDigitalTwin(String username, String vdmsid, String data, String image_url, MultipartFile multipartFile, HttpServletRequest httpServletRequest) {
 
         log.info("multiEditDigitalTwin, Params: data: {}, image url: {}, multipartFile: {}, endpoint : {}", data, image_url, multipartFile, httpServletRequest.getRequestURI());
         ObjectMapper objectMapper = new ObjectMapper();

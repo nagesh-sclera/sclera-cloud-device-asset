@@ -1,6 +1,6 @@
 package io.sclera.utils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.sclera.dto.MeasuringInstrumentAttributesDTO;
 import org.springframework.stereotype.Component;
 

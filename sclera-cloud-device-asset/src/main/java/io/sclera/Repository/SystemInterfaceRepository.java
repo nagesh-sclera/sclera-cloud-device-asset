@@ -5,7 +5,7 @@ import java.util.List;
 
 import jakarta.transaction.Transactional;
 
-import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
