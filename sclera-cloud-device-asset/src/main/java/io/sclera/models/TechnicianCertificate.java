@@ -2,7 +2,7 @@
 package io.sclera.models;
 
 import io.sclera.dto.TechnicianCertificateDTO;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @SqlResultSetMapping(name = "technicianCertificateMapping", classes = @ConstructorResult(targetClass = TechnicianCertificateDTO.class, columns = {@ColumnResult(name = "id", type = String.class), @ColumnResult(name = "name", type = String.class), @ColumnResult(name = "type", type = String.class), @ColumnResult(name = "url", type = String.class), @ColumnResult(name = "technician_id", type = String.class)}))
 @NamedNativeQuery(name = "TechnicianCertificate.getAll", query = "SELECT id, name, type, url, technician_id FROM technician_certificate", resultSetMapping = "technicianCertificateMapping")

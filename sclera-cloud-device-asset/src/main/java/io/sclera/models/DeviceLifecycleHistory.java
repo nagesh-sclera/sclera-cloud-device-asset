@@ -2,7 +2,7 @@ package io.sclera.models;
 
 import io.sclera.dto.DeviceLifecycleHistoryDTO;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigInteger;
 
 @SqlResultSetMapping(

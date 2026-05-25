@@ -4,7 +4,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
 
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 
 import io.sclera.dto.FloorDTO;
 import org.springframework.data.jpa.repository.JpaRepository;

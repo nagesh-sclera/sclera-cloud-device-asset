@@ -1,7 +1,7 @@
 package io.sclera.models;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /** STUB: non-AP-C1 entity (no @Entity to keep out of schema) */
 @Entity

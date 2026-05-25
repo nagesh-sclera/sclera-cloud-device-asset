@@ -5,7 +5,7 @@ package io.sclera.models;
 import io.sclera.dto.ConnectedDevicesDTO;
 import io.sclera.dto.PowerSourceConnectionsDTO;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 
 @Entity

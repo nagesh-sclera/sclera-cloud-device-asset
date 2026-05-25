@@ -3,7 +3,7 @@ package io.sclera.models;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.sclera.dto.touchscreen.assetmapper.AssetDTO;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.List;
 
 @Entity

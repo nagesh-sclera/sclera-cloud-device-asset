@@ -27,7 +27,7 @@ import io.sclera.client.DaintreeClient;
 import io.sclera.client.RabbitmqClient;
 import io.sclera.utils.InstrumentFormula;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 
 @Service

@@ -4,7 +4,7 @@ import io.sclera.dto.AssetFieldDTO;
 import io.sclera.service.touchscreen.AssetFieldService;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @RestController

@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.BuildingRepository;
 import io.sclera.dto.BuildingDTO;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class BuildingService {

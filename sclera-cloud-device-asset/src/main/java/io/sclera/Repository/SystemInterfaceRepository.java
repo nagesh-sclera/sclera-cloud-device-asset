@@ -3,7 +3,7 @@ package io.sclera.Repository;
 import java.math.BigInteger;
 import java.util.List;
 
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -3,7 +3,7 @@ package io.sclera.models;
 
 import io.sclera.dto.GlobalQrcodeDTO;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 
 @SqlResultSetMapping(

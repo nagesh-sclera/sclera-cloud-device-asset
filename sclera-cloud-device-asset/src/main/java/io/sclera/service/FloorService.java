@@ -41,7 +41,7 @@ import io.sclera.dto.FloorDTO;
 import io.sclera.utils.Utils;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 @ConfigurationProperties(prefix = "sclera")

@@ -2,7 +2,7 @@ package io.sclera.Repository;
 
 import io.sclera.dto.DeviceTypesDTO;
 import io.sclera.models.DeviceTypes;
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

@@ -33,7 +33,7 @@ import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.LocationRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 
 @Service

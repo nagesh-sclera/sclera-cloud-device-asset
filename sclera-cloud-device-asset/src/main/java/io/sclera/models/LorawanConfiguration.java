@@ -2,7 +2,7 @@ package io.sclera.models;
 
 import io.sclera.dto.LorawanConfigurationDTO;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Set;
 
 @Entity

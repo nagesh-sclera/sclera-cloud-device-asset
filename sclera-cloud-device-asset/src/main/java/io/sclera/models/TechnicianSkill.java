@@ -2,7 +2,7 @@
 package io.sclera.models;
 
 import io.sclera.dto.TechnicianSkillDTO;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 @SqlResultSetMapping(name = "technicianSkillMapping", classes = @ConstructorResult(targetClass = TechnicianSkillDTO.class, columns = {@ColumnResult(name = "id", type = String.class), @ColumnResult(name = "name", type = String.class), @ColumnResult(name = "type", type = String.class), @ColumnResult(name = "rating", type = BigDecimal.class), @ColumnResult(name = "ranking", type = Integer.class), @ColumnResult(name = "created_by", type = String.class), @ColumnResult(name = "created_at", type = Long.class), @ColumnResult(name = "technician_id", type = String.class)}))

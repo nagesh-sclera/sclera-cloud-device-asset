@@ -3,7 +3,7 @@ package io.sclera.models;
 import io.sclera.dto.AssetFieldDTO;
 import org.hibernate.annotations.ColumnDefault;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigInteger;
 
 @SqlResultSetMapping(

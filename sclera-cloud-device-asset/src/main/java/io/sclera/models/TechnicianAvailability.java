@@ -2,7 +2,7 @@
 package io.sclera.models;
 
 import io.sclera.dto.TechnicianAvailabilityDTO;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @SqlResultSetMapping(name = "technicianAvailabilityMapping", classes = @ConstructorResult(targetClass = TechnicianAvailabilityDTO.class, columns = {@ColumnResult(name = "id", type = String.class), @ColumnResult(name = "start_date", type = Long.class), @ColumnResult(name = "end_date", type = Long.class), @ColumnResult(name = "start_time", type = String.class), @ColumnResult(name = "end_time", type = String.class), @ColumnResult(name = "is_all_day", type = Boolean.class), @ColumnResult(name = "frequency", type = String.class), @ColumnResult(name = "`condition`", type = String.class), @ColumnResult(name = "technician_id", type = String.class)}))
 @NamedNativeQueries({

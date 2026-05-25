@@ -2,7 +2,7 @@ package io.sclera.models;
 
 import io.sclera.dto.LocationHistoryDTO;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigInteger;
 
 @SqlResultSetMapping(
