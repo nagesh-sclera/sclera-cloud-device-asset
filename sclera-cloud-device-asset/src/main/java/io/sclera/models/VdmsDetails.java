@@ -105,10 +105,10 @@ public class VdmsDetails {
     @Column(columnDefinition = "TEXT")
     private String layout_data;
 
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "text")
     private String device_custom_fields;
 
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "text")
     private String corrigo_layout_data;
 
     @OneToOne

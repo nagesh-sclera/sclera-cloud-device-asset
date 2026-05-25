@@ -371,10 +371,10 @@ public class Asset {
     public String subsystem_parent_id = null;
     public Integer subsystem_count = 0;
 
-    @Column(name = "original_keys", columnDefinition = "LONGTEXT", nullable = false)
+    @Column(name = "original_keys", columnDefinition = "text", nullable = false)
     public String originalKeys;
 
-    @Column(name = "custom_fields", columnDefinition = "LONGTEXT", nullable = true)
+    @Column(name = "custom_fields", columnDefinition = "text", nullable = true)
     public String customFields;
 
     @Column(name = "matched_products", columnDefinition = "TEXT", nullable = true)
