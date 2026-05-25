@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
-import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import io.sclera.Repository.LocationRepository;
 import io.sclera.Repository.VdmsRepository;

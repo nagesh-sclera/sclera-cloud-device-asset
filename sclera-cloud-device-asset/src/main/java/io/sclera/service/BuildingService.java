@@ -6,7 +6,6 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 import com.alibaba.fastjson.JSONObject;
-import tools.jackson.core.JacksonException;
 import io.sclera.Repository.VdmsRepository;
 import io.sclera.dto.FloorDTO;
 import io.sclera.dto.LocationDTO;

@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import com.fasterxml.uuid.Generators;
@@ -1088,7 +1089,7 @@ public class DeviceService {
                     this.quickUpdateForDevices(username, vdmsid, dockername, updateDevice, devices, assignee);
                 }
             }
-        } catch (Exception e) {
+        } catch (JacksonException e) {
             log.error("Exception. Params: tagDeviceOrLocationDTO: {}, endpoint : {}", tagDeviceOrLocationDTO, httpServletRequest.getRequestURI(), e);
         }
         return devices;
@@ -5928,7 +5929,7 @@ public class DeviceService {
             for (String device_id : device_ids) {
                 this.upsertOnboardAsset(username, vdmsid, deviceOnboardStatusDTO, device_id, onboard_asset_data.getString("onboard_type"));
             }
-        } catch (Exception e) {
+        } catch (JacksonException e) {
             System.out.println("Unable to upsert onboard assets");
         }
 
