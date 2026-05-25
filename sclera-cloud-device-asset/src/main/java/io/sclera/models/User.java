@@ -36,14 +36,14 @@ import java.util.Set;
 @NamedNativeQuery(
         name = "User.getAllUsers",
         query = "SELECT u.email, u.creation_timestamp, u.name, u.phone, u.phone_type, u.value,u.created_by,  u.company_name,u.website, u.address_id, u.customer_org_id as organisation_id, u.image_url, u.language "
-                + " FROM user u WHERE (?3 = 'null' or CONCAT_WS('' , u.name, u.email ) LIKE CONCAT('%' ,?3, '%')) LIMIT ?1  OFFSET ?2",
+                + " FROM \"user\" u WHERE (?3 = 'null' or CONCAT_WS('' , u.name, u.email ) LIKE CONCAT('%' ,?3, '%')) LIMIT ?1  OFFSET ?2",
         resultSetMapping = "usermapping"
 )
 
 @NamedNativeQuery(
         name = "User.getAllOrganisationUsersByPagination",
         query = "SELECT u.email, u.creation_timestamp, u.name, u.phone, u.phone_type, u.value,u.created_by,  u.company_name,u.website, u.address_id, u.customer_org_id as organisation_id, u.image_url, u.language "
-                + " FROM user u"
+                + " FROM \"user\" u"
                 + " LEFT JOIN customer_organisation co on co.id = u.customer_org_id"
                 + " WHERE u.customer_org_id = ?4 AND (?3 = 'null' or CONCAT_WS('' , u.name, u.email ) LIKE CONCAT('%' ,?3, '%')) LIMIT ?1  OFFSET ?2",
         resultSetMapping = "usermapping"
@@ -52,7 +52,7 @@ import java.util.Set;
 @NamedNativeQuery(
         name = "User.getAllOtherUsersByPagination",
         query = "SELECT u.email, u.creation_timestamp, u.name, u.phone, u.phone_type, u.value,u.created_by,  u.company_name,u.website, u.address_id, u.customer_org_id as organisation_id, u.image_url, u.language "
-                + " FROM user u"
+                + " FROM \"user\" u"
                 + " WHERE u.customer_org_id IS NULL AND (?3 = 'null' or CONCAT_WS('' , u.name, u.email ) LIKE CONCAT('%' ,?3, '%')) LIMIT ?1  OFFSET ?2",
         resultSetMapping = "usermapping"
 )
@@ -60,14 +60,14 @@ import java.util.Set;
 @NamedNativeQuery(
         name = "User.getUserByEmail",
         query = "SELECT u.email, u.creation_timestamp, u.name, u.phone, u.phone_type, u.value,u.created_by,  u.company_name,u.website, u.address_id, u.customer_org_id as organisation_id, u.image_url, u.language "
-                + " FROM user u WHERE u.email = ?1",
+                + " FROM \"user\" u WHERE u.email = ?1",
         resultSetMapping = "usermapping"
 )
 
 @NamedNativeQuery(
         name = "User.getAllUsersByOrganisationId",
         query = "SELECT u.email, u.creation_timestamp, u.name, u.phone, u.phone_type, u.value,u.created_by,  u.company_name,u.website, u.address_id, u.customer_org_id as organisation_id, u.image_url, u.language "
-                + " FROM user u"
+                + " FROM \"user\" u"
                 + " LEFT JOIN customer_organisation co on co.id = u.customer_org_id"
                 + " WHERE u.customer_org_id = ?1",
         resultSetMapping = "usermapping"
@@ -76,7 +76,7 @@ import java.util.Set;
 @NamedNativeQuery(
         name = "User.getUsers",
         query = "SELECT u.email, u.creation_timestamp, u.name, u.phone, u.phone_type, u.value,u.created_by,  u.company_name,u.website, u.address_id, u.customer_org_id as organisation_id, u.image_url, u.language "
-                + " FROM user u ",
+                + " FROM \"user\" u ",
         resultSetMapping = "usermapping"
 )
 
@@ -97,12 +97,13 @@ import java.util.Set;
 
 @NamedNativeQuery(
         name = "User.getAssigneeDetails",
-        query = "SELECT email, name, image_url FROM `user` WHERE email IN ?1",
+        query = "SELECT email, name, image_url FROM \"user\" WHERE email IN ?1",
         resultSetMapping = "userNameMapping"
 )
 
 
 @Entity
+@Table(name = "\"user\"")
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "email", scope = User.class)
 public class User {
     @Id

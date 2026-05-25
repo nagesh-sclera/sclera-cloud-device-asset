@@ -22,7 +22,7 @@ spring:
       - org.springframework.boot.amqp.autoconfigure.RabbitAutoConfiguration
       - org.springframework.boot.amqp.autoconfigure.health.RabbitHealthContributorAutoConfiguration
   datasource:
-    url: ${DB_URL:jdbc:mysql://scleravdmsdatabase:3306/vdms}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/vdms}
     username: ${DB_USER:root}
     password: ${DB_PASS:mypass123}
     hikari:
