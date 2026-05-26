@@ -45,7 +45,6 @@ public class Vendor {
     @Column(length = 64)
     private String state;
 
-    @Column(length = 255)
     private Integer zip;
 
     @Column(length = 64)

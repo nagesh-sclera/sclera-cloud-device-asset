@@ -20,8 +20,6 @@ public class ReportAttributes {
 
     private String protocol;
 
-    private Integer is_deleted;
-
     /** Scalar FK — replaces @ManyToOne ReportTemplate (loose coupling). */
     @Column(name = "report_template_id")
     private String report_template_id;
@@ -37,9 +35,6 @@ public class ReportAttributes {
 
     public String getProtocol() { return protocol; }
     public void setProtocol(String protocol) { this.protocol = protocol; }
-
-    public Integer getIs_deleted() { return is_deleted; }
-    public void setIs_deleted(Integer is_deleted) { this.is_deleted = is_deleted; }
 
     public String getReport_template_id() { return report_template_id; }
     public void setReport_template_id(String report_template_id) { this.report_template_id = report_template_id; }

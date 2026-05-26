@@ -7,6 +7,8 @@ import java.util.Objects;
 
 public class LocationGlobalChecklistId implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private String location_id;
     private String global_checklist_id;
 
