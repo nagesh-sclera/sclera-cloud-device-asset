@@ -1,7 +1,7 @@
 # CLAUDE.md — sclera-{{servicekey}}
 
 ## Project identity
-Walking-skeleton microservice scaffolded by `tools/skeleton-template/scaffold-skeleton.sh`. Spring Boot 2.6.5, Java 17. Hosts the future real `sclera-{{servicekey}}` service's Dapr surface.
+Walking-skeleton microservice scaffolded by `tools/skeleton-template/scaffold-skeleton.sh`. Spring Boot 4.0.6, Java 21. Hosts the future real `sclera-{{servicekey}}` service's Dapr surface.
 
 ## Rules
 - No database, no Flyway, no JPA. All endpoints return hardcoded defaults from `defaults/Defaults.java`.

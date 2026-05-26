@@ -30,7 +30,7 @@ import io.sclera.Repository.DocumentRepository;
 import io.sclera.dto.DocumentMediaDTO;
 import io.sclera.utils.FileUtils;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class DocumentService {

@@ -2,7 +2,7 @@
 package io.sclera.models;
 
 import io.sclera.dto.ClientBarCodeDTO;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigInteger;
 
 @SqlResultSetMapping(name = "clientbarcodedetails", classes = {@ConstructorResult(targetClass = ClientBarCodeDTO.class, columns = {@ColumnResult(name = "id", type = String.class), @ColumnResult(name = "device_id", type = String.class), @ColumnResult(name = "location_id", type = String.class)})})

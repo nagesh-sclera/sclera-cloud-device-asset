@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import io.sclera.dto.touchscreen.settings.VdmsDTO;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;

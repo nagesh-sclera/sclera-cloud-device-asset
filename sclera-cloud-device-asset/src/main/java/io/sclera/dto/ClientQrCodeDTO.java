@@ -2,7 +2,7 @@
 package io.sclera.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import javax.persistence.Id;
+import jakarta.persistence.Id;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 

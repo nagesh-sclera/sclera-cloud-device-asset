@@ -2,13 +2,14 @@
 package io.sclera.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.type.CollectionType;
 import io.sclera.dto.touchscreen.settings.DockerDTO;
 import io.sclera.dto.touchscreen.settings.NetworkConditionsResponseDTO;
 import io.sclera.dto.touchscreen.settings.dockercli.ConnectorDTO;
@@ -82,11 +83,12 @@ public class Utils {
         }
     }
 
-    public String convertYamlToJSON(String content) throws JsonProcessingException {
-        ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
-        Object obj = yamlReader.readValue(content, Object.class);
-        ObjectMapper jsonWriter = new ObjectMapper();
+    public String convertYamlToJSON(String content) {
+        com.fasterxml.jackson.databind.ObjectMapper yamlReader = new com.fasterxml.jackson.databind.ObjectMapper(new YAMLFactory());
+        Object obj;
         try {
+            obj = yamlReader.readValue(content, Object.class);
+            com.fasterxml.jackson.databind.ObjectMapper jsonWriter = new com.fasterxml.jackson.databind.ObjectMapper();
             return jsonWriter.writeValueAsString(obj);
         } catch (JsonProcessingException e) {
             log.error(e.getMessage());
@@ -94,9 +96,14 @@ public class Utils {
         }
     }
 
-    public String convertJSONToYAML(String content) throws JsonProcessingException {
-        JsonNode jsonNodeTree = new ObjectMapper().readTree(content);
-        return new YAMLMapper().writeValueAsString(jsonNodeTree);
+    public String convertJSONToYAML(String content) {
+        try {
+            JsonNode jsonNodeTree = new com.fasterxml.jackson.databind.ObjectMapper().readTree(content);
+            return new YAMLMapper().writeValueAsString(jsonNodeTree);
+        } catch (JsonProcessingException e) {
+            log.error(e.getMessage());
+            return "";
+        }
     }
 
     public ConcurrentHashMap<String, Object> execCmd(String[] cmd) {
@@ -574,11 +581,11 @@ public class Utils {
     }
 
     public <T> List<T> getJSONArrayFromJSONString(String JSONString, Class<T> object_type) {
-        ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        ObjectMapper mapper = JsonMapper.builder().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
         try {
             CollectionType listType = mapper.getTypeFactory().constructCollectionType(ArrayList.class, object_type);
             return mapper.readValue(JSONString, listType);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error(e.getMessage());
             return null;
         }
@@ -721,11 +728,11 @@ public class Utils {
     }
 
     public <T> Set<T> getJSONArrayFromJSONStringForSet(String JSONString, Class<T> object_type) {
-        ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        ObjectMapper mapper = JsonMapper.builder().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
         try {
             CollectionType setType = mapper.getTypeFactory().constructCollectionType(HashSet.class, object_type);
             return mapper.readValue(JSONString, setType);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error(e.getMessage());
             return null;
         }
@@ -737,8 +744,8 @@ public class Utils {
         return addFileToServer(image, directory, file_name, extension, server_image_url);
     }
 
-    public <T> T getJSONObjectFromString(String JSONString, Class<T> object_type) throws JsonMappingException, JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    public <T> T getJSONObjectFromString(String JSONString, Class<T> object_type) {
+        ObjectMapper mapper = JsonMapper.builder().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
         return mapper.readValue(JSONString, object_type);
     }
 

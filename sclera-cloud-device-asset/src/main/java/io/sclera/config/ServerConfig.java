@@ -6,8 +6,9 @@ import org.apache.tomcat.util.descriptor.web.SecurityCollection;
 import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
-import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
+import org.springframework.boot.tomcat.TomcatWebServerFactory;
+import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
+import org.springframework.boot.web.server.servlet.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -35,13 +36,13 @@ public class ServerConfig {
                 context.addConstraint(securityConstraint);
             }
         };
-        tomcatServletWebServerFactory.addAdditionalTomcatConnectors(redirectConnector());
+        tomcatServletWebServerFactory.addAdditionalConnectors(redirectConnector());
         return tomcatServletWebServerFactory;
     }
 
     private Connector redirectConnector() {
         int httpPort = Integer.parseInt(Objects.requireNonNull(environment.getProperty("server.http.port"), "Http port cannot be null"));
-        org.apache.catalina.connector.Connector connector = new org.apache.catalina.connector.Connector(TomcatServletWebServerFactory.DEFAULT_PROTOCOL);
+        org.apache.catalina.connector.Connector connector = new org.apache.catalina.connector.Connector(TomcatWebServerFactory.DEFAULT_PROTOCOL);
         connector.setScheme("http");
         connector.setPort(httpPort);
         connector.setSecure(false);

@@ -5,7 +5,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import io.sclera.dto.*;
 import io.sclera.dto.touchscreen.SensorDTO;

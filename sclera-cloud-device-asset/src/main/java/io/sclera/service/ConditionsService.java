@@ -33,7 +33,7 @@ import io.sclera.client.RabbitmqClient;
 import io.sclera.client.SocketClient;
 import io.sclera.utils.ConditionUtils;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class ConditionsService {

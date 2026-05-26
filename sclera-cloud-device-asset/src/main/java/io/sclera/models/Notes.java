@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import io.sclera.dto.Product_NotesDTO;
 import io.sclera.models.compositeclass.NoteIds;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @IdClass(NoteIds.class)

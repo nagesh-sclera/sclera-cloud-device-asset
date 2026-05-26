@@ -2,7 +2,7 @@ package io.sclera.models;
 
 import io.sclera.dto.MeasuringInstrumentAttributesDTO;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @SqlResultSetMapping(
         name = "measuringinstrumentattributemapping",

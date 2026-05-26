@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.itextpdf.text.pdf.Barcode;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.sclera.Repository.VdmsRepository;
 import io.sclera.client.PmsClient;
 import io.sclera.client.PropertyQrcodeClient;
@@ -33,7 +32,7 @@ import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.LocationRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 
 @Service

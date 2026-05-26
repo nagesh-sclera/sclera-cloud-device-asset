@@ -6,7 +6,6 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 import com.alibaba.fastjson.JSONObject;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.sclera.Repository.VdmsRepository;
 import io.sclera.dto.FloorDTO;
 import io.sclera.dto.LocationDTO;
@@ -19,7 +18,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.BuildingRepository;
 import io.sclera.dto.BuildingDTO;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class BuildingService {

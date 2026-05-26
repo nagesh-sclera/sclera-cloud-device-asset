@@ -97,7 +97,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -153,18 +153,14 @@ public class WebSecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeRequests()
-                .requestMatchers(this::allowAccess)
-                .permitAll()
-                .anyRequest()
-                .authenticated()
-                .and()
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(this::allowAccess).permitAll()
+                        .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.decoder(jwtDecoder(jwtProcessor(), tenantJwtIssuerValidator()))))
                 .headers(header -> header
                         .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN))
-                        .permissionsPolicy(permissions -> permissions.policy("camera=(self), microphone=(self), geolocation=(self)"))
-                        .and()
+                        .permissionsPolicyHeader(permissions -> permissions.policy("camera=(self), microphone=(self), geolocation=(self)"))
                         .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; img-src *; object-src *"))
                         .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(63072000))
                         .addHeaderWriter((request, response) -> response.setHeader("Strict-Transport-Security", "max-age=63072000 ; includeSubDomains")));

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.sclera.dto.touchscreen.DeviceIPAddressDTO;
 
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;

@@ -1,8 +1,8 @@
 package io.sclera.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import io.sclera.Repository.DockerRepository;
 import io.sclera.Repository.VdmsconfigurationRepository;
 import io.sclera.dto.touchscreen.settings.DockerDTO;
@@ -575,7 +575,7 @@ public class DockerUtils {
             if (response.get("Warnings") != null) {
                 log.warn("Warnings : {}", response.get("Warnings").toString());
             }
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Exception in parsing docker response : {}", e.getMessage());
         }
 

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 
 import com.alibaba.fastjson.JSONArray;
 import io.sclera.dto.LocationAlertDTO;

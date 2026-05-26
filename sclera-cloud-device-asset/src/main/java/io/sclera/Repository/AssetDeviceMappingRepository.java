@@ -5,7 +5,7 @@ import io.sclera.models.Asset;
 import io.sclera.models.AssetDeviceMapping;
 import io.sclera.models.Device;
 import java.util.List;
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

@@ -2,7 +2,7 @@
 package io.sclera.models;
 
 import io.sclera.dto.TechnicianDTO;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Set;
 // -- Exception day check
 // -- Date range check
@@ -63,7 +63,7 @@ public class Technician {
     @JoinColumn(name = "vdms_id")
     private Vdms vdms;
     // TODO: replace with Dapr call when device-technician module is ready
-    @javax.persistence.Transient
+    @jakarta.persistence.Transient
     private Set<Device> device;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "technician")
     private Set<AiCallLog> aiCallLog;

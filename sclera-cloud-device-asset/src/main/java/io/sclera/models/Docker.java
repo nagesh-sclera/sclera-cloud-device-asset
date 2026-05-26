@@ -8,7 +8,7 @@ import io.sclera.dto.touchscreen.settings.DockerDTO;
 import io.sclera.dto.touchscreen.settings.NetworkBoundaryConditionsDTO;
 import io.sclera.models.compositeclass.DockerIds;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigInteger;
 import java.util.Set;
 
@@ -702,7 +702,7 @@ public class Docker {
     @ManyToOne
     private Vendor_Organisation vendor_org;
 
-    @javax.persistence.Transient
+    @jakarta.persistence.Transient
     private Set<Device> device;
 
     @OneToOne
@@ -715,7 +715,7 @@ public class Docker {
     @OneToMany(mappedBy = "docker",cascade = CascadeType.ALL)
     private Set<Bacnet_Device> bacnet_device;
 
-    @javax.persistence.Transient
+    @jakarta.persistence.Transient
     private Set<History> history;
 
     @OneToMany(mappedBy = "docker",cascade = CascadeType.ALL)

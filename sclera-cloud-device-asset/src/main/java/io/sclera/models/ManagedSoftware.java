@@ -3,7 +3,7 @@ package io.sclera.models;
 
 import io.sclera.dto.ManagedSoftwareDTO;
 import io.sclera.dto.ManagedSoftwareUsersDTO;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigInteger;
 
 @SqlResultSetMapping(name = "ManagedSoftwareMapping", classes = {@ConstructorResult(targetClass = ManagedSoftwareDTO.class, columns = {@ColumnResult(name = "id", type = String.class), @ColumnResult(name = "name", type = String.class), @ColumnResult(name = "applicationName", type = String.class), @ColumnResult(name = "applicationType", type = String.class), @ColumnResult(name = "url", type = String.class), @ColumnResult(name = "vendor", type = String.class), @ColumnResult(name = "subscriptionId", type = String.class), @ColumnResult(name = "subscriptionType", type = String.class), @ColumnResult(name = "unitPrice", type = Double.class), @ColumnResult(name = "currency", type = String.class), @ColumnResult(name = "subscriptionStartDate", type = BigInteger.class), @ColumnResult(name = "subscriptionEndDate", type = BigInteger.class), @ColumnResult(name = "status", type = String.class), @ColumnResult(name = "applicationId", type = String.class)})})

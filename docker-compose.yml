@@ -11,59 +11,29 @@ services:
       timeout: 3s
       retries: 10
 
-  postgres:
-    image: postgres:16-alpine
-    container_name: sclera-postgres
-    env_file: .env
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./db-init/init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - sclera-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
-  pgadmin:
-    image: dpage/pgadmin4:8.6
-    container_name: sclera-pgadmin
-    env_file: .env
-    ports:
-      - "5050:80"
-    volumes:
-      - ./pgadmin/servers.json:/pgadmin4/servers.json
-    networks:
-      - sclera-net
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: on-failure
-
   app:
     build: ./sclera-cloud-device-asset
     container_name: sclera-cloud-device-asset
     depends_on:
       redis:
         condition: service_healthy
-      postgres:
-        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_URL: ${DB_URL}
-      DB_USER: ${DB_USER}
-      DB_PASS: ${DB_PASS}
+      DB_URL: jdbc:mysql://host.docker.internal:3306/vdms
+      DB_USER: root
+      DB_PASS: mypass123
       DAPR_HTTP_PORT: "3500"
       DAPR_GRPC_PORT: "50001"
       SPRING_FLYWAY_ENABLED: "false"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
     ports:
       - "8085:8085"
     networks:
       - sclera-net
     restart: on-failure
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   app-dapr:
     image: daprio/daprd:1.12.0
@@ -92,18 +62,20 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-      postgres:
-        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_URL: ${DB_URL}
-      DB_USER: ${DB_USER}
-      DB_PASS: ${DB_PASS}
+      DB_URL: jdbc:mysql://host.docker.internal:3306/vdms
+      DB_USER: root
+      DB_PASS: mypass123
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
     ports:
       - "8089:8089"
     networks:
       - sclera-net
     restart: on-failure
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   vdms-dapr:
     image: daprio/daprd:1.12.0
@@ -133,6 +105,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       DAPR_HTTP_PORT: "3500"
       DAPR_GRPC_PORT: "50001"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
     ports: ["8090:8090"]
     networks: [sclera-net]
     restart: on-failure
@@ -158,6 +132,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       DAPR_HTTP_PORT: "3500"
       DAPR_GRPC_PORT: "50001"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
     ports: ["8091:8091"]
     networks: [sclera-net]
     restart: on-failure
@@ -183,6 +159,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       DAPR_HTTP_PORT: "3500"
       DAPR_GRPC_PORT: "50001"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
     ports: ["8092:8092"]
     networks: [sclera-net]
     restart: on-failure
@@ -208,6 +186,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       DAPR_HTTP_PORT: "3500"
       DAPR_GRPC_PORT: "50001"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
     ports: ["8093:8093"]
     networks: [sclera-net]
     restart: on-failure
@@ -233,6 +213,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       DAPR_HTTP_PORT: "3500"
       DAPR_GRPC_PORT: "50001"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
     ports: ["8094:8094"]
     networks: [sclera-net]
     restart: on-failure
@@ -258,6 +240,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       DAPR_HTTP_PORT: "3500"
       DAPR_GRPC_PORT: "50001"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
     ports: ["8095:8095"]
     networks: [sclera-net]
     restart: on-failure
@@ -283,6 +267,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       DAPR_HTTP_PORT: "3500"
       DAPR_GRPC_PORT: "50001"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
     ports: ["8096:8096"]
     networks: [sclera-net]
     restart: on-failure
@@ -308,6 +294,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       DAPR_HTTP_PORT: "3500"
       DAPR_GRPC_PORT: "50001"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
     ports: ["8097:8097"]
     networks: [sclera-net]
     restart: on-failure
@@ -333,6 +321,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       DAPR_HTTP_PORT: "3500"
       DAPR_GRPC_PORT: "50001"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
     ports:
       - "8080:8080"
     depends_on:
@@ -412,6 +402,3 @@ services:
 networks:
   sclera-net:
     driver: bridge
-
-volumes:
-  postgres_data:

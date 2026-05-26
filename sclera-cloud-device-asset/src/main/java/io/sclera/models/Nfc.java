@@ -2,7 +2,7 @@
 package io.sclera.models;
 
 import io.sclera.dto.NfcDTO;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigInteger;
 
 @SqlResultSetMapping(name = "nfcdetails", classes = {@ConstructorResult(targetClass = NfcDTO.class, columns = {@ColumnResult(name = "id", type = String.class), @ColumnResult(name = "device_id", type = String.class), @ColumnResult(name = "location_id", type = String.class)})})

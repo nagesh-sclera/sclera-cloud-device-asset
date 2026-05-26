@@ -17,7 +17,7 @@ public class DockerSecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.disable())
-            .authorizeRequests(auth -> auth.anyRequest().permitAll());
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         return http.build();
     }
 }

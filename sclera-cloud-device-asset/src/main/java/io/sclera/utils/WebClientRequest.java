@@ -110,8 +110,8 @@ public class WebClientRequest {
                                 BodyInserters.fromMultipartData(addMultipartFiles(fileKey, multipartFiles))
                 )
                 .retrieve()
-                .onStatus(HttpStatus::is4xxClientError, response -> Mono.empty())
-                .onStatus(HttpStatus::is5xxServerError, response -> Mono.empty())
+                .onStatus(status -> status.is4xxClientError(), response -> Mono.empty())
+                .onStatus(status -> status.is5xxServerError(), response -> Mono.empty())
                 .toEntity(responseClass)
                 .block();
     }
@@ -213,8 +213,8 @@ public class WebClientRequest {
                             BodyInserters.fromMultipartData(addMultipartFiles(fileKey, multipartFiles))
                     )
                     .retrieve()
-                    .onStatus(HttpStatus::is4xxClientError, response -> Mono.empty())
-                    .onStatus(HttpStatus::is5xxServerError, response -> Mono.empty())
+                    .onStatus(status -> status.is4xxClientError(), response -> Mono.empty())
+                    .onStatus(status -> status.is5xxServerError(), response -> Mono.empty())
                     .toEntity(responseClass)
                     .block();
         } catch (Exception e) {

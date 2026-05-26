@@ -1,8 +1,7 @@
 package io.sclera.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.DeviceTechnicianAISuggestionRepository;
 import io.sclera.dto.DeviceTechnicianAISuggestionDTO;
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -83,7 +82,7 @@ public class DeviceTechnicianAISuggestionService {
     }
 
     // AI Suggestions for Skill Profiles
-    public List<TechnicianDTO> getDeviceTechnicianAISuggestionsByDeviceType(String deviceType, String vdmsId, HttpServletRequest httpServletRequest) throws JsonProcessingException {
+    public List<TechnicianDTO> getDeviceTechnicianAISuggestionsByDeviceType(String deviceType, String vdmsId, HttpServletRequest httpServletRequest) {
         String techniciansJsonArray = deviceTechnicianAISuggestionRepository.getDeviceTechnicianAISuggestionByDeviceType(deviceType, vdmsId);
 
         if (techniciansJsonArray != null && !techniciansJsonArray.isEmpty()) {

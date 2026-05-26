@@ -9,7 +9,7 @@ import io.sclera.dto.touchscreen.assetmapper.AssetDTO;
 import io.sclera.dto.touchscreen.assetmapper.AssetDeviceDTO;
 import org.hibernate.annotations.ColumnDefault;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.HashSet;

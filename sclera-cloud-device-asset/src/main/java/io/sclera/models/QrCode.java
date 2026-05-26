@@ -2,7 +2,7 @@
 package io.sclera.models;
 
 import io.sclera.dto.QrCodeDTO;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigInteger;
 
 @SqlResultSetMapping(name = "qrcodedetails", classes = {@ConstructorResult(targetClass = QrCodeDTO.class, columns = {@ColumnResult(name = "id", type = String.class), @ColumnResult(name = "device_id", type = String.class), @ColumnResult(name = "location_id", type = String.class), @ColumnResult(name = "updated_by", type = String.class), @ColumnResult(name = "updated_time", type = String.class)})})

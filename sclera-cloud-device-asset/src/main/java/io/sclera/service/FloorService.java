@@ -22,8 +22,7 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.sclera.Repository.LocationRepository;
 import io.sclera.Repository.VdmsRepository;
 import io.sclera.dto.LocationDTO;
@@ -41,7 +40,7 @@ import io.sclera.dto.FloorDTO;
 import io.sclera.utils.Utils;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 @ConfigurationProperties(prefix = "sclera")

@@ -3,7 +3,7 @@ package io.sclera.models;
 import io.sclera.dto.AiCallLogDTO;
 import io.sclera.dto.CallStatusDTO;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigInteger;
 import java.util.Set;
 

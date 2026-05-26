@@ -21,8 +21,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 
 import io.sclera.client.APICallClient;
 import io.sclera.service.DeviceSearchService;
@@ -30,8 +28,8 @@ import io.sclera.service.DeviceService;
 import io.sclera.utils.APIRequest;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
@@ -177,7 +175,7 @@ public class DeviceController {
     }
 
     @GetMapping(value = "/test/product")
-    public ProductDTO test() throws JsonMappingException, JsonProcessingException {
+    public ProductDTO test() {
         String product_id = "6aeeae74-2855-4b67-943e-49d979a45abf";
         return apicallService.getProductDetailsByProductId(product_id);
     }
@@ -466,7 +464,7 @@ public class DeviceController {
 
     @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/updateassetmatchdetails")
     public DeviceDTO updateAssetMatchDetails(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
-                                             @RequestBody JSONObject deviceObject, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) throws JsonProcessingException {
+                                             @RequestBody JSONObject deviceObject, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) {
         return deviceService.updateAssetMatchDetails(username, vdmsid, dockername, deviceObject, httpServletRequest, assignee);
     }
 
@@ -484,7 +482,7 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/multieditdigitaltwininstruments")
     public void multiEditDigitalTwin(@PathVariable String username, @PathVariable String vdmsid, @RequestParam(required = true) String data,
                                      @RequestParam(required = false) String image_url,
-                                     @RequestParam(required = false) MultipartFile image, HttpServletRequest httpServletRequest) throws JsonProcessingException {
+                                     @RequestParam(required = false) MultipartFile image, HttpServletRequest httpServletRequest) {
         deviceService.multiEditDigitalTwin(username, vdmsid, data, image_url, image, httpServletRequest);
     }
 

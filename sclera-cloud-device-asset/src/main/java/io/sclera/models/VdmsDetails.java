@@ -1,7 +1,7 @@
 package io.sclera.models;
 
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import io.sclera.dto.touchscreen.VdmsDetailsDTO;
 
