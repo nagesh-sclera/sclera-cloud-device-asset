@@ -7,9 +7,12 @@ public class DocumentQueryRepository {
 
     public String getQueryForUpsertDocument() {
         // PG-port: ON DUPLICATE KEY UPDATE -> ON CONFLICT (id) DO UPDATE SET ... (VALUES()->EXCLUDED)
-        // Note: original MySQL had encrypted_type = VALUES(link) (varchar->int coercion bug preserved as cast)
+        // PG-gap: original MySQL had `encrypted_type = VALUES(link)` — assigning the varchar `link`
+        //   to the integer `encrypted_type` (a copy-paste bug; MySQL silently coerced non-numeric->0,
+        //   PG would throw on CAST). Left OUT of the conflict UPDATE (encrypted_type keeps its inserted
+        //   value on conflict) pending an app-team decision (likely intended EXCLUDED.encrypted_type).
         return "INSERT INTO document (id , name, category , description, link, created_email, created_timestamp, encrypted_type,source_type) VALUES (?,?,?,?,?,?,?,?,?) " +
-                "ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name , category = EXCLUDED.category, description = EXCLUDED.description, link = EXCLUDED.link, encrypted_type = CAST(EXCLUDED.link AS integer) ";
+                "ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name , category = EXCLUDED.category, description = EXCLUDED.description, link = EXCLUDED.link ";
     }
 
     public String getQueryForTagDocument() {
