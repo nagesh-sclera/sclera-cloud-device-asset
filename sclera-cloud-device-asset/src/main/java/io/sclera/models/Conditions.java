@@ -1,8 +1,15 @@
 package io.sclera.models;
 
+// PG-restore: scalar columns + scalar FK fields referenced by alert/sensor native queries
+// (loose coupling; cross-module @ManyToOne replaced by scalar *_id).
+// PK changed from Long to String to match monolith + ConditionsRepository<Conditions, String>.
+// @OneToMany(mappedBy="bacnet_object") was removed from Bacnet_Object; FK stored as plain columns here.
+
+import java.math.BigInteger;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.Table;
@@ -54,14 +61,264 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "conditions")
 public class Conditions {
+
+    // --- Primary Key ---
     @Id
-    private Long id;
+    private String id;
 
-    @ManyToOne
-    private Bacnet_Object bacnet_object;
+    // --- Scalar columns ---
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Bacnet_Object getBacnet_object() { return bacnet_object; }
-    public void setBacnet_object(Bacnet_Object bacnet_object) { this.bacnet_object = bacnet_object; }
+    @Column(length = 128)
+    private String name;
+
+    @Column(length = 128)
+    private String value;
+
+    @Column(length = 128)
+    private String second_value;
+
+    private String alert_message;
+
+    @Column(length = 64)
+    private String start_time;
+
+    @Column(length = 64)
+    private String end_time;
+
+    @Column(length = 64)
+    private String alert_condition;
+
+    @Column(columnDefinition = "boolean default false")
+    private Boolean alert;
+
+    @Column(columnDefinition = "boolean default false")
+    private Boolean show_alert;
+
+    @Column(columnDefinition = "boolean default false")
+    private Boolean show_alert_message_as_value;
+
+    @Column(length = 8, columnDefinition = "integer default 0")
+    private Integer schedule;
+
+    private String schedule_conditions;
+
+    @Column(columnDefinition = "integer default 0")
+    private Integer max_alert_count;
+
+    @Column(columnDefinition = "integer default 0")
+    private Integer alert_count;
+
+    @Column(columnDefinition = "integer default 0")
+    private Integer alert_count_enabled;
+
+    // BigInteger maps to NUMERIC in PG (no length constraint needed)
+    private BigInteger last_alerted_timestamp;
+
+    private Integer alert_time;
+
+    @Column(length = 128)
+    private String priority;
+
+    @Column(columnDefinition = "boolean default false")
+    private Boolean last_alerted;
+
+    @Column
+    private Integer alert_count_time;
+
+    @Column
+    private Integer enable_threshold_line_onchart;
+
+    @Column
+    private String color_of_threshold_line_onchart;
+
+    // Plain FK string (not an @ManyToOne): daintree_device_id stored directly as column
+    private String daintree_device_id;
+
+    // --- Scalar FK fields (loose coupling: all cross-module @ManyToOne replaced by plain *_id columns) ---
+
+    // Replaces @ManyToOne Bacnet_Object (composite FK)
+    private String bacnet_object_bacnet_device_id;
+    private String bacnet_object_id;
+
+    // Replaces @ManyToOne Lorawan_Sensor_Attributes (composite FK)
+    private String lorawan_sensor_attributes_lorawan_sensor_id;
+    private String lorawan_sensor_attributes_name;
+
+    // Replaces @ManyToOne Snmp_Device
+    private String snmp_device_id;
+
+    // Replaces @ManyToOne DisruptiveSensor
+    private String disruptive_sensor_id;
+
+    // Replaces @ManyToOne MyDevicesSensorAttributes (composite FK)
+    private String my_devices_sensor_attributes_my_devices_sensor_id;
+    private String my_devices_sensor_attributes_name;
+
+    // Replaces @ManyToOne Monnit_Sensor
+    private String monnit_sensor_id;
+
+    // Replaces @ManyToOne PelicanSensorAttributes (composite FK)
+    private String pelican_sensor_attributes_pelican_sensor_id;
+    private String pelican_sensor_attributes_name;
+
+    // Replaces @ManyToOne KNXGroup (composite FK)
+    private String knx_group_address;
+    private String knx_group_knx_device_address;
+
+    // Replaces @ManyToOne SnmpObject (composite FK)
+    private String snmp_object_snmp_device_configuration_id;
+    private String snmp_object_oid;
+
+    // Replaces @ManyToOne MeasuringInstrument
+    private String measuring_instrument_id;
+
+    // Replaces @ManyToOne DaintreePoint
+    private String daintree_point_id;
+
+    // Replaces @ManyToOne AlertProfile (AlertProfile exists in this service but prefer scalar per loose-coupling rule)
+    private String alert_profile_id;
+
+    // Replaces @ManyToOne EcobeeSensorAttributes (composite FK)
+    private String ecobee_sensor_attributes_ecobee_sensor_id;
+    private String ecobee_sensor_attributes_name;
+
+    // Replaces @ManyToOne ModbusRegister
+    private String modbus_register_id;
+
+    // --- Getters and Setters ---
+
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getValue() { return value; }
+    public void setValue(String value) { this.value = value; }
+
+    public String getSecond_value() { return second_value; }
+    public void setSecond_value(String second_value) { this.second_value = second_value; }
+
+    public String getAlert_message() { return alert_message; }
+    public void setAlert_message(String alert_message) { this.alert_message = alert_message; }
+
+    public String getStart_time() { return start_time; }
+    public void setStart_time(String start_time) { this.start_time = start_time; }
+
+    public String getEnd_time() { return end_time; }
+    public void setEnd_time(String end_time) { this.end_time = end_time; }
+
+    public String getAlert_condition() { return alert_condition; }
+    public void setAlert_condition(String alert_condition) { this.alert_condition = alert_condition; }
+
+    public Boolean getAlert() { return alert; }
+    public void setAlert(Boolean alert) { this.alert = alert; }
+
+    public Boolean getShow_alert() { return show_alert; }
+    public void setShow_alert(Boolean show_alert) { this.show_alert = show_alert; }
+
+    public Boolean getShow_alert_message_as_value() { return show_alert_message_as_value; }
+    public void setShow_alert_message_as_value(Boolean show_alert_message_as_value) { this.show_alert_message_as_value = show_alert_message_as_value; }
+
+    public Integer getSchedule() { return schedule; }
+    public void setSchedule(Integer schedule) { this.schedule = schedule; }
+
+    public String getSchedule_conditions() { return schedule_conditions; }
+    public void setSchedule_conditions(String schedule_conditions) { this.schedule_conditions = schedule_conditions; }
+
+    public Integer getMax_alert_count() { return max_alert_count; }
+    public void setMax_alert_count(Integer max_alert_count) { this.max_alert_count = max_alert_count; }
+
+    public Integer getAlert_count() { return alert_count; }
+    public void setAlert_count(Integer alert_count) { this.alert_count = alert_count; }
+
+    public Integer getAlert_count_enabled() { return alert_count_enabled; }
+    public void setAlert_count_enabled(Integer alert_count_enabled) { this.alert_count_enabled = alert_count_enabled; }
+
+    public BigInteger getLast_alerted_timestamp() { return last_alerted_timestamp; }
+    public void setLast_alerted_timestamp(BigInteger last_alerted_timestamp) { this.last_alerted_timestamp = last_alerted_timestamp; }
+
+    public Integer getAlert_time() { return alert_time; }
+    public void setAlert_time(Integer alert_time) { this.alert_time = alert_time; }
+
+    public String getPriority() { return priority; }
+    public void setPriority(String priority) { this.priority = priority; }
+
+    public Boolean getLast_alerted() { return last_alerted; }
+    public void setLast_alerted(Boolean last_alerted) { this.last_alerted = last_alerted; }
+
+    public Integer getAlert_count_time() { return alert_count_time; }
+    public void setAlert_count_time(Integer alert_count_time) { this.alert_count_time = alert_count_time; }
+
+    public Integer getEnable_threshold_line_onchart() { return enable_threshold_line_onchart; }
+    public void setEnable_threshold_line_onchart(Integer enable_threshold_line_onchart) { this.enable_threshold_line_onchart = enable_threshold_line_onchart; }
+
+    public String getColor_of_threshold_line_onchart() { return color_of_threshold_line_onchart; }
+    public void setColor_of_threshold_line_onchart(String color_of_threshold_line_onchart) { this.color_of_threshold_line_onchart = color_of_threshold_line_onchart; }
+
+    public String getDaintree_device_id() { return daintree_device_id; }
+    public void setDaintree_device_id(String daintree_device_id) { this.daintree_device_id = daintree_device_id; }
+
+    public String getBacnet_object_bacnet_device_id() { return bacnet_object_bacnet_device_id; }
+    public void setBacnet_object_bacnet_device_id(String bacnet_object_bacnet_device_id) { this.bacnet_object_bacnet_device_id = bacnet_object_bacnet_device_id; }
+
+    public String getBacnet_object_id() { return bacnet_object_id; }
+    public void setBacnet_object_id(String bacnet_object_id) { this.bacnet_object_id = bacnet_object_id; }
+
+    public String getLorawan_sensor_attributes_lorawan_sensor_id() { return lorawan_sensor_attributes_lorawan_sensor_id; }
+    public void setLorawan_sensor_attributes_lorawan_sensor_id(String lorawan_sensor_attributes_lorawan_sensor_id) { this.lorawan_sensor_attributes_lorawan_sensor_id = lorawan_sensor_attributes_lorawan_sensor_id; }
+
+    public String getLorawan_sensor_attributes_name() { return lorawan_sensor_attributes_name; }
+    public void setLorawan_sensor_attributes_name(String lorawan_sensor_attributes_name) { this.lorawan_sensor_attributes_name = lorawan_sensor_attributes_name; }
+
+    public String getSnmp_device_id() { return snmp_device_id; }
+    public void setSnmp_device_id(String snmp_device_id) { this.snmp_device_id = snmp_device_id; }
+
+    public String getDisruptive_sensor_id() { return disruptive_sensor_id; }
+    public void setDisruptive_sensor_id(String disruptive_sensor_id) { this.disruptive_sensor_id = disruptive_sensor_id; }
+
+    public String getMy_devices_sensor_attributes_my_devices_sensor_id() { return my_devices_sensor_attributes_my_devices_sensor_id; }
+    public void setMy_devices_sensor_attributes_my_devices_sensor_id(String my_devices_sensor_attributes_my_devices_sensor_id) { this.my_devices_sensor_attributes_my_devices_sensor_id = my_devices_sensor_attributes_my_devices_sensor_id; }
+
+    public String getMy_devices_sensor_attributes_name() { return my_devices_sensor_attributes_name; }
+    public void setMy_devices_sensor_attributes_name(String my_devices_sensor_attributes_name) { this.my_devices_sensor_attributes_name = my_devices_sensor_attributes_name; }
+
+    public String getMonnit_sensor_id() { return monnit_sensor_id; }
+    public void setMonnit_sensor_id(String monnit_sensor_id) { this.monnit_sensor_id = monnit_sensor_id; }
+
+    public String getPelican_sensor_attributes_pelican_sensor_id() { return pelican_sensor_attributes_pelican_sensor_id; }
+    public void setPelican_sensor_attributes_pelican_sensor_id(String pelican_sensor_attributes_pelican_sensor_id) { this.pelican_sensor_attributes_pelican_sensor_id = pelican_sensor_attributes_pelican_sensor_id; }
+
+    public String getPelican_sensor_attributes_name() { return pelican_sensor_attributes_name; }
+    public void setPelican_sensor_attributes_name(String pelican_sensor_attributes_name) { this.pelican_sensor_attributes_name = pelican_sensor_attributes_name; }
+
+    public String getKnx_group_address() { return knx_group_address; }
+    public void setKnx_group_address(String knx_group_address) { this.knx_group_address = knx_group_address; }
+
+    public String getKnx_group_knx_device_address() { return knx_group_knx_device_address; }
+    public void setKnx_group_knx_device_address(String knx_group_knx_device_address) { this.knx_group_knx_device_address = knx_group_knx_device_address; }
+
+    public String getSnmp_object_snmp_device_configuration_id() { return snmp_object_snmp_device_configuration_id; }
+    public void setSnmp_object_snmp_device_configuration_id(String snmp_object_snmp_device_configuration_id) { this.snmp_object_snmp_device_configuration_id = snmp_object_snmp_device_configuration_id; }
+
+    public String getSnmp_object_oid() { return snmp_object_oid; }
+    public void setSnmp_object_oid(String snmp_object_oid) { this.snmp_object_oid = snmp_object_oid; }
+
+    public String getMeasuring_instrument_id() { return measuring_instrument_id; }
+    public void setMeasuring_instrument_id(String measuring_instrument_id) { this.measuring_instrument_id = measuring_instrument_id; }
+
+    public String getDaintree_point_id() { return daintree_point_id; }
+    public void setDaintree_point_id(String daintree_point_id) { this.daintree_point_id = daintree_point_id; }
+
+    public String getAlert_profile_id() { return alert_profile_id; }
+    public void setAlert_profile_id(String alert_profile_id) { this.alert_profile_id = alert_profile_id; }
+
+    public String getEcobee_sensor_attributes_ecobee_sensor_id() { return ecobee_sensor_attributes_ecobee_sensor_id; }
+    public void setEcobee_sensor_attributes_ecobee_sensor_id(String ecobee_sensor_attributes_ecobee_sensor_id) { this.ecobee_sensor_attributes_ecobee_sensor_id = ecobee_sensor_attributes_ecobee_sensor_id; }
+
+    public String getEcobee_sensor_attributes_name() { return ecobee_sensor_attributes_name; }
+    public void setEcobee_sensor_attributes_name(String ecobee_sensor_attributes_name) { this.ecobee_sensor_attributes_name = ecobee_sensor_attributes_name; }
+
+    public String getModbus_register_id() { return modbus_register_id; }
+    public void setModbus_register_id(String modbus_register_id) { this.modbus_register_id = modbus_register_id; }
 }

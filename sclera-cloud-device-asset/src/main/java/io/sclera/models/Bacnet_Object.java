@@ -915,8 +915,7 @@ public class Bacnet_Object {
     //	@ManyToOne
     //	private Location location;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "bacnet_object")
-    private Set<Conditions> conditions;
+    // removed: @OneToMany(mappedBy="bacnet_object") — Conditions uses scalar FK fields (loose coupling)
 
     @OneToMany(mappedBy = "bacnet_object", cascade = CascadeType.ALL)
     private Set<History> history;
@@ -1119,14 +1118,6 @@ public class Bacnet_Object {
 
     public void setBacnet_device(Bacnet_Device bacnet_device) {
         this.bacnet_device = bacnet_device;
-    }
-
-    public Set<Conditions> getConditions() {
-        return conditions;
-    }
-
-    public void setConditions(Set<Conditions> conditions) {
-        this.conditions = conditions;
     }
 
     public Set<History> getHistory() {
