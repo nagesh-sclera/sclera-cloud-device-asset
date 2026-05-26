@@ -176,7 +176,7 @@ public class Bacnet_Device {
     @Column(columnDefinition = "integer default 0", length = 8)
     private Integer is_added;
 
-    @Column(name = "object_list", columnDefinition = "LONGTEXT")
+    @Column(name = "object_list", columnDefinition = "text")
     private String object_list;
 
     @Column

@@ -129,7 +129,7 @@ public class Floor {
     @Column
     private Integer angle;
 
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "text")
     private String path;
 
     @Column(length = 128)

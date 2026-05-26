@@ -11,16 +11,16 @@ public class DeviceNetworkSpecification {
     @Id
     private String id;
     @Lob
-    @Column(name = "network_interfaces", columnDefinition = "LONGTEXT")
+    @Column(name = "network_interfaces", columnDefinition = "text")
     private String networkInterfaces;
     @Lob
-    @Column(name = "network_settings", columnDefinition = "LONGTEXT")
+    @Column(name = "network_settings", columnDefinition = "text")
     private String networkSettings;
     @Lob
-    @Column(name = "network_ports", columnDefinition = "LONGTEXT")
+    @Column(name = "network_ports", columnDefinition = "text")
     private String networkPorts;
     @Lob
-    @Column(name = "network_processes", columnDefinition = "LONGTEXT")
+    @Column(name = "network_processes", columnDefinition = "text")
     private String networkProcesses;
     @OneToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "device_id", referencedColumnName = "id", insertable = false, updatable = false)

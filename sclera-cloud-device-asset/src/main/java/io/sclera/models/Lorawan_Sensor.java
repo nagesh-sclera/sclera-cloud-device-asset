@@ -633,7 +633,7 @@ public class Lorawan_Sensor {
     @Column(columnDefinition = "boolean default false")
     private Boolean alert;
 
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "text")
     private String sensor_info;
 
 

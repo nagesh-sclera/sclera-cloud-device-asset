@@ -35,10 +35,10 @@ public class DeviceSpecification {
     @Column(name = "cpu_info", length = 512)
     private String cpuInfo;
     @Lob
-    @Column(name = "disk_drives", columnDefinition = "LONGTEXT")
+    @Column(name = "disk_drives", columnDefinition = "text")
     private String diskDrives;
     @Lob
-    @Column(name = "physical_disks", columnDefinition = "LONGTEXT")
+    @Column(name = "physical_disks", columnDefinition = "text")
     private String physicalDisks;
     @Column(name = "bios", length = 512)
     private String bios;
@@ -51,10 +51,10 @@ public class DeviceSpecification {
     @Column(name = "battery_info", length = 255)
     private String batteryInfo;
     @Lob
-    @Column(name = "processes", columnDefinition = "LONGTEXT")
+    @Column(name = "processes", columnDefinition = "text")
     private String processes;
     @Lob
-    @Column(name = "system_updates", columnDefinition = "LONGTEXT")
+    @Column(name = "system_updates", columnDefinition = "text")
     private String systemUpdates;
     // Relationship mapping (lazy fetch, optional)
     @OneToOne(fetch = FetchType.LAZY, optional = true)
@@ -63,7 +63,7 @@ public class DeviceSpecification {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "deviceSpecification")
     private Set<DeviceInstalledApps> deviceInstalledApps;
     @Lob
-    @Column(name = "child_devices", columnDefinition = "LONGTEXT")
+    @Column(name = "child_devices", columnDefinition = "text")
     private String childDevices;
 
     @Override

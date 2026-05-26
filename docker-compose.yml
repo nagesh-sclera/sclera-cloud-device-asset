@@ -1,5 +1,25 @@
 services:
 
+  postgres:
+    image: postgres:16
+    container_name: sclera-postgres
+    environment:
+      POSTGRES_DB: vdms
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: mypass123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres-init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - sclera-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d vdms"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   redis:
     image: redis:7-alpine
     container_name: sclera-redis
@@ -17,11 +37,15 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_URL: jdbc:mysql://host.docker.internal:3306/vdms
+      DB_URL: jdbc:postgresql://postgres:5432/vdms
       DB_USER: root
       DB_PASS: mypass123
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
       DAPR_HTTP_PORT: "3500"
       DAPR_GRPC_PORT: "50001"
       SPRING_FLYWAY_ENABLED: "false"
@@ -62,11 +86,16 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_URL: jdbc:mysql://host.docker.internal:3306/vdms
+      DB_URL: jdbc:postgresql://postgres:5432/vdms
       DB_USER: root
       DB_PASS: mypass123
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: vdms_svc
       MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
       MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
     ports:
@@ -402,3 +431,6 @@ services:
 networks:
   sclera-net:
     driver: bridge
+
+volumes:
+  pgdata:

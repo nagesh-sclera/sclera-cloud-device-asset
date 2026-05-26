@@ -2919,7 +2919,7 @@ public class Device {
     @Column(columnDefinition = "integer default 0")
     private Integer subsystem_count;
 
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "text")
     public String custom_fields;
 
     @Column(columnDefinition = "TEXT")
