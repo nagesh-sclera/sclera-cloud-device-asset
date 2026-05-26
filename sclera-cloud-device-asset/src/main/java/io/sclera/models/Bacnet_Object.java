@@ -76,11 +76,12 @@ import io.sclera.models.compositeclass.DockerIds;
 
 
 //to be removed after pagination api works
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getBacnetObjectList",
         query = "SELECT bo.id, bo.name, bo.type, bo.instance, bo.present_value, bo.validity, bo.unit, bo.state_text, bo.user_data_name, bo.user_data_value,"
                 + " bo.category, bo.configuration, bo.alert, b.name as building, f.name as floor, l.name as location, l.id as location_id, bo.bacnet_device_id,"
-                + " bo.last_seen, bo.device_id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " bo.last_seen, bo.device_id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, bo.cov_subscription, bo.high_limit, bo.low_limit, bo.present_value_data_type, "
                 + " bo.show_on_map, bd.name as bacnet_device_name, bo.show_on_scan,bo.off_normal,bo.normal,bo.fault"
                 + " FROM bacnet_object bo "
@@ -95,12 +96,13 @@ import io.sclera.models.compositeclass.DockerIds;
 )
 
 //Added pagination for getBacnetObjectList
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getBacnetObjectsByBacnetDeviceIdPagination",
         query = "SELECT bo.id, bo.name, bo.type, bo.instance, bo.present_value, bo.validity, bo.unit, bo.state_text, bo.user_data_name,"
                 + " bo.user_data_value, bo.category, bo.configuration, bo.alert, b.name as building, f.name as floor, l.name as location, bo.bacnet_device_id,"
                 + " l.id as location_id, bo.last_seen, bo.device_id,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, bo.cov_subscription, bo.high_limit, bo.low_limit, bo.present_value_data_type, "
                 + " bo.show_on_map, bd.name as bacnet_device_name, bo.show_on_scan,bo.off_normal,bo.normal,bo.fault"
                 + " FROM bacnet_object bo"
@@ -117,12 +119,13 @@ import io.sclera.models.compositeclass.DockerIds;
 )
 
 
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getBacnetObjectById",
         query = "SELECT bo.id, bo.name, bo.type, bo.instance, bo.present_value, bo.validity, bo.unit, bo.state_text, bo.user_data_name,"
                 + " bo.user_data_value, bo.category, bo.configuration, bo.alert, b.name as building, f.name as floor, l.name as location,bo.bacnet_device_id,"
                 + " l.id as location_id, bo.last_seen, bo.device_id,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, bo.cov_subscription, bo.high_limit, bo.low_limit, bo.present_value_data_type, "
                 + " bo.show_on_map, bd.name as bacnet_device_name, bo.show_on_scan,bo.off_normal,bo.normal,bo.fault"
                 + " FROM bacnet_object bo"
@@ -136,12 +139,13 @@ import io.sclera.models.compositeclass.DockerIds;
         resultSetMapping = "bacnetobjectmapping"
 )
 
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getBacnetObjectByAttributeId",
         query = "SELECT bo.id, bo.name, bo.type, bo.instance, bo.present_value, bo.validity, bo.unit, bo.state_text, bo.user_data_name,"
                 + " bo.user_data_value, bo.category, bo.configuration, bo.alert, b.name as building, f.name as floor, l.name as location,bo.bacnet_device_id,"
                 + " l.id as location_id, bo.last_seen, bo.device_id,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, bo.cov_subscription, bo.high_limit, bo.low_limit, bo.present_value_data_type, "
                 + " bo.show_on_map, bd.name as bacnet_device_name, bo.show_on_scan,bo.off_normal,bo.normal,bo.fault"
                 + " FROM bacnet_object bo"
@@ -157,12 +161,13 @@ import io.sclera.models.compositeclass.DockerIds;
 )
 
 //get bacnet object for touchscreen popup socket event
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getBacnetObjectByIdSocket",
         query = "SELECT bo.id, bo.name, bo.type, bo.instance, bo.present_value, bo.validity, bo.unit, bo.state_text, bo.user_data_name,"
                 + " bo.user_data_value, bo.category, bo.configuration, bo.alert, b.name as building, f.name as floor, l.name as location, bo.bacnet_device_id,"
                 + " l.id as location_id, bo.last_seen, bo.device_id,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, bo.cov_subscription, bo.high_limit, bo.low_limit, bo.present_value_data_type,"
                 + " bo.show_on_map, bd.name as bacnet_device_name, bo.show_on_scan,bo.off_normal,bo.normal,bo.fault"
                 + " FROM bacnet_object bo"
@@ -178,11 +183,12 @@ import io.sclera.models.compositeclass.DockerIds;
 )
 
 //get bacnet object info tagged to a device
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getDeviceBacnetObjects",
         query = "SELECT bo.id, bo.name, bo.type, bo.instance, bo.present_value, bo.validity, bo.unit, bo.state_text, bo.user_data_name, bo.user_data_value,"
                 + " bo.category, bo.configuration, bo.alert, b.name as building, f.name as floor, l.name as location, l.id as location_id, bo.bacnet_device_id,"
-                + " bo.last_seen, bo.device_id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " bo.last_seen, bo.device_id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, bo.cov_subscription, bo.high_limit, bo.low_limit, bo.present_value_data_type,"
                 + " bo.show_on_map, bd.name as bacnet_device_name, bo.show_on_scan,bo.off_normal,bo.normal,bo.fault"
                 + " FROM bacnet_object bo "
@@ -199,12 +205,13 @@ import io.sclera.models.compositeclass.DockerIds;
 
 //Touchscreen
 //to be removed after pagination api works
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.listBacnetSensorsTS",
         query = "SELECT bo.id, bo.name, bo.type, bo.instance, bo.present_value, bo.validity, bo.unit, bo.state_text, bo.user_data_name,"
                 + " bo.user_data_value, bo.category, bo.configuration, bo.alert, b.name as building, f.name as floor, l.name as location,"
                 + " l.id as location_id, bo.last_seen, bo.bacnet_device_id, bo.device_id,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, bo.cov_subscription, bo.high_limit, bo.low_limit, bo.present_value_data_type,"
                 + " bo.show_on_map, bd.name as bacnet_device_name, bo.show_on_scan,bo.off_normal,bo.normal,bo.fault"
                 + " FROM bacnet_object bo "
@@ -221,12 +228,13 @@ import io.sclera.models.compositeclass.DockerIds;
 )
 
 //Added pagination for listBacnetSensorsTS
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.listBacnetSensorsPaginationTS",
         query = "SELECT bo.id, bo.name, bo.type, bo.instance, bo.present_value, bo.validity, bo.unit, bo.state_text, bo.user_data_name,"
                 + " bo.user_data_value, bo.category, bo.configuration, bo.alert, b.name as building, f.name as floor, l.name as location,"
                 + " l.id as location_id, bo.last_seen, bo.bacnet_device_id, bo.device_id,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, bo.cov_subscription, bo.high_limit, bo.low_limit, bo.present_value_data_type,"
                 + " bo.show_on_map, bd.name as bacnet_device_name, bo.show_on_scan,bo.off_normal,bo.normal,bo.fault"
                 + " FROM bacnet_object bo "
@@ -245,13 +253,14 @@ import io.sclera.models.compositeclass.DockerIds;
 
 //to be removed after pagination api works
 //get all bacnet objects of a network
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getNetworkBacnetObjects",
         query = "SELECT bo.id, bo.name, bo.bacnet_device_id,"
                 + " bo.type, bo.instance, bo.present_value, bo.validity, bo.unit, bo.state_text, bo.user_data_name, bo.user_data_value,"
                 + " bo.category, bo.configuration, bo.alert, b.name as building, f.name as floor, l.name as location, l.id as location_id,"
                 + " bo.bacnet_device_id, bo.last_seen, bo.device_id,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, bo.cov_subscription, bo.high_limit, bo.low_limit, bo.present_value_data_type,"
                 + " bo.show_on_map, bd.name as bacnet_device_name, bo.show_on_scan,bo.off_normal,bo.normal,bo.fault"
                 + " FROM bacnet_object bo"
@@ -266,13 +275,14 @@ import io.sclera.models.compositeclass.DockerIds;
 )
 
 //Added pagination for getNetworkBacnetObjects
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getNetworkBacnetObjectsByPagination",
         query = "SELECT bo.id, bo.name, bo.bacnet_device_id,"
                 + " bo.type, bo.instance, bo.present_value, bo.validity, bo.unit, bo.state_text, bo.user_data_name, bo.user_data_value,"
                 + " bo.category, bo.configuration, bo.alert, b.name as building, f.name as floor, l.name as location, l.id as location_id,"
                 + " bo.bacnet_device_id, bo.last_seen, bo.device_id,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, bo.cov_subscription, bo.high_limit, bo.low_limit, bo.present_value_data_type,"
                 + " bo.show_on_map, bd.name as bacnet_device_name, bo.show_on_scan,bo.off_normal,bo.normal,bo.fault"
                 + " FROM bacnet_object bo"
@@ -289,11 +299,12 @@ import io.sclera.models.compositeclass.DockerIds;
 )
 
 
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getBacnetObjectByLastSeen",
         query = "SELECT bo.id, bo.name, bo.type, bo.instance, bo.present_value, bo.validity, bo.unit, bo.state_text, bo.user_data_name, bo.user_data_value,"
                 + " bo.category, bo.configuration, bo.alert, b.name as building, f.name as floor, l.name as location, l.id as location_id, bo.bacnet_device_id,"
-                + " bo.last_seen, bo.device_id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " bo.last_seen, bo.device_id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, bo.cov_subscription, bo.high_limit, bo.low_limit, bo.present_value_data_type, "
                 + " bo.show_on_map, bd.name as bacnet_device_name, bo.show_on_scan,bo.off_normal,bo.normal,bo.fault"
                 + " FROM bacnet_object bo "
@@ -307,11 +318,12 @@ import io.sclera.models.compositeclass.DockerIds;
         resultSetMapping = "bacnetobjectmapping"
 )
 
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getAllBacnetObjectList",
         query = "SELECT bo.id, bo.name, bo.type, bo.instance, bo.present_value, bo.validity, bo.unit, bo.state_text, bo.user_data_name, bo.user_data_value,"
                 + " bo.category, bo.configuration, bo.alert, b.name as building, f.name as floor, l.name as location, l.id as location_id, bo.bacnet_device_id,"
-                + " bo.last_seen, bo.device_id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " bo.last_seen, bo.device_id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, bo.cov_subscription, bo.high_limit, bo.low_limit, bo.present_value_data_type, "
                 + " bo.show_on_map, bd.name as bacnet_device_name, bo.show_on_scan,bo.off_normal,bo.normal,bo.fault"
                 + " FROM bacnet_object bo "
@@ -354,11 +366,12 @@ import io.sclera.models.compositeclass.DockerIds;
         })
 
 
+// PG-port: IF(...)->CASE WHEN (x2) (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getBacnetAlertInfoById",
-        query = "SELECT IF(bo.user_data_name IS NULL or bo.user_data_name = '', bo.name, bo.user_data_name) as name, bo.category, bo.unit,"
+        query = "SELECT CASE WHEN bo.user_data_name IS NULL OR bo.user_data_name = '' THEN bo.name ELSE bo.user_data_name END as name, bo.category, bo.unit,"
                 + " bd.name as bacnet_device_name, d.docker_name,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " d.product_id, d.monitor as device_monitor, d.email_alert, d.sms_alert, do.vendor_org_id, do.vdms_id, do.system_type, v.customer_org_id,"
                 + " b.name as building, f.name as floor, l.name as location"
                 + " FROM bacnet_object bo"
@@ -443,11 +456,12 @@ import io.sclera.models.compositeclass.DockerIds;
         })
 
 
+// PG-port: IF(...)->CASE WHEN (x2), IFNULL->COALESCE (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getBacnetObjectsByDeviceId",
-        query = "SELECT bo.id as primary_id, bo.bacnet_device_id as secondary_id, IF(bo.user_data_name IS NULL or bo.user_data_name = '', bo.name, bo.user_data_name) as name,"
+        query = "SELECT bo.id as primary_id, bo.bacnet_device_id as secondary_id, CASE WHEN bo.user_data_name IS NULL OR bo.user_data_name = '' THEN bo.name ELSE bo.user_data_name END as name,"
                 + " bo.alert, bo.category, 'bacnet' as protocol,"
-                + " IF(bo.user_data_value IS NULL or bo.user_data_value = '', CONCAT(bo.present_value, ' ', IFNULL(bo.unit, '')),bo.user_data_value) as value"
+                + " CASE WHEN bo.user_data_value IS NULL OR bo.user_data_value = '' THEN CONCAT(bo.present_value, ' ', COALESCE(bo.unit, '')) ELSE bo.user_data_value END as value"
                 + " FROM bacnet_object bo"
                 + " LEFT JOIN device d ON bo.device_id = d.id"
                 + " WHERE bo.device_id = ?1 and bo.show_on_map = 1",
@@ -516,21 +530,22 @@ import io.sclera.models.compositeclass.DockerIds;
         })
 
 
+// PG-port: IF(...)->CASE WHEN (x5); bare OR d.monnit_status -> OR d.monnit_status = 'alert' (MySQL truthy->PG boolean) (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getBacnetObjectDetailsById",
         query = "SELECT bo.id, bo.name, bo.type, bo.instance, bo.present_value, bo.validity, bo.unit, bo.state_text, bo.user_data_name, bo.user_data_value,"
                 + " bo.category, bo.configuration, b.name as building, f.name as floor, l.name as location, l.id as location_id, bo.alert, bo.last_seen,"
                 + " bo.bacnet_device_id, bd.name as bacnet_device_name, bo.device_id,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, d.monitor as device_monitor, d.popup_notification as device_popup_notification,"
                 + " d.email_alert as device_email_alert, d.sms_alert as device_sms_alert, d.product_id as device_product_id,"
                 + " d.docker_name, do.system_type as docker_system_type, do.vdms_id, do.vendor_org_id, v.customer_org_id,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as device_model,"
-                + " IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as device_vendor,"
-                + " IF(d.user_data_type IS NULL OR d.user_data_type = '', d.type, d.user_data_type) as device_type,"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as device_model,"
+                + " CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as device_vendor,"
+                + " CASE WHEN d.user_data_type IS NULL OR d.user_data_type = '' THEN d.type ELSE d.user_data_type END as device_type,"
                 + " d.virtual_device_type as device_virtual_device_type, d.warranty as device_warranty, d.status as device_status,"
                 + " d.last_seen_on as device_last_seen_on,"
-                + " IF(d.bacnet_status = 'alert' OR d.lorawan_status = 'alert' OR d.disruptive_status = 'alert' OR d.my_devices_status = 'alert' OR d.monnit_status OR d.pelican_status = 'alert' OR d.knx_status = 'alert' OR d.snmp_object_status = 'alert' OR d.measuring_instrument_status = 'alert' OR d.daintree_status = 'alert', 1, 0) as device_sensor_alert,"
+                + " CASE WHEN d.bacnet_status = 'alert' OR d.lorawan_status = 'alert' OR d.disruptive_status = 'alert' OR d.my_devices_status = 'alert' OR d.monnit_status = 'alert' OR d.pelican_status = 'alert' OR d.knx_status = 'alert' OR d.snmp_object_status = 'alert' OR d.measuring_instrument_status = 'alert' OR d.daintree_status = 'alert' THEN 1 ELSE 0 END as device_sensor_alert,"
                 + " d.local_vendor_email_alert as device_local_vendor_email_alert, d.local_vendor_sms_alert as device_local_vendor_sms_alert,"
                 + " p.global_image_url_1 as device_global_image_url_1, f.id as floor_id, b.id as building_id,"
                 + " ph.vendor_name as device_local_vendor_name, ph.email as device_local_vendor_email, ph.value as device_local_vendor_extension,"
@@ -570,11 +585,12 @@ import io.sclera.models.compositeclass.DockerIds;
                         })
         })
 
+// PG-port: IF(...)->CASE WHEN (x2), IFNULL->COALESCE (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getSensorCategoryByFloor",
-        query = "SELECT IF(bo.user_data_name IS NULL or bo.user_data_name = '', bo.name, bo.user_data_name) as name,"
-                + " IF(bo.user_data_value IS NULL or bo.user_data_value = '', CONCAT(bo.present_value, ' ', IFNULL(bo.unit, '')),"
-                + " bo.user_data_value) as value, bo.alert, bo.category, bo.id as primary_id, bo.bacnet_device_id as secondary_id, 'bacnet' as protocol , l.id as location_id,bo.last_seen,bo.device_id "
+        query = "SELECT CASE WHEN bo.user_data_name IS NULL OR bo.user_data_name = '' THEN bo.name ELSE bo.user_data_name END as name,"
+                + " CASE WHEN bo.user_data_value IS NULL OR bo.user_data_value = '' THEN CONCAT(bo.present_value, ' ', COALESCE(bo.unit, ''))"
+                + " ELSE bo.user_data_value END as value, bo.alert, bo.category, bo.id as primary_id, bo.bacnet_device_id as secondary_id, 'bacnet' as protocol , l.id as location_id,bo.last_seen,bo.device_id "
                 + " FROM bacnet_object bo "
                 + "JOIN device d ON bo.device_id = d.id "
                 + "JOIN location l ON d.location_id = l.id "
@@ -582,11 +598,12 @@ import io.sclera.models.compositeclass.DockerIds;
         resultSetMapping = "bacnetcategorysensormapping"
 )
 
+// PG-port: IF(...)->CASE WHEN (x2), IFNULL->COALESCE (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getSensorCategoryByFloorPagination",
-        query = "SELECT IF(bo.user_data_name IS NULL or bo.user_data_name = '', bo.name, bo.user_data_name) as name,"
-                + " IF(bo.user_data_value IS NULL or bo.user_data_value = '', CONCAT(bo.present_value, ' ', IFNULL(bo.unit, '')),"
-                + " bo.user_data_value) as value, bo.alert, bo.category, bo.id as primary_id, bo.bacnet_device_id as secondary_id, 'bacnet' as protocol , l.id as location_id,bo.last_seen,bo.device_id "
+        query = "SELECT CASE WHEN bo.user_data_name IS NULL OR bo.user_data_name = '' THEN bo.name ELSE bo.user_data_name END as name,"
+                + " CASE WHEN bo.user_data_value IS NULL OR bo.user_data_value = '' THEN CONCAT(bo.present_value, ' ', COALESCE(bo.unit, ''))"
+                + " ELSE bo.user_data_value END as value, bo.alert, bo.category, bo.id as primary_id, bo.bacnet_device_id as secondary_id, 'bacnet' as protocol , l.id as location_id,bo.last_seen,bo.device_id "
                 + " FROM bacnet_object bo "
                 + "JOIN device d ON bo.device_id = d.id "
                 + "JOIN location l ON d.location_id = l.id "
@@ -595,11 +612,12 @@ import io.sclera.models.compositeclass.DockerIds;
         resultSetMapping = "bacnetcategorysensormapping"
 )
 
+// PG-port: IF(...)->CASE WHEN (x2), IFNULL->COALESCE (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getSensorCategoryByLocationPagination",
-        query = "SELECT IF(bo.user_data_name IS NULL or bo.user_data_name = '', bo.name, bo.user_data_name) as name,"
-                + " IF(bo.user_data_value IS NULL or bo.user_data_value = '', CONCAT(bo.present_value, ' ', IFNULL(bo.unit, '')),"
-                + " bo.user_data_value) as value, bo.alert, bo.category, bo.id as primary_id, bo.bacnet_device_id as secondary_id, 'bacnet' as protocol , l.id as location_id,bo.last_seen,bo.device_id "
+        query = "SELECT CASE WHEN bo.user_data_name IS NULL OR bo.user_data_name = '' THEN bo.name ELSE bo.user_data_name END as name,"
+                + " CASE WHEN bo.user_data_value IS NULL OR bo.user_data_value = '' THEN CONCAT(bo.present_value, ' ', COALESCE(bo.unit, ''))"
+                + " ELSE bo.user_data_value END as value, bo.alert, bo.category, bo.id as primary_id, bo.bacnet_device_id as secondary_id, 'bacnet' as protocol , l.id as location_id,bo.last_seen,bo.device_id "
                 + " FROM bacnet_object bo "
                 + "JOIN device d ON bo.device_id = d.id "
                 + "JOIN location l ON d.location_id = l.id "
@@ -671,11 +689,12 @@ import io.sclera.models.compositeclass.DockerIds;
                         })
         })
 
+// PG-port: IF(...)->CASE WHEN (x3) (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getAnalyticsBacnetObjects",
-        query = "SELECT bo.id as primary_id, bo.bacnet_device_id as secondary_id, IF(bo.user_data_name IS NULL or bo.user_data_name = '', bd.name, bo.user_data_name) as name,"
-                + " bo.alert, bo.category, bo.present_value as value, l.id as location_id, l.name as location_name, bd.name as sensor_name, bo.device_id,IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name, "
-                + " bo.unit, bo.last_seen, 'bacnet' as protocol, IF(r.primary_id = bo.id and r.secondary_id = bo.bacnet_device_id,1,0) as is_added, r.id as report_attribute_id "
+        query = "SELECT bo.id as primary_id, bo.bacnet_device_id as secondary_id, CASE WHEN bo.user_data_name IS NULL OR bo.user_data_name = '' THEN bd.name ELSE bo.user_data_name END as name,"
+                + " bo.alert, bo.category, bo.present_value as value, l.id as location_id, l.name as location_name, bd.name as sensor_name, bo.device_id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name, "
+                + " bo.unit, bo.last_seen, 'bacnet' as protocol, CASE WHEN r.primary_id = bo.id AND r.secondary_id = bo.bacnet_device_id THEN 1 ELSE 0 END as is_added, r.id as report_attribute_id "
                 + " FROM bacnet_object bo "
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id "
                 + " LEFT JOIN device d ON bo.device_id = d.id "
@@ -688,10 +707,11 @@ import io.sclera.models.compositeclass.DockerIds;
         resultSetMapping = "analyticsbacnetobjectsmapping"
 )
 
+// PG-port: IF(...)->CASE WHEN (x2) (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getBacnetObjectsByTemplateId",
-        query = "SELECT bo.id as primary_id, bo.bacnet_device_id as secondary_id, IF(bo.user_data_name IS NULL or bo.user_data_name = '', bd.name, bo.user_data_name) as name,"
-                + " bo.alert, bo.category, bo.present_value as value, l.id as location_id, l.name as location_name, bd.name as sensor_name, bo.device_id,IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+        query = "SELECT bo.id as primary_id, bo.bacnet_device_id as secondary_id, CASE WHEN bo.user_data_name IS NULL OR bo.user_data_name = '' THEN bd.name ELSE bo.user_data_name END as name,"
+                + " bo.alert, bo.category, bo.present_value as value, l.id as location_id, l.name as location_name, bd.name as sensor_name, bo.device_id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " bo.unit, bo.last_seen, 'bacnet' as protocol, 0 as is_added , r.id as report_attribute_id"
                 + " FROM bacnet_object bo "
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id "
@@ -721,9 +741,10 @@ import io.sclera.models.compositeclass.DockerIds;
         })
 
 
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getBacnetObjectAlertDetails",
-        query = "SELECT bo.id as primary_id , bo.bacnet_device_id as secondary_id, IF(bo.user_data_name IS NULL or bo.user_data_name = '', bd.name, bo.user_data_name) as primary_name, bd.name as secondary_name,"
+        query = "SELECT bo.id as primary_id , bo.bacnet_device_id as secondary_id, CASE WHEN bo.user_data_name IS NULL OR bo.user_data_name = '' THEN bd.name ELSE bo.user_data_name END as primary_name, bd.name as secondary_name,"
                 + " bo.category, bo.present_value as value, bo.unit, 'bacnet' as protocol, bo.device_id as device_id"
                 + " FROM bacnet_object bo"
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id"
@@ -751,22 +772,24 @@ import io.sclera.models.compositeclass.DockerIds;
         })
 
 
+// PG-port: IF(...)->CASE WHEN (x2), IFNULL->COALESCE (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getSensorByDeviceId",
-        query = "SELECT IF(bo.user_data_name IS NULL or bo.user_data_name = '', bo.name, bo.user_data_name) as name,"
-                + " IF(bo.user_data_value IS NULL or bo.user_data_value = '', CONCAT(bo.present_value, ' ', IFNULL(bo.unit, '')),"
-                + " bo.user_data_value) as value, bo.alert, bo.category, bo.id as primary_id, bo.bacnet_device_id as secondary_id, 'bacnet' as protocol , d.location_id as location_id,bo.last_seen "
+        query = "SELECT CASE WHEN bo.user_data_name IS NULL OR bo.user_data_name = '' THEN bo.name ELSE bo.user_data_name END as name,"
+                + " CASE WHEN bo.user_data_value IS NULL OR bo.user_data_value = '' THEN CONCAT(bo.present_value, ' ', COALESCE(bo.unit, ''))"
+                + " ELSE bo.user_data_value END as value, bo.alert, bo.category, bo.id as primary_id, bo.bacnet_device_id as secondary_id, 'bacnet' as protocol , d.location_id as location_id,bo.last_seen "
                 + " FROM bacnet_object bo "
                 + "JOIN device d ON bo.device_id = d.id AND d.monitor = 1 "
                 + "WHERE (?1 = 'null' or d.id = ?1) AND bo.show_on_scan = 1",
         resultSetMapping = "bacnetlocationsensormapping"
 )
 
+// PG-port: IF(...)->CASE WHEN (x2), IFNULL->COALESCE (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getSensorByLocationId",
-        query = "SELECT IF(bo.user_data_name IS NULL or bo.user_data_name = '', bo.name, bo.user_data_name) as name,"
-                + " IF(bo.user_data_value IS NULL or bo.user_data_value = '', CONCAT(bo.present_value, ' ', IFNULL(bo.unit, '')),"
-                + " bo.user_data_value) as value, bo.alert, bo.category, bo.id as primary_id, bo.bacnet_device_id as secondary_id, 'bacnet' as protocol , l.id as location_id,bo.last_seen "
+        query = "SELECT CASE WHEN bo.user_data_name IS NULL OR bo.user_data_name = '' THEN bo.name ELSE bo.user_data_name END as name,"
+                + " CASE WHEN bo.user_data_value IS NULL OR bo.user_data_value = '' THEN CONCAT(bo.present_value, ' ', COALESCE(bo.unit, ''))"
+                + " ELSE bo.user_data_value END as value, bo.alert, bo.category, bo.id as primary_id, bo.bacnet_device_id as secondary_id, 'bacnet' as protocol , l.id as location_id,bo.last_seen "
                 + " FROM bacnet_object bo "
                 + "JOIN device d ON bo.device_id = d.id AND d.monitor = 1 "
                 + "JOIN location l ON d.location_id = l.id "
@@ -794,11 +817,12 @@ import io.sclera.models.compositeclass.DockerIds;
                         })
         })
 
+// PG-port: IF(...)->CASE WHEN (x2) (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "Bacnet_Object.getIntegrationSensorByLocationId",
-        query = "SELECT IF(bo.user_data_name IS NULL or bo.user_data_name = '', bo.name, bo.user_data_name) as name,"
-                + " IF(bo.user_data_value IS NULL or bo.user_data_value = '', bo.present_value,"
-                + " bo.user_data_value) as value,bo.unit, bo.alert, bo.category, bo.id as primary_id, bo.bacnet_device_id as secondary_id, 'bacnet' as protocol , l.id as location_id,bo.last_seen "
+        query = "SELECT CASE WHEN bo.user_data_name IS NULL OR bo.user_data_name = '' THEN bo.name ELSE bo.user_data_name END as name,"
+                + " CASE WHEN bo.user_data_value IS NULL OR bo.user_data_value = '' THEN bo.present_value"
+                + " ELSE bo.user_data_value END as value,bo.unit, bo.alert, bo.category, bo.id as primary_id, bo.bacnet_device_id as secondary_id, 'bacnet' as protocol , l.id as location_id,bo.last_seen "
                 + " FROM bacnet_object bo "
                 + "JOIN device d ON bo.device_id = d.id AND d.monitor = 1 "
                 + "JOIN location l ON d.location_id = l.id "

@@ -167,12 +167,13 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
 
 
 //Added pagination for getAllMonnitSensors
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "MeasuringInstrument.getAllMeasuringInstrumentDeviceByPagination",
         query = "SELECT ms.id, ms.type, ms.name, ms.description, ms.calculation_type, ms.attribute, ms.parameter, ms.category, ms.value,"
                 + " ms.unit, ms.tags, ms.timestamp, ms.sensor_type, ms.alert, ms.user_data_name, ms.user_data_value, b.name as building, f.name as floor, l.name as location, "
                 + " l.id as location_id, ms.device_id,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name, ms.show_on_map, ms.show_on_scan, ms.measuring_entity, ms.sub_category, ms.scale_type "
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name, ms.show_on_map, ms.show_on_scan, ms.measuring_entity, ms.sub_category, ms.scale_type "
                 + " FROM measuring_instrument ms"
                 + " LEFT JOIN device d ON ms.device_id = d.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
@@ -183,12 +184,13 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
         resultSetMapping = "measuringinstrumentmappings"
 )
 
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "MeasuringInstrument.getMeasuringInstrumentSensorById",
         query = "SELECT ms.id, ms.type, ms.name, ms.description, ms.calculation_type, ms.attribute, ms.parameter, ms.category, ms.value, ms.unit,"
                 + " ms.tags, ms.timestamp, ms.sensor_type, ms.alert, ms.user_data_name, ms.user_data_value, b.name as building, f.name as floor,"
                 + " l.name as location, l.id as location_id, ms.device_id,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name, ms.show_on_map, ms.show_on_scan, ms.measuring_entity, ms.sub_category, ms.scale_type "
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name, ms.show_on_map, ms.show_on_scan, ms.measuring_entity, ms.sub_category, ms.scale_type "
                 + " FROM measuring_instrument ms"
                 + " LEFT JOIN device d ON ms.device_id = d.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
@@ -200,12 +202,13 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
 
 
 //to get measuring instrument sensor info tagged to a device
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "MeasuringInstrument.getDeviceMeasuringInstrumentSensors",
         query = "SELECT ms.id, ms.type, ms.name, ms.description, ms.calculation_type, ms.attribute, ms.parameter, ms.category, ms.value, ms.unit,"
                 + " ms.tags, ms.timestamp, ms.sensor_type, ms.alert, ms.user_data_name, ms.user_data_value, b.name as building, f.name as floor,"
                 + " l.name as location, l.id as location_id, ms.device_id,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name, ms.show_on_map, ms.show_on_scan, ms.measuring_entity, ms.sub_category, ms.scale_type "
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name, ms.show_on_map, ms.show_on_scan, ms.measuring_entity, ms.sub_category, ms.scale_type "
                 + " FROM measuring_instrument ms"
                 + " LEFT JOIN device d ON ms.device_id = d.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
@@ -280,10 +283,11 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
                         })
         })
 
+// PG-port: IF(...)->CASE WHEN (x2), IFNULL->COALESCE (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "MeasuringInstrument.getmeasuringInstrumentsByDeviceId",
-        query = "SELECT mi.id as primary_id, null as secondary_id,IF(mi.user_data_name IS NULL or mi.user_data_name = '', mi.name, mi.user_data_name) as name, mi.alert, mi.sensor_type as category, 'measuring_instrument' as protocol, "
-                + " IF(mi.user_data_value IS NULL or mi.user_data_value = '', CONCAT(mi.value, ' ', IFNULL(mi.unit, '')),mi.user_data_value) as value"
+        query = "SELECT mi.id as primary_id, null as secondary_id, CASE WHEN mi.user_data_name IS NULL OR mi.user_data_name = '' THEN mi.name ELSE mi.user_data_name END as name, mi.alert, mi.sensor_type as category, 'measuring_instrument' as protocol, "
+                + " CASE WHEN mi.user_data_value IS NULL OR mi.user_data_value = '' THEN CONCAT(mi.value, ' ', COALESCE(mi.unit, '')) ELSE mi.user_data_value END as value"
                 + " FROM measuring_instrument mi"
                 + " LEFT JOIN device d ON mi.device_id = d.id"
                 + " WHERE mi.device_id = ?1 and mi.show_on_map = 1",
@@ -311,10 +315,10 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
                         })
         })
 
+// PG-port: IF(...)->CASE WHEN, IFNULL->COALESCE (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "MeasuringInstrument.getSensorCategoryByFloor",
-        query = "SELECT mi.name,IF(mi.user_data_value IS NULL or mi.user_data_value = '', CONCAT(mi.value, ' ', IFNULL(mi.unit, '')),"
-                + " mi.user_data_value) as value, mi.alert, false as alert, mi.sensor_type as category, mi.id as primary_id , null as secondary_id, 'measuring_instrument' as protocol,"
+        query = "SELECT mi.name, CASE WHEN mi.user_data_value IS NULL OR mi.user_data_value = '' THEN CONCAT(mi.value, ' ', COALESCE(mi.unit, '')) ELSE mi.user_data_value END as value, mi.alert, false as alert, mi.sensor_type as category, mi.id as primary_id , null as secondary_id, 'measuring_instrument' as protocol,"
                 + " l.id as location_id, mi.timestamp as last_seen, mi.device_id "
                 + " FROM measuring_instrument mi"
                 + " JOIN device d ON mi.device_id = d.id AND d.monitor = 1"
@@ -323,10 +327,10 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
         resultSetMapping = "measuringinstrumentcategorysensormapping"
 )
 
+// PG-port: IF(...)->CASE WHEN, IFNULL->COALESCE (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "MeasuringInstrument.getSensorCategoryByFloorPagination",
-        query = "SELECT mi.name,IF(mi.user_data_value IS NULL or mi.user_data_value = '', CONCAT(mi.value, ' ', IFNULL(mi.unit, '')),"
-                + " mi.user_data_value) as value, mi.alert, false as alert, mi.sensor_type as category, mi.id as primary_id , null as secondary_id, 'measuring_instrument' as protocol,"
+        query = "SELECT mi.name, CASE WHEN mi.user_data_value IS NULL OR mi.user_data_value = '' THEN CONCAT(mi.value, ' ', COALESCE(mi.unit, '')) ELSE mi.user_data_value END as value, mi.alert, false as alert, mi.sensor_type as category, mi.id as primary_id , null as secondary_id, 'measuring_instrument' as protocol,"
                 + " l.id as location_id, mi.timestamp as last_seen, mi.device_id  "
                 + " FROM measuring_instrument mi"
                 + " JOIN device d ON mi.device_id = d.id AND d.monitor = 1"
@@ -335,10 +339,10 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
                 + " LIMIT ?3 OFFSET ?4 ",
         resultSetMapping = "measuringinstrumentcategorysensormapping"
 )
+// PG-port: IF(...)->CASE WHEN, IFNULL->COALESCE (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "MeasuringInstrument.getSensorCategoryByLocationPagination",
-        query = "SELECT mi.name,IF(mi.user_data_value IS NULL or mi.user_data_value = '', CONCAT(mi.value, ' ', IFNULL(mi.unit, '')),"
-                + " mi.user_data_value) as value, mi.alert, false as alert, mi.sensor_type as category, mi.id as primary_id , null as secondary_id, 'measuring_instrument' as protocol,"
+        query = "SELECT mi.name, CASE WHEN mi.user_data_value IS NULL OR mi.user_data_value = '' THEN CONCAT(mi.value, ' ', COALESCE(mi.unit, '')) ELSE mi.user_data_value END as value, mi.alert, false as alert, mi.sensor_type as category, mi.id as primary_id , null as secondary_id, 'measuring_instrument' as protocol,"
                 + " l.id as location_id, mi.timestamp as last_seen, mi.device_id  "
                 + " FROM measuring_instrument mi"
                 + " JOIN device d ON mi.device_id = d.id AND d.monitor = 1"
@@ -411,21 +415,22 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
                         })
         })
 
+// PG-port: IF(...)->CASE WHEN (x5); bare OR d.monnit_status -> OR d.monnit_status = 'alert' (MySQL truthy->PG boolean) (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "MeasuringInstrument.getMeasuringInstrumentSensorDetailsById",
         query = "SELECT mi.id, mi.type, mi.name, mi.description, mi.calculation_type, mi.attribute, mi.parameter, mi.category, mi.value,"
                 + " mi.unit, mi.tags, mi.timestamp, mi.alert, mi.user_data_value, mi.user_data_name,  b.name as building, f.name as floor, l.name as location,"
                 + " l.id as location_id, mi.device_id,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, d.monitor as device_monitor, d.popup_notification as device_popup_notification,"
                 + " d.email_alert as device_email_alert, d.sms_alert as device_sms_alert, d.product_id as device_product_id,"
                 + " d.docker_name, do.system_type as docker_system_type, do.vdms_id, do.vendor_org_id, v.customer_org_id,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as device_model,"
-                + " IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as device_vendor,"
-                + " IF(d.user_data_type IS NULL OR d.user_data_type = '', d.type, d.user_data_type) as device_type,"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as device_model,"
+                + " CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as device_vendor,"
+                + " CASE WHEN d.user_data_type IS NULL OR d.user_data_type = '' THEN d.type ELSE d.user_data_type END as device_type,"
                 + " d.virtual_device_type as device_virtual_device_type, d.warranty as device_warranty, d.status as device_status,"
                 + " d.last_seen_on as device_last_seen_on,"
-                + " IF(d.bacnet_status = 'alert' OR d.lorawan_status = 'alert' OR d.disruptive_status = 'alert' OR d.my_devices_status = 'alert' OR d.monnit_status OR d.pelican_status = 'alert' OR d.knx_status = 'alert' OR d.snmp_object_status = 'alert' OR d.measuring_instrument_status = 'alert' OR d.daintree_status = 'alert', 1, 0) as device_sensor_alert,"
+                + " CASE WHEN d.bacnet_status = 'alert' OR d.lorawan_status = 'alert' OR d.disruptive_status = 'alert' OR d.my_devices_status = 'alert' OR d.monnit_status = 'alert' OR d.pelican_status = 'alert' OR d.knx_status = 'alert' OR d.snmp_object_status = 'alert' OR d.measuring_instrument_status = 'alert' OR d.daintree_status = 'alert' THEN 1 ELSE 0 END as device_sensor_alert,"
                 + " d.local_vendor_email_alert as device_local_vendor_email_alert, d.local_vendor_sms_alert as device_local_vendor_sms_alert,"
                 + " p.global_image_url_1 as device_global_image_url_1, f.id as floor_id, b.id as building_id,"
                 + " ph.vendor_name as device_local_vendor_name, ph.email as device_local_vendor_email, ph.value as device_local_vendor_extension,"
@@ -510,11 +515,12 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
         })
 
 
+// PG-port: IF(...)->CASE WHEN (x3) (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "MeasuringInstrument.getAnalyticsMeasuringInstruments",
-        query = "SELECT mi.id as primary_id, null as secondary_id, mi.sensor_type as category, IF(mi.user_data_name IS NULL or mi.user_data_name = '', mi.name, mi.user_data_name) as name,"
-                + " mi.alert, mi.value, l.id as location_id, l.name as location_name, mi.name as sensor_name, mi.device_id,IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name, mi.unit, mi.timestamp as last_seen, 'measuring_instrument' as protocol, "
-                + " IF(r.primary_id = mi.id,1,0) as is_added, r.id as report_attribute_id  "
+        query = "SELECT mi.id as primary_id, null as secondary_id, mi.sensor_type as category, CASE WHEN mi.user_data_name IS NULL OR mi.user_data_name = '' THEN mi.name ELSE mi.user_data_name END as name,"
+                + " mi.alert, mi.value, l.id as location_id, l.name as location_name, mi.name as sensor_name, mi.device_id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name, mi.unit, mi.timestamp as last_seen, 'measuring_instrument' as protocol, "
+                + " CASE WHEN r.primary_id = mi.id THEN 1 ELSE 0 END as is_added, r.id as report_attribute_id  "
                 + " FROM  measuring_instrument mi "
                 + " LEFT JOIN device d ON mi.device_id = d.id "
                 + " LEFT JOIN location l ON d.location_id = l.id "
@@ -524,10 +530,11 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
         resultSetMapping = "analyticsmeasuringinstrumentsmappings"
 )
 
+// PG-port: IF(...)->CASE WHEN (x2) (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "MeasuringInstrument.getMeasuringInstrumentsByTemplateId",
-        query = "SELECT mi.id as primary_id, null as secondary_id, mi.sensor_type as category, IF(mi.user_data_name IS NULL or mi.user_data_name = '', mi.name, mi.user_data_name) as name,"
-                + " mi.alert, mi.category, mi.value, l.id as location_id, l.name as location_name, mi.name as sensor_name, mi.device_id,IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+        query = "SELECT mi.id as primary_id, null as secondary_id, mi.sensor_type as category, CASE WHEN mi.user_data_name IS NULL OR mi.user_data_name = '' THEN mi.name ELSE mi.user_data_name END as name,"
+                + " mi.alert, mi.category, mi.value, l.id as location_id, l.name as location_name, mi.name as sensor_name, mi.device_id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " mi.unit, mi.timestamp as last_seen, 'measuring_instrument' as protocol , 0  as is_added, r.id as report_attribute_id "
                 + " FROM  measuring_instrument mi "
                 + " LEFT JOIN device d ON mi.device_id = d.id "
@@ -579,9 +586,10 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
         })
 
 
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "MeasuringInstrument.getMeasuringInstrumentAlertDetails",
-        query = "SELECT mi.id as primary_id , null as secondary_id, IF(mi.user_data_name IS NULL or mi.user_data_name = '', mi.name, mi.user_data_name) as primary_name, null as secondary_name,"
+        query = "SELECT mi.id as primary_id , null as secondary_id, CASE WHEN mi.user_data_name IS NULL OR mi.user_data_name = '' THEN mi.name ELSE mi.user_data_name END as primary_name, null as secondary_name,"
                 + " mi.sensor_type as category, mi.value, mi.unit, 'measuring_instrument' as protocol, mi.device_id as device_id, mi.type, mi.sub_category"
                 + " FROM measuring_instrument mi "
                 + " LEFT JOIN device d ON mi.device_id = d.id"
@@ -608,10 +616,10 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
                         })
         })
 
+// PG-port: IF(...)->CASE WHEN, IFNULL->COALESCE (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "MeasuringInstrument.getSensorByDeviceId",
-        query = "SELECT mi.name,IF(mi.user_data_value IS NULL or mi.user_data_value = '', CONCAT(mi.value, ' ', IFNULL(mi.unit, '')),"
-                + " mi.user_data_value) as value, mi.alert, false as alert, mi.sensor_type as category, mi.id as primary_id , null as secondary_id, 'measuring_instrument' as protocol,"
+        query = "SELECT mi.name, CASE WHEN mi.user_data_value IS NULL OR mi.user_data_value = '' THEN CONCAT(mi.value, ' ', COALESCE(mi.unit, '')) ELSE mi.user_data_value END as value, mi.alert, false as alert, mi.sensor_type as category, mi.id as primary_id , null as secondary_id, 'measuring_instrument' as protocol,"
                 + " d.location_id as location_id, mi.timestamp as last_seen  "
                 + " FROM measuring_instrument mi"
                 + " JOIN device d ON mi.device_id = d.id AND d.monitor = 1 "
@@ -620,10 +628,10 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
 )
 
 
+// PG-port: IF(...)->CASE WHEN, IFNULL->COALESCE (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "MeasuringInstrument.getSensorByLocationId",
-        query = "SELECT mi.name,IF(mi.user_data_value IS NULL or mi.user_data_value = '', CONCAT(mi.value, ' ', IFNULL(mi.unit, '')),"
-                + " mi.user_data_value) as value, mi.alert, false as alert, mi.sensor_type as category, mi.id as primary_id , null as secondary_id, 'measuring_instrument' as protocol,"
+        query = "SELECT mi.name, CASE WHEN mi.user_data_value IS NULL OR mi.user_data_value = '' THEN CONCAT(mi.value, ' ', COALESCE(mi.unit, '')) ELSE mi.user_data_value END as value, mi.alert, false as alert, mi.sensor_type as category, mi.id as primary_id , null as secondary_id, 'measuring_instrument' as protocol,"
                 + " l.id as location_id, mi.timestamp as last_seen  "
                 + " FROM measuring_instrument mi"
                 + " JOIN device d ON mi.device_id = d.id AND d.monitor = 1"
@@ -652,10 +660,10 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
                         })
         })
 
+// PG-port: IF(...)->CASE WHEN (MySQL->PostgreSQL)
 @NamedNativeQuery(
         name = "MeasuringInstrument.getIntegrationSensorByLocationId",
-        query = "SELECT mi.name,IF(mi.user_data_value IS NULL or mi.user_data_value = '', mi.value,"
-                + " mi.user_data_value) as value, mi.unit, mi.alert, false as alert, mi.sensor_type as category, mi.id as primary_id , null as secondary_id, 'measuring_instrument' as protocol,"
+        query = "SELECT mi.name, CASE WHEN mi.user_data_value IS NULL OR mi.user_data_value = '' THEN mi.value ELSE mi.user_data_value END as value, mi.unit, mi.alert, false as alert, mi.sensor_type as category, mi.id as primary_id , null as secondary_id, 'measuring_instrument' as protocol,"
                 + " l.id as location_id, mi.timestamp as last_seen  "
                 + " FROM measuring_instrument mi"
                 + " JOIN device d ON mi.device_id = d.id AND d.monitor = 1"
