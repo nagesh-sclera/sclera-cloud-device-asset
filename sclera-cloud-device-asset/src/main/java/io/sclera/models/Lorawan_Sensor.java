@@ -472,6 +472,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                         })
         })
 
+// PG-port: UNIX_TIMESTAMP()->EXTRACT(EPOCH FROM NOW())::bigint
+// last_seen is numeric(38,0) epoch-ms; UNIX_TIMESTAMP()*1000 -> EXTRACT(EPOCH FROM NOW())::bigint*1000
 @NamedNativeQuery(
         name = "Lorawan_Sensor.getLorawanSensorsNotReporting",
         query = "SELECT ls.id, ls.name, ls.app_key, ls.sensor_device_id, ls.sensor_type, ls.is_battery_low, ls.configuration, "
@@ -482,12 +484,14 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) AS device_name "
                 + "FROM lorawan_sensor ls "
                 + "LEFT JOIN device d ON ls.device_id = d.id "
-                + "WHERE ls.last_seen <= ((UNIX_TIMESTAMP() * 1000) - 86400000) "
+                + "WHERE ls.last_seen <= ((EXTRACT(EPOCH FROM NOW())::bigint * 1000) - 86400000) "
                 + "AND ls.configuration = 1 "
                 + "AND ls.lorawan_device_type = 2 "
                 + "ORDER BY ls.last_seen DESC, ls.id",
         resultSetMapping = "lorawansensorsexportmapping")
 
+// PG-port: UNIX_TIMESTAMP()->EXTRACT(EPOCH FROM NOW())::bigint
+// last_seen is numeric(38,0) epoch-ms; UNIX_TIMESTAMP()*1000 -> EXTRACT(EPOCH FROM NOW())::bigint*1000
 @NamedNativeQuery(
         name = "Lorawan_Sensor.getLorawanSensorsReporting",
         query = "SELECT ls.id, ls.name, ls.app_key, ls.sensor_device_id, ls.sensor_type, ls.is_battery_low, ls.configuration, "
@@ -498,7 +502,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) AS device_name "
                 + "FROM lorawan_sensor ls "
                 + "LEFT JOIN device d ON ls.device_id = d.id "
-                + "WHERE ls.last_seen > ((UNIX_TIMESTAMP() * 1000) - 86400000) "
+                + "WHERE ls.last_seen > ((EXTRACT(EPOCH FROM NOW())::bigint * 1000) - 86400000) "
                 + "AND ls.configuration = 1 "
                 + "AND ls.lorawan_device_type = 2 "
                 + "ORDER BY ls.last_seen DESC, ls.id",
@@ -519,6 +523,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " ORDER BY ls.last_seen DESC, ls.id",
         resultSetMapping = "lorawansensorsexportmapping")
 
+// PG-port: UNIX_TIMESTAMP()->EXTRACT(EPOCH FROM NOW())::bigint
+// last_seen is numeric(38,0) epoch-ms; UNIX_TIMESTAMP()*1000 -> EXTRACT(EPOCH FROM NOW())::bigint*1000
 @NamedNativeQuery(
         name = "Lorawan_Sensor.getLorawanGatewayNotReporting",
         query = "SELECT ls.id, ls.name, ls.app_key, ls.sensor_device_id, ls.sensor_type, ls.is_battery_low, ls.configuration, "
@@ -529,13 +535,15 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) AS device_name "
                 + "FROM lorawan_sensor ls "
                 + "LEFT JOIN device d ON ls.device_id = d.id "
-                + "WHERE ls.last_seen <= ((UNIX_TIMESTAMP() * 1000) - 86400000) "
+                + "WHERE ls.last_seen <= ((EXTRACT(EPOCH FROM NOW())::bigint * 1000) - 86400000) "
                 + "AND ls.configuration = 1 "
                 + "AND ls.lorawan_device_type = 1 "
                 + "ORDER BY ls.last_seen DESC, ls.id",
         resultSetMapping = "lorawansensorsexportmapping"
 )
 
+// PG-port: UNIX_TIMESTAMP()->EXTRACT(EPOCH FROM NOW())::bigint
+// last_seen is numeric(38,0) epoch-ms; UNIX_TIMESTAMP()*1000 -> EXTRACT(EPOCH FROM NOW())::bigint*1000
 @NamedNativeQuery(
         name = "Lorawan_Sensor.getLorawanGatewayReporting",
         query = "SELECT ls.id, ls.name, ls.app_key, ls.sensor_device_id, ls.sensor_type, ls.is_battery_low, ls.configuration, "
@@ -546,7 +554,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) AS device_name "
                 + "FROM lorawan_sensor ls "
                 + "LEFT JOIN device d ON ls.device_id = d.id "
-                + "WHERE ls.last_seen > ((UNIX_TIMESTAMP() * 1000) - 86400000) "
+                + "WHERE ls.last_seen > ((EXTRACT(EPOCH FROM NOW())::bigint * 1000) - 86400000) "
                 + "AND ls.configuration = 1 "
                 + "AND ls.lorawan_device_type = 1 "
                 + "ORDER BY ls.last_seen DESC, ls.id",

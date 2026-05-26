@@ -2397,6 +2397,8 @@ import java.util.Set;
         }
 )
 
+// PG-port: UNIX_TIMESTAMP()->EXTRACT(EPOCH FROM NOW())::bigint
+// dnd_timestamp is numeric(38,0) epoch-ms; UNIX_TIMESTAMP()*1000 -> EXTRACT(EPOCH FROM NOW())::bigint*1000
 @NamedNativeQuery(
         name = "Device.getDndDevices",
         query = "SELECT d.id, d.dnd_timestamp, d.is_dnd_enabled, d.system_dnd_enabled " +
@@ -2404,7 +2406,7 @@ import java.util.Set;
                 "WHERE d.is_dnd_enabled = ?1 " +
                 "AND d.dnd_timestamp IS NOT NULL " +
                 "AND d.system_dnd_enabled = ?1 " +
-                "AND d.dnd_timestamp < ((UNIX_TIMESTAMP() * 1000) - 86400000)",  // 24 hrs = 86400000 ms
+                "AND d.dnd_timestamp < ((EXTRACT(EPOCH FROM NOW())::bigint * 1000) - 86400000)",  // 24 hrs = 86400000 ms
         resultSetMapping = "dndDevicesMapping"
 )
 
