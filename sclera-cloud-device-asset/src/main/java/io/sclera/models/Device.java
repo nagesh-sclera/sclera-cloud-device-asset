@@ -688,7 +688,8 @@ import java.util.Set;
                 + " Left JOIN location l ON d.location_id = l.id"
                 + " Left JOIN floor f ON l.floor_id = f.id"
                 + " Left JOIN building b ON f.building_id = b.id"
-                + " Left JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " Left JOIN product_details p ON d.product_id = p.id"
                 + " WHERE (?1 = 'null' or d.docker_name = ?1) AND (?2 = 'null' or b.id = ?2) AND (?3 = 'null' or f.id = ?3) AND (?4 = 'null' or l.id = ?4) AND (?5 = 3 or d.status = ?5) AND d.monitor = 1",
         resultSetMapping = "devicelistmapping")
 
@@ -703,7 +704,8 @@ import java.util.Set;
                 + " Left JOIN location l ON d.location_id = l.id"
                 + " Left JOIN floor f ON l.floor_id = f.id"
                 + " Left JOIN building b ON f.building_id = b.id"
-                + " Left JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " Left JOIN product_details p ON d.product_id = p.id"
                 + " WHERE (?1 = 'null' or d.docker_name = ?1) AND (?2 = 'null' or b.id = ?2) AND (?3 = 'null' or f.id = ?3) AND (?4 = 'null' or l.id = ?4) AND "
                 + "  (?5 = 3 or d.status = ?5)  AND (?8 IS NULL or IF(?8 = 123 , (d.virtual_device_type IS NOT NULL AND (d.virtual_device_type!= 0 AND d.virtual_device_type!= 1)), NULL)) AND d.monitor = 1"
                 + " LIMIT ?6  OFFSET ?7",
@@ -774,7 +776,8 @@ import java.util.Set;
                 + " Left JOIN location l ON d.location_id = l.id"
                 + " Left JOIN floor f ON l.floor_id = f.id"
                 + " Left JOIN building b ON f.building_id = b.id"
-                + " Left JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " Left JOIN product_details p ON d.product_id = p.id"
                 + " WHERE d.id = ?1",
         resultSetMapping = "deviceinfomapping")
 
@@ -824,7 +827,8 @@ import java.util.Set;
                 + " Left JOIN location l ON d.location_id = l.id"
                 + " Left JOIN floor f ON l.floor_id = f.id"
                 + " Left JOIN building b ON f.building_id = b.id"
-                + " Left JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " Left JOIN product_details p ON d.product_id = p.id"
                 + " Left JOIN phonebook ph ON d.local_vendor_id = ph.id "
                 + "WHERE d.status = 0 AND d.monitor = 1",
         resultSetMapping = "devicelistparentTS")
@@ -839,7 +843,8 @@ import java.util.Set;
                 + " Left JOIN location l ON d.location_id = l.id"
                 + " Left JOIN floor f ON l.floor_id = f.id"
                 + " Left JOIN building b ON f.building_id = b.id"
-                + " Left JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " Left JOIN product_details p ON d.product_id = p.id"
                 + " Left JOIN phonebook ph ON d.local_vendor_id = ph.id "
                 + "WHERE d.status = 0 AND d.monitor = 1"
                 + " LIMIT ?1  OFFSET ?2",
@@ -855,7 +860,8 @@ import java.util.Set;
                 + " Left JOIN location l ON d.location_id = l.id"
                 + " Left JOIN floor f ON l.floor_id = f.id"
                 + " Left JOIN building b ON f.building_id = b.id"
-                + " Left JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " Left JOIN product_details p ON d.product_id = p.id"
                 + " Left JOIN phonebook ph ON d.local_vendor_id = ph.id "
                 + "WHERE d.monitor = 1 AND d.id = ?1 AND d.popup_notification = 1",
         resultSetMapping = "devicelistparentTS")
@@ -1916,7 +1922,8 @@ import java.util.Set;
                 + "FROM device d "
                 + "LEFT JOIN docker do ON d.docker_name = do.name AND d.docker_vdms_id = do.vdms_id "
                 + "LEFT JOIN vdms v ON do.vdms_id = v.id "
-                + "LEFT JOIN product_details p ON d.product_id = p.product_id "
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + "LEFT JOIN product_details p ON d.product_id = p.id "
                 + "LEFT JOIN location l ON d.location_id = l.id "
                 + "LEFT JOIN floor f ON l.floor_id = f.id "
                 + "LEFT JOIN building b ON f.building_id = b.id "
@@ -2268,7 +2275,8 @@ import java.util.Set;
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " WHERE d.id = ?1",
         resultSetMapping = "devicedetailsfornativeticketmapping"
 )

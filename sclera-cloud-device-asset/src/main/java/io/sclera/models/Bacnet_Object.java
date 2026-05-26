@@ -87,7 +87,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " FROM bacnet_object bo "
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id"
                 + " LEFT JOIN device d ON bo.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -108,7 +109,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " FROM bacnet_object bo"
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id"
                 + " LEFT JOIN device d ON bo.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -131,7 +133,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " FROM bacnet_object bo"
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id"
                 + " LEFT JOIN device d ON bo.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -151,7 +154,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " FROM bacnet_object bo"
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id"
                 + " LEFT JOIN device d ON bo.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -173,7 +177,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " FROM bacnet_object bo"
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id"
                 + " LEFT JOIN device d ON bo.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -194,7 +199,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " FROM bacnet_object bo "
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id"
                 + " LEFT JOIN device d ON bo.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -216,7 +222,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " bo.show_on_map, bd.name as bacnet_device_name, bo.show_on_scan,bo.off_normal,bo.normal,bo.fault"
                 + " FROM bacnet_object bo "
                 + " LEFT JOIN device d ON bo.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -239,7 +246,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " bo.show_on_map, bd.name as bacnet_device_name, bo.show_on_scan,bo.off_normal,bo.normal,bo.fault"
                 + " FROM bacnet_object bo "
                 + " LEFT JOIN device d ON bo.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -266,7 +274,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " FROM bacnet_object bo"
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id"
                 + " LEFT JOIN device d ON bo.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -288,7 +297,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " FROM bacnet_object bo"
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id"
                 + " LEFT JOIN device d ON bo.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -310,7 +320,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " FROM bacnet_object bo "
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id"
                 + " LEFT JOIN device d ON bo.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -329,7 +340,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " FROM bacnet_object bo "
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id"
                 + " LEFT JOIN device d ON bo.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id",
@@ -553,7 +565,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " FROM bacnet_object bo "
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id"
                 + " LEFT JOIN device d ON bo.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN phonebook ph ON d.local_vendor_id = ph.id"
                 + " LEFT JOIN docker do ON d.docker_name = do.name AND d.docker_vdms_id = do.vdms_id"
                 + " LEFT JOIN vdms v On do.vdms_id = v.id"

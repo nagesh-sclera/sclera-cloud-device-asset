@@ -437,7 +437,8 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
                 + " ph.phone as device_local_vendor_phone, mi.sensor_type,mi.show_on_map, mi.show_on_scan"
                 + " FROM measuring_instrument mi"
                 + " LEFT JOIN device d ON mi.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN phonebook ph ON d.local_vendor_id = ph.id"
                 + " LEFT JOIN docker do ON d.docker_name = do.name AND d.docker_vdms_id = do.vdms_id"
                 + " LEFT JOIN vdms v On do.vdms_id = v.id"

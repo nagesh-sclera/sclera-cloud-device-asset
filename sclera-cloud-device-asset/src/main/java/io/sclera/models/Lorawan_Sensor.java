@@ -79,7 +79,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " p.image_url_1 as device_image_url_1, ls.alert, ls.sensor_info, ls.sensor_device_profile_id, ls.lorawan_configuration_id"
                 + " FROM lorawan_sensor ls"
                 + " LEFT JOIN device d ON ls.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id",
@@ -97,7 +98,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " p.image_url_1 as device_image_url_1, ls.alert, ls.sensor_info, ls.sensor_device_profile_id,  ls.lorawan_configuration_id"
                 + " FROM lorawan_sensor ls"
                 + " LEFT JOIN device d ON ls.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -118,7 +120,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " p.image_url_1 as device_image_url_1, ls.alert, ls.sensor_info,  ls.sensor_device_profile_id, ls.lorawan_configuration_id"
                 + " FROM lorawan_sensor ls "
                 + " LEFT JOIN device d ON ls.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -138,7 +141,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " p.image_url_1 as device_image_url_1, ls.alert, ls.sensor_info, ls.sensor_device_profile_id, ls.lorawan_configuration_id"
                 + " FROM lorawan_sensor ls "
                 + " LEFT JOIN device d ON ls.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -158,7 +162,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " p.image_url_1 as device_image_url_1, ls.alert, ls.sensor_info, ls.sensor_device_profile_id, ls.lorawan_configuration_id"
                 + " FROM lorawan_sensor ls"
                 + " LEFT JOIN device d ON ls.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -179,7 +184,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " p.image_url_1 as device_image_url_1, ls.alert, ls.sensor_info, ls.sensor_device_profile_id, ls.lorawan_configuration_id"
                 + " FROM lorawan_sensor ls"
                 + " LEFT JOIN device d ON ls.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -198,7 +204,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " p.image_url_1 as device_image_url_1, ls.alert, ls.sensor_info, ls.sensor_device_profile_id, ls.lorawan_configuration_id"
                 + " FROM lorawan_sensor ls"
                 + " LEFT JOIN device d ON ls.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -247,7 +254,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " p.image_url_1 as device_image_url_1, ls.alert"
                 + " FROM lorawan_sensor ls"
                 + " LEFT JOIN device d ON ls.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -264,7 +272,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " p.image_url_1 as device_image_url_1,ls.alert"
                 + " FROM lorawan_sensor ls"
                 + " LEFT JOIN device d ON ls.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
@@ -394,7 +403,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " ph.phone as device_local_vendor_phone, ls.alert"
                 + " FROM lorawan_sensor ls"
                 + " LEFT JOIN device d ON ls.device_id = d.id"
-                + " LEFT JOIN product_details p ON d.product_id = p.product_id"
+                // PG-port: product_details join key p.product_id -> p.id (table has only id)
+                + " LEFT JOIN product_details p ON d.product_id = p.id"
                 + " LEFT JOIN phonebook ph ON d.local_vendor_id = ph.id"
                 + " LEFT JOIN docker do ON d.docker_name = do.name AND d.docker_vdms_id = do.vdms_id"
                 + " LEFT JOIN vdms v On do.vdms_id = v.id"
