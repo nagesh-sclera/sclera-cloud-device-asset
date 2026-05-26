@@ -182,8 +182,9 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
+                // PG-port: boolean col = 1/0 -> = true/false
                 + " WHERE bo.bacnet_device_id = ?1 AND bo.id = ?2 AND d.monitor = 1 AND d.popup_notification = 1"
-                + " AND bo.validity = 1 AND bo.device_id IS NOT NULL",
+                + " AND bo.validity = true AND bo.device_id IS NOT NULL",
         resultSetMapping = "bacnetobjectmapping"
 )
 
@@ -228,8 +229,9 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id"
+                // PG-port: boolean col = 1/0 -> = true/false
                 + " WHERE (?1 = 'null' or bd.docker_name = ?1) AND (?2 = 'null' or b.id = ?2) AND (?3 = 'null' or f.id = ?3)"
-                + " AND (?4 = 'null' or l.id = ?4) AND (?5 = 3 or bo.alert = ?5) AND bo.configuration = 1"
+                + " AND (?4 = 'null' or l.id = ?4) AND (?5 = 3 or bo.alert = ?5) AND bo.configuration = true"
                 + " AND bo.device_id IS NOT NULL AND d.monitor = 1",
         resultSetMapping = "bacnetobjectmapping"
 )
@@ -253,7 +255,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " LEFT JOIN building b ON f.building_id = b.id"
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id"
                 + " WHERE (?1 = 'null' or bd.docker_name = ?1) AND (?2 = 'null' or b.id = ?2) AND (?3 = 'null' or f.id = ?3)"
-                + " AND (?4 = 'null' or l.id = ?4) AND (?5 = 3 or bo.alert = ?5) AND bo.configuration = 1"
+                // PG-port: boolean col = 1/0 -> = true/false
+                + " AND (?4 = 'null' or l.id = ?4) AND (?5 = 3 or bo.alert = ?5) AND bo.configuration = true"
                 + " AND bo.device_id IS NOT NULL AND d.monitor = 1"
                 + " LIMIT ?6  OFFSET ?7",
         resultSetMapping = "bacnetobjectmapping"
@@ -279,7 +282,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE bd.docker_name = ?1 AND bd.docker_vdms_id = ?2 AND bo.configuration = 1",
+                // PG-port: boolean col = 1/0 -> = true/false
+                + " WHERE bd.docker_name = ?1 AND bd.docker_vdms_id = ?2 AND bo.configuration = true",
         resultSetMapping = "bacnetobjectmapping"
 )
 
@@ -302,7 +306,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE (?1 = 'all' or bd.docker_name = ?1) AND bd.docker_vdms_id = ?2 AND bo.configuration = 1"
+                // PG-port: boolean col = 1/0 -> = true/false
+                + " WHERE (?1 = 'all' or bd.docker_name = ?1) AND bd.docker_vdms_id = ?2 AND bo.configuration = true"
                 + " AND (?3 = 'null' or CONCAT_WS('', bo.name, bo.category, bo.user_data_name, d.display_name, d.user_data_name, l.name, bo.bacnet_device_id) LIKE CONCAT('%',?3,'%'))"
                 + " LIMIT ?4 OFFSET ?5",
         resultSetMapping = "bacnetobjectmapping"

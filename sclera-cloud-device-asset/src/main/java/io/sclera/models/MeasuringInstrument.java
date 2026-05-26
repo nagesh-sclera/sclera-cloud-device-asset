@@ -562,7 +562,8 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
         query = "select distinct(c.alert_message), m.device_id from measuring_instrument m " +
                 "JOIN conditions c " +
                 "ON m.id = c.measuring_instrument_id " +
-                "where c.alert = 1 AND m.device_id IN ?1",
+                // PG-port: boolean col = 1/0 -> = true/false
+                "where c.alert = true AND m.device_id IN ?1",
         resultSetMapping = "measuringinstrumentsmappings")
 
 @SqlResultSetMapping(

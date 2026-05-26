@@ -2661,7 +2661,8 @@ import java.util.Set;
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
                 + " WHERE d.subsystem_parent_id IS NULL AND d.asset_match_status != 3"
-                + " AND (d.is_dnd_enabled = 1 OR d.system_dnd_enabled = 1)"
+                // PG-port: boolean col = 1/0 -> = true/false
+                + " AND (d.is_dnd_enabled = true OR d.system_dnd_enabled = true)"
                 + " AND d.docker_vdms_id = ?1 AND (?2 = 'all' OR d.docker_name = ?2)"
                 + " ORDER BY d.created_timestamp DESC, d.id"
                 + " LIMIT ?3 OFFSET ?4",

@@ -189,7 +189,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE ls.configuration = 1 AND ls.lorawan_device_type = 2",
+                // PG-port: boolean col = 1/0 -> = true/false
+                + " WHERE ls.configuration = true AND ls.lorawan_device_type = 2",
         resultSetMapping = "lorawansensorsmapping")
 
 //Added pagination for getNetworkLorawanSensors
@@ -209,7 +210,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE ls.configuration = 1 AND ls.lorawan_device_type = 2"
+                // PG-port: boolean col = 1/0 -> = true/false
+                + " WHERE ls.configuration = true AND ls.lorawan_device_type = 2"
                 + " AND (?1 = 'null' or CONCAT_WS('', ls.model_name, ls.model_id, ls.manufacturer, ls.sensor_type, ls.name, ls.id, d.display_name , d.user_data_name, l.name) LIKE CONCAT('%',?1,'%'))"
                 + " LIMIT ?2 OFFSET ?3",
         resultSetMapping = "lorawansensorsmapping")
@@ -260,7 +262,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
                 + " WHERE (?1 = 'null' or b.id = ?1) AND (?2 = 'null' or f.id = ?2) AND (?3 = 'null' or l.id = ?3) AND (?4 = 3 or ls.alert = ?4)"
-                + " AND ls.configuration = 1 AND ls.device_id IS NOT NULL AND d.monitor = 1",
+                // PG-port: boolean col = 1/0 -> = true/false
+                + " AND ls.configuration = true AND ls.device_id IS NOT NULL AND d.monitor = 1",
         resultSetMapping = "lorawansensorsmappingTS")
 
 //Added pagination for getLorawanSensorsTS
@@ -278,7 +281,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
                 + " WHERE (?1 = 'null' or b.id = ?1) AND (?2 = 'null' or f.id = ?2) AND (?3 = 'null' or l.id = ?3) AND (?4 = 3 or ls.alert = ?4)"
-                + " AND ls.configuration = 1 AND ls.device_id IS NOT NULL AND d.monitor = 1"
+                // PG-port: boolean col = 1/0 -> = true/false
+                + " AND ls.configuration = true AND ls.device_id IS NOT NULL AND d.monitor = 1"
                 + " LIMIT ?5  OFFSET ?6",
         resultSetMapping = "lorawansensorsmappingTS")
 
@@ -433,7 +437,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 "ON lsa.name = c.lorawan_sensor_attributes_name AND lsa.lorawan_sensor_id = c.lorawan_sensor_attributes_lorawan_sensor_id " +
                 "JOIN lorawan_sensor ls " +
                 "ON ls.id = c.lorawan_sensor_attributes_lorawan_sensor_id " +
-                "where c.alert = 1 AND ls.device_id IN ?1",
+                // PG-port: boolean col = 1/0 -> = true/false
+                "where c.alert = true AND ls.device_id IN ?1",
         resultSetMapping = "lorawansensoralertmapping")
 
 
@@ -485,7 +490,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + "FROM lorawan_sensor ls "
                 + "LEFT JOIN device d ON ls.device_id = d.id "
                 + "WHERE ls.last_seen <= ((EXTRACT(EPOCH FROM NOW())::bigint * 1000) - 86400000) "
-                + "AND ls.configuration = 1 "
+                // PG-port: boolean col = 1/0 -> = true/false
+                + "AND ls.configuration = true "
                 + "AND ls.lorawan_device_type = 2 "
                 + "ORDER BY ls.last_seen DESC, ls.id",
         resultSetMapping = "lorawansensorsexportmapping")
@@ -503,7 +509,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + "FROM lorawan_sensor ls "
                 + "LEFT JOIN device d ON ls.device_id = d.id "
                 + "WHERE ls.last_seen > ((EXTRACT(EPOCH FROM NOW())::bigint * 1000) - 86400000) "
-                + "AND ls.configuration = 1 "
+                // PG-port: boolean col = 1/0 -> = true/false
+                + "AND ls.configuration = true "
                 + "AND ls.lorawan_device_type = 2 "
                 + "ORDER BY ls.last_seen DESC, ls.id",
         resultSetMapping = "lorawansensorsexportmapping")
@@ -519,7 +526,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) AS device_name "
                 + "FROM lorawan_sensor ls "
                 + "LEFT JOIN device d ON ls.device_id = d.id "
-                + " WHERE ls.sensor_join_status = 0 AND ls.configuration = 1 AND ls.lorawan_device_type = 2"
+                // PG-port: boolean col = 1/0 -> = true/false
+                + " WHERE ls.sensor_join_status = 0 AND ls.configuration = true AND ls.lorawan_device_type = 2"
                 + " ORDER BY ls.last_seen DESC, ls.id",
         resultSetMapping = "lorawansensorsexportmapping")
 
@@ -536,7 +544,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + "FROM lorawan_sensor ls "
                 + "LEFT JOIN device d ON ls.device_id = d.id "
                 + "WHERE ls.last_seen <= ((EXTRACT(EPOCH FROM NOW())::bigint * 1000) - 86400000) "
-                + "AND ls.configuration = 1 "
+                // PG-port: boolean col = 1/0 -> = true/false
+                + "AND ls.configuration = true "
                 + "AND ls.lorawan_device_type = 1 "
                 + "ORDER BY ls.last_seen DESC, ls.id",
         resultSetMapping = "lorawansensorsexportmapping"
@@ -555,7 +564,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + "FROM lorawan_sensor ls "
                 + "LEFT JOIN device d ON ls.device_id = d.id "
                 + "WHERE ls.last_seen > ((EXTRACT(EPOCH FROM NOW())::bigint * 1000) - 86400000) "
-                + "AND ls.configuration = 1 "
+                // PG-port: boolean col = 1/0 -> = true/false
+                + "AND ls.configuration = true "
                 + "AND ls.lorawan_device_type = 1 "
                 + "ORDER BY ls.last_seen DESC, ls.id",
         resultSetMapping = "lorawansensorsexportmapping"
@@ -572,7 +582,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + "FROM lorawan_sensor ls "
                 + "LEFT JOIN device d ON ls.device_id = d.id "
                 + "WHERE ls.last_seen IS NULL "
-                + "AND ls.configuration = 1 "
+                // PG-port: boolean col = 1/0 -> = true/false
+                + "AND ls.configuration = true "
                 + "AND ls.lorawan_device_type = 1 "
                 + "ORDER BY ls.id",
         resultSetMapping = "lorawansensorsexportmapping"
