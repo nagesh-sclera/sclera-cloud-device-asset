@@ -18,8 +18,9 @@ public interface DeviceOnboardStatusRepository extends JpaRepository<DeviceOnboa
 
     @Modifying
     @Transactional
-    @Query(value = "UPDATE device_onboard_status SET device_id = ?2 ,assignee_email = ?3 , image_status = IFNULL(?4, image_status), " +
-            " geolocation_status = IFNULL(?5, geolocation_status), tag_status = IFNULL(?6, tag_status), field_status = IFNULL(?7, field_status) WHERE id = ?1", nativeQuery = true)
+    // PG-port: IFNULL->COALESCE
+    @Query(value = "UPDATE device_onboard_status SET device_id = ?2 ,assignee_email = ?3 , image_status = COALESCE(?4, image_status), " +
+            " geolocation_status = COALESCE(?5, geolocation_status), tag_status = COALESCE(?6, tag_status), field_status = COALESCE(?7, field_status) WHERE id = ?1", nativeQuery = true)
     void updateOnboardAsset(String id, String device_id, String assignee_email, Integer image_status, Integer geolocation_status, Integer tag_status, Integer field_status);
 
     @Modifying
@@ -29,8 +30,9 @@ public interface DeviceOnboardStatusRepository extends JpaRepository<DeviceOnboa
 
     @Modifying
     @Transactional
-    @Query(value = "UPDATE device_onboard_status SET image_status = IFNULL(?2, image_status), geolocation_status = IFNULL(?3, geolocation_status),"
-            + " tag_status = IFNULL(?4, tag_status), field_status = IFNULL(?5, field_status) WHERE device_id = ?1", nativeQuery = true)
+    // PG-port: IFNULL->COALESCE
+    @Query(value = "UPDATE device_onboard_status SET image_status = COALESCE(?2, image_status), geolocation_status = COALESCE(?3, geolocation_status),"
+            + " tag_status = COALESCE(?4, tag_status), field_status = COALESCE(?5, field_status) WHERE device_id = ?1", nativeQuery = true)
     void updateAssetOnboardData(String device_id, Integer image_status, Integer geolocation_status, Integer tag_status, Integer field_status);
 
     @Query(nativeQuery = true)

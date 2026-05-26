@@ -52,9 +52,11 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 
     @Modifying
     @Transactional
+    // PG-port: IFNULL->COALESCE
+    // PG-gap: JSON_MERGE_PATCH is MySQL-specific; requires separate migration to jsonb_merge_patch or equivalent
     @Query(value = "UPDATE device SET monitor = ?4,  network_layer = ?5, user_data_model = ?6,model = ?6, user_data_name = ?7, type = ?8, user_data_vendor = ?9, vendor = ?9, parent = ?10, remote_access = ?11, warranty = ?12, product_id = ?13,"
             + " location_id = ?14, email_alert = ?15, sms_alert = ?16, popup_notification = ?17, serial_number = ?18, local_vendor_email_alert = ?19,"
-            + " local_vendor_sms_alert = ?20, subsystem_parent_id = ?21, custom_fields = IFNULL(?22, custom_fields), description = ?23, asset_match_status = ?24, asset_group = ?25, category = ?26, sub_category = ?27, location_status = ?28, "
+            + " local_vendor_sms_alert = ?20, subsystem_parent_id = ?21, custom_fields = COALESCE(?22, custom_fields), description = ?23, asset_match_status = ?24, asset_group = ?25, category = ?26, sub_category = ?27, location_status = ?28, "
             + " cost_value = ?29, assigned_user_email = ?30, ai_call = ?31, cost_unit = ?32, is_dnd_enabled = ?33, operational_status = ?34, adc_json = JSON_MERGE_PATCH(adc_json, CAST(?35 AS JSON)) "
             + " WHERE docker_vdms_id = ?2 AND docker_name = ?3 AND id = ?1", nativeQuery = true)
     int editDeviceByDeviceID(String device_id, String vdmsid, String dockername, Integer monitor, String network_layer, String user_data_model,
@@ -69,9 +71,10 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 
     @Modifying
     @Transactional
-    @Query(value = "UPDATE device SET global_vendor_id = IFNULL(?1 ,global_vendor_id) ,local_vendor_id = IFNULL(?2 ,local_vendor_id) ,"
-            + "other_vendor_1_id = IFNULL(?3 ,other_vendor_1_id) , other_vendor_2_id = IFNULL(?4 ,other_vendor_2_id) ,"
-            + "other_vendor_3_id = IFNULL(?5,other_vendor_3_id) WHERE id = ?6 ", nativeQuery = true)
+    // PG-port: IFNULL->COALESCE
+    @Query(value = "UPDATE device SET global_vendor_id = COALESCE(?1 ,global_vendor_id) ,local_vendor_id = COALESCE(?2 ,local_vendor_id) ,"
+            + "other_vendor_1_id = COALESCE(?3 ,other_vendor_1_id) , other_vendor_2_id = COALESCE(?4 ,other_vendor_2_id) ,"
+            + "other_vendor_3_id = COALESCE(?5,other_vendor_3_id) WHERE id = ?6 ", nativeQuery = true)
     Integer updateDeviceVendorsByDeviceID(String global_vendor_id, String local_vendor_id, String other_vendor_1_id,
                                           String other_vendor_2_id, String other_vendor_3_id, String device_id);
 
@@ -113,15 +116,16 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 
     @Modifying
     @Transactional
-    @Query(value = "UPDATE device SET user_data_name = IFNULL(?2 ,user_data_name), user_data_model = IFNULL(?3 ,user_data_model) ,user_data_vendor = IFNULL(?4 ,user_data_vendor) ,"
-            + "type = IFNULL(?5 ,type) ,warranty = IFNULL(?6 ,warranty) ,network_layer = IFNULL(?7 ,network_layer) ,"
-            + "location_id = IF(?8 = 'null' or ?8 = '', NULL, IFNULL(?8, location_id)), parent = IFNULL(?9 ,parent) ,product_id = IFNULL(?10 ,product_id) ,"
-            + "monitor = IFNULL(?11 ,monitor) ,remote_access = IFNULL(?12 ,remote_access) ,global_vendor_id = IFNULL(?13 ,global_vendor_id) ,"
-            + "local_vendor_id = IFNULL(?14 ,local_vendor_id) ,other_vendor_1_id = IFNULL(?15 ,other_vendor_1_id) ,"
-            + "other_vendor_2_id = IFNULL(?16 ,other_vendor_2_id) ,other_vendor_3_id = IFNULL(?17 ,other_vendor_3_id), "
-            + "email_alert = IFNULL(?18 ,email_alert), sms_alert = IFNULL(?19 ,sms_alert), popup_notification = IFNULL(?20 ,popup_notification),"
-            + "local_vendor_email_alert = IFNULL(?21 ,local_vendor_email_alert), local_vendor_sms_alert = IFNULL(?22 ,local_vendor_sms_alert), "
-            + "subsystem_parent_id = IFNULL(?23 ,subsystem_parent_id), description = IFNULL(?24, description), asset_match_status = IFNULL(?25, asset_match_status), custom_fields = IFNULL(?26, custom_fields), docker_name = ?27, asset_group = IFNULL(?28, asset_group), category = IFNULL(?29, category), sub_category = IFNULL(?30, sub_category), location_status = IF( ?8 IS NULL, location_status, NULL) "
+    // PG-port: IFNULL->COALESCE / IF->CASE WHEN
+    @Query(value = "UPDATE device SET user_data_name = COALESCE(?2 ,user_data_name), user_data_model = COALESCE(?3 ,user_data_model) ,user_data_vendor = COALESCE(?4 ,user_data_vendor) ,"
+            + "type = COALESCE(?5 ,type) ,warranty = COALESCE(?6 ,warranty) ,network_layer = COALESCE(?7 ,network_layer) ,"
+            + "location_id = CASE WHEN ?8 = 'null' OR ?8 = '' THEN NULL ELSE COALESCE(?8, location_id) END, parent = COALESCE(?9 ,parent) ,product_id = COALESCE(?10 ,product_id) ,"
+            + "monitor = COALESCE(?11 ,monitor) ,remote_access = COALESCE(?12 ,remote_access) ,global_vendor_id = COALESCE(?13 ,global_vendor_id) ,"
+            + "local_vendor_id = COALESCE(?14 ,local_vendor_id) ,other_vendor_1_id = COALESCE(?15 ,other_vendor_1_id) ,"
+            + "other_vendor_2_id = COALESCE(?16 ,other_vendor_2_id) ,other_vendor_3_id = COALESCE(?17 ,other_vendor_3_id), "
+            + "email_alert = COALESCE(?18 ,email_alert), sms_alert = COALESCE(?19 ,sms_alert), popup_notification = COALESCE(?20 ,popup_notification),"
+            + "local_vendor_email_alert = COALESCE(?21 ,local_vendor_email_alert), local_vendor_sms_alert = COALESCE(?22 ,local_vendor_sms_alert), "
+            + "subsystem_parent_id = COALESCE(?23 ,subsystem_parent_id), description = COALESCE(?24, description), asset_match_status = COALESCE(?25, asset_match_status), custom_fields = COALESCE(?26, custom_fields), docker_name = ?27, asset_group = COALESCE(?28, asset_group), category = COALESCE(?29, category), sub_category = COALESCE(?30, sub_category), location_status = CASE WHEN ?8 IS NULL THEN location_status ELSE NULL END "
             + "WHERE id = ?1", nativeQuery = true)
     void quickUpdate(String id, String user_data_name, String user_data_model, String user_data_vendor, String type,
                      String warranty, String network_layer, String location_id, String parent_device_id, String product_id,
@@ -162,11 +166,13 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 
     @Modifying
     @Transactional
+    // PG-port: IFNULL->COALESCE
+    // PG-gap: JSON_MERGE_PATCH is MySQL-specific; requires separate migration to jsonb_merge_patch or equivalent
     @Query(value = "UPDATE device SET monitor = ?2, location_id = ?3, network_layer = ?4, user_data_model = ?5, type = ?6, "
             + "user_data_vendor = ?7, user_data_name = ?8, parent = ?9, remote_access = ?10, product_id = ?11, warranty = ?12, "
             + "ip_address = ?13, email_alert = ?14, sms_alert = ?15, popup_notification = ?16, virtual_device_type = ?17, "
             + "serial_number = ?18, local_vendor_email_alert = ?19, local_vendor_sms_alert = ?20, docker_name = ?21, subsystem_parent_id = ?22, "
-            + "custom_fields = IFNULL(?23, custom_fields), description = ?24, asset_match_status = ?25,asset_group = ?26, category = ?27, "
+            + "custom_fields = COALESCE(?23, custom_fields), description = ?24, asset_match_status = ?25,asset_group = ?26, category = ?27, "
             + "sub_category = ?28, location_status = ?29, cost_value = ?30, assigned_user_email = ?31, ai_call = ?32, cost_unit = ?33, is_dnd_enabled = ?34, "
             + "operational_status = ?35, adc_json = JSON_MERGE_PATCH(adc_json, CAST(?36 AS JSON)), model = ?5, vendor = ?7  "
             + "WHERE id = ?1", nativeQuery = true)
@@ -187,12 +193,13 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 
     @Modifying
     @Transactional
+    // PG-port: IFNULL->COALESCE / IF->CASE WHEN
     @Query(value = "UPDATE device SET user_data_name = ?2 ,user_data_model = ?3 ,user_data_vendor = ?4 ,type = ?5 ,"
             + "network_layer = ?6 ,location_id = ?7 ,parent = ?8 ,warranty = ?9 ,monitor = ?10 ,remote_access = ?11 ,"
             + "product_id = ?12 ,global_vendor_id = ?13 ,local_vendor_id = ?14 ,other_vendor_1_id = ?15 ,"
             + "other_vendor_2_id = ?16 ,other_vendor_3_id = ?17, email_alert = ?18, sms_alert = ?19, popup_notification = ?20, "
             + "serial_number = ?21, local_vendor_email_alert = ?22, local_vendor_sms_alert = ?23, docker_name = ?24, subsystem_parent_id = ?25, "
-            + "custom_fields = IFNULL(?26, custom_fields), description = ?27, asset_match_status = ?28, asset_group = ?29, category = ?30, sub_category = ?31, location_status = IF( ?7 IS NULL, location_status, NULL)  "
+            + "custom_fields = COALESCE(?26, custom_fields), description = ?27, asset_match_status = ?28, asset_group = ?29, category = ?30, sub_category = ?31, location_status = CASE WHEN ?7 IS NULL THEN location_status ELSE NULL END  "
             + "WHERE id = ?1 ", nativeQuery = true)
     void multiDeviceUpdateByDeviceId(String id, String user_data_name, String user_data_model, String user_data_vendor,
                                      String type, String network_layer, String location_id, String parent, String warranty, Integer monitor,
@@ -386,7 +393,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     Set<DeviceDTO> getAllParentDeviceByPagination(String searchKey, Integer pagesize, Integer offset);
 
     //Get Parent Device Name by Id
-    @Query(value = "Select IF((d.user_data_name IS NULL or d.user_data_name = ''), d.display_name, d.user_data_name) from device d where d.id = ?1", nativeQuery = true)
+    // PG-port: IF->CASE WHEN
+    @Query(value = "Select CASE WHEN (d.user_data_name IS NULL OR d.user_data_name = '') THEN d.display_name ELSE d.user_data_name END from device d where d.id = ?1", nativeQuery = true)
     String getParentDeviceNameById(String parent_device_id);
 
     //new get method with subsystem parent devices get
@@ -438,7 +446,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 
     @Modifying
     @Transactional
-    @Query(value = "UPDATE device SET snmp_parent = ?3, type = IFNULL(?4, type) WHERE docker_name = ?1 AND id = ?2", nativeQuery = true)
+    // PG-port: IFNULL->COALESCE
+    @Query(value = "UPDATE device SET snmp_parent = ?3, type = COALESCE(?4, type) WHERE docker_name = ?1 AND id = ?2", nativeQuery = true)
     void updateSnmpParent(String dockername, String id, String snmp_parent, String device_type);
 
 
@@ -466,7 +475,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 
     @Transactional
     @Modifying
-    @Query(value = "UPDATE device SET ip_address = IFNULL(?1, ip_address), mac_address = ?2, status = IFNULL(?3, status), last_seen_on = IFNULL(?4, last_seen_on) WHERE docker_vdms_id = ?5 AND docker_name =?6 AND id = ?7 ", nativeQuery = true)
+    // PG-port: IFNULL->COALESCE
+    @Query(value = "UPDATE device SET ip_address = COALESCE(?1, ip_address), mac_address = ?2, status = COALESCE(?3, status), last_seen_on = COALESCE(?4, last_seen_on) WHERE docker_vdms_id = ?5 AND docker_name =?6 AND id = ?7 ", nativeQuery = true)
     void updateDeviceStatus(String ip_address, String mac_address, Integer status, BigInteger last_seen_on,
                             String vdms_id, String docker_name, String id);
 
@@ -533,23 +543,28 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     List<DeviceDTO> listAlldevices();
 
     @Transactional
-    @Query(value = "SELECT COUNT(id) FROM device WHERE status = ?2 AND monitor = 1 AND (?1 = 'all' or docker_name = ?1) AND asset_match_status != 3 AND IF('all' = ?3, true , assigned_user_email = ?3) ", nativeQuery = true)
+    // PG-port: IF->CASE WHEN
+    @Query(value = "SELECT COUNT(id) FROM device WHERE status = ?2 AND monitor = 1 AND (?1 = 'all' or docker_name = ?1) AND asset_match_status != 3 AND CASE WHEN 'all' = ?3 THEN true ELSE assigned_user_email = ?3 END ", nativeQuery = true)
     Integer onlineOfflineCountByDocker(String dockername, int i, String assignee);
 
     @Transactional
-    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND (monitor = 0 OR monitor IS NULL) AND asset_match_status != 3 AND IF('all' = ?2, true , assigned_user_email = ?2) ", nativeQuery = true)
+    // PG-port: IF->CASE WHEN
+    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND (monitor = 0 OR monitor IS NULL) AND asset_match_status != 3 AND CASE WHEN 'all' = ?2 THEN true ELSE assigned_user_email = ?2 END ", nativeQuery = true)
     Integer unmonitorCountByDocker(String dockername, String assignee);
 
     @Transactional
-    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND monitor = 1  AND asset_match_status != 3 AND IF('all' = ?2, true , assigned_user_email = ?2) ", nativeQuery = true)
+    // PG-port: IF->CASE WHEN
+    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND monitor = 1  AND asset_match_status != 3 AND CASE WHEN 'all' = ?2 THEN true ELSE assigned_user_email = ?2 END ", nativeQuery = true)
     Integer monitorCountByDocker(String dockername, String assignee);
 
     @Transactional
-    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND (assigned_user_email IS NOT NULL or assigned_user_email != 'null')  AND asset_match_status != 3 AND IF('all' = ?2, true , assigned_user_email = ?2) ", nativeQuery = true)
+    // PG-port: IF->CASE WHEN
+    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND (assigned_user_email IS NOT NULL or assigned_user_email != 'null')  AND asset_match_status != 3 AND CASE WHEN 'all' = ?2 THEN true ELSE assigned_user_email = ?2 END ", nativeQuery = true)
     Integer assignedCountByDocker(String dockername, String assignee);
 
 
-    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND (assigned_user_email IS NULL or assigned_user_email = 'null')  AND asset_match_status != 3 AND IF('all' = ?2, true , assigned_user_email = ?2) ", nativeQuery = true)
+    // PG-port: IF->CASE WHEN
+    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND (assigned_user_email IS NULL or assigned_user_email = 'null')  AND asset_match_status != 3 AND CASE WHEN 'all' = ?2 THEN true ELSE assigned_user_email = ?2 END ", nativeQuery = true)
     Integer unAssignedCountByDocker(String dockername, String assignee);
     // other device count
     @Transactional
@@ -558,20 +573,24 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 
     // other device count
     @Transactional
-    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND monitor = 1 AND ( virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1 ) ) AND asset_match_status != 3 AND IF('all' = ?2, true , assigned_user_email = ?2) ", nativeQuery = true)
+    // PG-port: IF->CASE WHEN
+    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND monitor = 1 AND ( virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1 ) ) AND asset_match_status != 3 AND CASE WHEN 'all' = ?2 THEN true ELSE assigned_user_email = ?2 END ", nativeQuery = true)
     Integer otherDeviceCountByDockerAssignee(String dockername, String assignee);
 
     // matched/unmatched device count
     @Transactional
-    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND asset_match_status = ?2 AND IF('all' = ?3, true , assigned_user_email = ?3)", nativeQuery = true)
+    // PG-port: IF->CASE WHEN
+    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND asset_match_status = ?2 AND CASE WHEN 'all' = ?3 THEN true ELSE assigned_user_email = ?3 END", nativeQuery = true)
     Integer getMatchedUnmatchedDeviceCountByDocker(String dockername, int i, String assignee);
 
     @Transactional
-    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1)  AND asset_match_status != 3 AND  (onboard_status != 3) AND IF('all' = ?2, true , assigned_user_email = ?2) ", nativeQuery = true)
+    // PG-port: IF->CASE WHEN
+    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1)  AND asset_match_status != 3 AND  (onboard_status != 3) AND CASE WHEN 'all' = ?2 THEN true ELSE assigned_user_email = ?2 END ", nativeQuery = true)
     Integer getNotOnboardedDeviceCountByDocker(String dockername, String assignee);
 
     @Transactional
-    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1)   AND asset_match_status != 3 AND (onboard_status = 3) AND IF('all' = ?2, true , assigned_user_email = ?2) ", nativeQuery = true)
+    // PG-port: IF->CASE WHEN
+    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1)   AND asset_match_status != 3 AND (onboard_status = 3) AND CASE WHEN 'all' = ?2 THEN true ELSE assigned_user_email = ?2 END ", nativeQuery = true)
     Integer getOnboardedDeviceCountByDocker(String dockername, String assignee);
 
 
@@ -587,7 +606,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 
     //get all device count by docker
     @Transactional
-    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND asset_match_status != 3 AND IF('all' = ?2, true , assigned_user_email = ?2) ", nativeQuery = true)
+    // PG-port: IF->CASE WHEN
+    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND asset_match_status != 3 AND CASE WHEN 'all' = ?2 THEN true ELSE assigned_user_email = ?2 END ", nativeQuery = true)
     Integer getAllDeviceCountByDockerAssignee(String docker_name, String assignee);
 
     @Transactional
@@ -652,7 +672,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 
     @Modifying
     @Transactional
-    @Query(value = "UPDATE device SET parent = ?2, user_connection_type = IFNULL(?3, user_connection_type) WHERE id = ?1", nativeQuery = true)
+    // PG-port: IFNULL->COALESCE
+    @Query(value = "UPDATE device SET parent = ?2, user_connection_type = COALESCE(?3, user_connection_type) WHERE id = ?1", nativeQuery = true)
     void updateDeviceParent(String id, String parent, String user_connection_type);
 
     @Modifying
@@ -906,15 +927,16 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     @Query(nativeQuery = true)
     Set<DeviceDTO> getAllNetworkParentDevices(JSONArray dockernames, JSONArray types, String searchkey, JSONArray virtual_device_types, Boolean isTaggedToQrCode, JSONArray deviceIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray deviceIdsTaggedToNfc);
 
+    // PG-port: IF->CASE WHEN
     @Query(value = "SELECT d.id FROM device d LEFT JOIN location l ON l.id = d.location_id" +
             " LEFT JOIN floor f ON l.floor_id = f.id" +
             " LEFT JOIN building b ON f.building_id = b.id" +
             " WHERE d.asset_match_status != 3 AND ('all' IN ?1 or d.docker_name IN ?1) AND" +
             " ('all' IN ?2 or d.type IN ?2)" +
-            " AND ('all' IN ?4 or (IF ('other' IN ?4, (d.virtual_device_type = 2), NULL)) or (IF ('power_source' IN ?4, (d.virtual_device_type = 3 or d.virtual_device_type = 4), NULL)) or (IF ('ip' IN ?4, (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1), NULL)))" +
+            " AND ('all' IN ?4 or (CASE WHEN 'other' IN ?4 THEN d.virtual_device_type = 2 ELSE NULL END) or (CASE WHEN 'power_source' IN ?4 THEN (d.virtual_device_type = 3 or d.virtual_device_type = 4) ELSE NULL END) or (CASE WHEN 'ip' IN ?4 THEN (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1) ELSE NULL END))" +
             " AND (?3 IS NULL or CONCAT_WS('', d.display_name, d.user_data_name, d.ip_address, d.mac_address, l.name, d.docker_name, d.vendor, d.user_data_vendor,d.latitude, d.longitude, d.warranty, b.name, f.name, d.model, d.user_data_model, d.serial_number, d.custom_fields,d.type) LIKE CONCAT('%',?3,'%')) " +
-            " AND (?5 IS NULL OR IF(?5, d.id IN ?6 , d.id NOT IN ?6))" +
-            " AND (?7 IS NULL OR IF(?8, d.id IN ?8 , d.id NOT IN ?8))" +
+            " AND (?5 IS NULL OR CASE WHEN ?5 THEN d.id IN ?6 ELSE d.id NOT IN ?6 END)" +
+            " AND (?7 IS NULL OR CASE WHEN ?8 THEN d.id IN ?8 ELSE d.id NOT IN ?8 END)" +
             " AND ('all' IN ?9 OR l.id IN ?9)", nativeQuery = true)
     List<String> getDeviceIds(List<String> dockerNames, List<String> types, String searchKey, List<String> virtual_device_types,
                               Boolean isTaggedToQrCode, List<String> deviceIdsTaggedToQrCode, Boolean isTaggedToNfc,
@@ -1043,7 +1065,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     @Query(value = "UPDATE device SET is_dnd_enabled = ?2 WHERE id = ?1", nativeQuery = true)
     void toggleDndStatus(String device_id, Boolean is_dnd_enabled);
 
-    @Query(value = "SELECT  IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as name FROM device d WHERE d.id = ?1", nativeQuery = true)
+    // PG-port: IF->CASE WHEN
+    @Query(value = "SELECT  CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as name FROM device d WHERE d.id = ?1", nativeQuery = true)
     String getDeviceNameById(String deviceId);
 
     @Query(nativeQuery = true)
@@ -1142,7 +1165,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     @Query(nativeQuery = true)
     DeviceDTO getDeviceDndAndSystemDndStatus(String deviceId, Boolean isDndEnabled);
 
-    @Query(value = "SELECT IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model FROM device d WHERE d.id = ?1", nativeQuery = true)
+    // PG-port: IF->CASE WHEN
+    @Query(value = "SELECT CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model FROM device d WHERE d.id = ?1", nativeQuery = true)
     String getModelById(String deviceId);
 
     List<Device> findByStatus(int status);
