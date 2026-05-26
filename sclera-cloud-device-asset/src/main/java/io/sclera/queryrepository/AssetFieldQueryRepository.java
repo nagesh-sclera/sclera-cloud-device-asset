@@ -6,12 +6,13 @@ import org.springframework.stereotype.Component;
 public class AssetFieldQueryRepository {
 
     public String getQueryForUpsertAssetField() {
+        // PG-port: ON DUPLICATE KEY UPDATE -> ON CONFLICT (id) DO UPDATE SET ... (VALUES()->EXCLUDED)
         return "INSERT INTO asset_field(" +
                 "id, name, type, tool_tip, default_value, is_active, options, is_deleted, show_in_section, created_at " +
                 ") VALUES (?,?,?,?,?,?,?,?,?,?) " +
-                "ON DUPLICATE KEY UPDATE " +
-                "name = VALUES(name), type = VALUES(type), tool_tip = VALUES(tool_tip), default_value = VALUES(default_value), " +
-                "is_active = VALUES(is_active), options = VALUES(options), is_deleted = VALUES(is_deleted), show_in_section = VALUES(show_in_section), created_at = VALUES(created_at) ";
+                "ON CONFLICT (id) DO UPDATE SET " +
+                "name = EXCLUDED.name, type = EXCLUDED.type, tool_tip = EXCLUDED.tool_tip, default_value = EXCLUDED.default_value, " +
+                "is_active = EXCLUDED.is_active, options = EXCLUDED.options, is_deleted = EXCLUDED.is_deleted, show_in_section = EXCLUDED.show_in_section, created_at = EXCLUDED.created_at ";
 
     }
 }

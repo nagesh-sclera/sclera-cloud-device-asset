@@ -6,13 +6,16 @@ import org.springframework.stereotype.Component;
 public class DocumentQueryRepository {
 
     public String getQueryForUpsertDocument() {
+        // PG-port: ON DUPLICATE KEY UPDATE -> ON CONFLICT (id) DO UPDATE SET ... (VALUES()->EXCLUDED)
+        // Note: original MySQL had encrypted_type = VALUES(link) (varchar->int coercion bug preserved as cast)
         return "INSERT INTO document (id , name, category , description, link, created_email, created_timestamp, encrypted_type,source_type) VALUES (?,?,?,?,?,?,?,?,?) " +
-                "ON DUPLICATE KEY UPDATE name = VALUES(name) , category = VALUES(category), description = VALUES(description), link = VALUES(link), encrypted_type = VALUES(link) ";
+                "ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name , category = EXCLUDED.category, description = EXCLUDED.description, link = EXCLUDED.link, encrypted_type = CAST(EXCLUDED.link AS integer) ";
     }
 
     public String getQueryForTagDocument() {
+        // PG-port: ON DUPLICATE KEY UPDATE -> ON CONFLICT (document_id, device_id) DO UPDATE SET ... (VALUES()->EXCLUDED)
         return "INSERT INTO device_document (document_id , device_id) VALUES (?,?) " +
-                "ON DUPLICATE KEY UPDATE document_id = VALUES(document_id), device_id = VALUES(device_id) ";
+                "ON CONFLICT (document_id, device_id) DO UPDATE SET document_id = EXCLUDED.document_id, device_id = EXCLUDED.device_id ";
     }
 
     public String getCountUpdateQuery() {
