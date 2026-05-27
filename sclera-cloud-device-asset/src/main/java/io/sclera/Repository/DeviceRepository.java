@@ -53,11 +53,12 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     @Modifying
     @Transactional
     // PG-port: IFNULL->COALESCE
-    // PG-gap: JSON_MERGE_PATCH is MySQL-specific; requires separate migration to jsonb_merge_patch or equivalent
+    // PG-port: JSON_MERGE_PATCH -> jsonb || (shallow merge; flat-object patch assumed — top-level scalar fields only;
+    //          if nested-object patches or null-to-remove semantics are ever needed, revisit with a jsonb_merge_patch() plpgsql function)
     @Query(value = "UPDATE device SET monitor = ?4,  network_layer = ?5, user_data_model = ?6,model = ?6, user_data_name = ?7, type = ?8, user_data_vendor = ?9, vendor = ?9, parent = ?10, remote_access = ?11, warranty = ?12, product_id = ?13,"
             + " location_id = ?14, email_alert = ?15, sms_alert = ?16, popup_notification = ?17, serial_number = ?18, local_vendor_email_alert = ?19,"
             + " local_vendor_sms_alert = ?20, subsystem_parent_id = ?21, custom_fields = COALESCE(?22, custom_fields), description = ?23, asset_match_status = ?24, asset_group = ?25, category = ?26, sub_category = ?27, location_status = ?28, "
-            + " cost_value = ?29, assigned_user_email = ?30, ai_call = ?31, cost_unit = ?32, is_dnd_enabled = ?33, operational_status = ?34, adc_json = JSON_MERGE_PATCH(adc_json, CAST(?35 AS JSON)) "
+            + " cost_value = ?29, assigned_user_email = ?30, ai_call = ?31, cost_unit = ?32, is_dnd_enabled = ?33, operational_status = ?34, adc_json = (COALESCE(adc_json::text, '{}')::jsonb || CAST(?35 AS jsonb))::json "
             + " WHERE docker_vdms_id = ?2 AND docker_name = ?3 AND id = ?1", nativeQuery = true)
     int editDeviceByDeviceID(String device_id, String vdmsid, String dockername, Integer monitor, String network_layer, String user_data_model,
                              String user_data_name, String type, String user_data_vendor, String parent, Integer remote_access,
@@ -167,14 +168,15 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     @Modifying
     @Transactional
     // PG-port: IFNULL->COALESCE
-    // PG-gap: JSON_MERGE_PATCH is MySQL-specific; requires separate migration to jsonb_merge_patch or equivalent
+    // PG-port: JSON_MERGE_PATCH -> jsonb || (shallow merge; flat-object patch assumed — top-level scalar fields only;
+    //          if nested-object patches or null-to-remove semantics are ever needed, revisit with a jsonb_merge_patch() plpgsql function)
     @Query(value = "UPDATE device SET monitor = ?2, location_id = ?3, network_layer = ?4, user_data_model = ?5, type = ?6, "
             + "user_data_vendor = ?7, user_data_name = ?8, parent = ?9, remote_access = ?10, product_id = ?11, warranty = ?12, "
             + "ip_address = ?13, email_alert = ?14, sms_alert = ?15, popup_notification = ?16, virtual_device_type = ?17, "
             + "serial_number = ?18, local_vendor_email_alert = ?19, local_vendor_sms_alert = ?20, docker_name = ?21, subsystem_parent_id = ?22, "
             + "custom_fields = COALESCE(?23, custom_fields), description = ?24, asset_match_status = ?25,asset_group = ?26, category = ?27, "
             + "sub_category = ?28, location_status = ?29, cost_value = ?30, assigned_user_email = ?31, ai_call = ?32, cost_unit = ?33, is_dnd_enabled = ?34, "
-            + "operational_status = ?35, adc_json = JSON_MERGE_PATCH(adc_json, CAST(?36 AS JSON)), model = ?5, vendor = ?7  "
+            + "operational_status = ?35, adc_json = (COALESCE(adc_json::text, '{}')::jsonb || CAST(?36 AS jsonb))::json, model = ?5, vendor = ?7  "
             + "WHERE id = ?1", nativeQuery = true)
     void editVirtualDeviceByVirtualDeviceId(String virtual_device_id, Integer monitor, String location_id, String network_layer,
                                             String user_data_model, String type, String user_data_vendor, String user_data_name, String parent,
