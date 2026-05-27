@@ -265,7 +265,8 @@ public class DeviceSearchService {
                             + "FROM "
                             + "((SELECT d.id, d.location_id, d.docker_name, d.docker_vdms_id, d.virtual_device_type, d.status, d.monitor, d.asset_match_status "
                             + "FROM device d "
-                            + "WHERE JSON_EXTRACT(d.custom_fields,('$[*].*')) "
+                            // PG-port: JSON_EXTRACT(col,'$[*].*') -> jsonb_path_query_array(col::jsonb,'$[*].*')::text; col is text so ::jsonb cast needed
+                            + "WHERE jsonb_path_query_array(d.custom_fields::jsonb, '$[*].*')::text "
                             + "LIKE CONCAT('%','" + search_details.get("value") + "','%')) "
                             + "UNION "
                             + "(SELECT d1.id, d1.location_id, d1.docker_name, d1.docker_vdms_id, d1.virtual_device_type, d1.status, d1.monitor, d1.asset_match_status "
@@ -273,19 +274,23 @@ public class DeviceSearchService {
                             + "LEFT JOIN location l ON l.id = d1.location_id "
                             + "LEFT JOIN floor f ON f.id = l.floor_id "
                             + "LEFT JOIN building b ON b.id = f.building_id "
-                            + "WHERE CONCAT_WS('',d1.id, IF(d1.user_data_name IS NULL or d1.user_data_name = '', d1.display_name, d1.user_data_name), "
-                            + "IF(d1.user_data_vendor IS NULL or d1.user_data_vendor = '', d1.vendor, d1.user_data_vendor), "
-                            + "IF(d1.user_data_model IS NULL or d1.user_data_model = '', d1.model, d1.user_data_model), d1.type, d1.ip_address,"
+                            // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END (three IF occurrences below)
+                            + "WHERE CONCAT_WS('',d1.id, CASE WHEN d1.user_data_name IS NULL or d1.user_data_name = '' THEN d1.display_name ELSE d1.user_data_name END, "
+                            + "CASE WHEN d1.user_data_vendor IS NULL or d1.user_data_vendor = '' THEN d1.vendor ELSE d1.user_data_vendor END, "
+                            + "CASE WHEN d1.user_data_model IS NULL or d1.user_data_model = '' THEN d1.model ELSE d1.user_data_model END, d1.type, d1.ip_address,"
                             + "d1.mac_address, d1.latitude, d1.longitude, d1.serial_number, d1.warranty, l.name, f.name, b.name) "
                             + "LIKE CONCAT('%','" + search_details.get("value") + "','%'))) AS t1 "
                             + "WHERE ('" + vdmsid + "' = 'null' or t1.docker_vdms_id = '" + vdmsid
                             + "') AND ('" + dockername + "' = 'all' or  t1.docker_name = '" + dockername + "') "
-                            + "AND (" + virtual_device_type + " IS NULL or IF(" + virtual_device_type + " = 123, (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)),NULL)) "
+                            // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                            + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
                             + "AND (" + status + " IS NULL or t1.status = " + status + ") "
-                            + "AND (" + monitor + " = 123  or IF(" + monitor + " = 1," + monitor + " = t1.monitor,t1.monitor IS NULL or " + monitor + " = t1.monitor)) "
+                            // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                            + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = t1.monitor ELSE t1.monitor IS NULL or " + monitor + " = t1.monitor END) "
                             + "AND ((" + asset_match_status + " IS NULL and t1.asset_match_status != 3) or "
-                            + "IF(" + asset_match_status + " = 3, t1.asset_match_status = " + asset_match_status + ", "
-                            + "(t1.asset_match_status = " + asset_match_status + " and t1.asset_match_status != 3))) "
+                            // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                            + "CASE WHEN " + asset_match_status + " = 3 THEN t1.asset_match_status = " + asset_match_status + " ELSE "
+                            + "(t1.asset_match_status = " + asset_match_status + " and t1.asset_match_status != 3) END) "
                             + "LIMIT " + pageSize + " OFFSET " + offset;
 
 
@@ -301,12 +306,16 @@ public class DeviceSearchService {
                         String query = "SELECT id FROM device "
                                 + " WHERE ('" + vdmsid + "' = 'null' or docker_vdms_id = '" + vdmsid
                                 + "') AND ('" + dockername + "' = 'all' or  docker_name = '" + dockername + "') "
-                                + "AND (" + virtual_device_type + " IS NULL or IF(" + virtual_device_type + " = 123, (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)),NULL)) "
+                                // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                                + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
                                 + "AND (" + status + " IS NULL or status = " + status + ") "
-                                + "AND (" + monitor + " = 123  or IF(" + monitor + " = 1," + monitor + " = monitor,monitor IS NULL or " + monitor + " = monitor)) "
+                                // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                                + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = monitor ELSE monitor IS NULL or " + monitor + " = monitor END) "
                                 + "AND ((" + asset_match_status + " IS NULL and asset_match_status != 3) or "
-                                + "IF(" + asset_match_status + " = 3, asset_match_status = " + asset_match_status + ", "
-                                + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3))) "
+                                // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                                + "CASE WHEN " + asset_match_status + " = 3 THEN asset_match_status = " + asset_match_status + " ELSE "
+                                + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3) END) "
+                                // PG-gap: MySQL JSON path wildcard $[*] with dynamic field via CONCAT — requires jsonb_path_query rewrite
                                 + "AND JSON_UNQUOTE(JSON_EXTRACT(custom_fields,CONCAT(\"$[*].\",\"" + searchColumn
                                 + "\"))) LIKE CONCAT('%','" + search_details.get("value") + "','%') LIMIT "
                                 + pageSize + " OFFSET " + offset;
@@ -325,12 +334,15 @@ public class DeviceSearchService {
                                 + "LEFT JOIN building b ON b.id = f.building_id "
                                 + "WHERE ('" + vdmsid + "' = 'null' or d.docker_vdms_id = '" + vdmsid
                                 + "') AND ('" + dockername + "' = 'all' or  d.docker_name = '" + dockername + "') "
-                                + "AND (" + virtual_device_type + " IS NULL or IF(" + virtual_device_type + " = 123, (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)),NULL)) "
+                                // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                                + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
                                 + "AND (" + status + " IS NULL or d.status = " + status + ") "
-                                + "AND (" + monitor + " = 123  or IF(" + monitor + " = 1," + monitor + " = d.monitor,d.monitor IS NULL or " + monitor + " = d.monitor)) "
+                                // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                                + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = d.monitor ELSE d.monitor IS NULL or " + monitor + " = d.monitor END) "
                                 + "AND ((" + asset_match_status + " IS NULL and d.asset_match_status != 3) or "
-                                + "IF(" + asset_match_status + " = 3, d.asset_match_status = " + asset_match_status + ", "
-                                + "(d.asset_match_status = " + asset_match_status + " and d.asset_match_status != 3))) "
+                                // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                                + "CASE WHEN " + asset_match_status + " = 3 THEN d.asset_match_status = " + asset_match_status + " ELSE "
+                                + "(d.asset_match_status = " + asset_match_status + " and d.asset_match_status != 3) END) "
                                 + "AND " + updatedSearchColumn + " LIKE '%" + search_details.get("value") + "%' "
                                 + "LIMIT " + pageSize + " OFFSET " + offset;
 
@@ -536,12 +548,16 @@ public class DeviceSearchService {
                         + " FROM device "
                         + "WHERE ('" + vdmsid + "' = 'null' OR docker_vdms_id = '" + vdmsid + "') "
                         + "AND ('" + dockername + "' = 'all' OR docker_name= '" + dockername + "') "
-                        + "AND (" + virtual_device_type + " IS NULL or IF(" + virtual_device_type + " = 123, (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)),NULL)) "
+                        // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                        + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
                         + "AND (" + status + " IS NULL or status = " + status + ") "
-                        + "AND (" + monitor + " = 123  or IF(" + monitor + " = 1," + monitor + " = monitor,monitor IS NULL or " + monitor + " = monitor)) "
+                        // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                        + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = monitor ELSE monitor IS NULL or " + monitor + " = monitor END) "
                         + "AND ((" + asset_match_status + " IS NULL and asset_match_status != 3) or "
-                        + "IF(" + asset_match_status + " = 3, asset_match_status = " + asset_match_status + ", "
-                        + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3))) "
+                        // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                        + "CASE WHEN " + asset_match_status + " = 3 THEN asset_match_status = " + asset_match_status + " ELSE "
+                        + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3) END) "
+                        // PG-gap: MySQL ->>>'$[*].field' uses MySQL JSON path wildcard — requires jsonb_path_query rewrite; ORDER BY semantics not confidently equivalent
                         + "ORDER BY (custom_fields->>'$[*]." + searchColumn + "' IS NULL OR custom_fields->>'$[*]." + searchColumn + "' = '[\"\"]'), "
                         + "custom_fields->>'$[*]." + searchColumn + "' LIMIT " + pagesize + " OFFSET " + offset;
 
@@ -557,9 +573,11 @@ public class DeviceSearchService {
 
                 if (searchColumn.equals("ip_address")) {
 //                    updatedSearchColumn = "INET_ATON(" + updatedSearchColumn + ")";
-                    updatedSearchColumn = "ISNULL(INET_ATON(" + updatedSearchColumn + ")),INET_ATON(" + updatedSearchColumn + ") ";
+                    // PG-gap: INET_ATON is MySQL-only; PG equivalent is inet(col) but type differs — marking gap
+                    updatedSearchColumn = "(" + updatedSearchColumn + " IS NULL)," + updatedSearchColumn + " "; // PG-gap: ISNULL->IS NULL; INET_ATON removed (MySQL-only)
                 } else {
-                    updatedSearchColumn = "ISNULL(" + updatedSearchColumn + ")," + updatedSearchColumn + " ";
+                    // PG-port: ISNULL(x) -> (x IS NULL)
+                    updatedSearchColumn = "(" + updatedSearchColumn + " IS NULL)," + updatedSearchColumn + " ";
                 }
 
                 String query = "SELECT d.id FROM device d "
@@ -568,12 +586,15 @@ public class DeviceSearchService {
                         + "LEFT JOIN building b ON b.id = f.building_id "
                         + "WHERE ('" + vdmsid + "' = 'null' or d.docker_vdms_id = '" + vdmsid
                         + "') AND ('" + dockername + "' = 'all' or  d.docker_name = '" + dockername + "') "
-                        + "AND (" + virtual_device_type + " IS NULL or IF(" + virtual_device_type + " = 123, (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)),NULL)) "
+                        // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                        + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
                         + "AND (" + status + " IS NULL or d.status = " + status + ") "
-                        + "AND (" + monitor + " = 123  or IF(" + monitor + " = 1," + monitor + " = monitor, monitor IS NULL or " + monitor + " = monitor)) "
+                        // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                        + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = monitor ELSE monitor IS NULL or " + monitor + " = monitor END) "
                         + "AND ((" + asset_match_status + " IS NULL and asset_match_status != 3) or "
-                        + "IF(" + asset_match_status + " = 3, asset_match_status = " + asset_match_status + ", "
-                        + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3))) "
+                        // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                        + "CASE WHEN " + asset_match_status + " = 3 THEN asset_match_status = " + asset_match_status + " ELSE "
+                        + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3) END) "
                         + "ORDER BY " + updatedSearchColumn
                         + "LIMIT " + pagesize + " OFFSET " + offset;
 
@@ -636,12 +657,15 @@ public class DeviceSearchService {
                     + "LEFT JOIN building b ON b.id = f.building_id "
                     + "WHERE ('" + vdmsid + "' = 'null' or d.docker_vdms_id = '" + vdmsid
                     + "') AND ('" + dockername + "' = 'all' or  d.docker_name = '" + dockername + "') "
-                    + "AND (" + virtual_device_type + " IS NULL or IF(" + virtual_device_type + " = 123, (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)),NULL)) "
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
                     + "AND (" + status + " IS NULL or d.status = " + status + ") "
-                    + "AND (" + monitor + " = 123  or IF(" + monitor + " = 1," + monitor + " = monitor, monitor IS NULL or " + monitor + " = monitor)) "
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = monitor ELSE monitor IS NULL or " + monitor + " = monitor END) "
                     + "AND ((" + asset_match_status + " IS NULL and asset_match_status != 3) or "
-                    + "IF(" + asset_match_status + " = 3, asset_match_status = " + asset_match_status + ", "
-                    + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3))) AND"
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "CASE WHEN " + asset_match_status + " = 3 THEN asset_match_status = " + asset_match_status + " ELSE "
+                    + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3) END) AND"
                     + generateMultiConditionStmt(filter_details, vdmsid, dockername)
                     + "LIMIT " + pagesize + " OFFSET " + offset;
 
@@ -666,6 +690,7 @@ public class DeviceSearchService {
         for (int i = 0; i < filter_details.size(); i++) {
             Map<String, Object> tempMap = filter_details.get(i);
             if ((Boolean) filter_details.get(i).get("custom")) {
+                // PG-gap: MySQL JSON path wildcard $[*].field + $[0] index — requires jsonb_path_query_first(col::jsonb,'$[*].field') #>> '{}' rewrite; not auto-ported due to wildcard
                 stringBuilder
                         .append(" JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(custom_fields,'$[*].")
                         .append(tempMap.get("column"))
@@ -699,15 +724,18 @@ public class DeviceSearchService {
                 break;
             }
             case "display_name": {
-                updateSearchColumn = "IF(d.user_data_name IS NULL or d.user_data_name = '', d.display_name, d.user_data_name)";
+                // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                updateSearchColumn = "CASE WHEN d.user_data_name IS NULL or d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END";
                 break;
             }
             case "vendor": {
-                updateSearchColumn = "IF(d.user_data_vendor IS NULL or d.user_data_vendor = '', d.vendor, d.user_data_vendor)";
+                // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                updateSearchColumn = "CASE WHEN d.user_data_vendor IS NULL or d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END";
                 break;
             }
             case "model": {
-                updateSearchColumn = "IF(d.user_data_model IS NULL or d.user_data_model = '', d.model, d.user_data_model)";
+                // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                updateSearchColumn = "CASE WHEN d.user_data_model IS NULL or d.user_data_model = '' THEN d.model ELSE d.user_data_model END";
                 break;
             }
             case "type": {
@@ -791,7 +819,8 @@ public class DeviceSearchService {
                 break;
             }
             default: {
-                updateSearchColumn = "IF(d.user_data_name IS NULL or d.user_data_name = '', d.display_name, d.user_data_name)";
+                // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                updateSearchColumn = "CASE WHEN d.user_data_name IS NULL or d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END";
                 break;
             }
         }
@@ -1009,6 +1038,7 @@ public class DeviceSearchService {
         String query = "SELECT id FROM device "
                 + " WHERE ('" + vdmsid + "' = 'null' or docker_vdms_id = '" + vdmsid
                 + "') AND ('" + dockername + "' = 'all' or  docker_name = '" + dockername + "') "
+                // PG-gap: MySQL JSON path wildcard $[*] with dynamic field via CONCAT — requires jsonb_path_query rewrite
                 + "AND JSON_UNQUOTE(JSON_EXTRACT(custom_fields,CONCAT(\"$[*].\",\"" + custom_fields.getString("key")
                 + "\"))) LIKE CONCAT('%','" + custom_fields.getString("value") + "','%') LIMIT 1";
 
@@ -1107,14 +1137,19 @@ public class DeviceSearchService {
                     + "LEFT JOIN device_specification ds ON ds.device_id = d.id "
                     + "WHERE ('" + vdmsid + "' = 'null' or d.docker_vdms_id = '" + vdmsid
                     + "') AND ('" + dockername + "' = 'all' or  d.docker_name = '" + dockername + "') "
-                    + "AND ((" + onboard_status + " = 123) or IF(" + onboard_status + " = 210, d.onboard_status != 3 ,(" + onboard_status + " = d.onboard_status ))) "
-                    + "AND (" + virtual_device_type + " IS NULL or IF(" + virtual_device_type + " = 123, (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)),NULL)) "
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "AND ((" + onboard_status + " = 123) or CASE WHEN " + onboard_status + " = 210 THEN d.onboard_status != 3 ELSE " + onboard_status + " = d.onboard_status END) "
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
                     + "AND (" + status + " IS NULL or d.status = " + status + ") "
-                    + "AND (" + monitor + " = 123  or IF(" + monitor + " = 1," + monitor + " = monitor, monitor IS NULL or " + monitor + " = monitor)) "
-                    + "AND (" + assgined_status + " IS NULL or IF(" + assgined_status + " = 0, (d.assigned_user_email IS NULL or d.assigned_user_email = 'null'), ( d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null')))"
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = monitor ELSE monitor IS NULL or " + monitor + " = monitor END) "
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "AND (" + assgined_status + " IS NULL or CASE WHEN " + assgined_status + " = 0 THEN (d.assigned_user_email IS NULL or d.assigned_user_email = 'null') ELSE ( d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null') END)"
                     + "AND ((" + asset_match_status + " IS NULL and asset_match_status != 3) or "
-                    + "IF(" + asset_match_status + " = 3, asset_match_status = " + asset_match_status + ", "
-                    + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3))) "
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "CASE WHEN " + asset_match_status + " = 3 THEN asset_match_status = " + asset_match_status + " ELSE "
+                    + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3) END) "
                     + generateDeviceIdsFilterCustomQuery
                     + searchAndFilterCustomQuery
                     + ") " + sortQuery
@@ -1203,6 +1238,7 @@ public class DeviceSearchService {
                 com.alibaba.fastjson.JSONObject tempMap = column_details.getJSONObject(i);
                 if ((Boolean) tempMap.get("custom")) {
                     if (tempMap.get("condition").equals("is_present")) {
+                        // PG-gap: MySQL JSON path wildcard $[*].field + $[0] — requires jsonb_path_query_first rewrite; not auto-ported
                         stringBuilder
                                 .append(" JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(custom_fields,'$[*].")
                                 .append(tempMap.get("column"))
@@ -1216,6 +1252,7 @@ public class DeviceSearchService {
                                 .append(" <> ''");
 
                     } else if (tempMap.get("condition").equals("is_not_present")) {
+                        // PG-gap: MySQL JSON path wildcard $[*].field + $[0] — requires jsonb_path_query_first rewrite; not auto-ported
                         stringBuilder
                                 .append(" JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(custom_fields,'$[*].")
                                 .append(tempMap.get("column"))
@@ -1416,13 +1453,16 @@ public class DeviceSearchService {
         StringBuilder searchColumnValueWithoutSpecialCharacters = new StringBuilder();
 
         if (search_details.get("column") == null) {
-            searchColumnValue.append("LOWER(CONCAT_WS('±','',d.id, IF(d.user_data_name IS NULL or d.user_data_name = '', d.display_name, d.user_data_name),")
-                    .append("IF(d.user_data_vendor IS NULL or d.user_data_vendor = '', d.vendor, d.user_data_vendor), ")
-                    .append("IF(d.user_data_model IS NULL or d.user_data_model = '', d.model, d.user_data_model), d.type, d.description,  ")
+            // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END (three IF occurrences)
+            // PG-gap: JSON_EXTRACT(col,'$[*].*') double wildcard inside REGEXP_REPLACE/COALESCE/IF chain — complex context, not auto-ported
+            searchColumnValue.append("LOWER(CONCAT_WS('±','',d.id, CASE WHEN d.user_data_name IS NULL or d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END,")
+                    .append("CASE WHEN d.user_data_vendor IS NULL or d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END, ")
+                    .append("CASE WHEN d.user_data_model IS NULL or d.user_data_model = '' THEN d.model ELSE d.user_data_model END, d.type, d.description,  ")
                     .append("d.ip_address, d.mac_address, d.latitude, d.longitude, d.serial_number, d.warranty,  d.created_timestamp,l.name, f.name, " +
                             "b.name, dos.assignee_email , dosa.email, ds.username, ds.email,COALESCE(IF(LOWER(REGEXP_REPLACE(JSON_EXTRACT(d.custom_fields, '$[*].*'), '[-.!\t_+#~`@$%^&*()=;:<>?,/{}|\\' ]', ''))" + this.generateConditionedQueryForCustomFields(search_details) + ",\"" + searchTermWithoutSpecialCharacters + "\",''), ''),''))");
         } else {
             if ((Boolean) search_details.get("custom")) {
+                // PG-gap: MySQL JSON path wildcard $[*] with dynamic field via CONCAT + $[0] index — requires jsonb_path_query rewrite; not auto-ported
                 searchColumnValue
                         .append("LOWER(CONCAT_WS('',JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(custom_fields,CONCAT(\"$[*].\",\"")
                         .append(searchColumn)
@@ -1597,6 +1637,7 @@ public class DeviceSearchService {
             String updatedSearchColumn = this.updateDeviceSearchColumnName(searchColumn);
 
             if ((Boolean) sort_details_object.get("custom")) {
+                // PG-gap: MySQL ->>>'$[*].field' uses MySQL JSON path wildcard operator — requires jsonb_path_query rewrite; not auto-ported
                 stringBuilder
                         .append(" ORDER BY (custom_fields->>'$[*].")
                         .append(searchColumn)
@@ -1607,9 +1648,11 @@ public class DeviceSearchService {
                         .append("'");
             } else {
                 if (searchColumn.equals("ip_address")) {
-                    updatedSearchColumn = "ISNULL(INET_ATON(" + updatedSearchColumn + ")),INET_ATON(" + updatedSearchColumn + ") ";
+                    // PG-gap: INET_ATON is MySQL-only; PG uses inet() but ordering semantics differ
+                    updatedSearchColumn = "(" + updatedSearchColumn + " IS NULL)," + updatedSearchColumn + " "; // PG-gap: ISNULL->IS NULL; INET_ATON removed (MySQL-only)
                 } else {
-                    updatedSearchColumn = "ISNULL(" + updatedSearchColumn + ")," + updatedSearchColumn + " = '',  " + updatedSearchColumn + " ";
+                    // PG-port: ISNULL(x) -> (x IS NULL)
+                    updatedSearchColumn = "(" + updatedSearchColumn + " IS NULL)," + updatedSearchColumn + " = '',  " + updatedSearchColumn + " ";
                     if (searchColumn.equals("created_timestamp") || searchColumn.equals("updated_timestamp")) {
                         updatedSearchColumn = updatedSearchColumn + " DESC, d.id";
                     }
@@ -1620,8 +1663,9 @@ public class DeviceSearchService {
                         .append(updatedSearchColumn);
             }
         } else {
+            // PG-port: ISNULL(x) -> (x IS NULL)
             stringBuilder
-                    .append(" ORDER BY ISNULL(d.updated_timestamp), d.updated_timestamp DESC, d.id ");
+                    .append(" ORDER BY (d.updated_timestamp IS NULL), d.updated_timestamp DESC, d.id ");
         }
 
         return stringBuilder.toString();
@@ -1685,14 +1729,19 @@ public class DeviceSearchService {
                     + "LEFT JOIN device_specification ds ON ds.device_id = d.id "
                     + "WHERE ('" + vdmsid + "' = 'null' or d.docker_vdms_id = '" + vdmsid
                     + "') AND ('" + dockername + "' = 'all' or  d.docker_name = '" + dockername + "') "
-                    + "AND ((" + onboard_status + " = 123) or IF(" + onboard_status + " = 210, d.onboard_status != 3 ,(" + onboard_status + " = d.onboard_status ))) "
-                    + "AND (" + virtual_device_type + " IS NULL or IF(" + virtual_device_type + " = 123, (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)),NULL)) "
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "AND ((" + onboard_status + " = 123) or CASE WHEN " + onboard_status + " = 210 THEN d.onboard_status != 3 ELSE " + onboard_status + " = d.onboard_status END) "
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
                     + "AND (" + status + " IS NULL or d.status = " + status + ") "
-                    + "AND (" + assigned_status + " IS NULL or IF(" + assigned_status + " = 0, (d.assigned_user_email IS NULL or d.assigned_user_email = 'null'), ( d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null')))"
-                    + "AND (" + monitor + " = 123  or IF(" + monitor + " = 1," + monitor + " = monitor, monitor IS NULL or " + monitor + " = monitor)) "
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "AND (" + assigned_status + " IS NULL or CASE WHEN " + assigned_status + " = 0 THEN (d.assigned_user_email IS NULL or d.assigned_user_email = 'null') ELSE ( d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null') END)"
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = monitor ELSE monitor IS NULL or " + monitor + " = monitor END) "
                     + "AND ((" + asset_match_status + " IS NULL and asset_match_status != 3) or "
-                    + "IF(" + asset_match_status + " = 3, asset_match_status = " + asset_match_status + ", "
-                    + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3))) "
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "CASE WHEN " + asset_match_status + " = 3 THEN asset_match_status = " + asset_match_status + " ELSE "
+                    + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3) END) "
                     + generateDeviceIdsFilterCustomQuery
                     + searchAndFilterCustomQuery
                     + ") " + sortQuery;
@@ -1796,14 +1845,19 @@ public class DeviceSearchService {
                     + "LEFT JOIN device_specification ds ON ds.device_id = d.id "
                     + "WHERE ('" + vdmsid + "' = 'null' or d.docker_vdms_id = '" + vdmsid
                     + "') AND ('" + dockername + "' = 'all' or  d.docker_name = '" + dockername + "') "
-                    + "AND ((" + onboard_status + " = 123) or IF(" + onboard_status + " = 210, d.onboard_status != 3 ,(" + onboard_status + " = d.onboard_status ))) "
-                    + "AND (" + virtual_device_type + " IS NULL or IF(" + virtual_device_type + " = 123, (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)),NULL)) "
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "AND ((" + onboard_status + " = 123) or CASE WHEN " + onboard_status + " = 210 THEN d.onboard_status != 3 ELSE " + onboard_status + " = d.onboard_status END) "
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
                     + "AND (" + status + " IS NULL or d.status = " + status + ") "
-                    + "AND (" + assigned_status + " IS NULL or IF(" + assigned_status + " = 0, (d.assigned_user_email IS NULL or d.assigned_user_email = 'null'), ( d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null')))"
-                    + "AND (" + monitor + " = 123  or IF(" + monitor + " = 1," + monitor + " = monitor, monitor IS NULL or " + monitor + " = monitor)) "
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "AND (" + assigned_status + " IS NULL or CASE WHEN " + assigned_status + " = 0 THEN (d.assigned_user_email IS NULL or d.assigned_user_email = 'null') ELSE ( d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null') END)"
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = monitor ELSE monitor IS NULL or " + monitor + " = monitor END) "
                     + "AND ((" + asset_match_status + " IS NULL and asset_match_status != 3) or "
-                    + "IF(" + asset_match_status + " = 3, asset_match_status = " + asset_match_status + ", "
-                    + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3))) "
+                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
+                    + "CASE WHEN " + asset_match_status + " = 3 THEN asset_match_status = " + asset_match_status + " ELSE "
+                    + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3) END) "
                     + generateDeviceIdsFilterCustomQuery
                     + searchAndFilterCustomQuery;
 

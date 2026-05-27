@@ -192,6 +192,7 @@ public class MeasuringInstrumentService {
 //                    " LEFT JOIN building b ON f.building_id = b.id " +
 //                    " WHERE ");
 //            for (int i = 1; i <= 50; i++) {
+//                // PG-gap (commented-out block): JSON_EXTRACT(col,'$.key') -> col::jsonb -> 'key' when this block is re-enabled
 //                query.append(" (JSON_EXTRACT(`attribute`,\"$.parameter_").append(i).append("_protocol\") = '").append(protocol).append("' AND JSON_EXTRACT(`attribute`, \"$.parameter_").append(i).append("_primary_id\") = '").append(primary_id).append("' AND JSON_EXTRACT(`attribute`, \"$.parameter_").append(i).append("_secondary_id\") = '").append(secondary_id).append("' ) OR");
 //            }
 //            query.setLength(query.length() - 2);
