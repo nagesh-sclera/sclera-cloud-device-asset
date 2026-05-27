@@ -557,9 +557,9 @@ public class DeviceSearchService {
                         // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
                         + "CASE WHEN " + asset_match_status + " = 3 THEN asset_match_status = " + asset_match_status + " ELSE "
                         + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3) END) "
-                        // PG-gap: MySQL ->>>'$[*].field' uses MySQL JSON path wildcard — requires jsonb_path_query rewrite; ORDER BY semantics not confidently equivalent
-                        + "ORDER BY (custom_fields->>'$[*]." + searchColumn + "' IS NULL OR custom_fields->>'$[*]." + searchColumn + "' = '[\"\"]'), "
-                        + "custom_fields->>'$[*]." + searchColumn + "' LIMIT " + pagesize + " OFFSET " + offset;
+                        // PG-port: ORDER BY MySQL ->>'$[*].field' -> jsonb_path_query_first(...)#>>'{}' sort key
+                        + "ORDER BY (jsonb_path_query_first(custom_fields::jsonb, '$[*].\"" + searchColumn + "\"') #>> '{}' IS NULL OR jsonb_path_query_first(custom_fields::jsonb, '$[*].\"" + searchColumn + "\"') #>> '{}' = ''), "
+                        + "jsonb_path_query_first(custom_fields::jsonb, '$[*].\"" + searchColumn + "\"') #>> '{}' LIMIT " + pagesize + " OFFSET " + offset;
 
                 System.out.println("SORT QUERY WITH CUSTOM COLUMN " + query);
 
@@ -1628,15 +1628,15 @@ public class DeviceSearchService {
             String updatedSearchColumn = this.updateDeviceSearchColumnName(searchColumn);
 
             if ((Boolean) sort_details_object.get("custom")) {
-                // PG-gap: MySQL ->>>'$[*].field' uses MySQL JSON path wildcard operator — requires jsonb_path_query rewrite; not auto-ported
+                // PG-port: ORDER BY MySQL ->>'$[*].field' -> jsonb_path_query_first(...)#>>'{}' sort key
                 stringBuilder
-                        .append(" ORDER BY (custom_fields->>'$[*].")
+                        .append(" ORDER BY (jsonb_path_query_first(custom_fields::jsonb, '$[*].\"")
                         .append(searchColumn)
-                        .append("' IS NULL OR custom_fields->>'$[*].")
+                        .append("\"') #>> '{}' IS NULL OR jsonb_path_query_first(custom_fields::jsonb, '$[*].\"")
                         .append(searchColumn)
-                        .append("' = '[\"\"]'), custom_fields->>'$[*].")
+                        .append("\"') #>> '{}' = ''), jsonb_path_query_first(custom_fields::jsonb, '$[*].\"")
                         .append(searchColumn)
-                        .append("'");
+                        .append("\"') #>> '{}'");
             } else {
                 if (searchColumn.equals("ip_address")) {
                     // PG-port: INET_ATON(col) -> col::inet for numeric IP ordering (column cast)
