@@ -67,6 +67,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
                         })
         })
 
+// PG-port: IF(user_data_name IS NULL OR...)->CASE WHEN (all lorawan sensor queries below)
 //to be removed after pagination api works
 @NamedNativeQuery(
         name = "Lorawan_Sensor.getLorawanSensors",
@@ -75,7 +76,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " l.name as location, f.name as floor, b.name as building, l.id as location_id, ls.last_seen, ls.signal_strength,"
                 + " ls.lorawan_device_type, ls.app_session_key, ls.network_session_key, ls.sensor_device_address, ls.serving_network_session_key,"
                 + " ls.forwarding_network_session_key, ls.network_key, ls.sensor_device_profile_name, ls.sensor_join_status, ls.battery,"
-                + " ls.device_id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " ls.device_id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, ls.alert, ls.sensor_info, ls.sensor_device_profile_id, ls.lorawan_configuration_id"
                 + " FROM lorawan_sensor ls"
                 + " LEFT JOIN device d ON ls.device_id = d.id"
@@ -94,7 +95,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " l.name as location, f.name as floor, b.name as building, l.id as location_id, ls.last_seen, ls.signal_strength,"
                 + " ls.lorawan_device_type, ls.app_session_key, ls.network_session_key, ls.sensor_device_address, ls.serving_network_session_key,"
                 + " ls.forwarding_network_session_key, ls.network_key, ls.sensor_device_profile_name, ls.sensor_join_status, ls.battery,"
-                + " ls.device_id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " ls.device_id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, ls.alert, ls.sensor_info, ls.sensor_device_profile_id,  ls.lorawan_configuration_id"
                 + " FROM lorawan_sensor ls"
                 + " LEFT JOIN device d ON ls.device_id = d.id"
@@ -116,7 +117,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " l.name as location, f.name as floor, b.name as building, l.id as location_id, ls.last_seen, ls.signal_strength,"
                 + " ls.lorawan_device_type, ls.app_session_key, ls.network_session_key, ls.sensor_device_address, ls.serving_network_session_key,"
                 + " ls.forwarding_network_session_key, ls.network_key, ls.sensor_device_profile_name, ls.sensor_join_status, ls.battery,"
-                + "	ls.device_id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + "	ls.device_id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, ls.alert, ls.sensor_info,  ls.sensor_device_profile_id, ls.lorawan_configuration_id"
                 + " FROM lorawan_sensor ls "
                 + " LEFT JOIN device d ON ls.device_id = d.id"
@@ -137,7 +138,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " l.name as location, f.name as floor, b.name as building, l.id as location_id, ls.last_seen, ls.signal_strength,"
                 + " ls.lorawan_device_type, ls.app_session_key, ls.network_session_key, ls.sensor_device_address, ls.serving_network_session_key,"
                 + " ls.forwarding_network_session_key, ls.network_key, ls.sensor_device_profile_name, ls.sensor_join_status, ls.battery,"
-                + "	ls.device_id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + "	ls.device_id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, ls.alert, ls.sensor_info, ls.sensor_device_profile_id, ls.lorawan_configuration_id"
                 + " FROM lorawan_sensor ls "
                 + " LEFT JOIN device d ON ls.device_id = d.id"
@@ -158,7 +159,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " l.name as location, f.name as floor, b.name as building, l.id as location_id, ls.last_seen, ls.signal_strength,"
                 + " ls.lorawan_device_type, ls.app_session_key, ls.network_session_key, ls.sensor_device_address, ls.serving_network_session_key,"
                 + " ls.forwarding_network_session_key, ls.network_key, ls.sensor_device_profile_name, ls.sensor_join_status, ls.battery,"
-                + " ls.device_id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " ls.device_id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, ls.alert, ls.sensor_info, ls.sensor_device_profile_id, ls.lorawan_configuration_id"
                 + " FROM lorawan_sensor ls"
                 + " LEFT JOIN device d ON ls.device_id = d.id"
@@ -180,7 +181,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " l.id as location_id, ls.last_seen, ls.signal_strength, ls.lorawan_device_type, ls.app_session_key, ls.network_session_key,"
                 + " ls.sensor_device_address, ls.serving_network_session_key, ls.forwarding_network_session_key, ls.network_key,"
                 + " ls.sensor_device_profile_name, ls.sensor_join_status, ls.battery, ls.device_id,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, ls.alert, ls.sensor_info, ls.sensor_device_profile_id, ls.lorawan_configuration_id"
                 + " FROM lorawan_sensor ls"
                 + " LEFT JOIN device d ON ls.device_id = d.id"
@@ -201,7 +202,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " l.id as location_id, ls.last_seen, ls.signal_strength, ls.lorawan_device_type, ls.app_session_key, ls.network_session_key,"
                 + " ls.sensor_device_address, ls.serving_network_session_key, ls.forwarding_network_session_key, ls.network_key,"
                 + " ls.sensor_device_profile_name, ls.sensor_join_status, ls.battery, ls.device_id,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, ls.alert, ls.sensor_info, ls.sensor_device_profile_id, ls.lorawan_configuration_id"
                 + " FROM lorawan_sensor ls"
                 + " LEFT JOIN device d ON ls.device_id = d.id"
@@ -252,7 +253,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
         name = "Lorawan_Sensor.getLorawanSensorsTS",
         query = "SELECT ls.id , ls.name, ls.sensor_type, ls.is_battery_low, ls.model_id, ls.manufacturer,"
                 + " l.name as location, f.name as floor, b.name as building, ls.last_seen, ls.signal_strength, ls.sensor_join_status, ls.battery, ls.device_id,"
-                + "	IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + "	CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, ls.alert"
                 + " FROM lorawan_sensor ls"
                 + " LEFT JOIN device d ON ls.device_id = d.id"
@@ -271,7 +272,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
         name = "Lorawan_Sensor.getLorawanSensorsPaginationTS",
         query = "SELECT ls.id , ls.name, ls.sensor_type, ls.is_battery_low, ls.model_id, ls.manufacturer,"
                 + " l.name as location, f.name as floor, b.name as building, ls.last_seen, ls.signal_strength, ls.sensor_join_status, ls.battery, ls.device_id,"
-                + "	IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + "	CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1,ls.alert"
                 + " FROM lorawan_sensor ls"
                 + " LEFT JOIN device d ON ls.device_id = d.id"
@@ -384,6 +385,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
         })
 
 
+// PG-port: IF->CASE WHEN (device_name, model, vendor, type, sensor_alert); monnit_status bare->='alert'
+// PG-gap: references lorawan_sensor_attributes via conditions join (sensor-integration table)
 @NamedNativeQuery(
         name = "Lorawan_Sensor.getLorawanSensorDetailsById",
         query = "SELECT ls.id , ls.name, ls.app_key, ls.sensor_device_id, ls.sensor_type, ls.is_battery_low, ls.configuration,"
@@ -391,16 +394,17 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " ls.lorawan_device_type, ls.app_session_key, ls.network_session_key, ls.sensor_device_address, ls.serving_network_session_key,"
                 + " ls.forwarding_network_session_key, ls.network_key, ls.sensor_device_profile_name, ls.sensor_join_status, ls.battery,"
                 + " ls.last_seen, ls.signal_strength, b.name as building, f.name as floor, l.name as location, l.id as location_id, "
-                + " ls.device_id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " ls.device_id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " p.image_url_1 as device_image_url_1, d.monitor as device_monitor, d.popup_notification as device_popup_notification,"
                 + " d.email_alert as device_email_alert, d.sms_alert as device_sms_alert, d.product_id as device_product_id,"
                 + " d.docker_name, do.system_type as docker_system_type, do.vdms_id, do.vendor_org_id, v.customer_org_id,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as device_model,"
-                + " IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as device_vendor,"
-                + " IF(d.user_data_type IS NULL OR d.user_data_type = '', d.type, d.user_data_type) as device_type,"
+                // PG-port: IF->CASE WHEN for model/vendor/type; monnit_status bare->= 'alert'; IF->CASE WHEN for alert
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as device_model,"
+                + " CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as device_vendor,"
+                + " CASE WHEN d.user_data_type IS NULL OR d.user_data_type = '' THEN d.type ELSE d.user_data_type END as device_type,"
                 + " d.virtual_device_type as device_virtual_device_type, d.warranty as device_warranty, d.status as device_status,"
                 + " d.last_seen_on as device_last_seen_on,"
-                + " IF(d.bacnet_status = 'alert' OR d.lorawan_status = 'alert' OR d.disruptive_status = 'alert' OR d.my_devices_status = 'alert' OR d.monnit_status OR d.pelican_status = 'alert' OR d.knx_status = 'alert' OR d.snmp_object_status = 'alert' OR d.measuring_instrument_status = 'alert' OR d.daintree_status = 'alert', 1, 0) as device_sensor_alert,"
+                + " CASE WHEN (d.bacnet_status = 'alert' OR d.lorawan_status = 'alert' OR d.disruptive_status = 'alert' OR d.my_devices_status = 'alert' OR d.monnit_status = 'alert' OR d.pelican_status = 'alert' OR d.knx_status = 'alert' OR d.snmp_object_status = 'alert' OR d.measuring_instrument_status = 'alert' OR d.daintree_status = 'alert') THEN 1 ELSE 0 END as device_sensor_alert,"
                 + " d.local_vendor_email_alert as device_local_vendor_email_alert, d.local_vendor_sms_alert as device_local_vendor_sms_alert,"
                 + " p.global_image_url_1 as device_global_image_url_1, f.id as floor_id, b.id as building_id,"
                 + " ph.vendor_name as device_local_vendor_name, ph.email as device_local_vendor_email, ph.value as device_local_vendor_extension,"
@@ -486,7 +490,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + "ls.last_seen, ls.signal_strength, ls.lorawan_device_type, ls.app_session_key, ls.network_session_key, "
                 + "ls.sensor_device_address, ls.serving_network_session_key, ls.forwarding_network_session_key, ls.network_key, "
                 + "ls.sensor_device_profile_name, ls.sensor_join_status, ls.battery, ls.device_id, "
-                + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) AS device_name "
+                + "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END AS device_name "
                 + "FROM lorawan_sensor ls "
                 + "LEFT JOIN device d ON ls.device_id = d.id "
                 + "WHERE ls.last_seen <= ((EXTRACT(EPOCH FROM NOW())::bigint * 1000) - 86400000) "
@@ -505,7 +509,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + "ls.last_seen, ls.signal_strength, ls.lorawan_device_type, ls.app_session_key, ls.network_session_key, "
                 + "ls.sensor_device_address, ls.serving_network_session_key, ls.forwarding_network_session_key, ls.network_key, "
                 + "ls.sensor_device_profile_name, ls.sensor_join_status, ls.battery, ls.device_id, "
-                + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) AS device_name "
+                + "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END AS device_name "
                 + "FROM lorawan_sensor ls "
                 + "LEFT JOIN device d ON ls.device_id = d.id "
                 + "WHERE ls.last_seen > ((EXTRACT(EPOCH FROM NOW())::bigint * 1000) - 86400000) "
@@ -523,7 +527,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + "ls.last_seen, ls.signal_strength, ls.lorawan_device_type, ls.app_session_key, ls.network_session_key, "
                 + "ls.sensor_device_address, ls.serving_network_session_key, ls.forwarding_network_session_key, ls.network_key, "
                 + "ls.sensor_device_profile_name, ls.sensor_join_status, ls.battery, ls.device_id, "
-                + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) AS device_name "
+                + "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END AS device_name "
                 + "FROM lorawan_sensor ls "
                 + "LEFT JOIN device d ON ls.device_id = d.id "
                 // PG-port: boolean col = 1/0 -> = true/false
@@ -540,7 +544,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + "ls.last_seen, ls.signal_strength, ls.lorawan_device_type, ls.app_session_key, ls.network_session_key, "
                 + "ls.sensor_device_address, ls.serving_network_session_key, ls.forwarding_network_session_key, ls.network_key, "
                 + "ls.sensor_device_profile_name, ls.sensor_join_status, ls.battery, ls.device_id, "
-                + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) AS device_name "
+                + "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END AS device_name "
                 + "FROM lorawan_sensor ls "
                 + "LEFT JOIN device d ON ls.device_id = d.id "
                 + "WHERE ls.last_seen <= ((EXTRACT(EPOCH FROM NOW())::bigint * 1000) - 86400000) "
@@ -560,7 +564,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + "ls.last_seen, ls.signal_strength, ls.lorawan_device_type, ls.app_session_key, ls.network_session_key, "
                 + "ls.sensor_device_address, ls.serving_network_session_key, ls.forwarding_network_session_key, ls.network_key, "
                 + "ls.sensor_device_profile_name, ls.sensor_join_status, ls.battery, ls.device_id, "
-                + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) AS device_name "
+                + "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END AS device_name "
                 + "FROM lorawan_sensor ls "
                 + "LEFT JOIN device d ON ls.device_id = d.id "
                 + "WHERE ls.last_seen > ((EXTRACT(EPOCH FROM NOW())::bigint * 1000) - 86400000) "
@@ -578,7 +582,7 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + "ls.last_seen, ls.signal_strength, ls.lorawan_device_type, ls.app_session_key, ls.network_session_key, "
                 + "ls.sensor_device_address, ls.serving_network_session_key, ls.forwarding_network_session_key, ls.network_key, "
                 + "ls.sensor_device_profile_name, ls.sensor_join_status, ls.battery, ls.device_id, "
-                + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) AS device_name "
+                + "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END AS device_name "
                 + "FROM lorawan_sensor ls "
                 + "LEFT JOIN device d ON ls.device_id = d.id "
                 + "WHERE ls.last_seen IS NULL "
