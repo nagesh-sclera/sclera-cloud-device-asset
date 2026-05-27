@@ -315,9 +315,9 @@ public class DeviceSearchService {
                                 // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
                                 + "CASE WHEN " + asset_match_status + " = 3 THEN asset_match_status = " + asset_match_status + " ELSE "
                                 + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3) END) "
-                                // PG-gap: MySQL JSON path wildcard $[*] with dynamic field via CONCAT — requires jsonb_path_query rewrite
-                                + "AND JSON_UNQUOTE(JSON_EXTRACT(custom_fields,CONCAT(\"$[*].\",\"" + searchColumn
-                                + "\"))) LIKE CONCAT('%','" + search_details.get("value") + "','%') LIMIT "
+                                // PG-port: jsonb_path_query_array(col::jsonb,'$[*]."field"')::text LIKE — validated via direct psql SELECT
+                                + "AND jsonb_path_query_array(custom_fields::jsonb, '$[*].\"" + searchColumn
+                                + "\"')::text LIKE CONCAT('%','" + search_details.get("value") + "','%') LIMIT "
                                 + pageSize + " OFFSET " + offset;
 
                         var queryResult = jdbcTemplate.queryForList(query);
@@ -690,18 +690,14 @@ public class DeviceSearchService {
         for (int i = 0; i < filter_details.size(); i++) {
             Map<String, Object> tempMap = filter_details.get(i);
             if ((Boolean) filter_details.get(i).get("custom")) {
-                // PG-gap: MySQL JSON path wildcard $[*].field + $[0] index — requires jsonb_path_query_first(col::jsonb,'$[*].field') #>> '{}' rewrite; not auto-ported due to wildcard
+                // PG-port: jsonb_path_query_first(col::jsonb,'$[*]."field"')#>>'{}' IS NOT NULL / <> '' — validated via direct psql SELECT
                 stringBuilder
-                        .append(" JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(custom_fields,'$[*].")
+                        .append(" (jsonb_path_query_first(custom_fields::jsonb, '$[*].\"")
                         .append(tempMap.get("column"))
-                        .append("'),'$[0]'")
-                        .append("))")
-                        .append(" IS NOT NULL AND ")
-                        .append(" JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(custom_fields,'$[*].")
+                        .append("\"') #>> '{}') IS NOT NULL AND ")
+                        .append(" (jsonb_path_query_first(custom_fields::jsonb, '$[*].\"")
                         .append(tempMap.get("column"))
-                        .append("'),'$[0]'")
-                        .append("))")
-                        .append(" <> '' ");
+                        .append("\"') #>> '{}') <> '' ");
             } else {
                 stringBuilder.append(" ").append(this.updateDeviceSearchColumnName(String.valueOf(tempMap.get("column")))).
                         append(" IS NOT NULL AND ").append(this.updateDeviceSearchColumnName(String.valueOf(tempMap.get("column")))).
@@ -1038,9 +1034,9 @@ public class DeviceSearchService {
         String query = "SELECT id FROM device "
                 + " WHERE ('" + vdmsid + "' = 'null' or docker_vdms_id = '" + vdmsid
                 + "') AND ('" + dockername + "' = 'all' or  docker_name = '" + dockername + "') "
-                // PG-gap: MySQL JSON path wildcard $[*] with dynamic field via CONCAT — requires jsonb_path_query rewrite
-                + "AND JSON_UNQUOTE(JSON_EXTRACT(custom_fields,CONCAT(\"$[*].\",\"" + custom_fields.getString("key")
-                + "\"))) LIKE CONCAT('%','" + custom_fields.getString("value") + "','%') LIMIT 1";
+                // PG-port: jsonb_path_query_array(col::jsonb,'$[*]."field"')::text LIKE — validated via direct psql SELECT
+                + "AND jsonb_path_query_array(custom_fields::jsonb, '$[*].\"" + custom_fields.getString("key")
+                + "\"')::text LIKE CONCAT('%','" + custom_fields.getString("value") + "','%') LIMIT 1";
 
         var queryResult = jdbcTemplate.queryForList(query);
 
@@ -1238,37 +1234,26 @@ public class DeviceSearchService {
                 com.alibaba.fastjson.JSONObject tempMap = column_details.getJSONObject(i);
                 if ((Boolean) tempMap.get("custom")) {
                     if (tempMap.get("condition").equals("is_present")) {
-                        // PG-gap: MySQL JSON path wildcard $[*].field + $[0] — requires jsonb_path_query_first rewrite; not auto-ported
+                        // PG-port: jsonb_path_query_first(col::jsonb,'$[*]."field"')#>>'{}' IS NOT NULL / <> ''
+                        // MySQL '<> null' -> PG IS NOT NULL (PG #>>'{}' returns SQL NULL when absent/json-null); validated via direct psql SELECT
                         stringBuilder
-                                .append(" JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(custom_fields,'$[*].")
+                                .append(" (jsonb_path_query_first(custom_fields::jsonb, '$[*].\"")
                                 .append(tempMap.get("column"))
-                                .append("'),'$[0]'")
-                                .append("))")
-                                .append(" <> 'null' AND ")
-                                .append(" JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(custom_fields,'$[*].")
+                                .append("\"') #>> '{}') IS NOT NULL AND ")
+                                .append(" (jsonb_path_query_first(custom_fields::jsonb, '$[*].\"")
                                 .append(tempMap.get("column"))
-                                .append("'),'$[0]'")
-                                .append("))")
-                                .append(" <> ''");
+                                .append("\"') #>> '{}') <> ''");
 
                     } else if (tempMap.get("condition").equals("is_not_present")) {
-                        // PG-gap: MySQL JSON path wildcard $[*].field + $[0] — requires jsonb_path_query_first rewrite; not auto-ported
+                        // PG-port: jsonb_path_query_first(col::jsonb,'$[*]."field"')#>>'{}' IS NULL OR = ''
+                        // MySQL '= null' -> PG IS NULL; the third OR IS NULL arm subsumes the '= null' arm but kept for clarity; validated via direct psql SELECT
                         stringBuilder
-                                .append(" JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(custom_fields,'$[*].")
+                                .append(" (jsonb_path_query_first(custom_fields::jsonb, '$[*].\"")
                                 .append(tempMap.get("column"))
-                                .append("'),'$[0]'")
-                                .append("))")
-                                .append(" = 'null' OR ")
-                                .append(" JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(custom_fields,'$[*].")
+                                .append("\"') #>> '{}') IS NULL OR ")
+                                .append(" (jsonb_path_query_first(custom_fields::jsonb, '$[*].\"")
                                 .append(tempMap.get("column"))
-                                .append("'),'$[0]'")
-                                .append("))")
-                                .append("='' OR")
-                                .append(" JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(custom_fields,'$[*].")
-                                .append(tempMap.get("column"))
-                                .append("'),'$[0]'")
-                                .append("))")
-                                .append(" IS NULL");
+                                .append("\"') #>> '{}') = ''");
 
                     }
 
@@ -1453,20 +1438,20 @@ public class DeviceSearchService {
         StringBuilder searchColumnValueWithoutSpecialCharacters = new StringBuilder();
 
         if (search_details.get("column") == null) {
-            // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END (three IF occurrences)
-            // PG-gap: JSON_EXTRACT(col,'$[*].*') double wildcard inside REGEXP_REPLACE/COALESCE/IF chain — complex context, not auto-ported
+            // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END (three IF occurrences already done above)
+            // PG-port: JSON_EXTRACT(col,'$[*].*') -> jsonb_path_query_array(col::jsonb,'$[*].*')::text; IF(...) -> CASE WHEN ... THEN ... ELSE '' END; validated via direct psql SELECT
             searchColumnValue.append("LOWER(CONCAT_WS('±','',d.id, CASE WHEN d.user_data_name IS NULL or d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END,")
                     .append("CASE WHEN d.user_data_vendor IS NULL or d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END, ")
                     .append("CASE WHEN d.user_data_model IS NULL or d.user_data_model = '' THEN d.model ELSE d.user_data_model END, d.type, d.description,  ")
                     .append("d.ip_address, d.mac_address, d.latitude, d.longitude, d.serial_number, d.warranty,  d.created_timestamp,l.name, f.name, " +
-                            "b.name, dos.assignee_email , dosa.email, ds.username, ds.email,COALESCE(IF(LOWER(REGEXP_REPLACE(JSON_EXTRACT(d.custom_fields, '$[*].*'), '[-.!\t_+#~`@$%^&*()=;:<>?,/{}|\\' ]', ''))" + this.generateConditionedQueryForCustomFields(search_details) + ",\"" + searchTermWithoutSpecialCharacters + "\",''), ''),''))");
+                            "b.name, dos.assignee_email , dosa.email, ds.username, ds.email,COALESCE(CASE WHEN LOWER(REGEXP_REPLACE(jsonb_path_query_array(d.custom_fields::jsonb, '$[*].*')::text, '[-.!\\t_+#~`@$%^&*()=;:<>?,/{}|\\'' ]', ''))" + this.generateConditionedQueryForCustomFields(search_details) + " THEN '" + searchTermWithoutSpecialCharacters + "' ELSE '' END, ''),''))");
         } else {
             if ((Boolean) search_details.get("custom")) {
-                // PG-gap: MySQL JSON path wildcard $[*] with dynamic field via CONCAT + $[0] index — requires jsonb_path_query rewrite; not auto-ported
+                // PG-port: jsonb_path_query_first(col::jsonb,'$[*]."field"')#>>'{}' inside LOWER(CONCAT_WS(...)) — validated via direct psql SELECT
                 searchColumnValue
-                        .append("LOWER(CONCAT_WS('',JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(custom_fields,CONCAT(\"$[*].\",\"")
+                        .append("LOWER(CONCAT_WS('',(jsonb_path_query_first(custom_fields::jsonb, '$[*].\"")
                         .append(searchColumn)
-                        .append("\")), '$[0]')),''))");
+                        .append("\"') #>> '{}'),''))");
             } else {
                 searchColumnValue
                         .append("LOWER(CONCAT_WS('',")
