@@ -1234,26 +1234,32 @@ public class DeviceSearchService {
                 com.alibaba.fastjson.JSONObject tempMap = column_details.getJSONObject(i);
                 if ((Boolean) tempMap.get("custom")) {
                     if (tempMap.get("condition").equals("is_present")) {
-                        // PG-port: jsonb_path_query_first(col::jsonb,'$[*]."field"')#>>'{}' IS NOT NULL / <> ''
-                        // MySQL '<> null' -> PG IS NOT NULL (PG #>>'{}' returns SQL NULL when absent/json-null); validated via direct psql SELECT
+                        // PG-port: jsonb_path_query_first(col::jsonb,'$[*]."field"')#>>'{}' IS NOT NULL / <> '' / <> 'null'
+                        // Restored MySQL '<> null' arm: #>>'{}' returns text 'null' (not SQL NULL) for JSON string "null", so IS NOT NULL alone is insufficient
                         stringBuilder
                                 .append(" (jsonb_path_query_first(custom_fields::jsonb, '$[*].\"")
                                 .append(tempMap.get("column"))
                                 .append("\"') #>> '{}') IS NOT NULL AND ")
                                 .append(" (jsonb_path_query_first(custom_fields::jsonb, '$[*].\"")
                                 .append(tempMap.get("column"))
-                                .append("\"') #>> '{}') <> ''");
+                                .append("\"') #>> '{}') <> '' AND ")
+                                .append(" (jsonb_path_query_first(custom_fields::jsonb, '$[*].\"")
+                                .append(tempMap.get("column"))
+                                .append("\"') #>> '{}') <> 'null'");
 
                     } else if (tempMap.get("condition").equals("is_not_present")) {
-                        // PG-port: jsonb_path_query_first(col::jsonb,'$[*]."field"')#>>'{}' IS NULL OR = ''
-                        // MySQL '= null' -> PG IS NULL; the third OR IS NULL arm subsumes the '= null' arm but kept for clarity; validated via direct psql SELECT
+                        // PG-port: jsonb_path_query_first(col::jsonb,'$[*]."field"')#>>'{}' IS NULL OR = '' OR = 'null'
+                        // Restored MySQL '= null' arm: #>>'{}' returns text 'null' (not SQL NULL) for JSON string "null"; dropped arm mis-classified those rows
                         stringBuilder
                                 .append(" (jsonb_path_query_first(custom_fields::jsonb, '$[*].\"")
                                 .append(tempMap.get("column"))
                                 .append("\"') #>> '{}') IS NULL OR ")
                                 .append(" (jsonb_path_query_first(custom_fields::jsonb, '$[*].\"")
                                 .append(tempMap.get("column"))
-                                .append("\"') #>> '{}') = ''");
+                                .append("\"') #>> '{}') = '' OR ")
+                                .append(" (jsonb_path_query_first(custom_fields::jsonb, '$[*].\"")
+                                .append(tempMap.get("column"))
+                                .append("\"') #>> '{}') = 'null'");
 
                     }
 
