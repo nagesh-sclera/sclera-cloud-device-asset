@@ -148,6 +148,9 @@ public class User {
     // removed: relation to Bucket-C entity ProfileUser (CP-2)
     // removed: relation to Bucket-C entity UserSettings (CP-2)
     // removed: relation to Bucket-C entity Ticket (AP-C3)
+    // PG-restore: scalar FK (replaces removed @ManyToOne Customer_Organisation) — loose coupling.
+    @Column(length = 64)
+    private String customer_org_id;
 
     @Column(length = 255)
     private String role;
@@ -273,6 +276,14 @@ public class User {
 
     public void setLanguage(String language) {
         this.language = language;
+    }
+
+    public String getCustomer_org_id() {
+        return customer_org_id;
+    }
+
+    public void setCustomer_org_id(String customer_org_id) {
+        this.customer_org_id = customer_org_id;
     }
 
 

@@ -149,15 +149,16 @@ public interface LocationRepository extends JpaRepository<Location, String> {
     @Query(nativeQuery = true)
     List<LocationDTO> getAllLocationDetails();
 
+    // PG-port: IF->CASE WHEN
     @Query(value = "SELECT COUNT(*) "
             + " FROM location l "
             + " LEFT JOIN floor f ON l.floor_id = f.id"
             + " LEFT JOIN building b ON f.building_id = b.id"
             + " WHERE ('all' IN ?10 OR f.building_id IN ?10) AND ('all' IN ?1 OR l.floor_id IN ?1) AND (?2 = 'null' OR CONCAT_WS('' , l.name) LIKE CONCAT('%' ,?2, '%'))"
-            + " AND (?3 IS NULL OR IF(?3 = 'present', l.id IN ?4, l.id NOT IN ?4))"
-            + " AND (?5 IS NULL OR IF(?5 = 'present', l.id IN ?6, l.id NOT IN ?6))"
-            + " AND (?11 IS NULL OR IF(?11 = 'present', l.id IN ?12, l.id NOT IN ?12))"
-            + " AND (?7 IS NULL OR IF(?7 = 'present', l.record_checklist_count>0, l.record_checklist_count=0 OR l.record_checklist_count IS NULL))"
+            + " AND (?3 IS NULL OR CASE WHEN ?3 = 'present' THEN l.id IN ?4 ELSE l.id NOT IN ?4 END)"
+            + " AND (?5 IS NULL OR CASE WHEN ?5 = 'present' THEN l.id IN ?6 ELSE l.id NOT IN ?6 END)"
+            + " AND (?11 IS NULL OR CASE WHEN ?11 = 'present' THEN l.id IN ?12 ELSE l.id NOT IN ?12 END)"
+            + " AND (?7 IS NULL OR CASE WHEN ?7 = 'present' THEN l.record_checklist_count>0 ELSE l.record_checklist_count=0 OR l.record_checklist_count IS NULL END)"
             + " AND (?8 IS NULL OR l.status = ?8) AND ('all' IN ?9 OR l.type IN ?9)", nativeQuery = true)
     int searchSortFilterLocationsCount(JSONArray floor_ids, String searchkey, String qrcodeCondition, JSONArray locationIdsTaggedToQrCode, String nfcCondition, JSONArray locationIdsTaggedToNfc, String procedureCondition, String status, JSONArray types, JSONArray building_ids,String barCodeCondition,JSONArray locationIdsTaggedToBarCode);
 
@@ -181,12 +182,13 @@ public interface LocationRepository extends JpaRepository<Location, String> {
     Set<LocationDTO> getAllMeasuringInstrumentLocationsPagination(String searchkey, Integer pagesize, Integer offset, String floorId, JSONArray measuringInstrumentIds, Boolean isTaggedToQrCode, JSONArray locationIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray locationIdsTaggedToNfc, JSONArray types, String building_id);
 
 
+    // PG-port: IF->CASE WHEN
     @Query(value = "SELECT l.id FROM location l" +
             " LEFT JOIN floor f ON l.floor_id = f.id" +
             " LEFT JOIN building b ON f.building_id = b.id" +
             " WHERE (?1 IS NULL or CONCAT_WS('' , l.name ) LIKE CONCAT('%' ,?1, '%'))" +
-            " AND (?2 IS NULL OR IF(?2, l.id IN ?3, l.id NOT IN ?3))" +
-            " AND (?4 IS NULL OR IF(?4, l.id IN ?5, l.id NOT IN ?5))" +
+            " AND (?2 IS NULL OR CASE WHEN ?2 THEN l.id IN ?3 ELSE l.id NOT IN ?3 END)" +
+            " AND (?4 IS NULL OR CASE WHEN ?4 THEN l.id IN ?5 ELSE l.id NOT IN ?5 END)" +
             " AND (('all' IN ?6) or f.building_id IN ?6)" +
             " AND (('all' IN ?7) or l.floor_id IN ?7)  AND (('all' IN ?8) or l.type IN ?8)", nativeQuery = true)
     List<String> getLocationIdsByFilter(String searchKey, Boolean isTaggedToQrCode, List<String> locationIdsTaggedToQrCode,
@@ -209,16 +211,18 @@ public interface LocationRepository extends JpaRepository<Location, String> {
 
     @Modifying
     @Transactional
-    @Query(value = "UPDATE location SET name = IFNULL(?2, name), position = IFNULL(?3, position), area = IFNULL(?4, area), z_index = IFNULL(?5, z_index), type = IFNULL(?6, type),  code = IFNULL(?7, code), updated_timestamp = IFNULL(?8, updated_timestamp)  WHERE id IN ?1", nativeQuery = true)
+    // PG-port: IFNULL->COALESCE
+    @Query(value = "UPDATE location SET name = COALESCE(?2, name), position = COALESCE(?3, position), area = COALESCE(?4, area), z_index = COALESCE(?5, z_index), type = COALESCE(?6, type),  code = COALESCE(?7, code), updated_timestamp = COALESCE(?8, updated_timestamp)  WHERE id IN ?1", nativeQuery = true)
     int multiUpdateLocations(Set<String> locationIds, String name, String position, String area, String z_index, String type, String code, BigInteger updated_timestamp);
 
+    // PG-port: IF->CASE WHEN
     @Query(value =
             "  SELECT  l.id FROM location l LEFT JOIN floor f ON l.floor_id = f.id" +
                     "  LEFT JOIN building b ON f.building_id = b.id" +
                     "  WHERE l.floor_id = ?1 AND (?2 IS NULL OR CONCAT_WS('' , l.name) LIKE CONCAT('%' ,?2, '%')) " +
-                    "  AND (?3 IS NULL OR IF(?3 = 'present', l.id IN ?4, l.id NOT IN ?4))" +
-                    "  AND (?5 IS NULL OR IF(?5 = 'present', l.id IN ?6, l.id NOT IN ?6))" +
-                    "  AND (?7 IS NULL OR IF(?7 = 'present', l.record_checklist_count>0, l.record_checklist_count=0 OR l.record_checklist_count IS NULL))" +
+                    "  AND (?3 IS NULL OR CASE WHEN ?3 = 'present' THEN l.id IN ?4 ELSE l.id NOT IN ?4 END)" +
+                    "  AND (?5 IS NULL OR CASE WHEN ?5 = 'present' THEN l.id IN ?6 ELSE l.id NOT IN ?6 END)" +
+                    "  AND (?7 IS NULL OR CASE WHEN ?7 = 'present' THEN l.record_checklist_count>0 ELSE l.record_checklist_count=0 OR l.record_checklist_count IS NULL END)" +
                     "  AND (?8 IS NULL OR l.id IN ?9) AND ('all' IN ?10 OR l.type IN ?10) ", nativeQuery = true)
     Set<String> getAllLocationIdsByFilter(String floorId, String searchKey, String qrCodeCondition, JSONArray locationIdsTaggedToQrCode, String nfcConditon, JSONArray locationIdsTaggedToNfc, String recordChecklistCondition, String roomStatusCondition, Set<String> locationIdsWithRoomStatus, JSONArray types);
 

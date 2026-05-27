@@ -11,44 +11,45 @@ public class DeviceQueryRepository {
 
 
     public String getQueryForUpsertCollection() {
+        // PG-port: ON DUPLICATE KEY UPDATE -> ON CONFLICT (id) DO UPDATE SET ... (VALUES()->EXCLUDED)
         return "INSERT INTO device (" +
                 "id, system_type_name, asset_type_name, asset_sub_type_name, adc_json, created_email, assigned_user_email, system_type_id, asset_type_id, asset_sub_type_id, " +
                 "location_id, docker_name, type, monitor, docker_vdms_id, virtual_device_type, asset_match_status, created_timestamp, asset_group, onboard_status, category, sub_category, " +
                 "location_status, source_type, display_name, model, vendor, serial_number, warranty, description, user_data_name, user_data_model, user_data_vendor " +
                 ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) " +
-                "ON DUPLICATE KEY UPDATE " +
-                "system_type_name = VALUES(system_type_name), " +
-                "asset_type_name = VALUES(asset_type_name), " +
-                "asset_sub_type_name = VALUES(asset_sub_type_name), " +
-                "adc_json = VALUES(adc_json), " +
-                "created_email = VALUES(created_email), " +
-                "assigned_user_email = VALUES(assigned_user_email), " +
-                "system_type_id = VALUES(system_type_id), " +
-                "asset_type_id = VALUES(asset_type_id), " +
-                "asset_sub_type_id = VALUES(asset_sub_type_id), " +
-                "location_id = VALUES(location_id), " +
-                "docker_name = VALUES(docker_name), " +
-                "type = VALUES(type), " +
-                "monitor = VALUES(monitor), " +
-                "docker_vdms_id = VALUES(docker_vdms_id), " +
-                "virtual_device_type = VALUES(virtual_device_type), " +
-                "asset_match_status = VALUES(asset_match_status), " +
-                "created_timestamp = VALUES(created_timestamp), " +
-                "asset_group = VALUES(asset_group), " +
-                "onboard_status = VALUES(onboard_status), " +
-                "category = VALUES(category), " +
-                "sub_category = VALUES(sub_category), " +
-                "location_status = VALUES(location_status), " +
-                "source_type = VALUES(source_type), " +
-                "display_name = VALUES(display_name), " +
-                "model = VALUES(model), " +
-                "vendor = VALUES(vendor), " +
-                "serial_number = VALUES(serial_number), " +
-                "warranty = VALUES(warranty), " +
-                "description = VALUES(description), " +
-                "user_data_name = VALUES(user_data_name), " +
-                "user_data_model = VALUES(user_data_model), " +
-                "user_data_vendor = VALUES(user_data_vendor)";
+                "ON CONFLICT (id) DO UPDATE SET " +
+                "system_type_name = EXCLUDED.system_type_name, " +
+                "asset_type_name = EXCLUDED.asset_type_name, " +
+                "asset_sub_type_name = EXCLUDED.asset_sub_type_name, " +
+                "adc_json = EXCLUDED.adc_json, " +
+                "created_email = EXCLUDED.created_email, " +
+                "assigned_user_email = EXCLUDED.assigned_user_email, " +
+                "system_type_id = EXCLUDED.system_type_id, " +
+                "asset_type_id = EXCLUDED.asset_type_id, " +
+                "asset_sub_type_id = EXCLUDED.asset_sub_type_id, " +
+                "location_id = EXCLUDED.location_id, " +
+                "docker_name = EXCLUDED.docker_name, " +
+                "type = EXCLUDED.type, " +
+                "monitor = EXCLUDED.monitor, " +
+                "docker_vdms_id = EXCLUDED.docker_vdms_id, " +
+                "virtual_device_type = EXCLUDED.virtual_device_type, " +
+                "asset_match_status = EXCLUDED.asset_match_status, " +
+                "created_timestamp = EXCLUDED.created_timestamp, " +
+                "asset_group = EXCLUDED.asset_group, " +
+                "onboard_status = EXCLUDED.onboard_status, " +
+                "category = EXCLUDED.category, " +
+                "sub_category = EXCLUDED.sub_category, " +
+                "location_status = EXCLUDED.location_status, " +
+                "source_type = EXCLUDED.source_type, " +
+                "display_name = EXCLUDED.display_name, " +
+                "model = EXCLUDED.model, " +
+                "vendor = EXCLUDED.vendor, " +
+                "serial_number = EXCLUDED.serial_number, " +
+                "warranty = EXCLUDED.warranty, " +
+                "description = EXCLUDED.description, " +
+                "user_data_name = EXCLUDED.user_data_name, " +
+                "user_data_model = EXCLUDED.user_data_model, " +
+                "user_data_vendor = EXCLUDED.user_data_vendor";
     }
 
     public String getQueryForUpdateImage(){

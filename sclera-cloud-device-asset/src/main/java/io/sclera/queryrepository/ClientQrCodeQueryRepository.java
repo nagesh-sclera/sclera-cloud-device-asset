@@ -6,19 +6,20 @@ import org.springframework.stereotype.Component;
 public class ClientQrCodeQueryRepository {
 
     public String getQueryForUpsertClientQrcodes() {
+        // PG-port: ON DUPLICATE KEY UPDATE -> ON CONFLICT (id) DO UPDATE SET ... (VALUES()->EXCLUDED)
         return "INSERT INTO client_qr_code (id, added_at, added_by, client_qr_code_id, device_id, location_id, updated_at, updated_by, vdms_id, batch_id, is_deleted) "
                 + "VALUES (?,?,?,?,?,?,?,?,?,?, false) "
-                + "ON DUPLICATE KEY UPDATE "
-                + "added_at = VALUES(added_at), "
-                + "added_by = VALUES(added_by), "
-                + "client_qr_code_id = VALUES(client_qr_code_id), "
-                + "device_id = VALUES(device_id), "
-                + "location_id = VALUES(location_id), "
-                + "updated_at = VALUES(updated_at), "
-                + "updated_by = VALUES(updated_by), "
-                + "vdms_id = VALUES(vdms_id), "
-                + "batch_id = VALUES(batch_id), "
-                + "is_deleted = false;";
+                + "ON CONFLICT (id) DO UPDATE SET "
+                + "added_at = EXCLUDED.added_at, "
+                + "added_by = EXCLUDED.added_by, "
+                + "client_qr_code_id = EXCLUDED.client_qr_code_id, "
+                + "device_id = EXCLUDED.device_id, "
+                + "location_id = EXCLUDED.location_id, "
+                + "updated_at = EXCLUDED.updated_at, "
+                + "updated_by = EXCLUDED.updated_by, "
+                + "vdms_id = EXCLUDED.vdms_id, "
+                + "batch_id = EXCLUDED.batch_id, "
+                + "is_deleted = false";
     }
 
 }

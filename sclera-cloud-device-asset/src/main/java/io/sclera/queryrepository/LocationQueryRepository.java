@@ -9,10 +9,11 @@ public class LocationQueryRepository {
     }
 
     public String getQueryForUpsertLocation(){
+        // PG-port: ON DUPLICATE KEY UPDATE -> ON CONFLICT (id) DO UPDATE SET ... (VALUES()->EXCLUDED)
         return "INSERT INTO location(" +
                 "id, name, code, floor_id, updated_timestamp, source_type " +
                 ") VALUES (?,?,?,?,?,?) " +
-                "ON DUPLICATE KEY UPDATE " +
-                "name = VALUES(name), code = VALUES(code), floor_id = VALUES(floor_id), updated_timestamp = VALUES(updated_timestamp) , source_type = VALUES(source_type)";
+                "ON CONFLICT (id) DO UPDATE SET " +
+                "name = EXCLUDED.name, code = EXCLUDED.code, floor_id = EXCLUDED.floor_id, updated_timestamp = EXCLUDED.updated_timestamp , source_type = EXCLUDED.source_type";
     }
 }

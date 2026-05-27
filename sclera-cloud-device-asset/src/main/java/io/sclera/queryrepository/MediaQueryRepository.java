@@ -6,12 +6,14 @@ import org.springframework.stereotype.Component;
 public class MediaQueryRepository {
 
     public String getQueryForUpsertMedia() {
+        // PG-port: ON DUPLICATE KEY UPDATE -> ON CONFLICT (id) DO UPDATE SET ... (VALUES()->EXCLUDED)
         return "INSERT INTO media (id , name, category , description, link, created_email, created_timestamp, extension,source_type) VALUES (?,?,?,?,?,?,?,?,?) " +
-                "ON DUPLICATE KEY UPDATE name = VALUES(name) , category = VALUES(category), description = VALUES(description), link = VALUES(link)  ";
+                "ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name , category = EXCLUDED.category, description = EXCLUDED.description, link = EXCLUDED.link  ";
     }
 
     public String getQueryForTagDocument() {
+        // PG-port: ON DUPLICATE KEY UPDATE -> ON CONFLICT (device_id, media_id) DO UPDATE SET ... (VALUES()->EXCLUDED)
         return "INSERT INTO device_media (media_id , device_id) VALUES (?,?) " +
-                "ON DUPLICATE KEY UPDATE media_id = VALUES(media_id), device_id = VALUES(device_id) ";
+                "ON CONFLICT (media_id, device_id) DO UPDATE SET media_id = EXCLUDED.media_id, device_id = EXCLUDED.device_id ";
     }
 }
