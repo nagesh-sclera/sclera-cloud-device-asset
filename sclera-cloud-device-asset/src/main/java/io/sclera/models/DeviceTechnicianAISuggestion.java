@@ -14,7 +14,7 @@ public class DeviceTechnicianAISuggestion {
     private String id;
     @Column(nullable = false)
     private String deviceType;
-    @Column(columnDefinition = "json")
+    @Column(columnDefinition = "jsonb")
     private String technicians;
     @ManyToOne
     @JoinColumn(name = "vdms_id")

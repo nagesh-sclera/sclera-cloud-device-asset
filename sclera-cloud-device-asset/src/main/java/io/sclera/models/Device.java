@@ -3255,7 +3255,7 @@ public class Device {
     @Column(name = "system_dnd_enabled",columnDefinition = "boolean default false", length = 8)
     private Boolean system_dnd_enabled;
 
-    @Column(name = "adc_json", columnDefinition = "JSON")
+    @Column(name = "adc_json", columnDefinition = "jsonb")
     private String adc_json;
 
     @Column
