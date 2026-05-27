@@ -229,9 +229,9 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id"
-                // PG-port: boolean col = 1/0 -> = true/false
+                // PG-port: boolean col = int-sentinel param -> col = (CAST(?N AS integer)=1)
                 + " WHERE (?1 = 'null' or bd.docker_name = ?1) AND (?2 = 'null' or b.id = ?2) AND (?3 = 'null' or f.id = ?3)"
-                + " AND (?4 = 'null' or l.id = ?4) AND (?5 = 3 or bo.alert = ?5) AND bo.configuration = true"
+                + " AND (?4 = 'null' or l.id = ?4) AND (?5 = 3 or bo.alert = (CAST(?5 AS integer) = 1)) AND bo.configuration = true"
                 + " AND bo.device_id IS NOT NULL AND d.monitor = 1",
         resultSetMapping = "bacnetobjectmapping"
 )
@@ -255,8 +255,8 @@ import io.sclera.models.compositeclass.DockerIds;
                 + " LEFT JOIN building b ON f.building_id = b.id"
                 + " LEFT JOIN bacnet_device bd ON bo.bacnet_device_id = bd.id"
                 + " WHERE (?1 = 'null' or bd.docker_name = ?1) AND (?2 = 'null' or b.id = ?2) AND (?3 = 'null' or f.id = ?3)"
-                // PG-port: boolean col = 1/0 -> = true/false
-                + " AND (?4 = 'null' or l.id = ?4) AND (?5 = 3 or bo.alert = ?5) AND bo.configuration = true"
+                // PG-port: boolean col = int-sentinel param -> col = (CAST(?N AS integer)=1)
+                + " AND (?4 = 'null' or l.id = ?4) AND (?5 = 3 or bo.alert = (CAST(?5 AS integer) = 1)) AND bo.configuration = true"
                 + " AND bo.device_id IS NOT NULL AND d.monitor = 1"
                 + " LIMIT ?6  OFFSET ?7",
         resultSetMapping = "bacnetobjectmapping"

@@ -262,8 +262,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE (?1 = 'null' or b.id = ?1) AND (?2 = 'null' or f.id = ?2) AND (?3 = 'null' or l.id = ?3) AND (?4 = 3 or ls.alert = ?4)"
-                // PG-port: boolean col = 1/0 -> = true/false
+                // PG-port: boolean col = int-sentinel param -> col = (CAST(?N AS integer)=1)
+                + " WHERE (?1 = 'null' or b.id = ?1) AND (?2 = 'null' or f.id = ?2) AND (?3 = 'null' or l.id = ?3) AND (?4 = 3 or ls.alert = (CAST(?4 AS integer) = 1))"
                 + " AND ls.configuration = true AND ls.device_id IS NOT NULL AND d.monitor = 1",
         resultSetMapping = "lorawansensorsmappingTS")
 
@@ -281,8 +281,8 @@ import io.sclera.dto.touchscreen.SensorDTO;
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE (?1 = 'null' or b.id = ?1) AND (?2 = 'null' or f.id = ?2) AND (?3 = 'null' or l.id = ?3) AND (?4 = 3 or ls.alert = ?4)"
-                // PG-port: boolean col = 1/0 -> = true/false
+                // PG-port: boolean col = int-sentinel param -> col = (CAST(?N AS integer)=1)
+                + " WHERE (?1 = 'null' or b.id = ?1) AND (?2 = 'null' or f.id = ?2) AND (?3 = 'null' or l.id = ?3) AND (?4 = 3 or ls.alert = (CAST(?4 AS integer) = 1))"
                 + " AND ls.configuration = true AND ls.device_id IS NOT NULL AND d.monitor = 1"
                 + " LIMIT ?5  OFFSET ?6",
         resultSetMapping = "lorawansensorsmappingTS")
