@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Give `sclera-cloud-device-asset`'s Swagger UI a basic API identity (title/version/description) via a single OpenAPI config bean, verified by a focused unit test.
+**Goal:** Give `sclera-cloud-device-asset`'s Swagger UI a basic API identity (title/version/description) via a single OpenAPI config bean (verified by a focused unit test), and add a "Swagger ↗" link to the test-ui dashboard that opens it.
 
-**Architecture:** springdoc-openapi auto-detects an `OpenAPI` `@Bean` and merges it into the generated spec served at `/v3/api-docs` (rendered by Swagger UI at `/swagger-ui/index.html`). We add one `@Configuration` bean in `io.sclera.config` and unit-test the bean's `Info` metadata directly — no Spring context boot. Security is unchanged (docker/dev-only reachability; the docker profile is already `permitAll`).
+**Architecture:** springdoc-openapi auto-detects an `OpenAPI` `@Bean` and merges it into the generated spec served at `/v3/api-docs` (rendered by Swagger UI at `/swagger-ui/index.html`). We add one `@Configuration` bean in `io.sclera.config` and unit-test the bean's `Info` metadata directly — no Spring context boot. Security is unchanged (docker/dev-only reachability; the docker profile is already `permitAll`). The test-ui (static dashboard served by the nginx `ui` service on :3000 from `test-ui/index.html`) gets a topbar link to the device-asset Swagger UI.
 
 **Tech Stack:** Java 21 (Amazon Corretto 21.0.8), Spring Boot 4.0.6, `springdoc-openapi-starter-webmvc-ui:3.0.3` (already in the pom), swagger-models v2 (`io.swagger.v3.oas.models.*`), JUnit 5 + AssertJ (both already used by the module's tests).
 
@@ -32,6 +32,8 @@ confirmed by the manual boot step in Task 2.
   define the OpenAPI document's top-level `Info` metadata.
 - Create: `sclera-cloud-device-asset/src/test/java/io/sclera/config/OpenApiConfigTest.java`
   — unit test asserting the bean's `Info` fields.
+- Modify: `test-ui/index.html` — add one `Swagger ↗` anchor in the topbar `.svc-strip`, beside the
+  existing `Traces ↗` link.
 - No other files change (no security config, no controllers, no pom — springdoc 3.0.3 is present).
 
 ## Build/run conventions (this machine)
@@ -183,6 +185,50 @@ Expected: the Swagger UI loads, shows the title/version, and lists the controlle
 
 ---
 
+### Task 3: Add "Swagger ↗" link to the test-ui dashboard
+
+**Files:**
+- Modify: `test-ui/index.html` (the topbar `.svc-strip`, around line 122 — the existing `Traces ↗` anchor).
+
+The test-ui is a static HTML dashboard served by the nginx `ui` service on :3000 (compose mounts
+`./test-ui` read-only). It has no test harness, so this is a static edit verified by loading the page.
+The link points directly at the device-asset Swagger UI on :8085 (the gateway has no `/swagger-ui`
+route; :8085 is exposed and reachable from the host browser, and hardcoding `localhost` matches the
+UI's existing `http://localhost:8080` gateway default).
+
+- [ ] **Step 1: Add the link anchor beside the existing "Traces ↗" link**
+
+In `test-ui/index.html`, find this line in the topbar `.svc-strip` (around line 122):
+
+```html
+    <a class="btn btn-primary btn-sm" href="traces.html" style="text-decoration:none">Traces ↗</a>
+```
+
+Replace it with these two lines (keep Traces, add Swagger before it):
+
+```html
+    <a class="btn btn-neutral btn-sm" href="http://localhost:8085/swagger-ui/index.html" target="_blank" rel="noopener" style="text-decoration:none">Swagger ↗</a>
+    <a class="btn btn-primary btn-sm" href="traces.html" style="text-decoration:none">Traces ↗</a>
+```
+
+- [ ] **Step 2: Verify the link renders and opens Swagger UI**
+
+With the docker stack running, open `http://localhost:3000` in a browser. Confirm a `Swagger ↗`
+button appears in the top-right strip; clicking it opens `http://localhost:8085/swagger-ui/index.html`
+in a new tab showing the Swagger UI. (The nginx `ui` service serves `test-ui/` directly — no rebuild
+needed; a browser refresh picks up the edited file.)
+
+- [ ] **Step 3: Commit**
+
+```powershell
+git add test-ui/index.html
+git commit -m "feat(test-ui): add Swagger UI link to dashboard topbar"
+```
+
+(End the commit message body with the standard `Co-Authored-By` trailer used in this repo.)
+
+---
+
 ## Self-Review
 
 **1. Spec coverage:**
@@ -194,6 +240,7 @@ Expected: the Swagger UI loads, shows the title/version, and lists the controlle
   existing test harness"): automated as a bean unit test (Task 1) + manual endpoint 200/title
   check (Task 2). The "Testing approach" section documents the rationale. ✓
 - "Verification: compile green, suite green, optional manual boot" → Task 1 Steps 4–5, Task 2. ✓
+- "test-ui Swagger link" (added per user request) → Task 3. ✓
 
 **2. Placeholder scan:** No TBD/TODO; all code blocks complete; all commands have expected output. ✓
 

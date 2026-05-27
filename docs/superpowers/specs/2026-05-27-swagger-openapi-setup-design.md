@@ -70,6 +70,15 @@ public class OpenApiConfig {
 
 Metadata values (title / `1.0.0` / description) are the approved defaults.
 
+### Component: `test-ui/index.html` (modify)
+
+Add one `Swagger ↗` anchor to the topbar `.svc-strip`, beside the existing `Traces ↗` link,
+pointing at the device-asset Swagger UI (`http://localhost:8085/swagger-ui/index.html`). The
+test-ui is the static dashboard served by the nginx `ui` service on :3000. Static edit, no test
+(no HTML test harness exists); verified by loading the page. Direct `:8085` link because the
+gateway has no `/swagger-ui` route and hardcoded `localhost` matches the UI's existing
+`http://localhost:8080` gateway default.
+
 ### What does NOT change
 
 - No edits to `WebSecurityConfig` or `DockerSecurityConfig` (docker/dev-only decision).
