@@ -42,7 +42,8 @@ import io.sclera.dto.VlanDTO;
 @NamedNativeQueries({
     @NamedNativeQuery(name = "System_interface.getInterfaceStatusList", query = "SELECT interface_name as interface_out, status as interface_status FROM system_interface", resultSetMapping = "systeminterfacelistmapping"),
     @NamedNativeQuery(name = "System_interface.getVlanDiscoverPidByInterfaceName", query = "SELECT pid, timestamp FROM system_interface WHERE interface_name = ?1", resultSetMapping = "systeminterfacepidmapping"),
-    @NamedNativeQuery(name = "System_interface.upsertInterfaceStatus", query = "INSERT INTO system_interface(interface_name, status) VALUE (?1, ?2) ON DUPLICATE KEY UPDATE status = ?2", resultClass = System_interface.class),
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (interface_name) DO UPDATE SET (VALUES->EXCLUDED); VALUE->VALUES
+    @NamedNativeQuery(name = "System_interface.upsertInterfaceStatus", query = "INSERT INTO system_interface(interface_name, status) VALUES (?1, ?2) ON CONFLICT (interface_name) DO UPDATE SET status = EXCLUDED.status", resultClass = System_interface.class),
     @NamedNativeQuery(name = "System_interface.getInterfaceStatus", query = "SELECT status FROM system_interface WHERE interface_name = ?1", resultClass = System_interface.class),
     @NamedNativeQuery(name = "System_interface.updateVlanDiscoverPidByInterfaceName", query = "UPDATE system_interface SET pid = ?1, timestamp = ?2 WHERE interface_name = ?3", resultClass = System_interface.class),
     @NamedNativeQuery(name = "System_interface.deleteAllInterface", query = "DELETE from system_interface", resultClass = System_interface.class)

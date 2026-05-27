@@ -706,12 +706,13 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 
     @Modifying
     @Transactional
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED); IFNULL->COALESCE; VALUE->VALUES
     @Query(value = "INSERT INTO device (id, docker_name, docker_vdms_id, user_data_name, user_data_model, user_data_vendor, type, mac_address, ip_address,"
-            + " network_layer, serial_number, warranty, custom_fields, subsystem_parent_id, virtual_device_type, monitor, subsystem_count,created_timestamp,  created_email) VALUE (?1, ?2, ?3, ?4,?5,?6,?7,?8,?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17,?18,?19)"
-            + " ON DUPLICATE KEY UPDATE user_data_name = IFNULL(?4, user_data_name), user_data_model = IFNULL(?5,user_data_model),"
-            + " user_data_vendor = IFNULL(?6,user_data_vendor), type = IFNULL(?7, type), mac_address = IFNULL(?8, mac_address),"
-            + " ip_address = IFNULL(?9, ip_address), network_layer = IFNULL(?10, network_layer), serial_number = IFNULL(?11, serial_number),"
-            + " warranty = IFNULL(?12, warranty), custom_fields = IFNULL(?13, custom_fields)", nativeQuery = true)
+            + " network_layer, serial_number, warranty, custom_fields, subsystem_parent_id, virtual_device_type, monitor, subsystem_count,created_timestamp,  created_email) VALUES (?1, ?2, ?3, ?4,?5,?6,?7,?8,?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17,?18,?19)"
+            + " ON CONFLICT (id) DO UPDATE SET user_data_name = COALESCE(EXCLUDED.user_data_name, device.user_data_name), user_data_model = COALESCE(EXCLUDED.user_data_model, device.user_data_model),"
+            + " user_data_vendor = COALESCE(EXCLUDED.user_data_vendor, device.user_data_vendor), type = COALESCE(EXCLUDED.type, device.type), mac_address = COALESCE(EXCLUDED.mac_address, device.mac_address),"
+            + " ip_address = COALESCE(EXCLUDED.ip_address, device.ip_address), network_layer = COALESCE(EXCLUDED.network_layer, device.network_layer), serial_number = COALESCE(EXCLUDED.serial_number, device.serial_number),"
+            + " warranty = COALESCE(EXCLUDED.warranty, device.warranty), custom_fields = COALESCE(EXCLUDED.custom_fields, device.custom_fields)", nativeQuery = true)
     void upsertVirtualDeviceByAssetMapper(String id, String docker_name, String vdms_id, String user_data_name, String user_data_model, String user_data_vendor,
                                           String type, String mac_address, String ip_address, String network_layer, String serial_number, String warranty,
                                           String custom_fields, String subsystem_parent_id, Integer virtual_device_type, Integer monitor, Integer subsystem_count,

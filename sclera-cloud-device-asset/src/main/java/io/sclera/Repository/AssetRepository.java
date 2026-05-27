@@ -134,7 +134,8 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
 
     @Modifying
     @Transactional
-    @Query(value = "INSERT INTO asset(id,display_name,description,type,mac_address,model,vendor,ip_address,network_layer,serial_number,warranty,original_keys,custom_fields,subsystem_parent_id,is_matched,matched_products,vdms_id,subsystem_count,import_type) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19) ON DUPLICATE KEY UPDATE display_name=?2, description=?3, type=?4", nativeQuery = true)
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
+    @Query(value = "INSERT INTO asset(id,display_name,description,type,mac_address,model,vendor,ip_address,network_layer,serial_number,warranty,original_keys,custom_fields,subsystem_parent_id,is_matched,matched_products,vdms_id,subsystem_count,import_type) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19) ON CONFLICT (id) DO UPDATE SET display_name=EXCLUDED.display_name, description=EXCLUDED.description, type=EXCLUDED.type", nativeQuery = true)
     void assetUpsert(String id, String display_name, String description, String type, String mac_address, String model, String vendor, String ip_address, int network_layer, String serial_number, String warranty, String original_keys, String custom_fields, String subsystem_parent_id, boolean is_matched, String matched_products, String vdms, int subsystem_count, String import_type);
 
 

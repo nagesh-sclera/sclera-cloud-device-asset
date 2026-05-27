@@ -52,10 +52,11 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
     // Upsert method to insert or update technician details
     @Modifying
     @Transactional
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
     @Query(value = "INSERT INTO technician (id, email, phone, country_code, name, department, designation, time_zone, created_by, created_at, cost, unit, type, vdms_id) " +
             "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14) " +
-            "ON DUPLICATE KEY UPDATE " +
-            "email = ?2, phone = ?3, country_code = ?4, name = ?5, department = ?6, designation = ?7, time_zone = ?8, cost = ?11, unit = ?12, type = ?13", nativeQuery = true)
+            "ON CONFLICT (id) DO UPDATE SET " +
+            "email = EXCLUDED.email, phone = EXCLUDED.phone, country_code = EXCLUDED.country_code, name = EXCLUDED.name, department = EXCLUDED.department, designation = EXCLUDED.designation, time_zone = EXCLUDED.time_zone, cost = EXCLUDED.cost, unit = EXCLUDED.unit, type = EXCLUDED.type", nativeQuery = true)
     Integer upsertTechnician(String id, String email, String phone, String countryCode, String name, String department, String designation, String timeZone, String createdBy, Long createdAt, Integer cost, String unit, String type, String vdmsId);
 
 

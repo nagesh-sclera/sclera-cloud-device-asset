@@ -48,10 +48,11 @@ public interface DeviceTechnicianAISuggestionRepository extends JpaRepository<De
 
     @Modifying
     @Transactional
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
     @Query(value = "INSERT INTO device_technician_ai_suggestion (id, device_type, technicians, vdms_id) " +
             "VALUES (?1, ?2, CAST(?3 AS JSON), ?4) " +
-            "ON DUPLICATE KEY UPDATE " +
-            "device_type = ?2, technicians = CAST(?3 AS JSON)",
+            "ON CONFLICT (id) DO UPDATE SET " +
+            "device_type = EXCLUDED.device_type, technicians = CAST(?3 AS JSON)",
             nativeQuery = true)
     Integer upsertTechnicianSuggestion(String id, String deviceType, String technicians, String vdmsId);
 }

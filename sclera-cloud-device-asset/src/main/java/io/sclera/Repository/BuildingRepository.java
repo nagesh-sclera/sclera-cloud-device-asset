@@ -38,7 +38,8 @@ public interface BuildingRepository extends JpaRepository<Building, String>{
 
 	@Modifying
 	@Transactional
-	@Query(value = "INSERT INTO building(id, name, vdms_id, code, updated_timestamp) VALUES(?1, ?2, ?3, ?4, ?5) ON DUPLICATE KEY UPDATE name = ?2, code = ?4, updated_timestamp = ?5 ", nativeQuery = true)
+	// PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
+	@Query(value = "INSERT INTO building(id, name, vdms_id, code, updated_timestamp) VALUES(?1, ?2, ?3, ?4, ?5) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, code = EXCLUDED.code, updated_timestamp = EXCLUDED.updated_timestamp", nativeQuery = true)
 	int upsertBuildingsByVdmsId(String id, String name, String vdms_id, String code, BigInteger updated_timestamp);
 
 	@Query(nativeQuery = true)

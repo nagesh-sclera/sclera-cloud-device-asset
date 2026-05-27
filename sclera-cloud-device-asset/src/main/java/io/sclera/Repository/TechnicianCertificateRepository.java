@@ -43,10 +43,11 @@ public interface TechnicianCertificateRepository extends JpaRepository<Technicia
 
     @Modifying
     @Transactional
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
     @Query(value = "INSERT INTO technician_certificate (id, name, type, url, technician_id) " +
             "VALUES (?1, ?2, ?3, ?4, ?5) " +
-            "ON DUPLICATE KEY UPDATE " +
-            "name = ?2, type = ?3, url = ?4"
+            "ON CONFLICT (id) DO UPDATE SET " +
+            "name = EXCLUDED.name, type = EXCLUDED.type, url = EXCLUDED.url"
             , nativeQuery = true)
     Integer upsertTechnicianCertificate(String id, String name, String type, String url, String technicianId);
 

@@ -25,8 +25,9 @@ public interface SystemInterfaceRepository  extends JpaRepository<System_interfa
 	
 	@Modifying
 	@Transactional
-	@Query(value = "INSERT INTO system_interface(interface_name, status) VALUE (?1 , ?2)"
-			+ "ON DUPLICATE KEY UPDATE status = ?2", nativeQuery = true)
+	// PG-port: ON DUPLICATE KEY -> ON CONFLICT (interface_name) DO UPDATE SET (VALUES->EXCLUDED); VALUE->VALUES
+	@Query(value = "INSERT INTO system_interface(interface_name, status) VALUES (?1 , ?2) "
+			+ "ON CONFLICT (interface_name) DO UPDATE SET status = EXCLUDED.status", nativeQuery = true)
 	void upsertInterfaceStatus(String interface_name, String interface_status);
 
 	

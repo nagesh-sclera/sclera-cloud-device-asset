@@ -4,18 +4,21 @@ package io.sclera.models;
 import io.sclera.dto.TechnicianAvailabilityDTO;
 import jakarta.persistence.*;
 
-@SqlResultSetMapping(name = "technicianAvailabilityMapping", classes = @ConstructorResult(targetClass = TechnicianAvailabilityDTO.class, columns = {@ColumnResult(name = "id", type = String.class), @ColumnResult(name = "start_date", type = Long.class), @ColumnResult(name = "end_date", type = Long.class), @ColumnResult(name = "start_time", type = String.class), @ColumnResult(name = "end_time", type = String.class), @ColumnResult(name = "is_all_day", type = Boolean.class), @ColumnResult(name = "frequency", type = String.class), @ColumnResult(name = "`condition`", type = String.class), @ColumnResult(name = "technician_id", type = String.class)}))
+// PG-port: backtick removed from ColumnResult name (condition is not reserved in PG)
+@SqlResultSetMapping(name = "technicianAvailabilityMapping", classes = @ConstructorResult(targetClass = TechnicianAvailabilityDTO.class, columns = {@ColumnResult(name = "id", type = String.class), @ColumnResult(name = "start_date", type = Long.class), @ColumnResult(name = "end_date", type = Long.class), @ColumnResult(name = "start_time", type = String.class), @ColumnResult(name = "end_time", type = String.class), @ColumnResult(name = "is_all_day", type = Boolean.class), @ColumnResult(name = "frequency", type = String.class), @ColumnResult(name = "condition", type = String.class), @ColumnResult(name = "technician_id", type = String.class)}))
 @NamedNativeQueries({
-    @NamedNativeQuery(name = "TechnicianAvailability.getAllTechnicianAvailability", query = "SELECT id, start_date, end_date, start_time, end_time, is_all_day, frequency, `condition`, technician_id FROM technician_availability", resultSetMapping = "technicianAvailabilityMapping"),
-    @NamedNativeQuery(name = "TechnicianAvailability.getTechnicianAvailabilityById", query = "SELECT id, start_date, end_date, start_time, end_time, is_all_day, frequency, `condition`, technician_id FROM technician_availability WHERE id = ?1", resultSetMapping = "technicianAvailabilityMapping"),
-    @NamedNativeQuery(name = "TechnicianAvailability.getTechnicianAvailabilityInRange", query = "SELECT id, start_date, end_date, start_time, end_time, is_all_day, frequency, `condition`, technician_id FROM technician_availability WHERE technician_id = ?1 AND ((start_time >= ?2 AND start_time <= ?3) OR (end_time >= ?2 AND end_time <= ?3))", resultSetMapping = "technicianAvailabilityMapping"),
-    @NamedNativeQuery(name = "TechnicianAvailability.createTechnicianAvailability", query = "INSERT INTO technician_availability (id, start_date, end_date, start_time, end_time, is_all_day, frequency, `condition`, technician_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)", resultClass = TechnicianAvailability.class),
-    @NamedNativeQuery(name = "TechnicianAvailability.updateTechnicianAvailability", query = "UPDATE technician_availability SET start_date = ?2, end_date = ?3, start_time = ?4, end_time = ?5, is_all_day = ?6, frequency = ?7, `condition` = ?8, technician_id = ?9 WHERE id = ?1", resultClass = TechnicianAvailability.class),
+    // PG-port: backticks removed from condition column (condition is not reserved in PG)
+    @NamedNativeQuery(name = "TechnicianAvailability.getAllTechnicianAvailability", query = "SELECT id, start_date, end_date, start_time, end_time, is_all_day, frequency, condition, technician_id FROM technician_availability", resultSetMapping = "technicianAvailabilityMapping"),
+    @NamedNativeQuery(name = "TechnicianAvailability.getTechnicianAvailabilityById", query = "SELECT id, start_date, end_date, start_time, end_time, is_all_day, frequency, condition, technician_id FROM technician_availability WHERE id = ?1", resultSetMapping = "technicianAvailabilityMapping"),
+    @NamedNativeQuery(name = "TechnicianAvailability.getTechnicianAvailabilityInRange", query = "SELECT id, start_date, end_date, start_time, end_time, is_all_day, frequency, condition, technician_id FROM technician_availability WHERE technician_id = ?1 AND ((start_time >= ?2 AND start_time <= ?3) OR (end_time >= ?2 AND end_time <= ?3))", resultSetMapping = "technicianAvailabilityMapping"),
+    @NamedNativeQuery(name = "TechnicianAvailability.createTechnicianAvailability", query = "INSERT INTO technician_availability (id, start_date, end_date, start_time, end_time, is_all_day, frequency, condition, technician_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)", resultClass = TechnicianAvailability.class),
+    @NamedNativeQuery(name = "TechnicianAvailability.updateTechnicianAvailability", query = "UPDATE technician_availability SET start_date = ?2, end_date = ?3, start_time = ?4, end_time = ?5, is_all_day = ?6, frequency = ?7, condition = ?8, technician_id = ?9 WHERE id = ?1", resultClass = TechnicianAvailability.class),
     @NamedNativeQuery(name = "TechnicianAvailability.findExistingTechnicianAvailabilityByIds", query = "SELECT id FROM technician_availability WHERE id IN ?1", resultClass = TechnicianAvailability.class),
     @NamedNativeQuery(name = "TechnicianAvailability.deleteTechnicianAvailabilityByIds", query = "DELETE FROM technician_availability WHERE id IN ?1", resultClass = TechnicianAvailability.class),
     @NamedNativeQuery(name = "TechnicianAvailability.deleteTechnicianAvailabilityByTechnicianIds", query = "DELETE FROM technician_availability WHERE technician_id IN ?1", resultClass = TechnicianAvailability.class),
     @NamedNativeQuery(name = "TechnicianAvailability.deleteTechnicianAvailabilityById", query = "DELETE FROM technician_availability WHERE id = ?1", resultClass = TechnicianAvailability.class),
-    @NamedNativeQuery(name = "TechnicianAvailability.upsertTechnicianAvailability", query = "INSERT INTO technician_availability (id, start_date, end_date, start_time, end_time, is_all_day, frequency, `condition`, technician_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9) ON DUPLICATE KEY UPDATE start_date = ?2, end_date = ?3, start_time = ?4, end_time = ?5, is_all_day = ?6, frequency = ?7, `condition` = ?8", resultClass = TechnicianAvailability.class)
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED); backticks removed (condition is not reserved in PG)
+    @NamedNativeQuery(name = "TechnicianAvailability.upsertTechnicianAvailability", query = "INSERT INTO technician_availability (id, start_date, end_date, start_time, end_time, is_all_day, frequency, condition, technician_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9) ON CONFLICT (id) DO UPDATE SET start_date = EXCLUDED.start_date, end_date = EXCLUDED.end_date, start_time = EXCLUDED.start_time, end_time = EXCLUDED.end_time, is_all_day = EXCLUDED.is_all_day, frequency = EXCLUDED.frequency, condition = EXCLUDED.condition", resultClass = TechnicianAvailability.class)
 })
 @Entity
 public class TechnicianAvailability {
@@ -30,7 +33,8 @@ public class TechnicianAvailability {
     @Column(columnDefinition = "boolean default false")
     private Boolean isAllDay = false;
     private String frequency;
-    @Column(name = "`condition`")
+    // PG-port: backtick removed (condition is not reserved in PG)
+    @Column(name = "condition")
     private String condition;
     @ManyToOne
     @JoinColumn(name = "technician_id")

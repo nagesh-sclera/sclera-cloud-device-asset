@@ -16,7 +16,8 @@ public interface AssetDeviceMappingRepository extends JpaRepository<AssetDeviceM
 
   @Modifying
   @Transactional
-  @Query(value = "INSERT INTO asset_device_mapping(id,match_score,asset_id,device_id) VALUES(?1,?2,?3,?4) ON DUPLICATE KEY UPDATE match_score=?2", nativeQuery = true)
+  // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
+  @Query(value = "INSERT INTO asset_device_mapping(id,match_score,asset_id,device_id) VALUES(?1,?2,?3,?4) ON CONFLICT (id) DO UPDATE SET match_score=EXCLUDED.match_score", nativeQuery = true)
   void saveNewAssetMapping(String id, Integer match_score, Asset asset, Device device);
 
   @Query(value = "SELECT asset_id FROM asset_device_mapping WHERE device_id IN ?1", nativeQuery = true)

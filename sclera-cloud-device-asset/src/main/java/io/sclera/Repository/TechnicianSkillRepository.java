@@ -41,10 +41,11 @@ public interface TechnicianSkillRepository extends JpaRepository<TechnicianSkill
 
     @Modifying
     @Transactional
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
     @Query(value = "INSERT INTO technician_skill (id, name, type, rating, ranking, created_by, created_at, technician_id) " +
             "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8) " +
-            "ON DUPLICATE KEY UPDATE " +
-            "name = ?2, type = ?3, rating = ?4, ranking = ?5 "
+            "ON CONFLICT (id) DO UPDATE SET " +
+            "name = EXCLUDED.name, type = EXCLUDED.type, rating = EXCLUDED.rating, ranking = EXCLUDED.ranking"
             , nativeQuery = true)
     Integer upsertTechnicianSkill(String id, String name, String type, BigDecimal rating, Integer ranking, String createdBy, Long createdAt, String technicianId);
 

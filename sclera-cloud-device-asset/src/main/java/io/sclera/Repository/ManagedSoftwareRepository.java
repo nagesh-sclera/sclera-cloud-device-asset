@@ -19,6 +19,7 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
 
     @Modifying
     @Transactional
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
     @Query(value =
         "INSERT INTO managed_software (" +
         "id, name, application_name, application_type, url, vendor, " +
@@ -27,20 +28,20 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
         ") VALUES (" +
         "?1, ?2, ?3, ?4, ?5, ?6, ?7, " +
         "?8, ?9, ?10, ?11, ?12, ?13, ?14 " +
-        ") ON DUPLICATE KEY UPDATE " +
-        "name = COALESCE(NULLIF(?2, ''), name), " +
-        "application_name = ?3, " +
-        "application_type = ?4, " +
-        "url = ?5, " +
-        "vendor = ?6, " +
-        "subscription_id = ?7, " +
-        "subscription_type = ?8, " +
-        "unit_price = ?9, " +
-        "currency = ?10, " +
-        "subscription_start_date = ?11, " +
-        "subscription_end_date = ?12, " +
-        "status = ?13, " +
-        "application_id = ?14 ",
+        ") ON CONFLICT (id) DO UPDATE SET " +
+        "name = COALESCE(NULLIF(?2, ''), managed_software.name), " +
+        "application_name = EXCLUDED.application_name, " +
+        "application_type = EXCLUDED.application_type, " +
+        "url = EXCLUDED.url, " +
+        "vendor = EXCLUDED.vendor, " +
+        "subscription_id = EXCLUDED.subscription_id, " +
+        "subscription_type = EXCLUDED.subscription_type, " +
+        "unit_price = EXCLUDED.unit_price, " +
+        "currency = EXCLUDED.currency, " +
+        "subscription_start_date = EXCLUDED.subscription_start_date, " +
+        "subscription_end_date = EXCLUDED.subscription_end_date, " +
+        "status = EXCLUDED.status, " +
+        "application_id = EXCLUDED.application_id",
         nativeQuery = true)
     void upsertManagedSoftware(
             String id, String name, String applicationName, String applicationType, String url, String vendor,

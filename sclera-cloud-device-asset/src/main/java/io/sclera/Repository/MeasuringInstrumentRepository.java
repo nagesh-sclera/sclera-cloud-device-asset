@@ -55,8 +55,9 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
 
     @Modifying
     @Transactional
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
     @Query(value = "INSERT INTO measuring_instrument( id , type, name , description , calculation_type , attribute, parameter, category, value, unit, tags, device_id, sensor_type, sub_category, digital_twin_position, scale_type) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?17, ?18, ?19) "
-            + "ON DUPLICATE KEY UPDATE type = ?2 , name = ?3, description = ?4, calculation_type = ?5, attribute =?6 , parameter =?7, category = ?8,  unit = ?10, tags = ?11, sensor_type = ?13,show_on_map = ?14, show_on_scan = ?15, measuring_entity = ?16, sub_category = ?17, digital_twin_position = ?18, scale_type = ?19", nativeQuery = true)
+            + "ON CONFLICT (id) DO UPDATE SET type = EXCLUDED.type, name = EXCLUDED.name, description = EXCLUDED.description, calculation_type = EXCLUDED.calculation_type, attribute = EXCLUDED.attribute, parameter = EXCLUDED.parameter, category = EXCLUDED.category, unit = EXCLUDED.unit, tags = EXCLUDED.tags, sensor_type = EXCLUDED.sensor_type, show_on_map = ?14, show_on_scan = ?15, measuring_entity = ?16, sub_category = EXCLUDED.sub_category, digital_twin_position = EXCLUDED.digital_twin_position, scale_type = EXCLUDED.scale_type", nativeQuery = true)
     void upsertInstrument(String id, String type, String name, String description, String calculation_type,
                           String attribute, String parameter, String category, String value, String unit, String tags,
                           String device_id, String sensor_type, Integer show_on_map, Integer show_on_scan, String measuring_entity,
