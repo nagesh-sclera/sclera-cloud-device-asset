@@ -19,15 +19,19 @@ import io.sclera.models.MeasuringInstrument;
 public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringInstrument, String> {
 
 
+    // PG-port: JSON_EXTRACT(col,'$.k')=?N -> col::jsonb ->> 'k' = ?N (text comparison);
+    //          JSON_SET(col,'$.k',?4) -> jsonb_set(col::jsonb,'{k}',to_jsonb(CAST(?4 AS text)))::text.
+    //          attribute column is text; cast to ::jsonb for operators, cast result back to text.
+    //          Pattern validated with direct psql SELECT on jsonb literals.
     @Modifying
     @Transactional
     @Query(value = "UPDATE measuring_instrument SET attribute = "
             + "CASE "
-            + "WHEN (JSON_EXTRACT(attribute, \"$.parameter_1_protocol\") = ?1 AND JSON_EXTRACT(attribute, \"$.parameter_1_primary_id\") = ?2 AND JSON_EXTRACT(attribute, \"$.parameter_1_secondary_id\") = ?3) THEN JSON_SET(attribute, \"$.parameter_1_value\", ?4) "
-            + "WHEN (JSON_EXTRACT(attribute, \"$.parameter_2_protocol\") = ?1 AND JSON_EXTRACT(attribute, \"$.parameter_2_primary_id\") = ?2 AND JSON_EXTRACT(attribute, \"$.parameter_2_secondary_id\") = ?3) THEN JSON_SET(attribute, \"$.parameter_2_value\", ?4) "
-            + "WHEN (JSON_EXTRACT(attribute, \"$.parameter_3_protocol\") = ?1 AND JSON_EXTRACT(attribute, \"$.parameter_3_primary_id\") = ?2 AND JSON_EXTRACT(attribute, \"$.parameter_3_secondary_id\") = ?3) THEN JSON_SET(attribute, \"$.parameter_3_value\", ?4) "
-            + "WHEN (JSON_EXTRACT(attribute, \"$.parameter_4_protocol\") = ?1 AND JSON_EXTRACT(attribute, \"$.parameter_4_primary_id\") = ?2 AND JSON_EXTRACT(attribute, \"$.parameter_4_secondary_id\") = ?3) THEN JSON_SET(attribute, \"$.parameter_4_value\", ?4) "
-            + "WHEN (JSON_EXTRACT(attribute, \"$.parameter_5_protocol\") = ?1 AND JSON_EXTRACT(attribute, \"$.parameter_5_primary_id\") = ?2 AND JSON_EXTRACT(attribute, \"$.parameter_5_secondary_id\") = ?3) THEN JSON_SET(attribute, \"$.parameter_5_value\", ?4) "
+            + "WHEN (attribute::jsonb ->> 'parameter_1_protocol' = ?1 AND attribute::jsonb ->> 'parameter_1_primary_id' = ?2 AND attribute::jsonb ->> 'parameter_1_secondary_id' = ?3) THEN jsonb_set(attribute::jsonb, '{parameter_1_value}', to_jsonb(CAST(?4 AS text)))::text "
+            + "WHEN (attribute::jsonb ->> 'parameter_2_protocol' = ?1 AND attribute::jsonb ->> 'parameter_2_primary_id' = ?2 AND attribute::jsonb ->> 'parameter_2_secondary_id' = ?3) THEN jsonb_set(attribute::jsonb, '{parameter_2_value}', to_jsonb(CAST(?4 AS text)))::text "
+            + "WHEN (attribute::jsonb ->> 'parameter_3_protocol' = ?1 AND attribute::jsonb ->> 'parameter_3_primary_id' = ?2 AND attribute::jsonb ->> 'parameter_3_secondary_id' = ?3) THEN jsonb_set(attribute::jsonb, '{parameter_3_value}', to_jsonb(CAST(?4 AS text)))::text "
+            + "WHEN (attribute::jsonb ->> 'parameter_4_protocol' = ?1 AND attribute::jsonb ->> 'parameter_4_primary_id' = ?2 AND attribute::jsonb ->> 'parameter_4_secondary_id' = ?3) THEN jsonb_set(attribute::jsonb, '{parameter_4_value}', to_jsonb(CAST(?4 AS text)))::text "
+            + "WHEN (attribute::jsonb ->> 'parameter_5_protocol' = ?1 AND attribute::jsonb ->> 'parameter_5_primary_id' = ?2 AND attribute::jsonb ->> 'parameter_5_secondary_id' = ?3) THEN jsonb_set(attribute::jsonb, '{parameter_5_value}', to_jsonb(CAST(?4 AS text)))::text "
             + "ELSE attribute "
             + "END ", nativeQuery = true)
     void updateMeasuringIntrumentParametersByIds(String protocol, String primary_id, String secondary_id, String value);
@@ -83,14 +87,17 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
     void updateInstrumentValueById(String measuingInstrument_id, String value, BigInteger timestamp);
 
 
+    // PG-port: JSON_EXTRACT(col,'$.k')=?N -> col::jsonb ->> 'k' = ?N (text comparison).
+    //          attribute column is text; ::jsonb cast is on the column side (safe).
+    //          Pattern validated with direct psql SELECT on jsonb literals.
     @Modifying
     @Transactional
     @Query(value = "SELECT DISTINCT id from measuring_instrument WHERE "
-            + "(JSON_EXTRACT(attribute,\"$.parameter_1_protocol\") = ?1 AND JSON_EXTRACT(attribute,\"$.parameter_1_primary_id\") = ?2 AND JSON_EXTRACT(attribute,\"$.parameter_1_secondary_id\") = ?3) OR "
-            + "(JSON_EXTRACT(attribute,\"$.parameter_2_protocol\") = ?1 AND JSON_EXTRACT(attribute,\"$.parameter_2_primary_id\") = ?2 AND JSON_EXTRACT(attribute,\"$.parameter_2_secondary_id\") = ?3) OR "
-            + "(JSON_EXTRACT(attribute,\"$.parameter_3_protocol\") = ?1 AND JSON_EXTRACT(attribute,\"$.parameter_3_primary_id\") = ?2 AND JSON_EXTRACT(attribute,\"$.parameter_3_secondary_id\") = ?3) OR "
-            + "(JSON_EXTRACT(attribute,\"$.parameter_4_protocol\") = ?1 AND JSON_EXTRACT(attribute,\"$.parameter_4_primary_id\") = ?2 AND JSON_EXTRACT(attribute,\"$.parameter_4_secondary_id\") = ?3) OR "
-            + "(JSON_EXTRACT(attribute,\"$.parameter_5_protocol\") = ?1 AND JSON_EXTRACT(attribute,\"$.parameter_5_primary_id\") = ?2 AND JSON_EXTRACT(attribute,\"$.parameter_5_secondary_id\") = ?3) ", nativeQuery = true)
+            + "(attribute::jsonb ->> 'parameter_1_protocol' = ?1 AND attribute::jsonb ->> 'parameter_1_primary_id' = ?2 AND attribute::jsonb ->> 'parameter_1_secondary_id' = ?3) OR "
+            + "(attribute::jsonb ->> 'parameter_2_protocol' = ?1 AND attribute::jsonb ->> 'parameter_2_primary_id' = ?2 AND attribute::jsonb ->> 'parameter_2_secondary_id' = ?3) OR "
+            + "(attribute::jsonb ->> 'parameter_3_protocol' = ?1 AND attribute::jsonb ->> 'parameter_3_primary_id' = ?2 AND attribute::jsonb ->> 'parameter_3_secondary_id' = ?3) OR "
+            + "(attribute::jsonb ->> 'parameter_4_protocol' = ?1 AND attribute::jsonb ->> 'parameter_4_primary_id' = ?2 AND attribute::jsonb ->> 'parameter_4_secondary_id' = ?3) OR "
+            + "(attribute::jsonb ->> 'parameter_5_protocol' = ?1 AND attribute::jsonb ->> 'parameter_5_primary_id' = ?2 AND attribute::jsonb ->> 'parameter_5_secondary_id' = ?3) ", nativeQuery = true)
     List<String> listIdByMeasuringParameter(String protocol, String primary_id, String secondary_id);
 
     //get measuring device count
@@ -243,10 +250,14 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
     void updateInstrumentAttributeById(String measuingInstrument_id, String attribute);
 
 
+    // PG-port: JSON_SET(col, CONCAT('$.parameter_',?1,'_value'), ?2) ->
+    //          jsonb_set(col::jsonb, ARRAY['parameter_' || CAST(?1 AS text) || '_value'], to_jsonb(CAST(?2 AS text)))::text.
+    //          Dynamic path built with ARRAY[...] expression; CAST used for param-adjacent conversions (no ?N::type).
+    //          Pattern validated with direct psql SELECT on jsonb literals.
     @Modifying
     @Transactional
     @Query(value = "UPDATE measuring_instrument SET attribute = " +
-            "  JSON_SET(attribute, CONCAT('$.parameter_', ?1, '_value'), ?2) " +
+            "  jsonb_set(attribute::jsonb, ARRAY['parameter_' || CAST(?1 AS text) || '_value'], to_jsonb(CAST(?2 AS text)))::text " +
             "WHERE id = ?3", nativeQuery = true)
     Integer updateMeasuringInstrumentParametersValuesByIds(int parameterIndex, String value, String id);
 
@@ -257,14 +268,20 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
     void deleteDigitalTwinPositions(String device_id);
 
 
+    // PG-port: Nested JSON_SET with dynamic CONCAT paths ->
+    //          jsonb_set(jsonb_set(jsonb_set(col::jsonb, ARRAY[...primary...], to_jsonb(CAST(?2 AS text))),
+    //                                                    ARRAY[...secondary...], to_jsonb(CAST(?3 AS text))),
+    //                                                    ARRAY[...tertiary...], to_jsonb(CAST(?4 AS text)))::text.
+    //          CAST used for all param-adjacent conversions (no ?N::type).
+    //          Pattern validated with direct psql SELECT on jsonb literals (3-level nested jsonb_set confirmed).
     @Modifying
     @Transactional
     @Query(value = "UPDATE measuring_instrument SET attribute = " +
-            "JSON_SET(" +
-            "JSON_SET(" +
-            "JSON_SET(attribute, CONCAT('$.parameter_', ?1, '_primary_id'), ?2), " +
-            "CONCAT('$.parameter_', ?1, '_secondary_id'), ?3), " +
-            "CONCAT('$.parameter_', ?1, '_tertiary_id'), ?4) " +
+            "jsonb_set(" +
+            "jsonb_set(" +
+            "jsonb_set(attribute::jsonb, ARRAY['parameter_' || CAST(?1 AS text) || '_primary_id'], to_jsonb(CAST(?2 AS text))), " +
+            "ARRAY['parameter_' || CAST(?1 AS text) || '_secondary_id'], to_jsonb(CAST(?3 AS text))), " +
+            "ARRAY['parameter_' || CAST(?1 AS text) || '_tertiary_id'], to_jsonb(CAST(?4 AS text)))::text " +
             "WHERE id = ?5", nativeQuery = true)
     void updateMeasuringInstrumentPrimaryAndSecondaryId(int parameterIndex, String primaryId, String secondaryId, String tertiaryId, String id);
 
