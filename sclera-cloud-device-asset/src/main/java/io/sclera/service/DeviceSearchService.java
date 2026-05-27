@@ -573,8 +573,8 @@ public class DeviceSearchService {
 
                 if (searchColumn.equals("ip_address")) {
 //                    updatedSearchColumn = "INET_ATON(" + updatedSearchColumn + ")";
-                    // PG-gap: INET_ATON is MySQL-only; PG equivalent is inet(col) but type differs — marking gap
-                    updatedSearchColumn = "(" + updatedSearchColumn + " IS NULL)," + updatedSearchColumn + " "; // PG-gap: ISNULL->IS NULL; INET_ATON removed (MySQL-only)
+                    // PG-port: INET_ATON(col) -> col::inet for numeric IP ordering (column cast)
+                    updatedSearchColumn = "(" + updatedSearchColumn + " IS NULL)," + updatedSearchColumn + "::inet "; // PG-port: ISNULL->IS NULL; INET_ATON(col)->col::inet for numeric IP sort (column cast, Hibernate-safe; throws on invalid IP string)
                 } else {
                     // PG-port: ISNULL(x) -> (x IS NULL)
                     updatedSearchColumn = "(" + updatedSearchColumn + " IS NULL)," + updatedSearchColumn + " ";
@@ -1648,8 +1648,8 @@ public class DeviceSearchService {
                         .append("'");
             } else {
                 if (searchColumn.equals("ip_address")) {
-                    // PG-gap: INET_ATON is MySQL-only; PG uses inet() but ordering semantics differ
-                    updatedSearchColumn = "(" + updatedSearchColumn + " IS NULL)," + updatedSearchColumn + " "; // PG-gap: ISNULL->IS NULL; INET_ATON removed (MySQL-only)
+                    // PG-port: INET_ATON(col) -> col::inet for numeric IP ordering (column cast)
+                    updatedSearchColumn = "(" + updatedSearchColumn + " IS NULL)," + updatedSearchColumn + "::inet "; // PG-port: ISNULL->IS NULL; INET_ATON(col)->col::inet for numeric IP sort (column cast, Hibernate-safe; throws on invalid IP string)
                 } else {
                     // PG-port: ISNULL(x) -> (x IS NULL)
                     updatedSearchColumn = "(" + updatedSearchColumn + " IS NULL)," + updatedSearchColumn + " = '',  " + updatedSearchColumn + " ";
