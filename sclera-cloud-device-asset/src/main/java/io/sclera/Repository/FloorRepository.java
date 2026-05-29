@@ -30,7 +30,7 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	
 	@Modifying
 	@Transactional
-	@Query(value = "INSERT INTO floor(id,name,initial_position,image_url,building_id,angle) VALUE(?1,?2,?3,?4,?5,?6)" , nativeQuery = true)
+	@Query(value = "INSERT INTO floor(id,name,initial_position,image_url,building_id,angle) VALUES(?1,?2,?3,?4,?5,?6)" , nativeQuery = true)
 	void addFloorByBuildingId(String floor_id, String name, String initial_position ,String image_url ,String building_id, String angle);
 	
 	//Get floor ids not tagged to a location
@@ -48,7 +48,7 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 
 	@Modifying
 	@Transactional
-	@Query(value = "INSERT INTO floor(id,name,initial_position,image_url,building_id,angle,updated_timestamp) VALUE(?1,?2,?3,?4,?5,?6,?7)" , nativeQuery = true)
+	@Query(value = "INSERT INTO floor(id,name,initial_position,image_url,building_id,angle,updated_timestamp) VALUES(?1,?2,?3,?4,?5,?6,?7)" , nativeQuery = true)
 	int addFloorByBuildingId(String floor_id, String name, String initial_position ,String image_url ,String building_id, Integer angle, BigInteger timestamp);
 
 	@Modifying

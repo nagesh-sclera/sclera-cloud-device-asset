@@ -217,7 +217,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
 
     @Modifying
     @Transactional
-    @Query(value = "INSERT INTO measuring_instrument_location (measuring_instrument_id , location_id) VALUE (?1,?2)", nativeQuery = true)
+    @Query(value = "INSERT INTO measuring_instrument_location (measuring_instrument_id , location_id) VALUES (?1,?2)", nativeQuery = true)
     void upsertMeasuringInstrumentLocations(String measuring_instrument_id, String location_id);
 
     @Modifying

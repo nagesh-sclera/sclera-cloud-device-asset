@@ -47,7 +47,7 @@ public interface MediaRepository extends JpaRepository<Media, String> {
 
     @Modifying
     @Transactional
-    @Query(value = "INSERT INTO device_media (media_id , device_id) VALUE (?1,?2)", nativeQuery = true)
+    @Query(value = "INSERT INTO device_media (media_id , device_id) VALUES (?1,?2)", nativeQuery = true)
     void tagMediaToDevice(String id, String device_id);
 
     @Modifying

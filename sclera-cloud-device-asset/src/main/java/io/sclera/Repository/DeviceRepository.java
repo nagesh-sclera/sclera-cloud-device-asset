@@ -40,14 +40,14 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     @Transactional
     @Query(value = "INSERT INTO device(id, docker_vdms_id, docker_name, ip_address, status, mac_address, last_seen_on, display_name, vendor, created_timestamp, user_data_name, type, description, custom_fields, created_email,asset_group) VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9,?10,?11,?12,?13,?14,?15,?16)", nativeQuery = true)
     void insertDevice(String id, String vdms_id, String docker_name, String ip_address, Integer status,
-                      String mac_address, String last_seen_on, String display_name, String vendor, BigInteger created_timestamp,
+                      String mac_address, BigInteger last_seen_on, String display_name, String vendor, BigInteger created_timestamp,
                       String user_data_name, String type, String description, String customFields, String created_email, String asset_group);
 
 
     @Modifying
     @Transactional
     @Query(value = "UPDATE device SET ip_address =?1 , status =?2  , last_seen_on = ?3,  display_name = ?4, vendor = ?5, snmp_parent = ?6  WHERE docker_vdms_id = ?7 AND docker_name =?8 AND  mac_address = ?9 ", nativeQuery = true)
-    void updateDevice(String ip_address, Integer status, String last_seen_on, String display_name, String vendor,
+    void updateDevice(String ip_address, Integer status, BigInteger last_seen_on, String display_name, String vendor,
                       String snmp_parent, String vdms_id, String docker_name, String mac_address);
 
     @Modifying
@@ -143,7 +143,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 //	@Query(value = "INSERT INTO device(id,ip_address,mac_address,user_data_name,user_data_model,user_data_vendor,type,"
 //			+ "location_id,network_layer,parent,snmp_parent,monitor,docker_name,docker_vdms_id,last_seen_on,warranty,status,"
 //			+ "email_alert, sms_alert, popup_notification, virtual_device_type, serial_number)"
-//			+ "VALUE(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21,?22)", nativeQuery = true)
+//			+ "VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21,?22)", nativeQuery = true)
 //	void addVirtualDevice(String final_device_id, String ip_address, String mac_address, String user_data_name,
 //			String user_data_model, String user_data_vendor, String type, String location_id, String network_layer,
 //			String parent, String snmp_parent, Integer monitor, String docker_name, String vdms_id, String last_seen_on,
@@ -156,7 +156,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
             + "location_id,network_layer,parent,snmp_parent,monitor,docker_name,docker_vdms_id,last_seen_on,warranty,status,"
             + "email_alert, sms_alert, popup_notification, virtual_device_type, serial_number, local_vendor_email_alert,local_vendor_sms_alert, "
             + "subsystem_parent_id, description, asset_match_status, created_timestamp, created_email,asset_group, category, sub_category, cost_value, assigned_user_email, ai_call, cost_unit, is_dnd_enabled, operational_status)"
-            + "VALUE(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21,?22, ?23, ?24, ?25, ?26, ?27, ?28,?29,?30, ?31, ?32, ?33, ?34, ?35, ?36, ?37, ?38)", nativeQuery = true)
+            + "VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21,?22, ?23, ?24, ?25, ?26, ?27, ?28,?29,?30, ?31, ?32, ?33, ?34, ?35, ?36, ?37, ?38)", nativeQuery = true)
     void addVirtualDevice(String final_device_id, String ip_address, String mac_address, String user_data_name,
                           String user_data_model, String user_data_vendor, String type, String location_id, String network_layer,
                           String parent, String snmp_parent, Integer monitor, String docker_name, String vdms_id, String last_seen_on,
@@ -424,8 +424,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     String getSubsystemParentId(String id);
 
     //get devices by ids
+    // PG-port: MySQL FIELD()->array_position; param must be a SQL array, not a Collection.
     @Query(nativeQuery = true)
-    Set<DeviceDTO> getDevicesByIdList(Set<String> device_ids);
+    Set<DeviceDTO> getDevicesByIdList(String[] device_ids);
 
     @Query(value = "SELECT id FROM device WHERE subsystem_parent_id = ?1", nativeQuery = true)
     List<String> getDevicesBySubSystemParentId(String device_id);
@@ -979,7 +980,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     @Query(value = "INSERT INTO device(id, docker_vdms_id, docker_name, ip_address, status, mac_address, last_seen_on, display_name, vendor, created_timestamp, user_data_name, type, description, "
             + " custom_fields, created_email,asset_group,onboard_status, monitor, virtual_device_type) VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9,?10,?11,?12,?13,?14,?15,?16,?17,?18, ?19)", nativeQuery = true)
     void addDevice(String id, String vdms_id, String docker_name, String ip_address, Integer status,
-                   String mac_address, String last_seen_on, String display_name, String vendor, BigInteger created_timestamp,
+                   String mac_address, BigInteger last_seen_on, String display_name, String vendor, BigInteger created_timestamp,
                    String user_data_name, String type, String description, String customFields, String created_email, String asset_group, Integer onboard_status, Integer monitor, Integer virtual_device_type);
 
     @Query(nativeQuery = true)
@@ -1082,7 +1083,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
             + "location_id,network_layer,parent,snmp_parent,monitor,docker_name,docker_vdms_id,last_seen_on,warranty,status,"
             + "email_alert, sms_alert, popup_notification, virtual_device_type, serial_number, local_vendor_email_alert,local_vendor_sms_alert, "
             + "subsystem_parent_id, description, asset_match_status, created_timestamp, created_email,asset_group, category, sub_category, cost_value, assigned_user_email, ai_call, cost_unit, is_dnd_enabled, custom_fields)"
-            + "VALUE(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21,?22, ?23, ?24, ?25, ?26, ?27, ?28,?29,?30, ?31, ?32, ?33, ?34, ?35, ?36, ?37, ?38)", nativeQuery = true)
+            + "VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21,?22, ?23, ?24, ?25, ?26, ?27, ?28,?29,?30, ?31, ?32, ?33, ?34, ?35, ?36, ?37, ?38)", nativeQuery = true)
     void moveVirtualDevice(String final_device_id, String ip_address, String mac_address, String user_data_name,
                            String user_data_model, String user_data_vendor, String type, String location_id, String network_layer,
                            String parent, String snmp_parent, Integer monitor, String docker_name, String vdms_id, String last_seen_on,

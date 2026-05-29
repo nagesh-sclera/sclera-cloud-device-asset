@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
 @Table(name = "product_details")
 public class Product_Details {
     @Id
-    private Long id;
+    private String id;
 
     @Column
     private String image_url_1;
@@ -24,8 +24,8 @@ public class Product_Details {
     @Column
     private String global_image_url_1;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
     public String getImage_url_1() { return image_url_1; }
     public void setImage_url_1(String image_url_1) { this.image_url_1 = image_url_1; }

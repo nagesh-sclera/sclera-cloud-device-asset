@@ -45,7 +45,7 @@ public interface DocumentRepository extends JpaRepository<Document, String> {
 
 	@Modifying
 	@Transactional
-	@Query(value = "INSERT INTO device_document (document_id , device_id) VALUE (?1,?2)", nativeQuery = true)
+	@Query(value = "INSERT INTO device_document (document_id , device_id) VALUES (?1,?2)", nativeQuery = true)
 	void tagDocumentToDevice(String document_id, String device_id);
 
 	@Modifying

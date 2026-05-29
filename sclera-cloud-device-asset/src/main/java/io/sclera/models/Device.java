@@ -219,8 +219,8 @@ import java.util.Set;
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE d.id IN ?1"
-                + " ORDER BY FIELD(d.id,?1)",
+                + " WHERE d.id = ANY(?1)"
+                + " ORDER BY array_position(?1, d.id)",
         resultSetMapping = "devicedtomapping"
 )
 

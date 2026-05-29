@@ -22,7 +22,7 @@ public interface BuildingRepository extends JpaRepository<Building, String>{
 	
 	@Modifying
 	@Transactional
-	@Query(value = "INSERT INTO building(id,name,vdms_id,updated_timestamp) VALUE(?1,?2,?3,?4)" , nativeQuery = true)
+	@Query(value = "INSERT INTO building(id,name,vdms_id,updated_timestamp) VALUES(?1,?2,?3,?4)" , nativeQuery = true)
 	int addBuildingByVdmsId(String building_id, String name, String vdms_id, BigInteger updated_timestamp);
 	
 	@Modifying

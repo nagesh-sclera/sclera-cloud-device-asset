@@ -69,7 +69,7 @@ services:
       "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"
     ]
     volumes:
@@ -116,7 +116,7 @@ services:
       "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"
     ]
     volumes:
@@ -147,7 +147,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:sclera-audit"
@@ -174,7 +174,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:sclera-identity"
@@ -201,7 +201,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:sclera-alerts"
@@ -228,7 +228,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:sclera-inventory"
@@ -255,7 +255,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:sclera-workorders"
@@ -282,7 +282,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:sclera-inspection"
@@ -309,7 +309,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:sclera-integrations"
@@ -336,7 +336,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:sclera-edge"
@@ -368,7 +368,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:api-gateway"

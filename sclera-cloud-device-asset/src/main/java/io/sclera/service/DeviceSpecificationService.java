@@ -582,7 +582,7 @@ public class DeviceSpecificationService {
         if (deviceIds == null || deviceIds.isEmpty()) {
             return new HashSet<>();
         }
-        return deviceRepository.getDevicesByIdList(deviceIds);
+        return deviceRepository.getDevicesByIdList(deviceIds.toArray(new String[0]));
     }
 
 }

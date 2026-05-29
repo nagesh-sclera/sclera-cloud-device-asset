@@ -522,7 +522,7 @@ public class DeviceService {
                             deviceDto.getDocker_name()) != 0) {
                         try {
                             deviceRepository.updateDevice(deviceDto.getIp_address(), deviceDto.getStatus(),
-                                    deviceDto.getLast_seen_on(), deviceDto.getDisplay_name(), deviceDto.getVendor(),
+                                    parseLastSeenOn(deviceDto.getLast_seen_on()), deviceDto.getDisplay_name(), deviceDto.getVendor(),
                                     deviceDto.getSnmp_parent(), deviceDto.getVdms_id(), deviceDto.getDocker_name(),
                                     deviceDto.getMac_address());
                             userActionLogService.addUserAction(username, "asset", "UPDATE", "A Device name:" + deviceDto.getDisplay_name() + " and id: " + deviceDto.getId() + " is updated for network " + deviceDto.getDocker_name(), "success", "asset_info", deviceDto.getId());
@@ -537,7 +537,7 @@ public class DeviceService {
                             try {
                                 deviceRepository.insertDevice(deviceDto.getId(), vdmsid,
                                         dockername, deviceDto.getIp_address(), deviceDto.getStatus(),
-                                        deviceDto.getMac_address(), deviceDto.getLast_seen_on(),
+                                        deviceDto.getMac_address(), parseLastSeenOn(deviceDto.getLast_seen_on()),
                                         deviceDto.getDisplay_name(), deviceDto.getVendor(), deviceDto.getCreated_timestamp(),
                                         deviceDto.getUser_data_name(), deviceDto.getType(), deviceDto.getDescription(), deviceDto.getCustom_fields(), username, deviceDto.getAsset_group());
                                 userActionLogService.addUserAction(username, "asset", "ADD", "A Device name: " + deviceDto.getUser_data_name() + " and id: " + deviceDto.getId() + " is added for network " + dockername, "success", "asset_info", deviceDto.getId());
@@ -5408,7 +5408,7 @@ public class DeviceService {
 
     // get devices by ids
     public Set<DeviceDTO> getDevicesByIdList(String vdms_id, Set<String> device_ids) {
-        Set<DeviceDTO> devices = deviceRepository.getDevicesByIdList(device_ids);
+        Set<DeviceDTO> devices = deviceRepository.getDevicesByIdList(device_ids.toArray(new String[0]));
         for (DeviceDTO device : devices) {
             device.setIp_addresses(this.getDeviceIPAddressByDeviceId(device.getId()));
             device.setSubsystems(new HashSet<>());
@@ -5541,7 +5541,7 @@ public class DeviceService {
 
 
     public Set<DeviceDTO> getDevicesByIds(Set<String> device_ids) {
-        Set<DeviceDTO> devices = deviceRepository.getDevicesByIdList(device_ids);
+        Set<DeviceDTO> devices = deviceRepository.getDevicesByIdList(device_ids.toArray(new String[0]));
         return devices.stream().filter(device -> (device.getAsset_match_status() != 3 && (device.getType() != null && device.getType() != ""))).collect(Collectors.toSet());
     }
 
@@ -6384,7 +6384,7 @@ public class DeviceService {
             try {
                 deviceRepository.addDevice(deviceDto.getId(), vdmsid,
                         dockername, deviceDto.getIp_address(), deviceDto.getStatus(),
-                        deviceDto.getMac_address(), deviceDto.getLast_seen_on(),
+                        deviceDto.getMac_address(), parseLastSeenOn(deviceDto.getLast_seen_on()),
                         deviceDto.getDisplay_name(), deviceDto.getVendor(), deviceDto.getCreated_timestamp(),
                         deviceDto.getUser_data_name(), deviceDto.getType(), deviceDto.getDescription(),
                         deviceDto.getCustom_fields(), username, deviceDto.getAsset_group(), deviceDto.getOnboard_status(), deviceDto.getMonitor(), deviceDto.getVirtual_device_type());
@@ -6397,10 +6397,20 @@ public class DeviceService {
             } catch (Exception e) {
                 log.error("Exception.  Params: deviceDto: {}, endpoint : {}", deviceDto, httpServletRequest.getRequestURI(), e);
                 userActionLogService.addUserAction(username, "asset", "ADD", "Unable to Add Device name: " + deviceDto.getUser_data_name() + " and id: " + deviceDto.getId() + " for network " + dockername, "failed", "asset_info", deviceDto.getId());
+                throw new RuntimeException("Failed to add device " + deviceDto.getId() + ": " + e.getMessage(), e);
             }
 
         }
         return this.getDeviceByDeviceId(username, vdmsid, dockername, deviceDto.getId());
+    }
+
+    // PG-port: device.last_seen_on is numeric; DTO ships it as String. MySQL silently coerced
+    // empty/"null"/non-numeric strings; PG rejects with 42804. Treat blank/"null"/unparseable as SQL NULL.
+    private static BigInteger parseLastSeenOn(String s) {
+        if (s == null) return null;
+        String t = s.trim();
+        if (t.isEmpty() || t.equalsIgnoreCase("null")) return null;
+        try { return new BigInteger(t); } catch (NumberFormatException e) { return null; }
     }
 
 //    public void exportFilteredDevices(HttpServletResponse response, String username, String vdmsid, String

@@ -31,7 +31,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
 
     @Modifying
     @Transactional
-    @Query(value = "INSERT INTO location(id,name,position,floor_id, area, type, updated_timestamp ) VALUE(?1,?2,?3,?4,?5,?6,?7)", nativeQuery = true)
+    @Query(value = "INSERT INTO location(id,name,position,floor_id, area, type, updated_timestamp ) VALUES(?1,?2,?3,?4,?5,?6,?7)", nativeQuery = true)
     int addLocationByFloorId(String location_id, String name, String position, String floor_id, String area, String type, BigInteger updated_timestamp);
 
 
