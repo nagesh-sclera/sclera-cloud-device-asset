@@ -3109,36 +3109,11 @@ public class Device {
     @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
     private Set<Ticket> ticket = new HashSet<>();
 
-    @OneToMany(mappedBy = "device")
-    private Set<Lorawan_Sensor> lorawan_sensor = new HashSet<>();
-
-    @OneToMany(mappedBy = "device")
-    private Set<Bacnet_Object> bacnet_object = new HashSet<>();
-
-    @OneToMany(mappedBy = "device")
-    private Set<DisruptiveSensor> disruptive_sensor = new HashSet<>();
-
     @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
     private Set<Device_IP_Address> device_ip_address = new HashSet<>();
 
-    @OneToMany(mappedBy = "device")
-    private Set<Datahoist> datahoist = new HashSet<>();
-
-    @OneToMany(mappedBy = "device")
-    private Set<MyDevicesSensor> my_devices_sensor = new HashSet<>();
-
-    @OneToMany(mappedBy = "device")
-    private Set<Monnit_Sensor> monnit_sensor = new HashSet<>();
-
-    @OneToMany(mappedBy = "device")
-    private Set<PelicanSensor> pelican_sensor = new HashSet<>();
-
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
     private Set<Snmp_Dump> snmp_dump = new HashSet<>();
-
-
-    @OneToMany(mappedBy = "device")
-    private Set<KNXGroup> knx_group = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
     private Set<SnmpObject> snmp_object = new HashSet<>();
@@ -3151,13 +3126,6 @@ public class Device {
     @ManyToMany()
     @JoinTable(name = "device_media", joinColumns = @JoinColumn(name = "device_id"), inverseJoinColumns = @JoinColumn(name = "media_id"))
     private Set<Media> media = new HashSet<>();
-
-    @ManyToMany()
-    @JoinTable(name = "device_check_list_template", joinColumns = @JoinColumn(name = "device_id"), inverseJoinColumns = @JoinColumn(name = "check_list_template_id"))
-    private Set<CheckListTemplate> check_list_template = new HashSet<>();
-
-    @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
-    private Set<CheckListRecord> check_list_record = new HashSet<>();
 
     @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
     private Set<AssetDeviceMapping> asset_device_mapping = new HashSet<>();
@@ -3172,30 +3140,11 @@ public class Device {
     @OneToOne(mappedBy = "device", cascade = CascadeType.ALL)
     private GlobalQrcode global_qrcode;
 
-    @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
-    private Set<RecordChecklist> record_checklist = new HashSet<>();
-
-    @ManyToMany()
-    @JoinTable(name = "device_global_checklist", joinColumns = @JoinColumn(name = "device_id"), inverseJoinColumns = @JoinColumn(name = "global_checklist_id"))
-    private Set<GlobalChecklist> global_checklist = new HashSet<>();
-
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
-    private Set<GlobalInspectionRelation> global_inspection_relation = new HashSet<>();
-
-    @OneToMany(mappedBy = "device")
-    private Set<DaintreeDevice> daintree_device = new HashSet<>();
-
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
     private Set<DeviceConditions> device_conditions = new HashSet<>();
 
-    @OneToMany(mappedBy = "device")
-    private Set<EcobeeSensor> ecobee_sensor = new HashSet<>();
-
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
     private Set<Specifications> specifications = new HashSet<>();
-
-    @OneToMany(mappedBy = "device")
-    private Set<ModbusRegister> modbus_register = new HashSet<>();
 
     @OneToMany(mappedBy = "device")
     private Set<SiemensAsset> siemens_asset = new HashSet<>();
@@ -3231,9 +3180,6 @@ public class Device {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
     private Set<ClientBarCode> client_barcode = new HashSet<>();
-
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
-    private Set<GlobalChecklistConditions> global_checklist_conditions = new HashSet<>();
 
     @Column(name = "cost_value", precision = 16, scale = 2)
     private BigDecimal cost_value;
@@ -3824,30 +3770,6 @@ public class Device {
         this.ticket = ticket;
     }
 
-    public Set<Lorawan_Sensor> getLorawan_sensor() {
-        return lorawan_sensor;
-    }
-
-    public void setLorawan_sensor(Set<Lorawan_Sensor> lorawan_sensor) {
-        this.lorawan_sensor = lorawan_sensor;
-    }
-
-    public Set<Bacnet_Object> getBacnet_object() {
-        return bacnet_object;
-    }
-
-    public void setBacnet_object(Set<Bacnet_Object> bacnet_object) {
-        this.bacnet_object = bacnet_object;
-    }
-
-    public Set<DisruptiveSensor> getDisruptive_sensor() {
-        return disruptive_sensor;
-    }
-
-    public void setDisruptive_sensor(Set<DisruptiveSensor> disruptive_sensor) {
-        this.disruptive_sensor = disruptive_sensor;
-    }
-
     public Set<Device_IP_Address> getDevice_ip_address() {
         return device_ip_address;
     }
@@ -3863,22 +3785,6 @@ public class Device {
     public Device(String id) {
         super();
         this.id = id;
-    }
-
-    public Set<Datahoist> getDatahoist() {
-        return datahoist;
-    }
-
-    public void setDatahoist(Set<Datahoist> datahoist) {
-        this.datahoist = datahoist;
-    }
-
-    public Set<MyDevicesSensor> getMy_devices_sensor() {
-        return my_devices_sensor;
-    }
-
-    public void setMy_devices_sensor(Set<MyDevicesSensor> my_devices_sensor) {
-        this.my_devices_sensor = my_devices_sensor;
     }
 
     public Integer getMy_devices_count() {
@@ -4034,30 +3940,6 @@ public class Device {
         this.local_vendor_sms_alert = local_vendor_sms_alert;
     }
 
-    public Set<Monnit_Sensor> getMonnit_sensor() {
-        return monnit_sensor;
-    }
-
-    public void setMonnit_sensor(Set<Monnit_Sensor> monnit_sensor) {
-        this.monnit_sensor = monnit_sensor;
-    }
-
-    public Set<PelicanSensor> getPelican_sensor() {
-        return pelican_sensor;
-    }
-
-    public void setPelican_sensor(Set<PelicanSensor> pelican_sensor) {
-        this.pelican_sensor = pelican_sensor;
-    }
-
-    public Set<KNXGroup> getKnx_group() {
-        return knx_group;
-    }
-
-    public void setKnx_group(Set<KNXGroup> knx_group) {
-        this.knx_group = knx_group;
-    }
-
     public Set<Document> getDocument() {
         return document;
     }
@@ -4074,14 +3956,6 @@ public class Device {
         this.media = media;
     }
 
-    public Set<CheckListTemplate> getCheck_list_template() {
-        return check_list_template;
-    }
-
-    public void setCheck_list_template(Set<CheckListTemplate> check_list_template) {
-        this.check_list_template = check_list_template;
-    }
-
     public String getSubsystem_parent_id() {
         return subsystem_parent_id;
     }
@@ -4096,14 +3970,6 @@ public class Device {
 
     public void setSubsystem_count(Integer subsystem_count) {
         this.subsystem_count = subsystem_count;
-    }
-
-    public Set<CheckListRecord> getCheck_list_record() {
-        return check_list_record;
-    }
-
-    public void setCheck_list_record(Set<CheckListRecord> check_list_record) {
-        this.check_list_record = check_list_record;
     }
 
     public String getCustom_fields() {
@@ -4210,22 +4076,6 @@ public class Device {
         this.global_qrcode = global_qrcode;
     }
 
-    public Set<RecordChecklist> getRecord_checklist() {
-        return record_checklist;
-    }
-
-    public void setRecord_checklist(Set<RecordChecklist> record_checklist) {
-        this.record_checklist = record_checklist;
-    }
-
-    public Set<GlobalChecklist> getGlobal_checklist() {
-        return global_checklist;
-    }
-
-    public void setGlobal_checklist(Set<GlobalChecklist> global_checklist) {
-        this.global_checklist = global_checklist;
-    }
-
     public String getRecord_checklist_status() {
         return record_checklist_status;
     }
@@ -4240,14 +4090,6 @@ public class Device {
 
     public void setRecord_checklist_count(Integer record_checklist_count) {
         this.record_checklist_count = record_checklist_count;
-    }
-
-    public Set<GlobalInspectionRelation> getGlobal_inspection_relation() {
-        return global_inspection_relation;
-    }
-
-    public void setGlobal_inspection_relation(Set<GlobalInspectionRelation> global_inspection_relation) {
-        this.global_inspection_relation = global_inspection_relation;
     }
 
 
@@ -4273,14 +4115,6 @@ public class Device {
 
     public void setQrcode_count(Integer qrcode_count) {
         this.qrcode_count = qrcode_count;
-    }
-
-    public Set<DaintreeDevice> getDaintree_device() {
-        return daintree_device;
-    }
-
-    public void setDaintree_device(Set<DaintreeDevice> daintree_device) {
-        this.daintree_device = daintree_device;
     }
 
     public String getAsset_image_url() {
@@ -4323,15 +4157,6 @@ public class Device {
         this.ecobee_status = ecobee_status;
     }
 
-    public Set<EcobeeSensor> getEcobee_sensor() {
-        return ecobee_sensor;
-    }
-
-    public void setEcobee_sensor(Set<EcobeeSensor> ecobee_sensor) {
-        this.ecobee_sensor = ecobee_sensor;
-    }
-
-
     public Set<Specifications> getSpecifications() {
         return specifications;
     }
@@ -4355,15 +4180,6 @@ public class Device {
     public void setModbus_status(String modbus_status) {
         this.modbus_status = modbus_status;
     }
-
-    public Set<ModbusRegister> getModbus_register() {
-        return modbus_register;
-    }
-
-    public void setModbus_register(Set<ModbusRegister> modbus_register) {
-        this.modbus_register = modbus_register;
-    }
-
 
     public Set<SiemensAsset> getSiemens_asset() {
         return siemens_asset;
@@ -4543,15 +4359,6 @@ public class Device {
         this.client_barcode = client_barcode;
     }
 
-    public Set<GlobalChecklistConditions> getGlobal_checklist_conditions() {
-        return global_checklist_conditions;
-    }
-
-    public void setGlobal_checklist_conditions(Set<GlobalChecklistConditions> global_checklist_conditions) {
-        this.global_checklist_conditions = global_checklist_conditions;
-    }
-
-
     public Set<Technician> getTechnician() {
         return technician;
     }
@@ -4701,33 +4508,17 @@ public class Device {
                 ", location=" + location +
                 ", history=" + history +
                 ", ticket=" + ticket +
-                ", lorawan_sensor=" + lorawan_sensor +
-                ", bacnet_object=" + bacnet_object +
-                ", disruptive_sensor=" + disruptive_sensor +
                 ", device_ip_address=" + device_ip_address +
-                ", datahoist=" + datahoist +
-                ", my_devices_sensor=" + my_devices_sensor +
-                ", monnit_sensor=" + monnit_sensor +
-                ", pelican_sensor=" + pelican_sensor +
                 ", snmp_dump=" + snmp_dump +
-                ", knx_group=" + knx_group +
                 ", snmp_object=" + snmp_object +
                 ", document=" + document +
                 ", media=" + media +
-                ", check_list_template=" + check_list_template +
-                ", check_list_record=" + check_list_record +
                 ", asset_device_mapping=" + asset_device_mapping +
                 ", measuring_instrument=" + measuring_instrument +
                 ", inventory=" + inventory +
                 ", global_qrcode=" + global_qrcode +
-                ", record_checklist=" + record_checklist +
-                ", global_checklist=" + global_checklist +
-                ", global_inspection_relation=" + global_inspection_relation +
-                ", daintree_device=" + daintree_device +
                 ", device_conditions=" + device_conditions +
-                ", ecobee_sensor=" + ecobee_sensor +
                 ", specifications=" + specifications +
-                ", modbus_register=" + modbus_register +
                 ", siemens_asset=" + siemens_asset +
                 ", device_onboard_status=" + device_onboard_status +
                 ", poly_lens_count=" + poly_lens_count +

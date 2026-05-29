@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.sclera.integrations.defaults.Defaults;
+import io.sclera.integrations.service.LorawanService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Map;
@@ -15,6 +17,9 @@ import java.util.Set;
 @RestController
 @RequestMapping("/lorawan")
 public class LorawanController {
+  @Autowired
+  LorawanService lorawanService;
+
   @GetMapping("/getDeviceIdByLorawanSensorId")
   public String getDeviceIdByLorawanSensorId(@RequestParam String id) {
     return Defaults.NULL_STRING;

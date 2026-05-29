@@ -1,27 +1,28 @@
 package io.sclera.inspection.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
+import io.sclera.inspection.service.GlobalChecklistConditionsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import io.sclera.inspection.defaults.Defaults;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @RestController
-@RequestMapping("/globalchecklistconditions")
+@RequestMapping("/globalChecklistConditions")
 public class GlobalChecklistConditionsController {
+
+  @Autowired
+  GlobalChecklistConditionsService globalChecklistConditionsService;
+
   @PostMapping("/updateGlobalChecklistConditionsDeviceAndIsRemoved")
-  public void updateGlobalChecklistConditionsDeviceAndIsRemoved(@RequestBody String ids) {
-    // no-op
+  public void updateGlobalChecklistConditionsDeviceAndIsRemoved(@RequestBody List<String> ids) {
+    globalChecklistConditionsService.updateDeviceAndIsRemoved(ids);
   }
 
   @PostMapping("/updateGlobalChecklistConditionsLocationAndIsRemoved")
-  public void updateGlobalChecklistConditionsLocationAndIsRemoved(@RequestBody String locationIds) {
-    // no-op
+  public void updateGlobalChecklistConditionsLocationAndIsRemoved(@RequestBody List<String> locationIds) {
+    globalChecklistConditionsService.updateLocationAndIsRemoved(locationIds);
   }
 }

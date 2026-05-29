@@ -64,9 +64,6 @@ public class Specifications {
     @ManyToOne
     private Device device;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "specifications")
-    private Set<ConnectedDevices> connected_devices;
-
     public String getId() {
         return id;
     }
@@ -106,14 +103,5 @@ public class Specifications {
     public void setDevice(Device device) {
         this.device = device;
     }
-
-    public Set<ConnectedDevices> getConnected_devices() {
-        return connected_devices;
-    }
-
-    public void setConnected_devices(Set<ConnectedDevices> connected_devices) {
-        this.connected_devices = connected_devices;
-    }
-
 
 }

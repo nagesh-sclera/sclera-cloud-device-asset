@@ -34,7 +34,7 @@ import java.util.Set;
 public class MyDevicesClient {
 
     private static final Logger log = LoggerFactory.getLogger(MyDevicesClient.class);
-    private static final String APP_ID = "sclera-workorders";
+    private static final String APP_ID = "sclera-integrations";
 
     private final DaprClient dapr;
 

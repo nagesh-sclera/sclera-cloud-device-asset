@@ -712,14 +712,8 @@ public class Docker {
     @OneToOne(cascade = CascadeType.ALL,mappedBy = "docker")
     private RemoteAccess remoteaccess;
 
-    @OneToMany(mappedBy = "docker",cascade = CascadeType.ALL)
-    private Set<Bacnet_Device> bacnet_device;
-
     @jakarta.persistence.Transient
     private Set<History> history;
-
-    @OneToMany(mappedBy = "docker",cascade = CascadeType.ALL)
-    private Set<KNXInterface> knx_interface;
 
     @OneToMany(mappedBy = "docker",cascade = CascadeType.ALL)
     private Set<SnmpDeviceConfiguration> snmp_device_configuration;
@@ -953,13 +947,6 @@ public class Docker {
         this.vendor_org = vendor_org;
     }
 
-    public Set<Bacnet_Device> getBacnet_device() {
-        return bacnet_device;
-    }
-
-    public void setBacnet_device(Set<Bacnet_Device> bacnet_device) {
-        this.bacnet_device = bacnet_device;
-    }
 
     public String getConfiguration_status() {
         return configuration_status;
@@ -991,14 +978,6 @@ public class Docker {
 
     public void setInterface_status(String interface_status) {
         this.interface_status = interface_status;
-    }
-
-    public Set<KNXInterface> getKnx_interface() {
-        return knx_interface;
-    }
-
-    public void setKnx_interface(Set<KNXInterface> knx_interface) {
-        this.knx_interface = knx_interface;
     }
 
     public Set<SnmpDeviceConfiguration> getSnmp_device_configuration() {

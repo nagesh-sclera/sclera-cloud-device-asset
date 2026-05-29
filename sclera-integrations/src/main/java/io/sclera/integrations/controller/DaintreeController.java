@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.sclera.integrations.defaults.Defaults;
+import io.sclera.integrations.service.DaintreeService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Map;
@@ -15,6 +17,9 @@ import java.util.Set;
 @RestController
 @RequestMapping("/daintree")
 public class DaintreeController {
+  @Autowired
+  DaintreeService daintreeService;
+
   @GetMapping("/getDeviceIdByDaintreeDeviceId")
   public String getDeviceIdByDaintreeDeviceId(@RequestParam String id) {
     return Defaults.NULL_STRING;
