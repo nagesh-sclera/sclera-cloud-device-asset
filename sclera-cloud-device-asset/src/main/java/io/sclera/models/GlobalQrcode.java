@@ -65,10 +65,11 @@ import jakarta.persistence.*;
         })
 
 
+// PG-port: IF(user_data_name IS NULL OR...)->CASE WHEN (all device-name expressions below)
 //to be removed after pagination api works
 @NamedNativeQuery(
         name = "GlobalQrcode.getGlobalQrCodeDevice",
-        query = "SELECT gq.id , gq.image_url, gq.device_id , IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name, d.docker_name , l.name as location_name, f.name as floor_name, b.name as building_name "
+        query = "SELECT gq.id , gq.image_url, gq.device_id , CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name, d.docker_name , l.name as location_name, f.name as floor_name, b.name as building_name "
                 + " FROM global_qrcode gq "
                 + " LEFT JOIN device d on d.id = gq.device_id"
                 + " LEFT JOIN location l ON l.id = d.location_id"
@@ -81,7 +82,7 @@ import jakarta.persistence.*;
 
 @NamedNativeQuery(
         name = "GlobalQrcode.getGlobalQrCodesByIds",
-        query = "SELECT gq.id , gq.image_url, gq.device_id , IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name, d.docker_name , l.name as location_name, f.name as floor_name, b.name as building_name "
+        query = "SELECT gq.id , gq.image_url, gq.device_id , CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name, d.docker_name , l.name as location_name, f.name as floor_name, b.name as building_name "
                 + " FROM global_qrcode gq "
                 + " LEFT JOIN device d on d.id = gq.device_id"
                 + " LEFT JOIN location l ON l.id = d.location_id OR l.id = gq.location_id"
@@ -92,7 +93,7 @@ import jakarta.persistence.*;
 
 @NamedNativeQuery(
         name = "GlobalQrcode.getGlobalQrcodeDeviceDetails",
-        query = "SELECT gq.id , gq.image_url, gq.device_id , IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name)  as device_name, d.docker_name ,gq.location_id, l.name as location_name, f.name as floor_name, b.name as building_name "
+        query = "SELECT gq.id , gq.image_url, gq.device_id , CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END  as device_name, d.docker_name ,gq.location_id, l.name as location_name, f.name as floor_name, b.name as building_name "
                 + " FROM global_qrcode gq "
                 + " LEFT JOIN device d on d.id = gq.device_id"
                 + " LEFT JOIN location l ON l.id = gq.location_id"
@@ -150,7 +151,7 @@ import jakarta.persistence.*;
 @NamedNativeQuery(
         name = "GlobalQrcode.getGlobalQrcodeById",
         query = "SELECT gq.id , gq.image_url, gq.device_id,"
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name, d.docker_name ,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name, d.docker_name ,"
                 + " gq.location_id, l.name as location_name, f.name as floor_name, b.name as building_name"
                 + " FROM global_qrcode gq "
                 + " LEFT JOIN device d on d.id = gq.device_id"
@@ -163,7 +164,7 @@ import jakarta.persistence.*;
 @NamedNativeQuery(
         name = "GlobalQrcode.getGlobalQrcodes",
         query = "SELECT gq.id , gq.image_url, gq.device_id, "
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " d.docker_name, gq.location_id, l.name as location_name, f.name as floor_name, b.name as building_name "
                 + " FROM global_qrcode gq "
                 + " LEFT JOIN device d on d.id = gq.device_id"
@@ -177,7 +178,7 @@ import jakarta.persistence.*;
 @NamedNativeQuery(
         name = "GlobalQrcode.getUntaggedGlobalQrcodes",
         query = "SELECT gq.id , gq.image_url, gq.device_id, "
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " d.docker_name, gq.location_id, l.name as location_name, f.name as floor_name, b.name as building_name "
                 + " FROM global_qrcode gq "
                 + " LEFT JOIN device d on d.id = gq.device_id"
@@ -193,7 +194,7 @@ import jakarta.persistence.*;
 @NamedNativeQuery(
         name = "GlobalQrcode.getGlobalQrcodeDetails",
         query = "SELECT gq.id , gq.image_url, gq.device_id, "
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " d.docker_name, gq.location_id, l.name as location_name, f.name as floor_name, b.name as building_name "
                 + " FROM global_qrcode gq "
                 + " LEFT JOIN device d on d.id = gq.device_id"
@@ -205,7 +206,7 @@ import jakarta.persistence.*;
 @NamedNativeQuery(
         name = "GlobalQrcode.getUntaggedGlobalQrcodeDetails",
         query = "SELECT gq.id , gq.image_url, gq.device_id, "
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name,"
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
                 + " d.docker_name, gq.location_id, l.name as location_name, f.name as floor_name, b.name as building_name "
                 + " FROM global_qrcode gq "
                 + " LEFT JOIN device d on d.id = gq.device_id"

@@ -4,7 +4,8 @@ package io.sclera.models;
 import jakarta.persistence.*;
 
 @NamedNativeQueries({
-    @NamedNativeQuery(name = "ApplicationUser.upsertApplicationUsers", query = "INSERT INTO application_user (id, technician_id, email, type) VALUES (?1, ?2, ?3, ?4) ON DUPLICATE KEY UPDATE technician_id = ?2, email = ?3, type = ?4", resultClass = ApplicationUser.class),
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
+    @NamedNativeQuery(name = "ApplicationUser.upsertApplicationUsers", query = "INSERT INTO application_user (id, technician_id, email, type) VALUES (?1, ?2, ?3, ?4) ON CONFLICT (id) DO UPDATE SET technician_id = EXCLUDED.technician_id, email = EXCLUDED.email, type = EXCLUDED.type", resultClass = ApplicationUser.class),
     @NamedNativeQuery(name = "ApplicationUser.clearManagedSoftwareId", query = "UPDATE application_user SET managed_software = null WHERE id IN ?1", resultClass = ApplicationUser.class),
     @NamedNativeQuery(name = "ApplicationUser.updateManagedSoftwareIdByUserIds", query = "UPDATE application_user SET managed_software = ?2 WHERE id IN ?1", resultClass = ApplicationUser.class),
     @NamedNativeQuery(name = "ApplicationUser.updateManagedSoftwareIdByUserId", query = "UPDATE application_user SET managed_software = ?2 WHERE id = ?1", resultClass = ApplicationUser.class),

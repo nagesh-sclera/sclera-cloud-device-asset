@@ -30,7 +30,7 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	
 	@Modifying
 	@Transactional
-	@Query(value = "INSERT INTO floor(id,name,initial_position,image_url,building_id,angle) VALUE(?1,?2,?3,?4,?5,?6)" , nativeQuery = true)
+	@Query(value = "INSERT INTO floor(id,name,initial_position,image_url,building_id,angle) VALUES(?1,?2,?3,?4,?5,?6)" , nativeQuery = true)
 	void addFloorByBuildingId(String floor_id, String name, String initial_position ,String image_url ,String building_id, String angle);
 	
 	//Get floor ids not tagged to a location
@@ -48,12 +48,13 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 
 	@Modifying
 	@Transactional
-	@Query(value = "INSERT INTO floor(id,name,initial_position,image_url,building_id,angle,updated_timestamp) VALUE(?1,?2,?3,?4,?5,?6,?7)" , nativeQuery = true)
+	@Query(value = "INSERT INTO floor(id,name,initial_position,image_url,building_id,angle,updated_timestamp) VALUES(?1,?2,?3,?4,?5,?6,?7)" , nativeQuery = true)
 	int addFloorByBuildingId(String floor_id, String name, String initial_position ,String image_url ,String building_id, Integer angle, BigInteger timestamp);
 
 	@Modifying
 	@Transactional
-	@Query(value = "INSERT INTO floor(id,name,initial_position ,angle ,building_id, updated_timestamp) VALUES(?1,?2,?3,?4,?5,?6) ON DUPLICATE KEY UPDATE name = ?2, updated_timestamp = ?6 " , nativeQuery = true)
+	// PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
+	@Query(value = "INSERT INTO floor(id,name,initial_position ,angle ,building_id, updated_timestamp) VALUES(?1,?2,?3,?4,?5,?6) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, updated_timestamp = EXCLUDED.updated_timestamp" , nativeQuery = true)
 	int upsertFloorByBuildingId(String floor_id, String name, String initial_position, Integer angle, String building_id, BigInteger timestamp);
 
 
@@ -99,7 +100,8 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 
 	@Modifying
 	@Transactional
-	@Query(value = "INSERT INTO floor(id,name,initial_position ,angle ,building_id, image_url, path, updated_timestamp) VALUES(?1,?2,?3,?4,?5,?6,?7,?8) ON DUPLICATE KEY UPDATE name = ?2, initial_position = ?3, angle = ?4, building_id = ?5, image_url = ?6, path = ?7, updated_timestamp = ?8 " , nativeQuery = true)
+	// PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
+	@Query(value = "INSERT INTO floor(id,name,initial_position ,angle ,building_id, image_url, path, updated_timestamp) VALUES(?1,?2,?3,?4,?5,?6,?7,?8) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, initial_position = EXCLUDED.initial_position, angle = EXCLUDED.angle, building_id = EXCLUDED.building_id, image_url = EXCLUDED.image_url, path = EXCLUDED.path, updated_timestamp = EXCLUDED.updated_timestamp" , nativeQuery = true)
 	int upsertFloorByBuildingIdsFromBackend(String floor_id, String name, String initial_position, Integer angle, String building_id, String image_url, String path, BigInteger timestamp);
 
 	@Modifying

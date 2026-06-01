@@ -154,6 +154,7 @@ import java.util.Set;
         }
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getSubsystemParentDevicesByPagination",
         query = "SELECT  d.id, d.status, d.display_name, d.last_seen_on, d.mac_address, d.vendor, d.model,"
@@ -180,12 +181,12 @@ import java.util.Set;
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE d.subsystem_parent_id IS NULL  AND ((?9 = 123) OR IF(?9 = 210 ,(d.onboard_status IS NULL OR d.onboard_status = 0 OR d.onboard_status = 1 OR d.onboard_status = 2) , ?9 = d.onboard_status))  AND (?1 = 'null' or d.docker_vdms_id = ?1) AND (?2 = 'all' or d.docker_name = ?2) "
-                + " AND (?3 IS NULL or IF(?3 = 123 , (d.virtual_device_type IS NOT NULL AND (d.virtual_device_type!= 0 AND d.virtual_device_type!= 1)), NULL))"
-                + " AND (?4 IS NULL or ?4 = d.status) AND ( ?5 = 123 or IF(?5=1 , ?5 = d.monitor , d.monitor IS NULL  or ?5 = d.monitor))"
-                + " AND ((?6 IS NULL and d.asset_match_status != 3) or IF(?6 = 3 , d.asset_match_status = ?6 , (d.asset_match_status = ?6 and d.asset_match_status != 3)))"
-                + " AND (?10 IS NULL or IF(?10 = 0, (d.assigned_user_email IS NULL or d.assigned_user_email = 'null'), ( d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null'))) "
-                + " AND IF('all' = ?11, true , assigned_user_email = ?11)"
+                + " WHERE d.subsystem_parent_id IS NULL  AND ((?9 = 123) OR CASE WHEN ?9 = 210 THEN (d.onboard_status IS NULL OR d.onboard_status = 0 OR d.onboard_status = 1 OR d.onboard_status = 2) ELSE ?9 = d.onboard_status END)  AND (?1 = 'null' or d.docker_vdms_id = ?1) AND (?2 = 'all' or d.docker_name = ?2) "
+                + " AND (?3 IS NULL or CASE WHEN ?3 = 123 THEN (d.virtual_device_type IS NOT NULL AND (d.virtual_device_type!= 0 AND d.virtual_device_type!= 1)) ELSE NULL END)"
+                + " AND (?4 IS NULL or ?4 = d.status) AND ( ?5 = 123 or CASE WHEN ?5=1 THEN ?5 = d.monitor ELSE d.monitor IS NULL  or ?5 = d.monitor END)"
+                + " AND ((?6 IS NULL and d.asset_match_status != 3) or CASE WHEN ?6 = 3 THEN d.asset_match_status = ?6 ELSE (d.asset_match_status = ?6 and d.asset_match_status != 3) END)"
+                + " AND (?10 IS NULL or CASE WHEN ?10 = 0 THEN (d.assigned_user_email IS NULL or d.assigned_user_email = 'null') ELSE ( d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null') END) "
+                + " AND CASE WHEN 'all' = ?11 THEN true ELSE assigned_user_email = ?11 END"
 //				+ " ORDER BY d.created_timestamp DESC, d.id "
                 + " ORDER BY (CASE ?6 WHEN 3 THEN d.updated_timestamp ELSE d.created_timestamp END) DESC, d.id "
                 + " LIMIT ?7  OFFSET ?8",
@@ -218,8 +219,8 @@ import java.util.Set;
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE d.id IN ?1"
-                + " ORDER BY FIELD(d.id,?1)",
+                + " WHERE d.id = ANY(?1)"
+                + " ORDER BY array_position(?1, d.id)",
         resultSetMapping = "devicedtomapping"
 )
 
@@ -409,6 +410,7 @@ import java.util.Set;
 )
 
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getfilterdevices",
         query = "SELECT  d.id, d.status, d.display_name, d.last_seen_on, d.mac_address, d.vendor, d.model,"
@@ -436,14 +438,15 @@ import java.util.Set;
                 + " LEFT JOIN building b ON f.building_id = b.id"
                 + " WHERE (?1 = 'null' or d.docker_vdms_id = ?1) AND (?2 = 'all' or d.docker_name = ?2) "
                 + " AND (?3 = 'null' or CONCAT_WS('',d.ip_address,d.display_name ,d.user_data_name, d.vendor, d.user_data_vendor, d.mac_address, l.name) LIKE CONCAT('%',?3,'%'))"
-                + " AND (?4 IS NULL or IF(?4 = 123 , (d.virtual_device_type IS NOT NULL AND (d.virtual_device_type!= 0 AND d.virtual_device_type!= 1)), NULL))"
-                + " AND (?5 IS NULL or ?5 = d.status) AND ( ?6 = 123 or IF(?6=1 , ?6 = d.monitor , d.monitor IS NULL  or ?6 = d.monitor))"
-                + " AND (?10 IS NULL or IF(?10 = 0, (d.assigned_user_email IS NULL or d.assigned_user_email = 'null'), ( d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null'))) "
-                + " AND ((?7 IS NULL and d.asset_match_status != 3) or IF(?7 = 3 , d.asset_match_status = ?7 , (d.asset_match_status = ?7 and d.asset_match_status != 3)))"
+                + " AND (?4 IS NULL or CASE WHEN ?4 = 123 THEN (d.virtual_device_type IS NOT NULL AND (d.virtual_device_type!= 0 AND d.virtual_device_type!= 1)) ELSE NULL END)"
+                + " AND (?5 IS NULL or ?5 = d.status) AND ( ?6 = 123 or CASE WHEN ?6=1 THEN ?6 = d.monitor ELSE d.monitor IS NULL  or ?6 = d.monitor END)"
+                + " AND (?10 IS NULL or CASE WHEN ?10 = 0 THEN (d.assigned_user_email IS NULL or d.assigned_user_email = 'null') ELSE ( d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null') END) "
+                + " AND ((?7 IS NULL and d.asset_match_status != 3) or CASE WHEN ?7 = 3 THEN d.asset_match_status = ?7 ELSE (d.asset_match_status = ?7 and d.asset_match_status != 3) END)"
                 + " LIMIT ?8  OFFSET ?9",
         resultSetMapping = "devicemapping"
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getSubsystemParentDevices",
         query = "SELECT  d.id, d.status, d.display_name, d.last_seen_on, d.mac_address, d.vendor, d.model,"
@@ -469,17 +472,18 @@ import java.util.Set;
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE d.subsystem_parent_id IS NULL  AND ((?7 = 123) OR IF(?7 = 0 ,(d.onboard_status IS NULL OR d.onboard_status = 0) , ?7 = d.onboard_status))  AND (?1 = 'null' or d.docker_vdms_id = ?1) AND (?2 = 'all' or d.docker_name = ?2) "
-                + " AND (?3 IS NULL or IF(?3 = 123 , (d.virtual_device_type IS NOT NULL AND (d.virtual_device_type!= 0 AND d.virtual_device_type!= 1)), NULL))"
-                + " AND (?4 IS NULL or ?4 = d.status) AND ( ?5 = 123 or IF(?5=1 , ?5 = d.monitor , d.monitor IS NULL  or ?5 = d.monitor))"
-                + " AND (?8 IS NULL or IF(?8 = 0, (d.assigned_user_email IS NULL or d.assigned_user_email = 'null'), ( d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null'))) "
-                + " AND ((?6 IS NULL and d.asset_match_status != 3) or IF(?6 = 3 , d.asset_match_status = ?6 , (d.asset_match_status = ?6 and d.asset_match_status != 3)))"
+                + " WHERE d.subsystem_parent_id IS NULL  AND ((?7 = 123) OR CASE WHEN ?7 = 0 THEN (d.onboard_status IS NULL OR d.onboard_status = 0) ELSE ?7 = d.onboard_status END)  AND (?1 = 'null' or d.docker_vdms_id = ?1) AND (?2 = 'all' or d.docker_name = ?2) "
+                + " AND (?3 IS NULL or CASE WHEN ?3 = 123 THEN (d.virtual_device_type IS NOT NULL AND (d.virtual_device_type!= 0 AND d.virtual_device_type!= 1)) ELSE NULL END)"
+                + " AND (?4 IS NULL or ?4 = d.status) AND ( ?5 = 123 or CASE WHEN ?5=1 THEN ?5 = d.monitor ELSE d.monitor IS NULL  or ?5 = d.monitor END)"
+                + " AND (?8 IS NULL or CASE WHEN ?8 = 0 THEN (d.assigned_user_email IS NULL or d.assigned_user_email = 'null') ELSE ( d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null') END) "
+                + " AND ((?6 IS NULL and d.asset_match_status != 3) or CASE WHEN ?6 = 3 THEN d.asset_match_status = ?6 ELSE (d.asset_match_status = ?6 and d.asset_match_status != 3) END)"
 //				+ " ORDER BY d.created_timestamp DESC, d.id "
                 + " ORDER BY (CASE ?6 WHEN 3 THEN d.updated_timestamp ELSE d.created_timestamp END) DESC, d.id ",
         resultSetMapping = "devicemapping"
 )
 
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getSubsystemDevicesByPagination",
         query = "SELECT  d.id, d.status, d.display_name, d.last_seen_on, d.mac_address, d.vendor, d.model,"
@@ -506,7 +510,7 @@ import java.util.Set;
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
                 + " WHERE d.subsystem_parent_id = ?1"
-                + " AND IF('all' = ?4, true , assigned_user_email = ?4)"
+                + " AND CASE WHEN 'all' = ?4 THEN true ELSE assigned_user_email = ?4 END"
                 + " ORDER BY d.created_timestamp DESC, d.id "
                 + " LIMIT ?2  OFFSET ?3",
         resultSetMapping = "devicemapping"
@@ -694,6 +698,7 @@ import java.util.Set;
         resultSetMapping = "devicelistmapping")
 
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 //Added Pagination for listDevices
 @NamedNativeQuery(
         name = "Device.listDevicesByPaginationTs",
@@ -707,7 +712,7 @@ import java.util.Set;
                 // PG-port: product_details join key p.product_id -> p.id (table has only id)
                 + " Left JOIN product_details p ON d.product_id = p.id"
                 + " WHERE (?1 = 'null' or d.docker_name = ?1) AND (?2 = 'null' or b.id = ?2) AND (?3 = 'null' or f.id = ?3) AND (?4 = 'null' or l.id = ?4) AND "
-                + "  (?5 = 3 or d.status = ?5)  AND (?8 IS NULL or IF(?8 = 123 , (d.virtual_device_type IS NOT NULL AND (d.virtual_device_type!= 0 AND d.virtual_device_type!= 1)), NULL)) AND d.monitor = 1"
+                + "  (?5 = 3 or d.status = ?5)  AND (?8 IS NULL or CASE WHEN ?8 = 123 THEN (d.virtual_device_type IS NOT NULL AND (d.virtual_device_type!= 0 AND d.virtual_device_type!= 1)) ELSE NULL END) AND d.monitor = 1"
                 + " LIMIT ?6  OFFSET ?7",
         resultSetMapping = "devicelistmapping")
 
@@ -1040,10 +1045,11 @@ import java.util.Set;
         }
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getDeviceAlertInfoByDeviceId",
         query = "SELECT d.email_alert, d.sms_alert, d.docker_vdms_id AS vdms_id, v.customer_org_id, do.vendor_org_id, d.docker_name, do.system_type, "
-                + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as device_name, d.product_id, "
+                + "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name, d.product_id, "
                 + "b.name as building, f.name as floor, l.name as location, d.monitor, "
                 + "d.local_vendor_email_alert as local_vendor_email_alert, d.local_vendor_sms_alert as local_vendor_sms_alert, "
                 + "ph.vendor_name as local_vendor_name, ph.email as local_vendor_email, ph.value as local_vendor_extension, "
@@ -1089,10 +1095,11 @@ import java.util.Set;
 )
 
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.listTopologyDevicesByDockerName",
-        query = "SELECT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.last_seen_on, d.mac_address, d.vendor, d.model, d.ip_address, l.name location, d.user_data_vendor, d.user_data_name, "
-                + "IF(d.parent = '', 'no_parent', d.parent) as parent, d.snmp_parent, d.docker_name, b.name as building, f.name as floor, d.status, d.virtual_device_type, d.type from device d "
+        query = "SELECT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.last_seen_on, d.mac_address, d.vendor, d.model, d.ip_address, l.name location, d.user_data_vendor, d.user_data_name, "
+                + "CASE WHEN d.parent = '' THEN 'no_parent' ELSE d.parent END as parent, d.snmp_parent, d.docker_name, b.name as building, f.name as floor, d.status, d.virtual_device_type, d.type from device d "
                 + "Left JOIN location l ON d.location_id = l.id "
                 + "Left JOIN floor f ON l.floor_id = f.id "
                 + "Left JOIN building b ON f.building_id = b.id "
@@ -1131,10 +1138,11 @@ import java.util.Set;
         }
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.listTopologyDevices",
-        query = "SELECT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.last_seen_on, d.mac_address, d.vendor, d.model, d.ip_address, l.name location, d.user_data_vendor, d.user_data_name, "
-                + "IF(d.parent = '', 'no_parent', d.parent) as parent, d.snmp_parent, d.docker_name, b.name as building, f.name as floor, d.status, d.virtual_device_type, d.type, d.connection_type, d.user_connection_type from device d "
+        query = "SELECT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.last_seen_on, d.mac_address, d.vendor, d.model, d.ip_address, l.name location, d.user_data_vendor, d.user_data_name, "
+                + "CASE WHEN d.parent = '' THEN 'no_parent' ELSE d.parent END as parent, d.snmp_parent, d.docker_name, b.name as building, f.name as floor, d.status, d.virtual_device_type, d.type, d.connection_type, d.user_connection_type from device d "
                 + "Left JOIN location l ON d.location_id = l.id "
                 + "Left JOIN floor f ON l.floor_id = f.id "
                 + "Left JOIN building b ON f.building_id = b.id "
@@ -1163,12 +1171,13 @@ import java.util.Set;
 )
 
 //IF(d.position IS NULL, l.position, d.position) as position
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getDevicesByType",
-        query = "SELECT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as name, l.name as location, l.id as location_id,"
-                + " d.type, d.virtual_device_type, d.status, IF(d.position IS NULL, l.position, d.position) as position,"
-                + " IF(d.bacnet_status = 'alert' OR d.lorawan_status = 'alert' OR d.disruptive_status = 'alert' OR d.my_devices_status = 'alert' OR"
-                + " d.monnit_status = 'alert' OR d.pelican_status = 'alert' OR d.knx_status = 'alert' OR d.snmp_object_status = 'alert' OR d.measuring_instrument_status = 'alert' OR d.ecobee_status = 'alert' OR d.modbus_status = 'alert', 1, 0) as sensor_alert "
+        query = "SELECT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as name, l.name as location, l.id as location_id,"
+                + " d.type, d.virtual_device_type, d.status, CASE WHEN d.position IS NULL THEN l.position ELSE d.position END as position,"
+                + " CASE WHEN d.bacnet_status = 'alert' OR d.lorawan_status = 'alert' OR d.disruptive_status = 'alert' OR d.my_devices_status = 'alert' OR"
+                + " d.monnit_status = 'alert' OR d.pelican_status = 'alert' OR d.knx_status = 'alert' OR d.snmp_object_status = 'alert' OR d.measuring_instrument_status = 'alert' OR d.ecobee_status = 'alert' OR d.modbus_status = 'alert' THEN 1 ELSE 0 END as sensor_alert "
                 + " FROM device d"
                 + " LEFT JOIN docker do ON (do.name = d.docker_name AND do.vdms_id = d.docker_vdms_id)"
                 + " LEFT JOIN location l ON d.location_id = l.id"
@@ -1177,12 +1186,13 @@ import java.util.Set;
         resultSetMapping = "devicelistbytypes"
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getDevicesByTypePagination",
-        query = "SELECT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as name, l.name as location, l.id as location_id,"
-                + " d.type, d.virtual_device_type, d.status, IF(d.position IS NULL, l.position, d.position) as position,"
-                + " IF(d.bacnet_status = 'alert' OR d.lorawan_status = 'alert' OR d.disruptive_status = 'alert' OR d.my_devices_status = 'alert' OR"
-                + " d.monnit_status = 'alert' OR d.pelican_status = 'alert' OR d.knx_status = 'alert' OR d.snmp_object_status = 'alert' OR d.measuring_instrument_status = 'alert' OR d.ecobee_status = 'alert' OR d.modbus_status = 'alert', 1, 0) as sensor_alert "
+        query = "SELECT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as name, l.name as location, l.id as location_id,"
+                + " d.type, d.virtual_device_type, d.status, CASE WHEN d.position IS NULL THEN l.position ELSE d.position END as position,"
+                + " CASE WHEN d.bacnet_status = 'alert' OR d.lorawan_status = 'alert' OR d.disruptive_status = 'alert' OR d.my_devices_status = 'alert' OR"
+                + " d.monnit_status = 'alert' OR d.pelican_status = 'alert' OR d.knx_status = 'alert' OR d.snmp_object_status = 'alert' OR d.measuring_instrument_status = 'alert' OR d.ecobee_status = 'alert' OR d.modbus_status = 'alert' THEN 1 ELSE 0 END as sensor_alert "
                 + " FROM device d"
                 + " LEFT JOIN docker do ON (do.name = d.docker_name AND do.vdms_id = d.docker_vdms_id)"
                 + " LEFT JOIN location l ON d.location_id = l.id"
@@ -1209,9 +1219,10 @@ import java.util.Set;
 )
 
 //IF(d.position IS NULL, l.position, d.position) as position
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.listDevicebyDockerIntegration",
-        query = "SELECT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, l.name as location, d.docker_name"
+        query = "SELECT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, l.name as location, d.docker_name"
                 + " FROM device d"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " WHERE (?1 = 'null' or d.docker_name = ?1) AND d.monitor = 1 AND d.asset_match_status != 3",
@@ -1292,28 +1303,30 @@ import java.util.Set;
         }
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getNetworkParentDeviceByPagination",
-        query = "SELECT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.ip_address,"
-                + " d.status, d.type, IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor,"
+        query = "SELECT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.ip_address,"
+                + " d.status, d.type, CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor,"
                 + " d.mac_address, l.name as location, d.docker_name,d.latitude, d.longitude, d.warranty, b.name as building, f.name as floor,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, d.serial_number, d.custom_fields,d.asset_group"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, d.serial_number, d.custom_fields,d.asset_group"
                 + " FROM device d"
                 + " LEFT JOIN location l ON l.id = d.location_id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE ('all' IN ?1 or d.docker_name IN ?1) AND ('all' IN ?2 or d.type IN ?2) AND ('all' IN ?6 or (IF ('other' IN ?6, (d.virtual_device_type = 2), NULL)) or (IF ('power_source' IN ?6, (d.virtual_device_type = 3 or d.virtual_device_type = 4), NULL)) or (IF ('ip' IN ?6, (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1), NULL)))"
+                + " WHERE ('all' IN ?1 or d.docker_name IN ?1) AND ('all' IN ?2 or d.type IN ?2) AND ('all' IN ?6 or (CASE WHEN 'other' IN ?6 THEN (d.virtual_device_type = 2) ELSE NULL END) or (CASE WHEN 'power_source' IN ?6 THEN (d.virtual_device_type = 3 or d.virtual_device_type = 4) ELSE NULL END) or (CASE WHEN 'ip' IN ?6 THEN (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1) ELSE NULL END))"
                 + " AND (?3 = 'null'  or CONCAT_WS('', d.display_name, d.user_data_name, d.ip_address, d.mac_address, l.name, d.docker_name, d.vendor, d.user_data_vendor,d.latitude, d.longitude, d.warranty, b.name, f.name, d.model, d.user_data_model, d.serial_number, d.custom_fields,d.type) LIKE CONCAT('%',?3,'%'))"
                 + " LIMIT ?4 OFFSET ?5",
         resultSetMapping = "parentdevicemapping")
 
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAllParentDeviceByPagination",
-        query = "SELECT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.ip_address,"
-                + " d.status, d.type, IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor,"
+        query = "SELECT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.ip_address,"
+                + " d.status, d.type, CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor,"
                 + " d.mac_address, l.name as location, d.docker_name, d.latitude, d.longitude, d.warranty, b.name as building, f.name as floor,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, d.serial_number, d.custom_fields,d.asset_group"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, d.serial_number, d.custom_fields,d.asset_group"
                 + " FROM device d"
                 + " LEFT JOIN location l ON l.id = d.location_id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
@@ -1322,12 +1335,13 @@ import java.util.Set;
                 + " LIMIT ?2 OFFSET ?3",
         resultSetMapping = "parentdevicemapping")
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.listAlldevices",
-        query = "SELECT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.ip_address,"
+        query = "SELECT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.ip_address,"
                 + " d.status, d.type, d.vendor,"
                 + " d.mac_address, l.name as location, d.docker_name, d.latitude, d.longitude, d.warranty, b.name as building, f.name as floor,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, d.serial_number, d.custom_fields,d.asset_group"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, d.serial_number, d.custom_fields,d.asset_group"
                 + " FROM device d"
                 + " LEFT JOIN location l ON l.id = d.location_id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
@@ -1336,21 +1350,22 @@ import java.util.Set;
         resultSetMapping = "parentdevicemapping"
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAllNetworkParentDeviceByPagination",
-        query = "SELECT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.ip_address,"
-                + " d.status, d.type, IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor,"
+        query = "SELECT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.ip_address,"
+                + " d.status, d.type, CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor,"
                 + " d.mac_address, l.name as location, d.docker_name,d.latitude, d.longitude, d.warranty, b.name as building, f.name as floor,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, d.serial_number, d.custom_fields,d.asset_group"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, d.serial_number, d.custom_fields,d.asset_group"
                 + " FROM device d"
                 + " LEFT JOIN location l ON l.id = d.location_id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE d.asset_match_status != 3 AND ('all' IN ?1 or d.docker_name IN ?1) AND ('all' IN ?2 or d.type IN ?2) AND ('all' IN ?6 or (IF ('other' IN ?6, (d.virtual_device_type = 2), NULL)) or (IF ('power_source' IN ?6, (d.virtual_device_type = 3 or d.virtual_device_type = 4), NULL)) or (IF ('ip' IN ?6, (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1), NULL)))"
+                + " WHERE d.asset_match_status != 3 AND ('all' IN ?1 or d.docker_name IN ?1) AND ('all' IN ?2 or d.type IN ?2) AND ('all' IN ?6 or (CASE WHEN 'other' IN ?6 THEN (d.virtual_device_type = 2) ELSE NULL END) or (CASE WHEN 'power_source' IN ?6 THEN (d.virtual_device_type = 3 or d.virtual_device_type = 4) ELSE NULL END) or (CASE WHEN 'ip' IN ?6 THEN (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1) ELSE NULL END))"
                 + " AND (?3 = 'null'  or LOWER(REGEXP_REPLACE(CONCAT_WS('', d.display_name, d.user_data_name, d.ip_address, d.mac_address, l.name, d.docker_name, d.vendor, d.user_data_vendor,d.latitude, d.longitude, d.warranty, b.name, f.name, d.model, d.user_data_model, d.serial_number, d.custom_fields,d.type), '[ -.!\t_+#~`@$%^&*()=;:<>?,/{}|\\\\ ]' , '')) LIKE CONCAT('%',?3,'%'))"
-                + " AND (?7 IS NULL OR IF(?7, d.id IN ?8 , d.id NOT IN ?8))"
-                + " AND (?9 IS NULL OR IF(?9, d.id IN ?10 , d.id NOT IN ?10))"
-                + " AND (?11 IS NULL OR IF(?11, d.id IN ?12 , d.id NOT IN ?12))"
+                + " AND (?7 IS NULL OR CASE WHEN ?7 THEN d.id IN ?8 ELSE d.id NOT IN ?8 END)"
+                + " AND (?9 IS NULL OR CASE WHEN ?9 THEN d.id IN ?10 ELSE d.id NOT IN ?10 END)"
+                + " AND (?11 IS NULL OR CASE WHEN ?11 THEN d.id IN ?12 ELSE d.id NOT IN ?12 END)"
                 + " LIMIT ?4 OFFSET ?5",
         resultSetMapping = "parentdevicemapping")
 
@@ -1427,13 +1442,14 @@ import java.util.Set;
         resultSetMapping = "assetDeviceMapping"
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getPaginatedDevices",
         query = "SELECT d.id,"
-                + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name,"
+                + "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name,"
                 + "d.mac_address,"
-                + "IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model,"
-                + "IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor,"
+                + "CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model,"
+                + "CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor,"
                 + "d.type,"
                 + "d.ip_address,"
                 + "d.network_layer,"
@@ -1461,12 +1477,13 @@ import java.util.Set;
         }
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getUntaggedProductDevicesByPagination",
         query = "SELECT d.id,"
-                + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, "
-                + "IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, "
-                + "IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor, "
+                + "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, "
+                + "CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, "
+                + "CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor, "
                 + "d.type, "
                 + "d.matched_product_ids "
                 + "FROM device d "
@@ -1475,12 +1492,13 @@ import java.util.Set;
         resultSetMapping = "assetMapping"
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAssetMapperDevicesByIdList",
         query = "SELECT d.id,"
-                + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, "
-                + "IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, "
-                + "IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor, "
+                + "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, "
+                + "CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, "
+                + "CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor, "
                 + "d.type, "
                 + "d.matched_product_ids "
                 + "FROM device d "
@@ -1488,12 +1506,13 @@ import java.util.Set;
         resultSetMapping = "assetMapping"
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAssetMapperDeviceById",
         query = "SELECT d.id,"
-                + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, "
-                + "IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, "
-                + "IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor, "
+                + "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, "
+                + "CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, "
+                + "CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor, "
                 + "d.type, "
                 + "d.matched_product_ids "
                 + "FROM device d "
@@ -1501,12 +1520,13 @@ import java.util.Set;
         resultSetMapping = "assetMapping"
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAssetMapperSubSystemDevicesById",
         query = "SELECT d.id,"
-                + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, "
-                + "IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, "
-                + "IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor, "
+                + "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, "
+                + "CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, "
+                + "CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor, "
                 + "d.type, "
                 + "d.matched_product_ids "
                 + "FROM device d "
@@ -1543,9 +1563,10 @@ import java.util.Set;
 )
 
 //list devices for snmp discovery
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAllDeviceByVdmsIdAndDockerName",
-        query = "SELECT  d.id, d.status, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as name, d.mac_address, d.vendor, d.model,"
+        query = "SELECT  d.id, d.status, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as name, d.mac_address, d.vendor, d.model,"
                 + " d.type , d.ip_address,l.name as location,"
                 + " d.docker_vdms_id AS vdms_id, d.docker_name,"
                 + " b.name as building, f.name as floor,d.asset_group"
@@ -1558,9 +1579,10 @@ import java.util.Set;
         resultSetMapping = "devicedetailsmapping"
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getDeviceDetails",
-        query = "SELECT  d.id, d.status, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as name, d.mac_address, IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor, IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model,"
+        query = "SELECT  d.id, d.status, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as name, d.mac_address, CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor, CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model,"
                 + " d.type , d.ip_address,l.name as location,"
                 + " d.docker_vdms_id AS vdms_id, d.docker_name,"
                 + " b.name as building, f.name as floor,d.asset_group"
@@ -1572,9 +1594,10 @@ import java.util.Set;
         resultSetMapping = "devicedetailsmapping"
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAllDeviceByVdmsIdAndDockerNameWithoutPagination",
-        query = "SELECT  d.id, d.status, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as name, d.mac_address, d.vendor, d.model,"
+        query = "SELECT  d.id, d.status, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as name, d.mac_address, d.vendor, d.model,"
                 + " d.type , d.ip_address,l.name as location,"
                 + " d.docker_vdms_id AS vdms_id, d.docker_name,"
                 + " b.name as building, f.name as floor,d.asset_group"
@@ -1611,10 +1634,11 @@ import java.util.Set;
         }
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getDeviceAlertInfoById",
         query = "SELECT d.id, d.docker_name, do.system_type as docker_system_type, "
-                + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as name, "
+                + "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as name, "
                 + "b.name as building, f.name as floor, l.name as location, d.monitor as device_monitor, d.product_id, p.global_image_url_1 as image_url, d.type "
                 + "FROM device d "
                 + "LEFT JOIN docker do ON d.docker_name = do.name AND d.docker_vdms_id = do.vdms_id "
@@ -1642,12 +1666,13 @@ import java.util.Set;
         }
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getRoomStatusByDeviceId",
         query = "SELECT d.status as device_status,"
-                + " IF(d.bacnet_status = 'alert' OR d.lorawan_status = 'alert' OR d.disruptive_status = 'alert' OR d.my_devices_status = 'alert' OR"
-                + " d.monnit_status = 'alert' OR d.pelican_status = 'alert' OR d.knx_status = 'alert' OR d.snmp_object_status = 'alert' OR d.measuring_instrument_status = 'alert' OR d.daintree_status = 'alert', 1, IF(d.bacnet_count > 0 OR d.lorawan_count > 0  OR d.disruptive_count > 0  OR"
-                + " d.my_devices_count > 0  OR d.monnit_count > 0  OR d.pelican_count > 0 OR d.knx_count > 0 OR d.snmp_object_count > 0 OR d.measuring_instrument_count > 0 OR d.daintree_count > 0 OR d.ecobee_count > 0 OR d.modbus_count > 0, 0, NULL)) as sensor_alert_status"
+                + " CASE WHEN d.bacnet_status = 'alert' OR d.lorawan_status = 'alert' OR d.disruptive_status = 'alert' OR d.my_devices_status = 'alert' OR"
+                + " d.monnit_status = 'alert' OR d.pelican_status = 'alert' OR d.knx_status = 'alert' OR d.snmp_object_status = 'alert' OR d.measuring_instrument_status = 'alert' OR d.daintree_status = 'alert' THEN 1 ELSE CASE WHEN d.bacnet_count > 0 OR d.lorawan_count > 0  OR d.disruptive_count > 0  OR"
+                + " d.my_devices_count > 0  OR d.monnit_count > 0  OR d.pelican_count > 0 OR d.knx_count > 0 OR d.snmp_object_count > 0 OR d.measuring_instrument_count > 0 OR d.daintree_count > 0 OR d.ecobee_count > 0 OR d.modbus_count > 0 THEN 0 ELSE NULL END END as sensor_alert_status"
                 + " FROM device d"
                 + " WHERE ('null' = ?1 or d.id = ?1) AND d.monitor = 1",
         resultSetMapping = "roomstatusdevicemapping"
@@ -1668,12 +1693,13 @@ import java.util.Set;
         }
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getRoomStatusByLocationId",
         query = "SELECT d.location_id as id, d.status, "
-                + " IF(d.bacnet_status = 'alert' OR d.lorawan_status = 'alert' OR d.disruptive_status = 'alert' OR d.my_devices_status = 'alert' OR"
-                + " d.monnit_status = 'alert' OR d.pelican_status = 'alert' OR d.knx_status = 'alert' OR d.snmp_object_status = 'alert' OR d.measuring_instrument_status = 'alert' OR d.daintree_status = 'alert', 1, IF(d.bacnet_count > 0 OR d.lorawan_count > 0  OR d.disruptive_count > 0  OR"
-                + " d.my_devices_count > 0  OR d.monnit_count > 0  OR d.pelican_count > 0 OR d.knx_count > 0 OR d.snmp_object_count > 0 OR d.measuring_instrument_count > 0  OR d.daintree_count > 0 OR d.ecobee_count > 0 OR d.modbus_count > 0, 0, NULL)) as sensorstatus"
+                + " CASE WHEN d.bacnet_status = 'alert' OR d.lorawan_status = 'alert' OR d.disruptive_status = 'alert' OR d.my_devices_status = 'alert' OR"
+                + " d.monnit_status = 'alert' OR d.pelican_status = 'alert' OR d.knx_status = 'alert' OR d.snmp_object_status = 'alert' OR d.measuring_instrument_status = 'alert' OR d.daintree_status = 'alert' THEN 1 ELSE CASE WHEN d.bacnet_count > 0 OR d.lorawan_count > 0  OR d.disruptive_count > 0  OR"
+                + " d.my_devices_count > 0  OR d.monnit_count > 0  OR d.pelican_count > 0 OR d.knx_count > 0 OR d.snmp_object_count > 0 OR d.measuring_instrument_count > 0  OR d.daintree_count > 0 OR d.ecobee_count > 0 OR d.modbus_count > 0 THEN 0 ELSE NULL END END as sensorstatus"
                 + " FROM device d"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
@@ -1712,179 +1738,188 @@ import java.util.Set;
         }
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAllRecordChecklistDevicesPagination",
-        query = "SELECT DISTINCT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.ip_address,"
-                + " d.status, d.type, IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor,"
+        query = "SELECT DISTINCT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.ip_address,"
+                + " d.status, d.type, CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor,"
                 + " d.mac_address, l.name as location, d.docker_name, d.latitude, d.longitude, d.warranty, b.name as building, f.name as floor,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, d.serial_number, d.custom_fields,"
-                + " IF(rc.device_id = d.id, 1, 0) as is_added,d.asset_group"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, d.serial_number, d.custom_fields,"
+                + " CASE WHEN rc.device_id = d.id THEN 1 ELSE 0 END as is_added,d.asset_group"
                 + " FROM device d"
                 + " LEFT JOIN record_checklist rc ON rc.device_id = d.id  AND rc.global_checklist_id IN ?6 AND rc.inspection_record_id = ?7 AND rc.is_removed = 0"
                 + " LEFT JOIN location l ON l.id = d.location_id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE d.asset_match_status != 3 AND ('all' IN ?4 or d.docker_name IN ?4) AND ('all' IN ?5 or d.type IN ?5) AND ('all' IN ?8 or (IF ('other' IN ?8, (d.virtual_device_type = 2), NULL)) or (IF ('power_source' IN ?8, (d.virtual_device_type = 3 or d.virtual_device_type = 4), NULL)) or (IF ('ip' IN ?8, (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1), NULL)))"
+                + " WHERE d.asset_match_status != 3 AND ('all' IN ?4 or d.docker_name IN ?4) AND ('all' IN ?5 or d.type IN ?5) AND ('all' IN ?8 or (CASE WHEN 'other' IN ?8 THEN (d.virtual_device_type = 2) ELSE NULL END) or (CASE WHEN 'power_source' IN ?8 THEN (d.virtual_device_type = 3 or d.virtual_device_type = 4) ELSE NULL END) or (CASE WHEN 'ip' IN ?8 THEN (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1) ELSE NULL END))"
                 + " AND (?1 = 'null'  or LOWER(REGEXP_REPLACE(CONCAT_WS('', d.display_name, d.user_data_name, d.ip_address, d.mac_address, l.name, d.docker_name, d.vendor, d.user_data_vendor,d.latitude, d.longitude, d.warranty, b.name, f.name, d.model, d.user_data_model, d.serial_number, d.custom_fields,d.type, d.description), '[ -.!\t_+#~`@$%^&*()=;:<>?,/{}|\\\\ ]' , '')) LIKE CONCAT('%',?1,'%'))"
-                + " AND (?9 IS NULL OR IF(?9, d.id IN ?10 , d.id NOT IN ?10))"
-                + " AND (?11 IS NULL OR IF(?11, d.id IN ?12 , d.id NOT IN ?12))"
-                + " AND (?13 IS NULL OR IF(?13, d.id IN ?14 , d.id NOT IN ?14))"
+                + " AND (?9 IS NULL OR CASE WHEN ?9 THEN d.id IN ?10 ELSE d.id NOT IN ?10 END)"
+                + " AND (?11 IS NULL OR CASE WHEN ?11 THEN d.id IN ?12 ELSE d.id NOT IN ?12 END)"
+                + " AND (?13 IS NULL OR CASE WHEN ?13 THEN d.id IN ?14 ELSE d.id NOT IN ?14 END)"
                 + " LIMIT ?2 OFFSET ?3",
         resultSetMapping = "isaddeddevicemapping")
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAllQrcodeDevicesPagination",
-        query = "SELECT DISTINCT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.ip_address,"
-                + " d.status, d.type, IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor,"
+        query = "SELECT DISTINCT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.ip_address,"
+                + " d.status, d.type, CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor,"
                 + " d.mac_address, l.name as location, d.docker_name, d.latitude, d.longitude, d.warranty, b.name as building, f.name as floor,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, d.serial_number, d.custom_fields,"
-                + " IF(gr.device_id = d.id, 1, 0) as is_added,d.asset_group"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, d.serial_number, d.custom_fields,"
+                + " CASE WHEN gr.device_id = d.id THEN 1 ELSE 0 END as is_added,d.asset_group"
                 + " FROM device d"
                 + " LEFT JOIN global_qrcode gr ON gr.device_id = d.id"
                 + " LEFT JOIN location l ON l.id = d.location_id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE d.asset_match_status != 3 AND ('all' IN ?4 or d.docker_name IN ?4) AND ('all' IN ?5 or d.type IN ?5) AND ('all' IN ?6 or (IF ('other' IN ?6, (d.virtual_device_type = 2), NULL)) or (IF ('power_source' IN ?6, (d.virtual_device_type = 3 or d.virtual_device_type = 4), NULL)) or (IF ('ip' IN ?6, (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1), NULL)))"
+                + " WHERE d.asset_match_status != 3 AND ('all' IN ?4 or d.docker_name IN ?4) AND ('all' IN ?5 or d.type IN ?5) AND ('all' IN ?6 or (CASE WHEN 'other' IN ?6 THEN (d.virtual_device_type = 2) ELSE NULL END) or (CASE WHEN 'power_source' IN ?6 THEN (d.virtual_device_type = 3 or d.virtual_device_type = 4) ELSE NULL END) or (CASE WHEN 'ip' IN ?6 THEN (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1) ELSE NULL END))"
                 + " AND (?1 = 'null'  or CONCAT_WS('', d.display_name, d.user_data_name, d.ip_address, d.mac_address, l.name, d.docker_name, d.vendor, d.user_data_vendor,d.latitude, d.longitude, d.warranty, b.name, f.name, d.model, d.user_data_model, d.serial_number, d.custom_fields,d.type, d.description) LIKE CONCAT('%',?1,'%'))"
-                + " AND (?7 IS NULL OR IF(?7, d.id IN ?8 , d.id NOT IN ?8))"
-                + " AND (?9 IS NULL OR IF(?9, d.id IN ?10 , d.id NOT IN ?10))"
-                + " AND (?11 IS NULL OR IF(?11, d.id IN ?12 , d.id NOT IN ?12))"
+                + " AND (?7 IS NULL OR CASE WHEN ?7 THEN d.id IN ?8 ELSE d.id NOT IN ?8 END)"
+                + " AND (?9 IS NULL OR CASE WHEN ?9 THEN d.id IN ?10 ELSE d.id NOT IN ?10 END)"
+                + " AND (?11 IS NULL OR CASE WHEN ?11 THEN d.id IN ?12 ELSE d.id NOT IN ?12 END)"
                 + " LIMIT ?2 OFFSET ?3",
         resultSetMapping = "isaddeddevicemapping")
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAllBarCodeDevicesPagination",
-        query = "SELECT DISTINCT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.ip_address,"
-                + " d.status, d.type, IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor,"
+        query = "SELECT DISTINCT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.ip_address,"
+                + " d.status, d.type, CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor,"
                 + " d.mac_address, l.name as location, d.docker_name, d.latitude, d.longitude, d.warranty, b.name as building, f.name as floor,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, d.serial_number, d.custom_fields,"
-                + " IF(gr.device_id = d.id, 1, 0) as is_added,d.asset_group"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, d.serial_number, d.custom_fields,"
+                + " CASE WHEN gr.device_id = d.id THEN 1 ELSE 0 END as is_added,d.asset_group"
                 + " FROM device d"
                 + " LEFT JOIN client_bar_code cbc ON cbc.device_id = d.id"
                 + " LEFT JOIN location l ON l.id = d.location_id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE d.asset_match_status != 3 AND ('all' IN ?4 or d.docker_name IN ?4) AND ('all' IN ?5 or d.type IN ?5) AND ('all' IN ?6 or (IF ('other' IN ?6, (d.virtual_device_type = 2), NULL)) or (IF ('power_source' IN ?6, (d.virtual_device_type = 3 or d.virtual_device_type = 4), NULL)) or (IF ('ip' IN ?6, (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1), NULL)))"
+                + " WHERE d.asset_match_status != 3 AND ('all' IN ?4 or d.docker_name IN ?4) AND ('all' IN ?5 or d.type IN ?5) AND ('all' IN ?6 or (CASE WHEN 'other' IN ?6 THEN (d.virtual_device_type = 2) ELSE NULL END) or (CASE WHEN 'power_source' IN ?6 THEN (d.virtual_device_type = 3 or d.virtual_device_type = 4) ELSE NULL END) or (CASE WHEN 'ip' IN ?6 THEN (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1) ELSE NULL END))"
                 + " AND (?1 = 'null'  or CONCAT_WS('', d.display_name, d.user_data_name, d.ip_address, d.mac_address, l.name, d.docker_name, d.vendor, d.user_data_vendor,d.latitude, d.longitude, d.warranty, b.name, f.name, d.model, d.user_data_model, d.serial_number, d.custom_fields,d.type, d.description) LIKE CONCAT('%',?1,'%'))"
-                + " AND (?7 IS NULL OR IF(?7, d.id IN ?8 , d.id NOT IN ?8))"
-                + " AND (?9 IS NULL OR IF(?9, d.id IN ?10 , d.id NOT IN ?10))"
-                + " AND (?11 IS NULL OR IF(?11, d.id IN ?12 , d.id NOT IN ?12))"
+                + " AND (?7 IS NULL OR CASE WHEN ?7 THEN d.id IN ?8 ELSE d.id NOT IN ?8 END)"
+                + " AND (?9 IS NULL OR CASE WHEN ?9 THEN d.id IN ?10 ELSE d.id NOT IN ?10 END)"
+                + " AND (?11 IS NULL OR CASE WHEN ?11 THEN d.id IN ?12 ELSE d.id NOT IN ?12 END)"
                 + " LIMIT ?2 OFFSET ?3",
         resultSetMapping = "isaddeddevicemapping")
 
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAllChecklistDevicesPagination",
-        query = "SELECT DISTINCT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.ip_address,"
-                + " d.status, d.type, IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor,"
+        query = "SELECT DISTINCT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.ip_address,"
+                + " d.status, d.type, CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor,"
                 + " d.mac_address, l.name as location, d.docker_name, d.latitude, d.longitude, d.warranty, b.name as building, f.name as floor,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, d.serial_number, d.custom_fields,"
-                + " IF(dgc.device_id = d.id, 1, 0) as is_added,d.asset_group"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, d.serial_number, d.custom_fields,"
+                + " CASE WHEN dgc.device_id = d.id THEN 1 ELSE 0 END as is_added,d.asset_group"
                 + " FROM device d"
                 + " LEFT JOIN device_global_checklist dgc ON dgc.device_id = d.id AND dgc.global_checklist_id IN ?6 AND dgc.is_removed = 0"
                 + " LEFT JOIN location l ON l.id = d.location_id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE d.asset_match_status != 3 AND ('all' IN ?4 or d.docker_name IN ?4) AND ('all' IN ?5 or d.type IN ?5) AND ('all' IN ?7 or (IF ('other' IN ?7, (d.virtual_device_type = 2), NULL)) or (IF ('power_source' IN ?7, (d.virtual_device_type = 3 or d.virtual_device_type = 4), NULL)) or (IF ('ip' IN ?7, (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1), NULL)))"
+                + " WHERE d.asset_match_status != 3 AND ('all' IN ?4 or d.docker_name IN ?4) AND ('all' IN ?5 or d.type IN ?5) AND ('all' IN ?7 or (CASE WHEN 'other' IN ?7 THEN (d.virtual_device_type = 2) ELSE NULL END) or (CASE WHEN 'power_source' IN ?7 THEN (d.virtual_device_type = 3 or d.virtual_device_type = 4) ELSE NULL END) or (CASE WHEN 'ip' IN ?7 THEN (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1) ELSE NULL END))"
                 + " AND (?1 = 'null'  or LOWER(REGEXP_REPLACE(CONCAT_WS('', d.display_name, d.user_data_name, d.ip_address, d.mac_address, l.name, d.docker_name, d.vendor, d.user_data_vendor,d.latitude, d.longitude, d.warranty, b.name, f.name, d.model, d.user_data_model, d.serial_number, d.custom_fields,d.type, d.description), '[ -.!\t_+#~`@$%^&*()=;:<>?,/{}|\\\\ ]' , '')) LIKE CONCAT('%',?1,'%'))"
-                + " AND (?8 IS NULL OR IF(?8, d.id IN ?9 , d.id NOT IN ?9))"
-                + " AND (?10 IS NULL OR IF(?10, d.id IN ?11 , d.id NOT IN ?11))"
-                + " AND (?12 IS NULL OR IF(?12, d.id IN ?13 , d.id NOT IN ?13))"
+                + " AND (?8 IS NULL OR CASE WHEN ?8 THEN d.id IN ?9 ELSE d.id NOT IN ?9 END)"
+                + " AND (?10 IS NULL OR CASE WHEN ?10 THEN d.id IN ?11 ELSE d.id NOT IN ?11 END)"
+                + " AND (?12 IS NULL OR CASE WHEN ?12 THEN d.id IN ?13 ELSE d.id NOT IN ?13 END)"
                 + " LIMIT ?2 OFFSET ?3",
         resultSetMapping = "isaddeddevicemapping")
 
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAllInspectionDevicesPagination",
-        query = "SELECT DISTINCT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.ip_address,"
-                + " d.status, d.type, IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor,"
+        query = "SELECT DISTINCT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.ip_address,"
+                + " d.status, d.type, CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor,"
                 + " d.mac_address, l.name as location, d.docker_name, d.latitude, d.longitude, d.warranty, b.name as building, f.name as floor,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, d.serial_number, d.custom_fields,"
-                + " IF(gir.device_id = d.id, 1, 0) as is_added,d.asset_group"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, d.serial_number, d.custom_fields,"
+                + " CASE WHEN gir.device_id = d.id THEN 1 ELSE 0 END as is_added,d.asset_group"
                 + " FROM device d"
                 + " LEFT JOIN global_inspection_relation gir ON gir.device_id = d.id  AND gir.global_checklist_id IN ?6 AND gir.global_inspection_record_id = ?7 AND gir.is_removed = 0"
                 + " LEFT JOIN location l ON l.id = d.location_id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE d.asset_match_status != 3 AND ('all' IN ?4 or d.docker_name IN ?4) AND ('all' IN ?5 or d.type IN ?5) AND ('all' IN ?8 or (IF ('other' IN ?8, (d.virtual_device_type = 2), NULL)) or (IF ('power_source' IN ?8, (d.virtual_device_type = 3 or d.virtual_device_type = 4), NULL)) or (IF ('ip' IN ?8, (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1), NULL)))"
+                + " WHERE d.asset_match_status != 3 AND ('all' IN ?4 or d.docker_name IN ?4) AND ('all' IN ?5 or d.type IN ?5) AND ('all' IN ?8 or (CASE WHEN 'other' IN ?8 THEN (d.virtual_device_type = 2) ELSE NULL END) or (CASE WHEN 'power_source' IN ?8 THEN (d.virtual_device_type = 3 or d.virtual_device_type = 4) ELSE NULL END) or (CASE WHEN 'ip' IN ?8 THEN (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1) ELSE NULL END))"
                 + " AND (?1 = 'null'  or LOWER(REGEXP_REPLACE(CONCAT_WS('', d.display_name, d.user_data_name, d.ip_address, d.mac_address, l.name, d.docker_name, d.vendor, d.user_data_vendor,d.latitude, d.longitude, d.warranty, b.name, f.name, d.model, d.user_data_model, d.serial_number, d.custom_fields,d.type, d.description), '[ -.!\t_+#~`@$%^&*()=;:<>?,/{}|\\\\ ]' , '')) LIKE CONCAT('%',?1,'%'))"
-                + " AND (?9 IS NULL OR IF(?9, d.id IN ?10 , d.id NOT IN ?10))"
-                + " AND (?11 IS NULL OR IF(?11, d.id IN ?12 , d.id NOT IN ?12))"
-                + " AND (?13 IS NULL OR IF(?13, d.id IN ?14 , d.id NOT IN ?14))"
+                + " AND (?9 IS NULL OR CASE WHEN ?9 THEN d.id IN ?10 ELSE d.id NOT IN ?10 END)"
+                + " AND (?11 IS NULL OR CASE WHEN ?11 THEN d.id IN ?12 ELSE d.id NOT IN ?12 END)"
+                + " AND (?13 IS NULL OR CASE WHEN ?13 THEN d.id IN ?14 ELSE d.id NOT IN ?14 END)"
                 + " LIMIT ?2 OFFSET ?3",
         resultSetMapping = "isaddeddevicemapping")
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAllChecklistDevices",
-        query = "SELECT DISTINCT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.ip_address,"
-                + " d.status, d.type, IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor,"
+        query = "SELECT DISTINCT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.ip_address,"
+                + " d.status, d.type, CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor,"
                 + " d.mac_address, l.name as location, d.docker_name, d.latitude, d.longitude, d.warranty, b.name as building, f.name as floor,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, d.serial_number, d.custom_fields,"
-                + " IF(dgc.device_id = d.id, 1, 0) as is_added,d.asset_group"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, d.serial_number, d.custom_fields,"
+                + " CASE WHEN dgc.device_id = d.id THEN 1 ELSE 0 END as is_added,d.asset_group"
                 + " FROM device d"
                 + " LEFT JOIN device_global_checklist dgc ON dgc.device_id = d.id AND dgc.global_checklist_id IN ?4 AND dgc.is_removed = 0 "
                 + " LEFT JOIN location l ON l.id = d.location_id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE d.asset_match_status != 3 AND ('all' IN ?2 or d.docker_name IN ?2) AND ('all' IN ?3 or d.type IN ?3) AND ('all' IN ?5 or (IF ('other' IN ?5, (d.virtual_device_type = 2), NULL)) or (IF ('power_source' IN ?5, (d.virtual_device_type = 3 or d.virtual_device_type = 4), NULL)) or (IF ('ip' IN ?5, (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1), NULL)))"
+                + " WHERE d.asset_match_status != 3 AND ('all' IN ?2 or d.docker_name IN ?2) AND ('all' IN ?3 or d.type IN ?3) AND ('all' IN ?5 or (CASE WHEN 'other' IN ?5 THEN (d.virtual_device_type = 2) ELSE NULL END) or (CASE WHEN 'power_source' IN ?5 THEN (d.virtual_device_type = 3 or d.virtual_device_type = 4) ELSE NULL END) or (CASE WHEN 'ip' IN ?5 THEN (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1) ELSE NULL END))"
                 + " AND (?1 IS NULL or CONCAT_WS('', d.display_name, d.user_data_name, d.ip_address, d.mac_address, l.name, d.docker_name, d.vendor, d.user_data_vendor,d.latitude, d.longitude, d.warranty, b.name, f.name, d.model, d.user_data_model, d.serial_number, d.custom_fields,d.type, d.description) LIKE CONCAT('%',?1,'%'))"
-                + " AND (?6 IS NULL OR IF(?6, d.id IN ?7 , d.id NOT IN ?7))"
-                + " AND (?8 IS NULL OR IF(?8, d.id IN ?9 , d.id NOT IN ?9))",
+                + " AND (?6 IS NULL OR CASE WHEN ?6 THEN d.id IN ?7 ELSE d.id NOT IN ?7 END)"
+                + " AND (?8 IS NULL OR CASE WHEN ?8 THEN d.id IN ?9 ELSE d.id NOT IN ?9 END)",
         resultSetMapping = "isaddeddevicemapping")
 
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAllInspectionDevices",
-        query = "SELECT DISTINCT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.ip_address,"
-                + " d.status, d.type, IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor,"
+        query = "SELECT DISTINCT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.ip_address,"
+                + " d.status, d.type, CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor,"
                 + " d.mac_address, l.name as location, d.docker_name, d.latitude, d.longitude, d.warranty, b.name as building, f.name as floor,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, d.serial_number, d.custom_fields,"
-                + " IF(gir.device_id = d.id, 1, 0) as is_added,d.asset_group"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, d.serial_number, d.custom_fields,"
+                + " CASE WHEN gir.device_id = d.id THEN 1 ELSE 0 END as is_added,d.asset_group"
                 + " FROM device d"
                 + " LEFT JOIN global_inspection_relation gir ON gir.device_id = d.id  AND gir.global_checklist_id = ?4 AND gir.global_inspection_record_id = ?5 AND gir.is_removed = 0 "
                 + " LEFT JOIN location l ON l.id = d.location_id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE d.asset_match_status != 3 AND ('all' IN ?2 or d.docker_name IN ?2) AND ('all' IN ?3 or d.type IN ?3) AND ('all' IN ?6 or (IF ('other' IN ?6, (d.virtual_device_type = 2), NULL)) or (IF ('power_source' IN ?6, (d.virtual_device_type = 3 or d.virtual_device_type = 4), NULL)) or (IF ('ip' IN ?6, (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1), NULL)))"
+                + " WHERE d.asset_match_status != 3 AND ('all' IN ?2 or d.docker_name IN ?2) AND ('all' IN ?3 or d.type IN ?3) AND ('all' IN ?6 or (CASE WHEN 'other' IN ?6 THEN (d.virtual_device_type = 2) ELSE NULL END) or (CASE WHEN 'power_source' IN ?6 THEN (d.virtual_device_type = 3 or d.virtual_device_type = 4) ELSE NULL END) or (CASE WHEN 'ip' IN ?6 THEN (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1) ELSE NULL END))"
                 + " AND (?1 IS NULL or CONCAT_WS('', d.display_name, d.user_data_name, d.ip_address, d.mac_address, l.name, d.docker_name, d.vendor, d.user_data_vendor,d.latitude, d.longitude, d.warranty, b.name, f.name, d.model, d.user_data_model, d.serial_number, d.custom_fields,d.type, d.description) LIKE CONCAT('%',?1,'%'))"
-                + " AND (?7 IS NULL OR IF(?7, d.id IN ?8 , d.id NOT IN ?8))"
-                + " AND (?9 IS NULL OR IF(?9, d.id IN ?10 , d.id NOT IN ?10))",
+                + " AND (?7 IS NULL OR CASE WHEN ?7 THEN d.id IN ?8 ELSE d.id NOT IN ?8 END)"
+                + " AND (?9 IS NULL OR CASE WHEN ?9 THEN d.id IN ?10 ELSE d.id NOT IN ?10 END)",
         resultSetMapping = "isaddeddevicemapping")
 
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAllQrcodeDevices",
-        query = "SELECT DISTINCT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.ip_address,"
-                + " d.status, d.type, IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor,"
+        query = "SELECT DISTINCT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.ip_address,"
+                + " d.status, d.type, CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor,"
                 + " d.mac_address, l.name as location, d.docker_name, d.latitude, d.longitude, d.warranty, b.name as building, f.name as floor,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, d.serial_number, d.custom_fields,"
-                + " IF(gr.device_id = d.id, 1, 0) as is_added,d.asset_group"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, d.serial_number, d.custom_fields,"
+                + " CASE WHEN gr.device_id = d.id THEN 1 ELSE 0 END as is_added,d.asset_group"
                 + " FROM device d"
                 + " LEFT JOIN global_qrcode gr ON gr.device_id = d.id"
                 + " LEFT JOIN location l ON l.id = d.location_id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE d.asset_match_status != 3 AND ('all' IN ?2 or d.docker_name IN ?2) AND ('all' IN ?3 or d.type IN ?3) AND ('all' IN ?4 or (IF ('other' IN ?4, (d.virtual_device_type = 2), NULL)) or (IF ('power_source' IN ?4, (d.virtual_device_type = 3 or d.virtual_device_type = 4), NULL)) or (IF ('ip' IN ?4, (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1), NULL)))"
+                + " WHERE d.asset_match_status != 3 AND ('all' IN ?2 or d.docker_name IN ?2) AND ('all' IN ?3 or d.type IN ?3) AND ('all' IN ?4 or (CASE WHEN 'other' IN ?4 THEN (d.virtual_device_type = 2) ELSE NULL END) or (CASE WHEN 'power_source' IN ?4 THEN (d.virtual_device_type = 3 or d.virtual_device_type = 4) ELSE NULL END) or (CASE WHEN 'ip' IN ?4 THEN (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1) ELSE NULL END))"
                 + " AND (?1 IS NULL  or CONCAT_WS('', d.display_name, d.user_data_name, d.ip_address, d.mac_address, l.name, d.docker_name, d.vendor, d.user_data_vendor,d.latitude, d.longitude, d.warranty, b.name, f.name, d.model, d.user_data_model, d.serial_number, d.custom_fields,d.type, d.description) LIKE CONCAT('%',?1,'%'))"
-                + " AND (?5 IS NULL OR IF(?5, d.id IN ?6 , d.id NOT IN ?6))"
-                + " AND (?7 IS NULL OR IF(?7, d.id IN ?8 , d.id NOT IN ?8))",
+                + " AND (?5 IS NULL OR CASE WHEN ?5 THEN d.id IN ?6 ELSE d.id NOT IN ?6 END)"
+                + " AND (?7 IS NULL OR CASE WHEN ?7 THEN d.id IN ?8 ELSE d.id NOT IN ?8 END)",
 
         resultSetMapping = "isaddeddevicemapping")
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAllNetworkParentDevices",
-        query = "SELECT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.ip_address,"
-                + " d.status, d.type, IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor,"
+        query = "SELECT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.ip_address,"
+                + " d.status, d.type, CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor,"
                 + " d.mac_address, l.name as location, d.docker_name,d.latitude, d.longitude, d.warranty, b.name as building, f.name as floor,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, d.serial_number, d.custom_fields,d.asset_group"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, d.serial_number, d.custom_fields,d.asset_group"
                 + " FROM device d"
                 + " LEFT JOIN location l ON l.id = d.location_id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE d.asset_match_status != 3 AND ('all' IN ?1 or d.docker_name IN ?1) AND ('all' IN ?2 or d.type IN ?2) AND ('all' IN ?4 or (IF ('other' IN ?4, (d.virtual_device_type = 2), NULL)) or (IF ('power_source' IN ?4, (d.virtual_device_type = 3 or d.virtual_device_type = 4), NULL)) or (IF ('ip' IN ?4, (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1), NULL)))"
+                + " WHERE d.asset_match_status != 3 AND ('all' IN ?1 or d.docker_name IN ?1) AND ('all' IN ?2 or d.type IN ?2) AND ('all' IN ?4 or (CASE WHEN 'other' IN ?4 THEN (d.virtual_device_type = 2) ELSE NULL END) or (CASE WHEN 'power_source' IN ?4 THEN (d.virtual_device_type = 3 or d.virtual_device_type = 4) ELSE NULL END) or (CASE WHEN 'ip' IN ?4 THEN (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1) ELSE NULL END))"
                 + " AND (?3 IS NULL or CONCAT_WS('', d.display_name, d.user_data_name, d.ip_address, d.mac_address, l.name, d.docker_name, d.vendor, d.user_data_vendor,d.latitude, d.longitude, d.warranty, b.name, f.name, d.model, d.user_data_model, d.serial_number, d.custom_fields,d.type) LIKE CONCAT('%',?3,'%'))"
-                + " AND (?5 IS NULL OR IF(?5, d.id IN ?6 , d.id NOT IN ?6))"
-                + " AND (?7 IS NULL OR IF(?8, d.id IN ?8 , d.id NOT IN ?8))",
+                + " AND (?5 IS NULL OR CASE WHEN ?5 THEN d.id IN ?6 ELSE d.id NOT IN ?6 END)"
+                + " AND (?7 IS NULL OR CASE WHEN ?8 THEN d.id IN ?8 ELSE d.id NOT IN ?8 END)",
         resultSetMapping = "parentdevicemapping")
 
 @SqlResultSetMapping(
@@ -1914,10 +1949,11 @@ import java.util.Set;
         }
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getDeviceConditionAlertInfoById",
         query = "SELECT d.id, d.docker_name, do.system_type as docker_system_type, "
-                + "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as name, "
+                + "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as name, "
                 + "b.name as building, f.name as floor, l.name as location, d.monitor as device_monitor, d.product_id, p.global_image_url_1 as image_url, d.local_vendor_id, d.type "
                 + "FROM device d "
                 + "LEFT JOIN docker do ON d.docker_name = do.name AND d.docker_vdms_id = do.vdms_id "
@@ -1962,17 +1998,18 @@ import java.util.Set;
         }
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getFilterVirtualDevicesByPagination",
-        query = "SELECT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.ip_address,"
-                + " d.status, d.type, IF(d.user_data_vendor IS NULL OR d.user_data_vendor = '', d.vendor, d.user_data_vendor) as vendor,"
+        query = "SELECT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.ip_address,"
+                + " d.status, d.type, CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor,"
                 + " d.mac_address, l.name as location, d.docker_name, d.latitude, d.longitude, d.warranty, b.name as building, f.name as floor,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model, d.serial_number, d.custom_fields, d.virtual_device_type,d.asset_group"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model, d.serial_number, d.custom_fields, d.virtual_device_type,d.asset_group"
                 + " FROM device d"
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE ('all' IN ?4 or d.docker_name IN ?4) AND ('all' IN ?6 or (IF ('other' IN ?6, (d.virtual_device_type = 2), NULL)) or (IF ('power_source' IN ?6, (d.virtual_device_type = 3 or d.virtual_device_type = 4), NULL)) or (IF ('ip' IN ?6, (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1), NULL))) AND ('all' IN ?5 or d.type IN ?5)"
+                + " WHERE ('all' IN ?4 or d.docker_name IN ?4) AND ('all' IN ?6 or (CASE WHEN 'other' IN ?6 THEN (d.virtual_device_type = 2) ELSE NULL END) or (CASE WHEN 'power_source' IN ?6 THEN (d.virtual_device_type = 3 or d.virtual_device_type = 4) ELSE NULL END) or (CASE WHEN 'ip' IN ?6 THEN (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1) ELSE NULL END)) AND ('all' IN ?5 or d.type IN ?5)"
                 + " AND (?1 = 'null' or CONCAT_WS('', d.display_name, d.user_data_name, d.ip_address, d.mac_address, l.name, d.docker_name, d.vendor, d.user_data_vendor,d.latitude, d.longitude,d.warranty, b.name, f.name, d.model, d.user_data_model, d.serial_number, d.custom_fields,d.type) LIKE CONCAT('%',?1,'%'))"
                 + " LIMIT ?2 OFFSET ?3",
         resultSetMapping = "getfilterdevicesmapping"
@@ -2004,9 +2041,10 @@ import java.util.Set;
         }
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getDeviceDetailsByDeviceIdList",
-        query = "SELECT  d.id, d.status, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as name, d.mac_address, d.vendor, d.model, d.virtual_device_type,"
+        query = "SELECT  d.id, d.status, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as name, d.mac_address, d.vendor, d.model, d.virtual_device_type,"
                 + " d.type , d.ip_address,l.name as location,"
                 + " d.docker_vdms_id AS vdms_id, d.docker_name,"
                 + " b.name as building, f.name as floor,d.asset_group"
@@ -2018,9 +2056,10 @@ import java.util.Set;
         resultSetMapping = "devicedetailsfortopologymapping"
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getDevicesByFilter",
-        query = "SELECT  d.id, d.status, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as name, d.mac_address, d.vendor, d.model, d.virtual_device_type,"
+        query = "SELECT  d.id, d.status, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as name, d.mac_address, d.vendor, d.model, d.virtual_device_type,"
                 + " d.type , d.ip_address,l.name as location,"
                 + " d.docker_vdms_id AS vdms_id, d.docker_name,"
                 + " b.name as building, f.name as floor,d.asset_group"
@@ -2029,10 +2068,10 @@ import java.util.Set;
                 + " LEFT JOIN building b ON f.building_id = b.id"
                 + " WHERE d.asset_match_status != 3 AND ('all' IN ?1 or d.docker_name IN ?1) "
                 + " AND ('all' IN ?2 or d.type IN ?2)"
-                + " AND ('all' IN ?4 or (IF ('other' IN ?4, (d.virtual_device_type = 2), NULL)) or (IF ('power_source' IN ?4, (d.virtual_device_type = 3 or d.virtual_device_type = 4), NULL)) or (IF ('ip' IN ?4, (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1), NULL)))"
+                + " AND ('all' IN ?4 or (CASE WHEN 'other' IN ?4 THEN (d.virtual_device_type = 2) ELSE NULL END) or (CASE WHEN 'power_source' IN ?4 THEN (d.virtual_device_type = 3 or d.virtual_device_type = 4) ELSE NULL END) or (CASE WHEN 'ip' IN ?4 THEN (d.virtual_device_type IS NULL or d.virtual_device_type = 0 or d.virtual_device_type = 1) ELSE NULL END))"
                 + " AND (?3 IS NULL or CONCAT_WS('', d.display_name, d.user_data_name, d.ip_address, d.mac_address, l.name, d.docker_name, d.vendor, d.user_data_vendor,d.latitude, d.longitude, d.warranty, b.name, f.name, d.model, d.user_data_model, d.serial_number, d.custom_fields,d.type) LIKE CONCAT('%',?3,'%')) "
-                + " AND (?5 IS NULL OR IF(?5, d.id IN ?6 , d.id NOT IN ?6))"
-                + " AND (?7 IS NULL OR IF(?8, d.id IN ?8 , d.id NOT IN ?8))"
+                + " AND (?5 IS NULL OR CASE WHEN ?5 THEN d.id IN ?6 ELSE d.id NOT IN ?6 END)"
+                + " AND (?7 IS NULL OR CASE WHEN ?8 THEN d.id IN ?8 ELSE d.id NOT IN ?8 END)"
                 + " AND ('all' IN ?9 OR l.id IN ?9)"
                 + " AND ('all' IN ?10 OR d.id IN ?10)",
         resultSetMapping = "devicedetailsfortopologymapping"
@@ -2230,11 +2269,12 @@ import java.util.Set;
         }
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getDeviceDetailsByIdList",
         query = "SELECT d.id, d.status, "
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model,"
-                + " IF(d.user_data_vendor  IS NULL OR d.user_data_vendor  = '', d.vendor, d.user_data_vendor ) as vendor "
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model,"
+                + " CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor "
                 + " FROM device d"
                 + " WHERE d.id IN (?1)",
         resultSetMapping = "deviceDetailsMapping"
@@ -2264,12 +2304,13 @@ import java.util.Set;
         }
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getDeviceById",
         query = "SELECT d.id, d.status, "
-                + " IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as name,"
-                + " IF(d.user_data_model IS NULL OR d.user_data_model = '', d.model, d.user_data_model) as model,"
-                + " IF(d.user_data_vendor  IS NULL OR d.user_data_vendor  = '', d.vendor, d.user_data_vendor ) as vendor" +
+                + " CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as name,"
+                + " CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model,"
+                + " CASE WHEN d.user_data_vendor IS NULL OR d.user_data_vendor = '' THEN d.vendor ELSE d.user_data_vendor END as vendor" +
                 ", d.type, d.ip_address, d.mac_address, d.serial_number, b.name as building, f.name as floor, l.name as location, d.docker_name, d.category"
                 + " FROM device d"
                 + " LEFT JOIN location l ON d.location_id = l.id"
@@ -2298,9 +2339,10 @@ import java.util.Set;
         }
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.browseAiCallFlowDevicesWithSearch",
-        query = "SELECT d.id, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as name, d.docker_name, d.ai_call, IF(cfr.device_id = d.id, 1, 0) as is_added " +
+        query = "SELECT d.id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as name, d.docker_name, d.ai_call, CASE WHEN cfr.device_id = d.id THEN 1 ELSE 0 END as is_added " +
                 "FROM device d " +
                 "LEFT JOIN call_flow_rule cfr ON d.id = cfr.device_id " +
                 "LEFT JOIN location l ON l.id = d.location_id " +
@@ -2436,9 +2478,10 @@ import java.util.Set;
 )
 
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAllDeviceCustomDetailsPaginated",
-        query = "SELECT d.id, d.ip_address, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.status " +
+        query = "SELECT d.id, d.ip_address, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.status " +
                 "FROM device d " +
                 "WHERE ( 'all' IN ?4 OR d.id NOT IN ?4 ) " +
                 "AND ( ?5 = 'all' OR d.docker_name = ?5 ) " +
@@ -2448,9 +2491,10 @@ import java.util.Set;
         resultSetMapping = "deviceCustomDetailsMapping"
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getAllDeviceCustomDetails",
-        query = "SELECT d.id, d.ip_address, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.status " +
+        query = "SELECT d.id, d.ip_address, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.status " +
                 "FROM device d " +
                 "WHERE ( 'all' IN ?2 OR d.id NOT IN ?2 ) " +
                 "AND ( ?3 = 'all' OR d.docker_name = ?3 ) " +
@@ -2459,9 +2503,10 @@ import java.util.Set;
         resultSetMapping = "deviceCustomDetailsMapping"
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getDeviceCustomDetailsPaginated",
-        query = "SELECT d.id, d.ip_address, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.status " +
+        query = "SELECT d.id, d.ip_address, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.status " +
                 "FROM device d " +
                 "WHERE ( d.id IN ?4 ) " +
                 "AND (?1 = 'null' OR CONCAT_WS('', d.display_name, d.user_data_name) LIKE CONCAT('%', ?1, '%')) " +
@@ -2470,9 +2515,10 @@ import java.util.Set;
         resultSetMapping = "deviceCustomDetailsMapping"
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getDeviceCustomDetails",
-        query = "SELECT d.id, d.ip_address, IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) as display_name, d.status " +
+        query = "SELECT d.id, d.ip_address, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as display_name, d.status " +
                 "FROM device d " +
                 "WHERE ( d.id IN ?2 ) " +
                 "AND (?1 = 'null' OR CONCAT_WS('', d.display_name, d.user_data_name) LIKE CONCAT('%', ?1, '%')) " +
@@ -2480,11 +2526,12 @@ import java.util.Set;
         resultSetMapping = "deviceCustomDetailsMapping"
 )
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getDeviceCustomDetailsByIds",
         query =
                 "SELECT d.id, d.ip_address, " +
-                        "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) AS display_name, " +
+                        "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END AS display_name, " +
                         "d.status " +
                         "FROM device d " +
                         "WHERE ( 'null' in ?2 OR d.id IN ?2 ) " +
@@ -2496,11 +2543,12 @@ import java.util.Set;
 )
 
 
+// PG-port: IF->CASE / IFNULL->COALESCE
 @NamedNativeQuery(
         name = "Device.getDeviceCustomDetailsByIdsPaginated",
         query =
                 "SELECT d.id, d.ip_address, " +
-                        "IF(d.user_data_name IS NULL OR d.user_data_name = '', d.display_name, d.user_data_name) AS display_name, " +
+                        "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END AS display_name, " +
                         "d.status " +
                         "FROM device d " +
                         "WHERE ( 'null' in ?4 OR d.id IN ?4 ) " +
@@ -3061,36 +3109,11 @@ public class Device {
     @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
     private Set<Ticket> ticket = new HashSet<>();
 
-    @OneToMany(mappedBy = "device")
-    private Set<Lorawan_Sensor> lorawan_sensor = new HashSet<>();
-
-    @OneToMany(mappedBy = "device")
-    private Set<Bacnet_Object> bacnet_object = new HashSet<>();
-
-    @OneToMany(mappedBy = "device")
-    private Set<DisruptiveSensor> disruptive_sensor = new HashSet<>();
-
     @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
     private Set<Device_IP_Address> device_ip_address = new HashSet<>();
 
-    @OneToMany(mappedBy = "device")
-    private Set<Datahoist> datahoist = new HashSet<>();
-
-    @OneToMany(mappedBy = "device")
-    private Set<MyDevicesSensor> my_devices_sensor = new HashSet<>();
-
-    @OneToMany(mappedBy = "device")
-    private Set<Monnit_Sensor> monnit_sensor = new HashSet<>();
-
-    @OneToMany(mappedBy = "device")
-    private Set<PelicanSensor> pelican_sensor = new HashSet<>();
-
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
     private Set<Snmp_Dump> snmp_dump = new HashSet<>();
-
-
-    @OneToMany(mappedBy = "device")
-    private Set<KNXGroup> knx_group = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
     private Set<SnmpObject> snmp_object = new HashSet<>();
@@ -3103,13 +3126,6 @@ public class Device {
     @ManyToMany()
     @JoinTable(name = "device_media", joinColumns = @JoinColumn(name = "device_id"), inverseJoinColumns = @JoinColumn(name = "media_id"))
     private Set<Media> media = new HashSet<>();
-
-    @ManyToMany()
-    @JoinTable(name = "device_check_list_template", joinColumns = @JoinColumn(name = "device_id"), inverseJoinColumns = @JoinColumn(name = "check_list_template_id"))
-    private Set<CheckListTemplate> check_list_template = new HashSet<>();
-
-    @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
-    private Set<CheckListRecord> check_list_record = new HashSet<>();
 
     @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
     private Set<AssetDeviceMapping> asset_device_mapping = new HashSet<>();
@@ -3124,30 +3140,11 @@ public class Device {
     @OneToOne(mappedBy = "device", cascade = CascadeType.ALL)
     private GlobalQrcode global_qrcode;
 
-    @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
-    private Set<RecordChecklist> record_checklist = new HashSet<>();
-
-    @ManyToMany()
-    @JoinTable(name = "device_global_checklist", joinColumns = @JoinColumn(name = "device_id"), inverseJoinColumns = @JoinColumn(name = "global_checklist_id"))
-    private Set<GlobalChecklist> global_checklist = new HashSet<>();
-
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
-    private Set<GlobalInspectionRelation> global_inspection_relation = new HashSet<>();
-
-    @OneToMany(mappedBy = "device")
-    private Set<DaintreeDevice> daintree_device = new HashSet<>();
-
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
     private Set<DeviceConditions> device_conditions = new HashSet<>();
 
-    @OneToMany(mappedBy = "device")
-    private Set<EcobeeSensor> ecobee_sensor = new HashSet<>();
-
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
     private Set<Specifications> specifications = new HashSet<>();
-
-    @OneToMany(mappedBy = "device")
-    private Set<ModbusRegister> modbus_register = new HashSet<>();
 
     @OneToMany(mappedBy = "device")
     private Set<SiemensAsset> siemens_asset = new HashSet<>();
@@ -3184,9 +3181,6 @@ public class Device {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
     private Set<ClientBarCode> client_barcode = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
-    private Set<GlobalChecklistConditions> global_checklist_conditions = new HashSet<>();
-
     @Column(name = "cost_value", precision = 16, scale = 2)
     private BigDecimal cost_value;
     @Column(name = "ai_call", columnDefinition = "boolean default false", length = 8)
@@ -3207,7 +3201,7 @@ public class Device {
     @Column(name = "system_dnd_enabled",columnDefinition = "boolean default false", length = 8)
     private Boolean system_dnd_enabled;
 
-    @Column(name = "adc_json", columnDefinition = "JSON")
+    @Column(name = "adc_json", columnDefinition = "jsonb")
     private String adc_json;
 
     @Column
@@ -3776,30 +3770,6 @@ public class Device {
         this.ticket = ticket;
     }
 
-    public Set<Lorawan_Sensor> getLorawan_sensor() {
-        return lorawan_sensor;
-    }
-
-    public void setLorawan_sensor(Set<Lorawan_Sensor> lorawan_sensor) {
-        this.lorawan_sensor = lorawan_sensor;
-    }
-
-    public Set<Bacnet_Object> getBacnet_object() {
-        return bacnet_object;
-    }
-
-    public void setBacnet_object(Set<Bacnet_Object> bacnet_object) {
-        this.bacnet_object = bacnet_object;
-    }
-
-    public Set<DisruptiveSensor> getDisruptive_sensor() {
-        return disruptive_sensor;
-    }
-
-    public void setDisruptive_sensor(Set<DisruptiveSensor> disruptive_sensor) {
-        this.disruptive_sensor = disruptive_sensor;
-    }
-
     public Set<Device_IP_Address> getDevice_ip_address() {
         return device_ip_address;
     }
@@ -3815,22 +3785,6 @@ public class Device {
     public Device(String id) {
         super();
         this.id = id;
-    }
-
-    public Set<Datahoist> getDatahoist() {
-        return datahoist;
-    }
-
-    public void setDatahoist(Set<Datahoist> datahoist) {
-        this.datahoist = datahoist;
-    }
-
-    public Set<MyDevicesSensor> getMy_devices_sensor() {
-        return my_devices_sensor;
-    }
-
-    public void setMy_devices_sensor(Set<MyDevicesSensor> my_devices_sensor) {
-        this.my_devices_sensor = my_devices_sensor;
     }
 
     public Integer getMy_devices_count() {
@@ -3986,30 +3940,6 @@ public class Device {
         this.local_vendor_sms_alert = local_vendor_sms_alert;
     }
 
-    public Set<Monnit_Sensor> getMonnit_sensor() {
-        return monnit_sensor;
-    }
-
-    public void setMonnit_sensor(Set<Monnit_Sensor> monnit_sensor) {
-        this.monnit_sensor = monnit_sensor;
-    }
-
-    public Set<PelicanSensor> getPelican_sensor() {
-        return pelican_sensor;
-    }
-
-    public void setPelican_sensor(Set<PelicanSensor> pelican_sensor) {
-        this.pelican_sensor = pelican_sensor;
-    }
-
-    public Set<KNXGroup> getKnx_group() {
-        return knx_group;
-    }
-
-    public void setKnx_group(Set<KNXGroup> knx_group) {
-        this.knx_group = knx_group;
-    }
-
     public Set<Document> getDocument() {
         return document;
     }
@@ -4026,14 +3956,6 @@ public class Device {
         this.media = media;
     }
 
-    public Set<CheckListTemplate> getCheck_list_template() {
-        return check_list_template;
-    }
-
-    public void setCheck_list_template(Set<CheckListTemplate> check_list_template) {
-        this.check_list_template = check_list_template;
-    }
-
     public String getSubsystem_parent_id() {
         return subsystem_parent_id;
     }
@@ -4048,14 +3970,6 @@ public class Device {
 
     public void setSubsystem_count(Integer subsystem_count) {
         this.subsystem_count = subsystem_count;
-    }
-
-    public Set<CheckListRecord> getCheck_list_record() {
-        return check_list_record;
-    }
-
-    public void setCheck_list_record(Set<CheckListRecord> check_list_record) {
-        this.check_list_record = check_list_record;
     }
 
     public String getCustom_fields() {
@@ -4162,22 +4076,6 @@ public class Device {
         this.global_qrcode = global_qrcode;
     }
 
-    public Set<RecordChecklist> getRecord_checklist() {
-        return record_checklist;
-    }
-
-    public void setRecord_checklist(Set<RecordChecklist> record_checklist) {
-        this.record_checklist = record_checklist;
-    }
-
-    public Set<GlobalChecklist> getGlobal_checklist() {
-        return global_checklist;
-    }
-
-    public void setGlobal_checklist(Set<GlobalChecklist> global_checklist) {
-        this.global_checklist = global_checklist;
-    }
-
     public String getRecord_checklist_status() {
         return record_checklist_status;
     }
@@ -4192,14 +4090,6 @@ public class Device {
 
     public void setRecord_checklist_count(Integer record_checklist_count) {
         this.record_checklist_count = record_checklist_count;
-    }
-
-    public Set<GlobalInspectionRelation> getGlobal_inspection_relation() {
-        return global_inspection_relation;
-    }
-
-    public void setGlobal_inspection_relation(Set<GlobalInspectionRelation> global_inspection_relation) {
-        this.global_inspection_relation = global_inspection_relation;
     }
 
 
@@ -4225,14 +4115,6 @@ public class Device {
 
     public void setQrcode_count(Integer qrcode_count) {
         this.qrcode_count = qrcode_count;
-    }
-
-    public Set<DaintreeDevice> getDaintree_device() {
-        return daintree_device;
-    }
-
-    public void setDaintree_device(Set<DaintreeDevice> daintree_device) {
-        this.daintree_device = daintree_device;
     }
 
     public String getAsset_image_url() {
@@ -4275,15 +4157,6 @@ public class Device {
         this.ecobee_status = ecobee_status;
     }
 
-    public Set<EcobeeSensor> getEcobee_sensor() {
-        return ecobee_sensor;
-    }
-
-    public void setEcobee_sensor(Set<EcobeeSensor> ecobee_sensor) {
-        this.ecobee_sensor = ecobee_sensor;
-    }
-
-
     public Set<Specifications> getSpecifications() {
         return specifications;
     }
@@ -4307,15 +4180,6 @@ public class Device {
     public void setModbus_status(String modbus_status) {
         this.modbus_status = modbus_status;
     }
-
-    public Set<ModbusRegister> getModbus_register() {
-        return modbus_register;
-    }
-
-    public void setModbus_register(Set<ModbusRegister> modbus_register) {
-        this.modbus_register = modbus_register;
-    }
-
 
     public Set<SiemensAsset> getSiemens_asset() {
         return siemens_asset;
@@ -4495,15 +4359,6 @@ public class Device {
         this.client_barcode = client_barcode;
     }
 
-    public Set<GlobalChecklistConditions> getGlobal_checklist_conditions() {
-        return global_checklist_conditions;
-    }
-
-    public void setGlobal_checklist_conditions(Set<GlobalChecklistConditions> global_checklist_conditions) {
-        this.global_checklist_conditions = global_checklist_conditions;
-    }
-
-
     public Set<Technician> getTechnician() {
         return technician;
     }
@@ -4653,33 +4508,17 @@ public class Device {
                 ", location=" + location +
                 ", history=" + history +
                 ", ticket=" + ticket +
-                ", lorawan_sensor=" + lorawan_sensor +
-                ", bacnet_object=" + bacnet_object +
-                ", disruptive_sensor=" + disruptive_sensor +
                 ", device_ip_address=" + device_ip_address +
-                ", datahoist=" + datahoist +
-                ", my_devices_sensor=" + my_devices_sensor +
-                ", monnit_sensor=" + monnit_sensor +
-                ", pelican_sensor=" + pelican_sensor +
                 ", snmp_dump=" + snmp_dump +
-                ", knx_group=" + knx_group +
                 ", snmp_object=" + snmp_object +
                 ", document=" + document +
                 ", media=" + media +
-                ", check_list_template=" + check_list_template +
-                ", check_list_record=" + check_list_record +
                 ", asset_device_mapping=" + asset_device_mapping +
                 ", measuring_instrument=" + measuring_instrument +
                 ", inventory=" + inventory +
                 ", global_qrcode=" + global_qrcode +
-                ", record_checklist=" + record_checklist +
-                ", global_checklist=" + global_checklist +
-                ", global_inspection_relation=" + global_inspection_relation +
-                ", daintree_device=" + daintree_device +
                 ", device_conditions=" + device_conditions +
-                ", ecobee_sensor=" + ecobee_sensor +
                 ", specifications=" + specifications +
-                ", modbus_register=" + modbus_register +
                 ", siemens_asset=" + siemens_asset +
                 ", device_onboard_status=" + device_onboard_status +
                 ", poly_lens_count=" + poly_lens_count +

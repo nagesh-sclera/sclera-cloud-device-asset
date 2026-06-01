@@ -1,42 +1,44 @@
 package io.sclera.inspection.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
+import io.sclera.inspection.service.GlobalInspectionRelationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import io.sclera.inspection.defaults.Defaults;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @RestController
-@RequestMapping("/globalinspectionrecord")
+@RequestMapping("/globalInspectionRecord")
 public class GlobalInspectionRecordController {
+
+  @Autowired
+  GlobalInspectionRelationService globalInspectionRelationService;
+
   @PostMapping("/updateGlobalInspectionRelationDeviceAndIsRemoved")
-  public void updateGlobalInspectionRelationDeviceAndIsRemoved(@RequestBody String ids) {
-    // no-op
+  public void updateGlobalInspectionRelationDeviceAndIsRemoved(@RequestBody List<String> ids) {
+    globalInspectionRelationService.updateDeviceAndIsRemoved(ids);
   }
 
   @PostMapping("/deleteGlobalInspectionRelationInBatch")
-  public void deleteGlobalInspectionRelationInBatch(@RequestBody String ids) {
-    // no-op
+  public void deleteGlobalInspectionRelationInBatch(@RequestBody List<String> ids) {
+    globalInspectionRelationService.deleteInBatch(ids);
   }
 
   @PostMapping("/updateGlobalInspectionByDeviceId")
   public void updateGlobalInspectionByDeviceId(@RequestParam(required=false) String primaryDeviceId, @RequestParam(required=false) String existingDeviceId) {
-    // no-op
+    globalInspectionRelationService.updateGlobalInspectionByDeviceId(primaryDeviceId, existingDeviceId);
   }
 
   @PostMapping("/updateGlobalInspectionRelationLocationAndIsRemoved")
-  public void updateGlobalInspectionRelationLocationAndIsRemoved(@RequestBody String locationIds) {
-    // no-op
+  public void updateGlobalInspectionRelationLocationAndIsRemoved(@RequestBody List<String> locationIds) {
+    globalInspectionRelationService.updateLocationAndIsRemoved(locationIds);
   }
 
   @PostMapping("/updateGlobalInspectionRecord")
   public void updateGlobalInspectionRecord(@RequestParam(required=false) String email) {
-    // no-op
+    globalInspectionRelationService.updateGlobalInspectionRecord(email);
   }
 }

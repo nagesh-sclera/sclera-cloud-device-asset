@@ -19,7 +19,7 @@ public interface AiCallLogRepository extends JpaRepository<AiCallLog, String> {
 
     @Modifying
     @Transactional
-    @Query(value = "INSERT INTO ai_call_log (id,created_at,assigned_at,issue_type,description,priority,status,is_completed,device_id,technician_id) VALUE (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10) ", nativeQuery = true)
+    @Query(value = "INSERT INTO ai_call_log (id,created_at,assigned_at,issue_type,description,priority,status,is_completed,device_id,technician_id) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10) ", nativeQuery = true)
     void insertAiCallLog(String id, BigInteger createdAt,BigInteger assignedAt, String issueType, String description, String priority, String status, Boolean isCompleted, String deviceId, String technicianId);
 
     @Modifying

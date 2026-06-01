@@ -27,7 +27,7 @@ public interface NotesRepository extends JpaRepository<Notes, NoteIds> {
 
 	@Modifying
 	@Transactional
-	@Query(value = "INSERT INTO notes(id,body,title,is_global,device_id) VALUE(?1,?2,?3,?4,?5)" , nativeQuery = true)
+	@Query(value = "INSERT INTO notes(id,body,title,is_global,device_id) VALUES(?1,?2,?3,?4,?5)" , nativeQuery = true)
 	void addGlobalNotesByDeviceId(String note_id, String body, String title, Integer is_global, String device_id);
 
 	@Query(value = "SELECT id FROM notes WHERE device_id = ?1 AND is_global = 1" , nativeQuery = true)
@@ -48,7 +48,7 @@ public interface NotesRepository extends JpaRepository<Notes, NoteIds> {
 
 	@Modifying
 	@Transactional
-	@Query(value = "INSERT INTO notes(id,title,body,device_id) VALUE(?1,?2,?3,?4)" , nativeQuery = true)
+	@Query(value = "INSERT INTO notes(id,title,body,device_id) VALUES(?1,?2,?3,?4)" , nativeQuery = true)
 	void addNoteByDeviceId(String id, String title, String body, String device_id);
 
 	@Query(nativeQuery = true)

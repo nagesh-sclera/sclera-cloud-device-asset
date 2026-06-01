@@ -53,6 +53,21 @@
     <!--        </dependencies>-->
     <!--    </dependencyManagement>-->
 
+    <dependencyManagement>
+        <dependencies>
+            <!-- Testcontainers BOM: provides versions for junit-jupiter, postgresql, etc.
+                 spring-boot-testcontainers is managed by the Boot parent, but the
+                 individual TC module versions require an explicit BOM import. -->
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>1.21.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.webjars</groupId>
@@ -116,6 +131,21 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -410,11 +440,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-cache</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>io.dapr</groupId>
             <artifactId>dapr-sdk</artifactId>
             <version>1.12.0</version>
@@ -431,6 +456,16 @@
 
     <build>
         <plugins>
+            <!-- Set JVM timezone to UTC for tests so PostgreSQL 16 accepts the connection.
+                 The JVM default (Asia/Calcutta) is a legacy Olson alias rejected by PG 16;
+                 only canonical IANA names (e.g. Asia/Kolkata) are accepted. UTC is safest. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Duser.timezone=UTC</argLine>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

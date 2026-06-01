@@ -69,7 +69,7 @@ services:
       "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"
     ]
     volumes:
@@ -116,7 +116,7 @@ services:
       "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"
     ]
     volumes:
@@ -147,7 +147,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:sclera-audit"
@@ -174,7 +174,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:sclera-identity"
@@ -201,7 +201,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:sclera-alerts"
@@ -228,7 +228,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:sclera-inventory"
@@ -255,7 +255,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:sclera-workorders"
@@ -265,8 +265,14 @@ services:
   sclera-inspection:
     build: ./sclera-inspection
     container_name: sclera-inspection
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      DB_URL: jdbc:postgresql://postgres:5432/vdms
+      DB_USER: root
+      DB_PASS: mypass123
       DAPR_HTTP_PORT: "3500"
       DAPR_GRPC_PORT: "50001"
       MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
@@ -274,6 +280,8 @@ services:
     ports: ["8095:8095"]
     networks: [sclera-net]
     restart: on-failure
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   sclera-inspection-dapr:
     image: daprio/daprd:1.12.0
@@ -282,7 +290,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:sclera-inspection"
@@ -292,8 +300,14 @@ services:
   sclera-integrations:
     build: ./sclera-integrations
     container_name: sclera-integrations
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      DB_URL: jdbc:postgresql://postgres:5432/vdms
+      DB_USER: root
+      DB_PASS: mypass123
       DAPR_HTTP_PORT: "3500"
       DAPR_GRPC_PORT: "50001"
       MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
@@ -301,6 +315,8 @@ services:
     ports: ["8096:8096"]
     networks: [sclera-net]
     restart: on-failure
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   sclera-integrations-dapr:
     image: daprio/daprd:1.12.0
@@ -309,7 +325,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:sclera-integrations"
@@ -336,7 +352,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:sclera-edge"
@@ -368,7 +384,7 @@ services:
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components/local",
+      "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
     network_mode: "service:api-gateway"

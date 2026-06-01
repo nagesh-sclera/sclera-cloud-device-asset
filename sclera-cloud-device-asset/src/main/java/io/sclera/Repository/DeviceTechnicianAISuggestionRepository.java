@@ -16,13 +16,13 @@ public interface DeviceTechnicianAISuggestionRepository extends JpaRepository<De
     @Modifying
     @Transactional
     @Query(value = "INSERT INTO device_technician_ai_suggestion (id, device_type, technicians, vdms_id) " +
-            "VALUES (?1, ?2, CAST(?3 AS JSON), ?4)", nativeQuery = true)
+            "VALUES (?1, ?2, CAST(?3 AS jsonb), ?4)", nativeQuery = true)
     Integer createTechnicianSuggestion(String id, String deviceType, String technicians, String vdmsId);
 
     @Modifying
     @Transactional
     @Query(value = "UPDATE device_technician_ai_suggestion " +
-            "SET device_type = ?2, technicians = CAST(?3 AS JSON), vdms_id = ?4 WHERE id = ?1", nativeQuery = true)
+            "SET device_type = ?2, technicians = CAST(?3 AS jsonb), vdms_id = ?4 WHERE id = ?1", nativeQuery = true)
     Integer updateTechnicianSuggestion(String id, String deviceType, String technicians, String vdmsId);
 
 
@@ -48,10 +48,11 @@ public interface DeviceTechnicianAISuggestionRepository extends JpaRepository<De
 
     @Modifying
     @Transactional
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
     @Query(value = "INSERT INTO device_technician_ai_suggestion (id, device_type, technicians, vdms_id) " +
-            "VALUES (?1, ?2, CAST(?3 AS JSON), ?4) " +
-            "ON DUPLICATE KEY UPDATE " +
-            "device_type = ?2, technicians = CAST(?3 AS JSON)",
+            "VALUES (?1, ?2, CAST(?3 AS jsonb), ?4) " +
+            "ON CONFLICT (id) DO UPDATE SET " +
+            "device_type = EXCLUDED.device_type, technicians = CAST(?3 AS jsonb)",
             nativeQuery = true)
     Integer upsertTechnicianSuggestion(String id, String deviceType, String technicians, String vdmsId);
 }

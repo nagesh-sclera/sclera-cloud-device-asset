@@ -18,12 +18,13 @@ public interface DeviceTypesRepository extends JpaRepository<DeviceTypes, String
 
     @Modifying
     @Transactional
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
     @Query(value =
             "INSERT INTO device_types (id, name, updated_timestamp) " +
                     "VALUES (?1, ?2, ?3) " +
-                    "ON DUPLICATE KEY UPDATE " +
-                    "name = ?2, " +
-                    "updated_timestamp = ?3",
+                    "ON CONFLICT (id) DO UPDATE SET " +
+                    "name = EXCLUDED.name, " +
+                    "updated_timestamp = EXCLUDED.updated_timestamp",
             nativeQuery = true)
     Integer upsert(String id,
                    String name,

@@ -16,7 +16,7 @@ public interface LocationHistoryRepository extends JpaRepository<LocationHistory
 
     @Modifying
     @Transactional
-    @Query(value = "INSERT INTO location_history(id, status,type, description, updated_timestamp, updated_email, location_id) VALUE (?1, ?2, ?3, ?4, ?5, ?6, ?7) ", nativeQuery = true)
+    @Query(value = "INSERT INTO location_history(id, status,type, description, updated_timestamp, updated_email, location_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7) ", nativeQuery = true)
     void addLocationHistory(String id, String status, String type, String description, BigInteger updated_timestamp, String updated_email, String location_id);
 
     @Query(nativeQuery = true)

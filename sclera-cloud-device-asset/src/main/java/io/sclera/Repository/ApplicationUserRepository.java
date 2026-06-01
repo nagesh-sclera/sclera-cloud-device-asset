@@ -17,10 +17,11 @@ public interface ApplicationUserRepository extends JpaRepository<ApplicationUser
 
     @Modifying
     @Transactional
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
     @Query(value = "INSERT INTO application_user (id, technician_id, email, type) " +
             "VALUES (?1, ?2, ?3, ?4) " +
-            "ON DUPLICATE KEY UPDATE " +
-            "technician_id = ?2, email = ?3, type = ?4", nativeQuery = true)
+            "ON CONFLICT (id) DO UPDATE SET " +
+            "technician_id = EXCLUDED.technician_id, email = EXCLUDED.email, type = EXCLUDED.type", nativeQuery = true)
     Integer upsertApplicationUsers(String id, String technicianId, String email, String type);
 
     @Modifying

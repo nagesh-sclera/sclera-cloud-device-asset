@@ -20,8 +20,9 @@ public interface DocumentRepository extends JpaRepository<Document, String> {
 
 	@Modifying
 	@Transactional
+	// PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
 	@Query(value = "INSERT INTO document (id , name, category , description, link, created_email, created_timestamp, encrypted_type) VALUES (?1,?2,?3,?4,?5,?6,?7,?8) "
-			+ "ON DUPLICATE KEY UPDATE name = ?2 , category = ?3, description = ?4, link = ?5, encrypted_type = ?8 ", nativeQuery = true)
+			+ "ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, category = EXCLUDED.category, description = EXCLUDED.description, link = EXCLUDED.link, encrypted_type = EXCLUDED.encrypted_type", nativeQuery = true)
 	void upsertDocument(String id, String name, String category, String description, String link, String username,
 						BigInteger createdTimestamp,Integer encryptedType);
 
@@ -44,7 +45,7 @@ public interface DocumentRepository extends JpaRepository<Document, String> {
 
 	@Modifying
 	@Transactional
-	@Query(value = "INSERT INTO device_document (document_id , device_id) VALUE (?1,?2)", nativeQuery = true)
+	@Query(value = "INSERT INTO device_document (document_id , device_id) VALUES (?1,?2)", nativeQuery = true)
 	void tagDocumentToDevice(String document_id, String device_id);
 
 	@Modifying

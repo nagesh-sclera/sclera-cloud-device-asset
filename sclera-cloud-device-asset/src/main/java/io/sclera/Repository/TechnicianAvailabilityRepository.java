@@ -14,13 +14,15 @@ public interface TechnicianAvailabilityRepository extends JpaRepository<Technici
 
     @Modifying
     @Transactional
-    @Query(value = "INSERT INTO technician_availability (id, start_date, end_date, start_time, end_time, is_all_day, frequency, `condition`, technician_id) " +
+    // PG-port: backtick removed (condition is not reserved in PG)
+    @Query(value = "INSERT INTO technician_availability (id, start_date, end_date, start_time, end_time, is_all_day, frequency, condition, technician_id) " +
             "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)", nativeQuery = true)
     Integer createTechnicianAvailability(String id, Long startDate, Long endDate, String startTime, String endTime, Boolean isAllDay, String frequency, String condition, String technicianId);
 
     @Modifying
     @Transactional
-    @Query(value = "UPDATE technician_availability SET start_date = ?2, end_date = ?3, start_time = ?4, end_time = ?5, is_all_day = ?6, frequency = ?7, `condition` = ?8, technician_id = ?9 " +
+    // PG-port: backtick removed (condition is not reserved in PG)
+    @Query(value = "UPDATE technician_availability SET start_date = ?2, end_date = ?3, start_time = ?4, end_time = ?5, is_all_day = ?6, frequency = ?7, condition = ?8, technician_id = ?9 " +
             "WHERE id = ?1", nativeQuery = true)
     Integer updateTechnicianAvailability(String id, Long startDate, Long endDate, String startTime, String endTime, Boolean isAllDay, String frequency, String condition, String technicianId);
 
@@ -54,9 +56,10 @@ public interface TechnicianAvailabilityRepository extends JpaRepository<Technici
 
     @Modifying
     @Transactional
-    @Query(value = "INSERT INTO technician_availability (id, start_date, end_date, start_time, end_time, is_all_day, frequency, `condition`, technician_id) " +
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED); backticks removed (condition is not reserved in PG)
+    @Query(value = "INSERT INTO technician_availability (id, start_date, end_date, start_time, end_time, is_all_day, frequency, condition, technician_id) " +
             "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9) " +
-            "ON DUPLICATE KEY UPDATE " +
-            "start_date = ?2, end_date = ?3, start_time = ?4, end_time = ?5, is_all_day = ?6, frequency = ?7, `condition` = ?8", nativeQuery = true)
+            "ON CONFLICT (id) DO UPDATE SET " +
+            "start_date = EXCLUDED.start_date, end_date = EXCLUDED.end_date, start_time = EXCLUDED.start_time, end_time = EXCLUDED.end_time, is_all_day = EXCLUDED.is_all_day, frequency = EXCLUDED.frequency, condition = EXCLUDED.condition", nativeQuery = true)
     Integer upsertTechnicianAvailability(String id, Long startDate, Long endDate, String startTime, String endTime, Boolean isAllDay, String frequency, String condition, String technicianId);
 }

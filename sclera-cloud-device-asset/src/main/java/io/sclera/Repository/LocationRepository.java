@@ -31,7 +31,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
 
     @Modifying
     @Transactional
-    @Query(value = "INSERT INTO location(id,name,position,floor_id, area, type, updated_timestamp ) VALUE(?1,?2,?3,?4,?5,?6,?7)", nativeQuery = true)
+    @Query(value = "INSERT INTO location(id,name,position,floor_id, area, type, updated_timestamp ) VALUES(?1,?2,?3,?4,?5,?6,?7)", nativeQuery = true)
     int addLocationByFloorId(String location_id, String name, String position, String floor_id, String area, String type, BigInteger updated_timestamp);
 
 
@@ -81,7 +81,8 @@ public interface LocationRepository extends JpaRepository<Location, String> {
 
     @Modifying
     @Transactional
-    @Query(value = "INSERT INTO location(id,name,position,area,floor_id, type, code,updated_timestamp ) VALUES(?1,?2,?3,?4,?5,?7,?8,?9) ON DUPLICATE KEY UPDATE name = ?2, status=?6, type = ?7, code = ?8, updated_timestamp = ?9  ", nativeQuery = true)
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
+    @Query(value = "INSERT INTO location(id,name,position,area,floor_id, type, code,updated_timestamp ) VALUES(?1,?2,?3,?4,?5,?7,?8,?9) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, status=?6, type = EXCLUDED.type, code = EXCLUDED.code, updated_timestamp = EXCLUDED.updated_timestamp", nativeQuery = true)
     int upsertLocationByFloorId(String id, String name, String position, String area, String floor_id, String status, String type, String code, BigInteger updated_timestamp);
 
     @Query(nativeQuery = true)
@@ -115,7 +116,8 @@ public interface LocationRepository extends JpaRepository<Location, String> {
     //to be deleted after backend sync
     @Modifying
     @Transactional
-    @Query(value = "INSERT INTO location(id,name,position,area,floor_id, type, updated_timestamp ) VALUES(?1,?2,?3,?4,?5, ?6, ?7 ) ON DUPLICATE KEY UPDATE name = ?2, position = ?3, area = ?4,floor_id = ?5, type =?6, updated_timestamp = ?7 ", nativeQuery = true)
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
+    @Query(value = "INSERT INTO location(id,name,position,area,floor_id, type, updated_timestamp ) VALUES(?1,?2,?3,?4,?5, ?6, ?7 ) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, position = EXCLUDED.position, area = EXCLUDED.area, floor_id = EXCLUDED.floor_id, type = EXCLUDED.type, updated_timestamp = EXCLUDED.updated_timestamp", nativeQuery = true)
     int upsertLocationByFloorIdBackendSync(String id, String name, String position, String area, String floor_id, String type, BigInteger updated_timestamp);
 
     @Query(value = "SELECT COUNT(*) FROM location WHERE floor_id = ?1 AND (?2 = 'null' or CONCAT_WS('' , name ) LIKE CONCAT('%' ,?2, '%')) ", nativeQuery = true)
@@ -240,7 +242,8 @@ public interface LocationRepository extends JpaRepository<Location, String> {
 
     @Modifying
     @Transactional
-    @Query(value = "INSERT INTO location(id,name,position,area,floor_id, type, code, updated_timestamp) VALUES(?1,?2,?3,?4,?5,?7,?8,?9) ON DUPLICATE KEY UPDATE name = ?2, status=?6, type = ?7, code = ?8, area =?4, position = ?3, updated_timestamp = ?9 ", nativeQuery = true)
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
+    @Query(value = "INSERT INTO location(id,name,position,area,floor_id, type, code, updated_timestamp) VALUES(?1,?2,?3,?4,?5,?7,?8,?9) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, status=?6, type = EXCLUDED.type, code = EXCLUDED.code, area = EXCLUDED.area, position = EXCLUDED.position, updated_timestamp = EXCLUDED.updated_timestamp", nativeQuery = true)
     int upsertlocationdetails(String id, String name, String position, String area, String floor_id, String status, String type, String code, BigInteger updated_timestamp);
 
 

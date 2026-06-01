@@ -40,24 +40,25 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     @Transactional
     @Query(value = "INSERT INTO device(id, docker_vdms_id, docker_name, ip_address, status, mac_address, last_seen_on, display_name, vendor, created_timestamp, user_data_name, type, description, custom_fields, created_email,asset_group) VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9,?10,?11,?12,?13,?14,?15,?16)", nativeQuery = true)
     void insertDevice(String id, String vdms_id, String docker_name, String ip_address, Integer status,
-                      String mac_address, String last_seen_on, String display_name, String vendor, BigInteger created_timestamp,
+                      String mac_address, BigInteger last_seen_on, String display_name, String vendor, BigInteger created_timestamp,
                       String user_data_name, String type, String description, String customFields, String created_email, String asset_group);
 
 
     @Modifying
     @Transactional
     @Query(value = "UPDATE device SET ip_address =?1 , status =?2  , last_seen_on = ?3,  display_name = ?4, vendor = ?5, snmp_parent = ?6  WHERE docker_vdms_id = ?7 AND docker_name =?8 AND  mac_address = ?9 ", nativeQuery = true)
-    void updateDevice(String ip_address, Integer status, String last_seen_on, String display_name, String vendor,
+    void updateDevice(String ip_address, Integer status, BigInteger last_seen_on, String display_name, String vendor,
                       String snmp_parent, String vdms_id, String docker_name, String mac_address);
 
     @Modifying
     @Transactional
     // PG-port: IFNULL->COALESCE
-    // PG-gap: JSON_MERGE_PATCH is MySQL-specific; requires separate migration to jsonb_merge_patch or equivalent
+    // PG-port: JSON_MERGE_PATCH -> jsonb || (shallow merge; flat-object patch assumed — top-level scalar fields only;
+    //          if nested-object patches or null-to-remove semantics are ever needed, revisit with a jsonb_merge_patch() plpgsql function)
     @Query(value = "UPDATE device SET monitor = ?4,  network_layer = ?5, user_data_model = ?6,model = ?6, user_data_name = ?7, type = ?8, user_data_vendor = ?9, vendor = ?9, parent = ?10, remote_access = ?11, warranty = ?12, product_id = ?13,"
             + " location_id = ?14, email_alert = ?15, sms_alert = ?16, popup_notification = ?17, serial_number = ?18, local_vendor_email_alert = ?19,"
             + " local_vendor_sms_alert = ?20, subsystem_parent_id = ?21, custom_fields = COALESCE(?22, custom_fields), description = ?23, asset_match_status = ?24, asset_group = ?25, category = ?26, sub_category = ?27, location_status = ?28, "
-            + " cost_value = ?29, assigned_user_email = ?30, ai_call = ?31, cost_unit = ?32, is_dnd_enabled = ?33, operational_status = ?34, adc_json = JSON_MERGE_PATCH(adc_json, CAST(?35 AS JSON)) "
+            + " cost_value = ?29, assigned_user_email = ?30, ai_call = ?31, cost_unit = ?32, is_dnd_enabled = ?33, operational_status = ?34, adc_json = (COALESCE(adc_json::text, '{}')::jsonb || CAST(?35 AS jsonb))::jsonb "
             + " WHERE docker_vdms_id = ?2 AND docker_name = ?3 AND id = ?1", nativeQuery = true)
     int editDeviceByDeviceID(String device_id, String vdmsid, String dockername, Integer monitor, String network_layer, String user_data_model,
                              String user_data_name, String type, String user_data_vendor, String parent, Integer remote_access,
@@ -142,7 +143,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 //	@Query(value = "INSERT INTO device(id,ip_address,mac_address,user_data_name,user_data_model,user_data_vendor,type,"
 //			+ "location_id,network_layer,parent,snmp_parent,monitor,docker_name,docker_vdms_id,last_seen_on,warranty,status,"
 //			+ "email_alert, sms_alert, popup_notification, virtual_device_type, serial_number)"
-//			+ "VALUE(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21,?22)", nativeQuery = true)
+//			+ "VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21,?22)", nativeQuery = true)
 //	void addVirtualDevice(String final_device_id, String ip_address, String mac_address, String user_data_name,
 //			String user_data_model, String user_data_vendor, String type, String location_id, String network_layer,
 //			String parent, String snmp_parent, Integer monitor, String docker_name, String vdms_id, String last_seen_on,
@@ -155,7 +156,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
             + "location_id,network_layer,parent,snmp_parent,monitor,docker_name,docker_vdms_id,last_seen_on,warranty,status,"
             + "email_alert, sms_alert, popup_notification, virtual_device_type, serial_number, local_vendor_email_alert,local_vendor_sms_alert, "
             + "subsystem_parent_id, description, asset_match_status, created_timestamp, created_email,asset_group, category, sub_category, cost_value, assigned_user_email, ai_call, cost_unit, is_dnd_enabled, operational_status)"
-            + "VALUE(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21,?22, ?23, ?24, ?25, ?26, ?27, ?28,?29,?30, ?31, ?32, ?33, ?34, ?35, ?36, ?37, ?38)", nativeQuery = true)
+            + "VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21,?22, ?23, ?24, ?25, ?26, ?27, ?28,?29,?30, ?31, ?32, ?33, ?34, ?35, ?36, ?37, ?38)", nativeQuery = true)
     void addVirtualDevice(String final_device_id, String ip_address, String mac_address, String user_data_name,
                           String user_data_model, String user_data_vendor, String type, String location_id, String network_layer,
                           String parent, String snmp_parent, Integer monitor, String docker_name, String vdms_id, String last_seen_on,
@@ -167,14 +168,15 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     @Modifying
     @Transactional
     // PG-port: IFNULL->COALESCE
-    // PG-gap: JSON_MERGE_PATCH is MySQL-specific; requires separate migration to jsonb_merge_patch or equivalent
+    // PG-port: JSON_MERGE_PATCH -> jsonb || (shallow merge; flat-object patch assumed — top-level scalar fields only;
+    //          if nested-object patches or null-to-remove semantics are ever needed, revisit with a jsonb_merge_patch() plpgsql function)
     @Query(value = "UPDATE device SET monitor = ?2, location_id = ?3, network_layer = ?4, user_data_model = ?5, type = ?6, "
             + "user_data_vendor = ?7, user_data_name = ?8, parent = ?9, remote_access = ?10, product_id = ?11, warranty = ?12, "
             + "ip_address = ?13, email_alert = ?14, sms_alert = ?15, popup_notification = ?16, virtual_device_type = ?17, "
             + "serial_number = ?18, local_vendor_email_alert = ?19, local_vendor_sms_alert = ?20, docker_name = ?21, subsystem_parent_id = ?22, "
             + "custom_fields = COALESCE(?23, custom_fields), description = ?24, asset_match_status = ?25,asset_group = ?26, category = ?27, "
             + "sub_category = ?28, location_status = ?29, cost_value = ?30, assigned_user_email = ?31, ai_call = ?32, cost_unit = ?33, is_dnd_enabled = ?34, "
-            + "operational_status = ?35, adc_json = JSON_MERGE_PATCH(adc_json, CAST(?36 AS JSON)), model = ?5, vendor = ?7  "
+            + "operational_status = ?35, adc_json = (COALESCE(adc_json::text, '{}')::jsonb || CAST(?36 AS jsonb))::jsonb, model = ?5, vendor = ?7  "
             + "WHERE id = ?1", nativeQuery = true)
     void editVirtualDeviceByVirtualDeviceId(String virtual_device_id, Integer monitor, String location_id, String network_layer,
                                             String user_data_model, String type, String user_data_vendor, String user_data_name, String parent,
@@ -422,8 +424,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     String getSubsystemParentId(String id);
 
     //get devices by ids
+    // PG-port: MySQL FIELD()->array_position; param must be a SQL array, not a Collection.
     @Query(nativeQuery = true)
-    Set<DeviceDTO> getDevicesByIdList(Set<String> device_ids);
+    Set<DeviceDTO> getDevicesByIdList(String[] device_ids);
 
     @Query(value = "SELECT id FROM device WHERE subsystem_parent_id = ?1", nativeQuery = true)
     List<String> getDevicesBySubSystemParentId(String device_id);
@@ -706,12 +709,13 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 
     @Modifying
     @Transactional
+    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED); IFNULL->COALESCE; VALUE->VALUES
     @Query(value = "INSERT INTO device (id, docker_name, docker_vdms_id, user_data_name, user_data_model, user_data_vendor, type, mac_address, ip_address,"
-            + " network_layer, serial_number, warranty, custom_fields, subsystem_parent_id, virtual_device_type, monitor, subsystem_count,created_timestamp,  created_email) VALUE (?1, ?2, ?3, ?4,?5,?6,?7,?8,?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17,?18,?19)"
-            + " ON DUPLICATE KEY UPDATE user_data_name = IFNULL(?4, user_data_name), user_data_model = IFNULL(?5,user_data_model),"
-            + " user_data_vendor = IFNULL(?6,user_data_vendor), type = IFNULL(?7, type), mac_address = IFNULL(?8, mac_address),"
-            + " ip_address = IFNULL(?9, ip_address), network_layer = IFNULL(?10, network_layer), serial_number = IFNULL(?11, serial_number),"
-            + " warranty = IFNULL(?12, warranty), custom_fields = IFNULL(?13, custom_fields)", nativeQuery = true)
+            + " network_layer, serial_number, warranty, custom_fields, subsystem_parent_id, virtual_device_type, monitor, subsystem_count,created_timestamp,  created_email) VALUES (?1, ?2, ?3, ?4,?5,?6,?7,?8,?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17,?18,?19)"
+            + " ON CONFLICT (id) DO UPDATE SET user_data_name = COALESCE(EXCLUDED.user_data_name, device.user_data_name), user_data_model = COALESCE(EXCLUDED.user_data_model, device.user_data_model),"
+            + " user_data_vendor = COALESCE(EXCLUDED.user_data_vendor, device.user_data_vendor), type = COALESCE(EXCLUDED.type, device.type), mac_address = COALESCE(EXCLUDED.mac_address, device.mac_address),"
+            + " ip_address = COALESCE(EXCLUDED.ip_address, device.ip_address), network_layer = COALESCE(EXCLUDED.network_layer, device.network_layer), serial_number = COALESCE(EXCLUDED.serial_number, device.serial_number),"
+            + " warranty = COALESCE(EXCLUDED.warranty, device.warranty), custom_fields = COALESCE(EXCLUDED.custom_fields, device.custom_fields)", nativeQuery = true)
     void upsertVirtualDeviceByAssetMapper(String id, String docker_name, String vdms_id, String user_data_name, String user_data_model, String user_data_vendor,
                                           String type, String mac_address, String ip_address, String network_layer, String serial_number, String warranty,
                                           String custom_fields, String subsystem_parent_id, Integer virtual_device_type, Integer monitor, Integer subsystem_count,
@@ -976,7 +980,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     @Query(value = "INSERT INTO device(id, docker_vdms_id, docker_name, ip_address, status, mac_address, last_seen_on, display_name, vendor, created_timestamp, user_data_name, type, description, "
             + " custom_fields, created_email,asset_group,onboard_status, monitor, virtual_device_type) VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9,?10,?11,?12,?13,?14,?15,?16,?17,?18, ?19)", nativeQuery = true)
     void addDevice(String id, String vdms_id, String docker_name, String ip_address, Integer status,
-                   String mac_address, String last_seen_on, String display_name, String vendor, BigInteger created_timestamp,
+                   String mac_address, BigInteger last_seen_on, String display_name, String vendor, BigInteger created_timestamp,
                    String user_data_name, String type, String description, String customFields, String created_email, String asset_group, Integer onboard_status, Integer monitor, Integer virtual_device_type);
 
     @Query(nativeQuery = true)
@@ -1079,7 +1083,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
             + "location_id,network_layer,parent,snmp_parent,monitor,docker_name,docker_vdms_id,last_seen_on,warranty,status,"
             + "email_alert, sms_alert, popup_notification, virtual_device_type, serial_number, local_vendor_email_alert,local_vendor_sms_alert, "
             + "subsystem_parent_id, description, asset_match_status, created_timestamp, created_email,asset_group, category, sub_category, cost_value, assigned_user_email, ai_call, cost_unit, is_dnd_enabled, custom_fields)"
-            + "VALUE(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21,?22, ?23, ?24, ?25, ?26, ?27, ?28,?29,?30, ?31, ?32, ?33, ?34, ?35, ?36, ?37, ?38)", nativeQuery = true)
+            + "VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21,?22, ?23, ?24, ?25, ?26, ?27, ?28,?29,?30, ?31, ?32, ?33, ?34, ?35, ?36, ?37, ?38)", nativeQuery = true)
     void moveVirtualDevice(String final_device_id, String ip_address, String mac_address, String user_data_name,
                            String user_data_model, String user_data_vendor, String type, String location_id, String network_layer,
                            String parent, String snmp_parent, Integer monitor, String docker_name, String vdms_id, String last_seen_on,

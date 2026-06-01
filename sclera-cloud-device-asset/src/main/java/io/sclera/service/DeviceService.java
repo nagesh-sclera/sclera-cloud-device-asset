@@ -36,6 +36,7 @@ import io.sclera.client.ModbusClient;
 import io.sclera.client.MonnitClient;
 import io.sclera.client.MqttClient;
 import io.sclera.client.MyDevicesClient;
+import io.sclera.client.DatahoistClient;
 import io.sclera.client.PelicanClient;
 import io.sclera.client.PolyLensClient;
 import io.sclera.client.SiemensClient;
@@ -214,7 +215,7 @@ public class DeviceService {
     PelicanClient pelicanService;
 
     @Autowired
-    DataHoistService dataHoistService;
+    DatahoistClient dataHoistService;
 
     @Autowired
     LocationService locationService;
@@ -522,7 +523,7 @@ public class DeviceService {
                             deviceDto.getDocker_name()) != 0) {
                         try {
                             deviceRepository.updateDevice(deviceDto.getIp_address(), deviceDto.getStatus(),
-                                    deviceDto.getLast_seen_on(), deviceDto.getDisplay_name(), deviceDto.getVendor(),
+                                    parseLastSeenOn(deviceDto.getLast_seen_on()), deviceDto.getDisplay_name(), deviceDto.getVendor(),
                                     deviceDto.getSnmp_parent(), deviceDto.getVdms_id(), deviceDto.getDocker_name(),
                                     deviceDto.getMac_address());
                             userActionLogService.addUserAction(username, "asset", "UPDATE", "A Device name:" + deviceDto.getDisplay_name() + " and id: " + deviceDto.getId() + " is updated for network " + deviceDto.getDocker_name(), "success", "asset_info", deviceDto.getId());
@@ -537,7 +538,7 @@ public class DeviceService {
                             try {
                                 deviceRepository.insertDevice(deviceDto.getId(), vdmsid,
                                         dockername, deviceDto.getIp_address(), deviceDto.getStatus(),
-                                        deviceDto.getMac_address(), deviceDto.getLast_seen_on(),
+                                        deviceDto.getMac_address(), parseLastSeenOn(deviceDto.getLast_seen_on()),
                                         deviceDto.getDisplay_name(), deviceDto.getVendor(), deviceDto.getCreated_timestamp(),
                                         deviceDto.getUser_data_name(), deviceDto.getType(), deviceDto.getDescription(), deviceDto.getCustom_fields(), username, deviceDto.getAsset_group());
                                 userActionLogService.addUserAction(username, "asset", "ADD", "A Device name: " + deviceDto.getUser_data_name() + " and id: " + deviceDto.getId() + " is added for network " + dockername, "success", "asset_info", deviceDto.getId());
@@ -1748,57 +1749,10 @@ public class DeviceService {
             String device_name = deviceDTO.getUser_data_name() == null || deviceDTO.getUser_data_name().equals("") ? deviceDTO.getDisplay_name() : deviceDTO.getUser_data_name();
 
             try {
-                for (Bacnet_Object bacnetObject : device.getBacnet_object()) {
-                    bacnetObject.setDevice(null);
-                }
-                log.info("Came here after bacnet");
-                for (Lorawan_Sensor lorawanSensor : device.getLorawan_sensor()) {
-                    lorawanSensor.setDevice(null);
-                }
-                log.info("Came here after lorawan");
-                for (DisruptiveSensor disruptiveSensor : device.getDisruptive_sensor()) {
-                    disruptiveSensor.setDevice(null);
-                }
-
-                log.info("Came here after disruptive");
-                for (Datahoist datahoist : device.getDatahoist()) {
-                    datahoist.setDevice(null);
-                }
-                log.info("Came here after data hoist");
-                for (MyDevicesSensor myDevicesSensor : device.getMy_devices_sensor()) {
-                    myDevicesSensor.setDevice(null);
-                }
-                log.info("Came here after my devices");
-                for (Monnit_Sensor monnitSensor : device.getMonnit_sensor()) {
-                    monnitSensor.setDevice(null);
-                }
-                log.info("Came here after monnit sensor");
-                for (PelicanSensor pelicanSensor : device.getPelican_sensor()) {
-                    pelicanSensor.setDevice(null);
-                }
-                log.info("Came here after pelican sensor");
-                for (KNXGroup knxGroup : device.getKnx_group()) {
-                    knxGroup.setDevice(null);
-                }
-                log.info("Came here after knx group");
                 for (SnmpObject snmpObject : device.getSnmp_object()) {
                     snmpObject.setDevice(null);
                 }
                 log.info("Came here after snmp object");
-                for (DaintreeDevice daintreeDevice : device.getDaintree_device()) {
-                    daintreeDevice.setDevice(null);
-                }
-                log.info("Came here after daintree");
-
-                for (EcobeeSensor ecobeeSensor : device.getEcobee_sensor()) {
-                    ecobeeSensor.setDevice(null);
-                }
-                log.info("Came here after ecobee");
-
-                for (ModbusRegister modbusRegister : device.getModbus_register()) {
-                    modbusRegister.setDevice(null);
-                }
-                log.info("Came here after modbus");
 
                 for (SiemensAsset siemensAsset : device.getSiemens_asset()) {
                     siemensAsset.setDevice(null);
@@ -1812,93 +1766,13 @@ public class DeviceService {
                     log.info("No inventory_device mapped for deviceId: {}", device.getId());
                 }
 
-                Set<String> inspectionRecordIds = device.getRecord_checklist()
-                        .stream()
-                        .map(RecordChecklist::getInspection_record)
-                        .filter(Objects::nonNull)
-                        .filter(record -> !true)
-                        .map(InspectionRecord::getId)
-                        .collect(Collectors.toSet());
-                finalInspectionrecordIds.addAll(inspectionRecordIds);
-
-                Set<String> recordChecklistIds = device.getRecord_checklist()
-                        .stream()
-                        .map(RecordChecklist::getId)
-                        .collect(Collectors.toSet());
-                finalRecordChecklistIds.addAll(recordChecklistIds);
-
-                System.out.println("r size" + recordChecklistIds.size());
-
-                Set<String> globalInspectionRelationIds = device.getGlobal_inspection_relation()
-                        .stream()
-                        .map(GlobalInspectionRelation::getId)
-                        .collect(Collectors.toSet());
-                finalGlobalInspectionRelationIds.addAll(globalInspectionRelationIds);
-
-                System.out.println("g size" + globalInspectionRelationIds.size());
-
-                Set<String> globalChecklistConditionIds = device.getGlobal_checklist_conditions()
-                        .stream()
-                        .map(GlobalChecklistConditions::getId)
-                        .collect(Collectors.toSet());
-
-                System.out.println("global checklist conditions size" + globalChecklistConditionIds.size());
-
-                recordChecklistService.updateRecordChecklistDeviceAndIsRemoved(recordChecklistIds);
-                globalInspectionRecordService.updateGlobalInspectionRelationDeviceAndIsRemoved(globalInspectionRelationIds);
-                globalChecklistConditionsService.updateGlobalChecklistConditionsDeviceAndIsRemoved(globalChecklistConditionIds);
-
-                for (RecordChecklist recordChecklist : device.getRecord_checklist()) {
-                    UserActionLogDTO userActionLogDTO = new UserActionLogDTO();
-                    if (recordChecklist.getRecord_type().equals("checklist") && recordChecklist.getInspection_record() == null) {
-                        userActionLogDTO.setType("procedure");
-                        userActionLogDTO.setSub_type("tagged_procedure");
-                    } else if (recordChecklist.getRecord_type().equals("checklist") && recordChecklist.getInspection_record() != null) {
-                        userActionLogDTO.setType("inspection");
-                        userActionLogDTO.setSub_type("inspection_checklist");
-                    } else if (recordChecklist.getRecord_type().equals("service") && recordChecklist.getInspection_record() == null) {
-                        userActionLogDTO.setType("reactive_service");
-                        userActionLogDTO.setSub_type("service_request");
-                    } else if (recordChecklist.getRecord_type().equals("service") && recordChecklist.getInspection_record() != null) {
-                        userActionLogDTO.setSub_type("scheduled_service");
-                        userActionLogDTO.setSub_type("service_checklist");
-                    }
-                    userActionLogDTO.setStatus("success");
-                    userActionLogDTO.setPrimary_id(recordChecklist.getId());
-                    userActionLogDTO.setEmail(username);
-                    userActionLogDTO.setSecondary_id(deviceId);
-                    userActionLogDTO.setTable_name("record_checklist");
-                    userActionLogDTO.setCreated_timestamp(BigInteger.valueOf(System.currentTimeMillis()));
-                    userActionLogDTO.setMessage("Record Checklist " + recordChecklist.getId() + " tagged to device " + deviceId + " has been soft deleted");
-                    userActionLogDTOS.add(userActionLogDTO);
-                    log.info("Deleted record id " + recordChecklist.getId());
-                }
-
-                for (GlobalInspectionRelation globalInspectionRelation : device.getGlobal_inspection_relation()) {
-                    UserActionLogDTO userActionLogDTO = new UserActionLogDTO();
-                    userActionLogDTO.setPrimary_id(globalInspectionRelation.getId());
-                    userActionLogDTO.setEmail(username);
-                    userActionLogDTO.setStatus("success");
-                    userActionLogDTO.setSecondary_id(deviceId);
-                    userActionLogDTO.setTable_name("global_inspection_relation");
-                    userActionLogDTO.setCreated_timestamp(BigInteger.valueOf(System.currentTimeMillis()));
-                    userActionLogDTO.setMessage("Global Inspection Relation " + globalInspectionRelation.getId() + " associated with device " + deviceId + " has been soft deleted");
-                    userActionLogDTOS.add(userActionLogDTO);
-                    log.info("DELETED global relation id :" + globalInspectionRelation.getId());
-                }
-
-                for (GlobalChecklistConditions globalChecklistConditions : device.getGlobal_checklist_conditions()) {
-                    UserActionLogDTO userActionLogDTO = new UserActionLogDTO();
-                    userActionLogDTO.setPrimary_id(globalChecklistConditions.getId());
-                    userActionLogDTO.setEmail(username);
-                    userActionLogDTO.setStatus("success");
-                    userActionLogDTO.setSecondary_id(deviceId);
-                    userActionLogDTO.setTable_name("global_checklist_conditions");
-                    userActionLogDTO.setCreated_timestamp(BigInteger.valueOf(System.currentTimeMillis()));
-                    userActionLogDTO.setMessage("Global Inspection Relation " + globalChecklistConditions.getId() + " associated with device " + deviceId + " has been soft deleted");
-                    userActionLogDTOS.add(userActionLogDTO);
-                    log.info("DELETED global checklist condition id :" + globalChecklistConditions.getId());
-                }
+                // Inspection data ownership moved to sclera-inspection — cleanup is now a single
+                // remote call per feature (deviceId-keyed). Per-entity ids are not available here
+                // anymore; the per-row audit log entries that used to be built from local entities
+                // are emitted by sclera-inspection as it performs the soft-delete.
+                recordChecklistService.deleteAllRecordChecklistByDeviceId(deviceId);
+                globalInspectionRecordService.updateGlobalInspectionByDeviceId(deviceId, deviceId);
+                globalChecklistService.deleteGlobalChecklistByDeviceId(deviceId);
                 connectedDevicesService.untagPowerSourceByDeviceId(deviceId);
                 log.info("Untagged Power sources");
 
@@ -1998,57 +1872,10 @@ public class DeviceService {
             LocationDTO locationDTO = null;
 
             try {
-                for (Bacnet_Object bacnetObject : device.getBacnet_object()) {
-                    bacnetObject.setDevice(null);
-                }
-                log.info("Came here after bacnet");
-                for (Lorawan_Sensor lorawanSensor : device.getLorawan_sensor()) {
-                    lorawanSensor.setDevice(null);
-                }
-                log.info("Came here after lorawan");
-                for (DisruptiveSensor disruptiveSensor : device.getDisruptive_sensor()) {
-                    disruptiveSensor.setDevice(null);
-                }
-
-                log.info("Came here after disruptive");
-                for (Datahoist datahoist : device.getDatahoist()) {
-                    datahoist.setDevice(null);
-                }
-                log.info("Came here after data hoist");
-                for (MyDevicesSensor myDevicesSensor : device.getMy_devices_sensor()) {
-                    myDevicesSensor.setDevice(null);
-                }
-                log.info("Came here after my devices");
-                for (Monnit_Sensor monnitSensor : device.getMonnit_sensor()) {
-                    monnitSensor.setDevice(null);
-                }
-                log.info("Came here after monnit sensor");
-                for (PelicanSensor pelicanSensor : device.getPelican_sensor()) {
-                    pelicanSensor.setDevice(null);
-                }
-                log.info("Came here after pelican sensor");
-                for (KNXGroup knxGroup : device.getKnx_group()) {
-                    knxGroup.setDevice(null);
-                }
-                log.info("Came here after knx group");
                 for (SnmpObject snmpObject : device.getSnmp_object()) {
                     snmpObject.setDevice(null);
                 }
                 log.info("Came here after snmp object");
-                for (DaintreeDevice daintreeDevice : device.getDaintree_device()) {
-                    daintreeDevice.setDevice(null);
-                }
-                log.info("Came here after daintree");
-
-                for (EcobeeSensor ecobeeSensor : device.getEcobee_sensor()) {
-                    ecobeeSensor.setDevice(null);
-                }
-                log.info("Came here after ecobee");
-
-                for (ModbusRegister modbusRegister : device.getModbus_register()) {
-                    modbusRegister.setDevice(null);
-                }
-                log.info("Came here after modbus");
 
                 for (SiemensAsset siemensAsset : device.getSiemens_asset()) {
                     siemensAsset.setDevice(null);
@@ -5408,7 +5235,7 @@ public class DeviceService {
 
     // get devices by ids
     public Set<DeviceDTO> getDevicesByIdList(String vdms_id, Set<String> device_ids) {
-        Set<DeviceDTO> devices = deviceRepository.getDevicesByIdList(device_ids);
+        Set<DeviceDTO> devices = deviceRepository.getDevicesByIdList(device_ids.toArray(new String[0]));
         for (DeviceDTO device : devices) {
             device.setIp_addresses(this.getDeviceIPAddressByDeviceId(device.getId()));
             device.setSubsystems(new HashSet<>());
@@ -5541,7 +5368,7 @@ public class DeviceService {
 
 
     public Set<DeviceDTO> getDevicesByIds(Set<String> device_ids) {
-        Set<DeviceDTO> devices = deviceRepository.getDevicesByIdList(device_ids);
+        Set<DeviceDTO> devices = deviceRepository.getDevicesByIdList(device_ids.toArray(new String[0]));
         return devices.stream().filter(device -> (device.getAsset_match_status() != 3 && (device.getType() != null && device.getType() != ""))).collect(Collectors.toSet());
     }
 
@@ -6384,7 +6211,7 @@ public class DeviceService {
             try {
                 deviceRepository.addDevice(deviceDto.getId(), vdmsid,
                         dockername, deviceDto.getIp_address(), deviceDto.getStatus(),
-                        deviceDto.getMac_address(), deviceDto.getLast_seen_on(),
+                        deviceDto.getMac_address(), parseLastSeenOn(deviceDto.getLast_seen_on()),
                         deviceDto.getDisplay_name(), deviceDto.getVendor(), deviceDto.getCreated_timestamp(),
                         deviceDto.getUser_data_name(), deviceDto.getType(), deviceDto.getDescription(),
                         deviceDto.getCustom_fields(), username, deviceDto.getAsset_group(), deviceDto.getOnboard_status(), deviceDto.getMonitor(), deviceDto.getVirtual_device_type());
@@ -6397,10 +6224,20 @@ public class DeviceService {
             } catch (Exception e) {
                 log.error("Exception.  Params: deviceDto: {}, endpoint : {}", deviceDto, httpServletRequest.getRequestURI(), e);
                 userActionLogService.addUserAction(username, "asset", "ADD", "Unable to Add Device name: " + deviceDto.getUser_data_name() + " and id: " + deviceDto.getId() + " for network " + dockername, "failed", "asset_info", deviceDto.getId());
+                throw new RuntimeException("Failed to add device " + deviceDto.getId() + ": " + e.getMessage(), e);
             }
 
         }
         return this.getDeviceByDeviceId(username, vdmsid, dockername, deviceDto.getId());
+    }
+
+    // PG-port: device.last_seen_on is numeric; DTO ships it as String. MySQL silently coerced
+    // empty/"null"/non-numeric strings; PG rejects with 42804. Treat blank/"null"/unparseable as SQL NULL.
+    private static BigInteger parseLastSeenOn(String s) {
+        if (s == null) return null;
+        String t = s.trim();
+        if (t.isEmpty() || t.equalsIgnoreCase("null")) return null;
+        try { return new BigInteger(t); } catch (NumberFormatException e) { return null; }
     }
 
 //    public void exportFilteredDevices(HttpServletResponse response, String username, String vdmsid, String

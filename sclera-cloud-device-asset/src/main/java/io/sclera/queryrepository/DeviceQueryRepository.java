@@ -12,11 +12,14 @@ public class DeviceQueryRepository {
 
     public String getQueryForUpsertCollection() {
         // PG-port: ON DUPLICATE KEY UPDATE -> ON CONFLICT (id) DO UPDATE SET ... (VALUES()->EXCLUDED)
+        // PG-port: adc_json is a jsonb column; the bound String must be cast (pgjdbc binds setString as
+        //   varchar -> "column is of type jsonb but expression is of type character varying"). Matches the
+        //   CAST(? AS jsonb) the AISuggestion native queries already use. (Method currently has no callers.)
         return "INSERT INTO device (" +
                 "id, system_type_name, asset_type_name, asset_sub_type_name, adc_json, created_email, assigned_user_email, system_type_id, asset_type_id, asset_sub_type_id, " +
                 "location_id, docker_name, type, monitor, docker_vdms_id, virtual_device_type, asset_match_status, created_timestamp, asset_group, onboard_status, category, sub_category, " +
                 "location_status, source_type, display_name, model, vendor, serial_number, warranty, description, user_data_name, user_data_model, user_data_vendor " +
-                ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) " +
+                ") VALUES (?,?,?,?,CAST(? AS jsonb),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) " +
                 "ON CONFLICT (id) DO UPDATE SET " +
                 "system_type_name = EXCLUDED.system_type_name, " +
                 "asset_type_name = EXCLUDED.asset_type_name, " +
