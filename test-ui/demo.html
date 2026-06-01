@@ -3,342 +3,1109 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sclera — Dapr Test (integrations ↔ inspection)</title>
+<title>Sclera 2.0 — Device Module Test</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; font-size: 13px; }
-.app { display: grid; grid-template-rows: 50px 1fr; min-height: 100vh; }
-
-/* Topbar */
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; height: 100vh; overflow: hidden; font-size: 14px; }
+.app { display: grid; grid-template-rows: 50px 1fr; height: 100vh; }
 .topbar { background: #1a1d27; border-bottom: 1px solid #2d3148; padding: 0 20px; display: flex; align-items: center; gap: 14px; }
 .topbar h1 { font-size: 15px; font-weight: 600; color: #7c8cf8; }
 .svc-strip { margin-left: auto; display: flex; gap: 8px; align-items: center; }
 .svc-pill { display: flex; align-items: center; gap: 5px; background: #13151f; border: 1px solid #2d3148; border-radius: 20px; padding: 3px 11px; font-size: 12px; }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: #475569; }
-.dot.up { background: #22c55e; }
-.dot.down { background: #ef4444; }
-
-/* Layout */
-.main { padding: 16px; display: flex; flex-direction: column; gap: 14px; max-width: 1400px; margin: 0 auto; }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-/* Cards */
-.card { background: #1a1d27; border: 1px solid #2d3148; border-radius: 8px; padding: 16px; }
+.dot.up { background: #22c55e; } .dot.down { background: #ef4444; }
+.body { display: grid; grid-template-columns: 220px 1fr; overflow: hidden; }
+.sidebar { background: #13151f; border-right: 1px solid #2d3148; padding: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+.main { padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.sb-section { background: #1a1d27; border: 1px solid #2d3148; border-radius: 7px; padding: 10px; }
+.sb-section h4 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #64748b; margin-bottom: 8px; }
+.f { display: flex; flex-direction: column; gap: 2px; margin-bottom: 6px; }
+.f:last-of-type { margin-bottom: 0; }
+.f label { font-size: 10px; color: #94a3b8; }
+.f input, .f textarea { background: #0f1117; border: 1px solid #2d3148; color: #e2e8f0; border-radius: 5px; padding: 5px 8px; font-size: 11px; font-family: inherit; width: 100%; }
+.f input:focus { outline: none; border-color: #7c8cf8; }
+.f textarea { font-family: 'Consolas', monospace; font-size: 10px; resize: vertical; }
+.hint { font-size: 10px; color: #475569; margin-top: 3px; }
+.tabs { display: flex; gap: 2px; background: #1a1d27; border: 1px solid #2d3148; border-radius: 7px; padding: 3px; flex-shrink: 0; overflow-x: auto; }
+.tab { padding: 5px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; color: #64748b; font-weight: 500; white-space: nowrap; }
+.tab:hover { color: #94a3b8; }
+.tab.active { background: #7c8cf8; color: #fff; }
+.panel { display: none; flex-direction: column; gap: 12px; }
+.panel.active { display: flex; }
+.card { background: #1a1d27; border: 1px solid #2d3148; border-radius: 8px; padding: 14px; }
 .card-hdr { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-.card-hdr h2 { font-size: 14px; font-weight: 600; color: #c7d2fe; }
-.card-hdr .ep { font-size: 11px; color: #475569; font-family: 'Consolas', monospace; }
-.card-hdr .badge-svc { font-size: 10px; padding: 2px 8px; border-radius: 12px; font-weight: 600; }
-.badge-int { background: #1e3a5f; color: #60a5fa; }
-.badge-ins { background: #14532d; color: #4ade80; }
-.badge-cda { background: #5c2d91; color: #c084fc; }
-
-/* Buttons */
-.btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 5px; border: none; cursor: pointer; font-size: 12px; font-weight: 500; font-family: inherit; }
-.btn:hover { filter: brightness(1.1); }
-.btn:disabled { opacity: .4; cursor: not-allowed; }
+.card-hdr h2 { font-size: 13px; font-weight: 600; color: #c7d2fe; }
+.card-hdr .ep { font-size: 10px; color: #475569; font-family: 'Consolas', monospace; }
+.btn { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 5px; border: none; cursor: pointer; font-size: 12px; font-weight: 500; font-family: inherit; white-space: nowrap; }
+.btn:hover { filter: brightness(1.1); } .btn:disabled { opacity: .4; cursor: not-allowed; }
 .btn-primary { background: #7c8cf8; color: #fff; }
 .btn-success { background: #16a34a; color: #fff; }
 .btn-danger  { background: #dc2626; color: #fff; }
+.btn-warn    { background: #d97706; color: #fff; }
 .btn-neutral { background: #2d3148; color: #e2e8f0; }
 .btn-sm { padding: 4px 9px; font-size: 11px; }
-
-/* Form */
-.f { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
-.f label { font-size: 11px; color: #94a3b8; }
-.f input { background: #0f1117; border: 1px solid #2d3148; color: #e2e8f0; border-radius: 5px; padding: 5px 9px; font-size: 12px; font-family: inherit; width: 100%; }
-.f input:focus { outline: none; border-color: #7c8cf8; }
-
-.row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-.endpoint-row { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px dashed #2d3148; }
-.endpoint-row:last-child { border-bottom: none; }
-.endpoint-row .ep-name { flex: 1; font-family: 'Consolas', monospace; font-size: 11px; color: #94a3b8; word-break: break-all; }
-.endpoint-row .ep-status { font-size: 10px; min-width: 50px; text-align: center; padding: 2px 6px; border-radius: 10px; font-weight: 600; }
-.status-200 { background: #14532d; color: #4ade80; }
-.status-404 { background: #5a1a1a; color: #fca5a5; }
-.status-500 { background: #5a1a1a; color: #fca5a5; }
-.status-pending { background: #2d3148; color: #94a3b8; }
-
-/* Response */
-.res-panel { background: #0a0c14; border: 1px solid #1e2235; border-radius: 5px; padding: 10px; font-family: 'Consolas', monospace; font-size: 11px; max-height: 320px; overflow-y: auto; white-space: pre-wrap; color: #a5f3fc; margin-top: 10px; min-height: 80px; }
-.res-meta { font-size: 11px; color: #64748b; margin-bottom: 4px; font-family: 'Consolas', monospace; }
-.res-meta .ok { color: #4ade80; }
-.res-meta .err { color: #f87171; }
+.fg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fg .s2 { grid-column: span 2; } .fg .s1 { grid-column: span 1; }
+.ff { display: flex; flex-direction: column; gap: 3px; }
+.ff label { font-size: 11px; color: #94a3b8; }
+.ff input, .ff select, .ff textarea { background: #0f1117; border: 1px solid #2d3148; color: #e2e8f0; border-radius: 5px; padding: 6px 9px; font-size: 12px; font-family: inherit; width: 100%; }
+.ff input:focus, .ff select:focus { outline: none; border-color: #7c8cf8; }
+.ff textarea { font-family: 'Consolas', monospace; font-size: 11px; resize: vertical; }
+.row-actions { grid-column: span 2; display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { text-align: left; padding: 7px 10px; background: #13151f; color: #64748b; border-bottom: 1px solid #2d3148; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+td { padding: 7px 10px; border-bottom: 1px solid #1e2235; color: #cbd5e1; vertical-align: middle; }
+tr:hover td { background: #181b28; }
+.tbl-empty { text-align: center; color: #475569; padding: 20px; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+.stat { background: #13151f; border: 1px solid #2d3148; border-radius: 8px; padding: 12px; }
+.stat .v { font-size: 26px; font-weight: 700; color: #7c8cf8; line-height: 1; }
+.stat .l { font-size: 9px; color: #64748b; margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; }
+.stat.g .v { color: #22c55e; } .stat.r .v { color: #ef4444; } .stat.a .v { color: #f59e0b; }
+.msg { padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-top: 6px; }
+.msg-ok   { background: #14532d; color: #86efac; border: 1px solid #166534; }
+.msg-err  { background: #450a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
+.msg-info { background: #1e3a5f; color: #93c5fd; border: 1px solid #1d4ed8; }
+.badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+.badge-blue  { background: #1e3a5f; color: #60a5fa; }
+.badge-green { background: #14532d; color: #4ade80; }
+.badge-red   { background: #450a0a; color: #f87171; }
+.badge-gray  { background: #2d3148; color: #94a3b8; }
+.badge-warn  { background: #451a03; color: #fbbf24; }
+.res { background: #0a0c14; border: 1px solid #1e2235; border-radius: 5px; padding: 10px; font-family: 'Consolas', monospace; font-size: 11px; max-height: 240px; overflow-y: auto; white-space: pre-wrap; color: #a5f3fc; margin-top: 8px; }
+.ep-row { display: flex; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px dashed #1e2235; }
+.ep-row:last-of-type { border-bottom: none; }
+.ep-name { flex: 1; font-family: 'Consolas', monospace; font-size: 11px; color: #94a3b8; }
+.ep-name small { display: block; font-size: 10px; color: #475569; margin-top: 1px; }
+.ep-st { font-size: 10px; min-width: 40px; text-align: center; padding: 2px 5px; border-radius: 10px; font-weight: 600; }
+.s-ok { background: #14532d; color: #4ade80; } .s-err { background: #5a1a1a; color: #fca5a5; } .s-pend { background: #2d3148; color: #94a3b8; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
 </style>
 </head>
 <body>
 <div class="app">
-
-  <!-- Top bar -->
-  <div class="topbar">
-    <h1>Sclera — Dapr Test: integrations ↔ inspection</h1>
-    <div class="svc-strip">
-      <div class="svc-pill"><div class="dot" id="dot-int"></div>integrations :8096</div>
-      <div class="svc-pill"><div class="dot" id="dot-ins"></div>inspection :8095</div>
-      <div class="svc-pill"><div class="dot" id="dot-cda"></div>cloud-device-asset :8085</div>
-      <button class="btn btn-neutral btn-sm" onclick="pingAll()">Ping</button>
-      <a class="btn btn-neutral btn-sm" href="index.html" style="text-decoration:none">Asset UI ↗</a>
-    </div>
+<div class="topbar">
+  <h1>Sclera 2.0 — Device Module</h1>
+  <div class="svc-strip">
+    <div class="svc-pill"><div class="dot" id="dot-gw"></div>Gateway :8080</div>
+    <div class="svc-pill"><div class="dot" id="dot-cda"></div>Device-Asset</div>
+    <div class="svc-pill"><div class="dot" id="dot-vdms"></div>VDMS</div>
+    <div class="svc-pill"><div class="dot" id="dot-aud"></div>Audit</div>
+    <div class="svc-pill"><div class="dot" id="dot-int"></div>Integrations</div>
+    <div class="svc-pill"><div class="dot" id="dot-ins"></div>Inspection</div>
+    <button class="btn btn-neutral btn-sm" onclick="pingAll()">Ping</button>
+    <a class="btn btn-neutral btn-sm" href="index.html" style="text-decoration:none">Dashboard ↗</a>
   </div>
+</div>
+<div class="body">
 
-  <div class="main">
-
-    <!-- ── Inputs ── -->
-    <div class="card">
-      <div class="card-hdr"><h2>Test inputs (shared by all buttons below)</h2></div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-        <div class="f"><label>deviceId</label><input id="in_device" value="VDMS760_right_wing_Demo_Device_1"></div>
-        <div class="f"><label>locationId</label><input id="in_location" value="loc-demo-1"></div>
-        <div class="f"><label>recordId (single)</label><input id="in_record" value="rec-demo-1"></div>
-        <div class="f"><label>email</label><input id="in_email" value="admin@sclera.com"></div>
-      </div>
-    </div>
-
-    <div class="grid-2">
-
-      <!-- ── INTEGRATIONS (direct HTTP) ── -->
-      <div class="card">
-        <div class="card-hdr">
-          <span class="badge-svc badge-int">integrations</span>
-          <h2 style="flex:1">Direct HTTP — sclera-integrations :8096</h2>
-        </div>
-
-        <div class="endpoint-row">
-          <div class="ep-name">GET /bacnet/getBacnetObjectCountByDeviceId</div>
-          <button class="btn btn-primary btn-sm" onclick="call('int-bcount','GET','http://localhost:8096/bacnet/getBacnetObjectCountByDeviceId?deviceId='+enc($('in_device').value))">Call</button>
-          <span class="ep-status status-pending" id="st-int-bcount">—</span>
-        </div>
-        <div class="endpoint-row">
-          <div class="ep-name">GET /bacnet/getBacnetObjectsByDeviceId</div>
-          <button class="btn btn-primary btn-sm" onclick="call('int-bobj','GET','http://localhost:8096/bacnet/getBacnetObjectsByDeviceId?deviceId='+enc($('in_device').value))">Call</button>
-          <span class="ep-status status-pending" id="st-int-bobj">—</span>
-        </div>
-        <div class="endpoint-row">
-          <div class="ep-name">GET /myDevices/getDeviceIdByMyDevicesSensorId</div>
-          <button class="btn btn-primary btn-sm" onclick="call('int-mdid','GET','http://localhost:8096/myDevices/getDeviceIdByMyDevicesSensorId?myDevicesSensorId='+enc($('in_record').value))">Call</button>
-          <span class="ep-status status-pending" id="st-int-mdid">—</span>
-        </div>
-        <div class="endpoint-row">
-          <div class="ep-name">POST /myDevices/deleteMyDevicesCompany</div>
-          <button class="btn btn-danger btn-sm" onclick="call('int-mdcdel','POST','http://localhost:8096/myDevices/deleteMyDevicesCompany',{my_devices_company_id:$('in_record').value})">Call</button>
-          <span class="ep-status status-pending" id="st-int-mdcdel">—</span>
-        </div>
-        <div class="endpoint-row">
-          <div class="ep-name">GET /kNX/getKNXGroupCountByDeviceId</div>
-          <button class="btn btn-primary btn-sm" onclick="call('int-knx','GET','http://localhost:8096/kNX/getKNXGroupCountByDeviceId?deviceId='+enc($('in_device').value))">Call</button>
-          <span class="ep-status status-pending" id="st-int-knx">—</span>
-        </div>
-        <div class="endpoint-row">
-          <div class="ep-name">GET /connectedDevices/getPowerSourceTopologyConnectionsCount</div>
-          <button class="btn btn-primary btn-sm" onclick="call('int-cd','GET','http://localhost:8096/connectedDevices/getPowerSourceTopologyConnectionsCount')">Call</button>
-          <span class="ep-status status-pending" id="st-int-cd">—</span>
-        </div>
-        <div class="endpoint-row">
-          <div class="ep-name">GET /datahoist/getDataHoistDeviceById</div>
-          <button class="btn btn-primary btn-sm" onclick="call('int-dh','GET','http://localhost:8096/datahoist/getDataHoistDeviceById?deviceId='+enc($('in_device').value))">Call</button>
-          <span class="ep-status status-pending" id="st-int-dh">—</span>
-        </div>
-
-        <div class="row">
-          <button class="btn btn-success btn-sm" onclick="runAllInt()">Run all integrations ▶</button>
-        </div>
-      </div>
-
-      <!-- ── INSPECTION (direct HTTP) ── -->
-      <div class="card">
-        <div class="card-hdr">
-          <span class="badge-svc badge-ins">inspection</span>
-          <h2 style="flex:1">Direct HTTP — sclera-inspection :8095</h2>
-        </div>
-
-        <div class="endpoint-row">
-          <div class="ep-name">GET /checkListTemplate/getCheckListTemplatesCountByDeviceId</div>
-          <button class="btn btn-primary btn-sm" onclick="call('ins-ctc','GET','http://localhost:8095/checkListTemplate/getCheckListTemplatesCountByDeviceId?deviceId='+enc($('in_device').value))">Call</button>
-          <span class="ep-status status-pending" id="st-ins-ctc">—</span>
-        </div>
-        <div class="endpoint-row">
-          <div class="ep-name">POST /inspectionRecord/updateInspectionRecordStatus</div>
-          <button class="btn btn-primary btn-sm" onclick="callQuery('ins-irst','POST','http://localhost:8095/inspectionRecord/updateInspectionRecordStatus',{id:$('in_record').value,status:true})">Call</button>
-          <span class="ep-status status-pending" id="st-ins-irst">—</span>
-        </div>
-        <div class="endpoint-row">
-          <div class="ep-name">POST /inspectionRecord/updateInspectionStatusOnDeviceArchive</div>
-          <button class="btn btn-primary btn-sm" onclick="call('ins-iar','POST','http://localhost:8095/inspectionRecord/updateInspectionStatusOnDeviceArchive',[$('in_device').value])">Call</button>
-          <span class="ep-status status-pending" id="st-ins-iar">—</span>
-        </div>
-        <div class="endpoint-row">
-          <div class="ep-name">POST /globalChecklist/deleteGlobalChecklistByDeviceId</div>
-          <button class="btn btn-danger btn-sm" onclick="callQuery('ins-gcdel','POST','http://localhost:8095/globalChecklist/deleteGlobalChecklistByDeviceId',{deviceId:$('in_device').value})">Call</button>
-          <span class="ep-status status-pending" id="st-ins-gcdel">—</span>
-        </div>
-        <div class="endpoint-row">
-          <div class="ep-name">GET /recordChecklist/getRecordChecklistStatusByDeviceId</div>
-          <button class="btn btn-primary btn-sm" onclick="call('ins-rcs','GET','http://localhost:8095/recordChecklist/getRecordChecklistStatusByDeviceId?deviceId='+enc($('in_device').value))">Call</button>
-          <span class="ep-status status-pending" id="st-ins-rcs">—</span>
-        </div>
-        <div class="endpoint-row">
-          <div class="ep-name">GET /recordChecklist/getChecklistStatusCountDeviceId</div>
-          <button class="btn btn-primary btn-sm" onclick="call('ins-rcc','GET','http://localhost:8095/recordChecklist/getChecklistStatusCountDeviceId?a='+enc($('in_device').value))">Call</button>
-          <span class="ep-status status-pending" id="st-ins-rcc">—</span>
-        </div>
-        <div class="endpoint-row">
-          <div class="ep-name">POST /recordChecklist/deleteRecordChecklistByLocationId</div>
-          <button class="btn btn-danger btn-sm" onclick="callQuery('ins-rcdel','POST','http://localhost:8095/recordChecklist/deleteRecordChecklistByLocationId',{locationId:$('in_location').value})">Call</button>
-          <span class="ep-status status-pending" id="st-ins-rcdel">—</span>
-        </div>
-        <div class="endpoint-row">
-          <div class="ep-name">POST /globalInspectionRecord/updateGlobalInspectionRecord</div>
-          <button class="btn btn-primary btn-sm" onclick="callQuery('ins-gir','POST','http://localhost:8095/globalInspectionRecord/updateGlobalInspectionRecord',{email:$('in_email').value})">Call</button>
-          <span class="ep-status status-pending" id="st-ins-gir">—</span>
-        </div>
-
-        <div class="row">
-          <button class="btn btn-success btn-sm" onclick="runAllIns()">Run all inspection ▶</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── DAPR-routed via cloud-device-asset ── -->
-    <div class="card">
-      <div class="card-hdr">
-        <span class="badge-svc badge-cda">cloud-device-asset → dapr → target</span>
-        <h2 style="flex:1">Dapr-routed: trigger from :8085, app-dapr forwards to integrations / inspection sidecars</h2>
-      </div>
-      <p style="color:#64748b;font-size:12px;margin-bottom:10px">
-        These call cloud-device-asset endpoints whose business logic invokes BacnetClient/RecordChecklistClient/etc.
-        Those Clients do <code style="color:#7c8cf8">dapr.invokeMethod(APP_ID, …)</code> — proving the sidecar wire is up.
-        If these succeed, the Dapr service-discovery (mDNS) between cloud-device-asset's sidecar and the
-        integrations / inspection sidecars is healthy.
-      </p>
-
-      <div class="endpoint-row">
-        <div class="ep-name">GET /actuator/health (cloud-device-asset)</div>
-        <button class="btn btn-primary btn-sm" onclick="call('cda-h','GET','http://localhost:8085/actuator/health')">Call</button>
-        <span class="ep-status status-pending" id="st-cda-h">—</span>
-      </div>
-      <div class="endpoint-row">
-        <div class="ep-name">GET /user/admin/vdms/VDMS760/docker/right_wing/getdevicecount<br><span style="color:#475569;font-size:10px">touches multiple Clients internally</span></div>
-        <button class="btn btn-primary btn-sm" onclick="call('cda-dc','GET','http://localhost:8085/user/admin/vdms/VDMS760/docker/right_wing/getdevicecount?assignee=all')">Call</button>
-        <span class="ep-status status-pending" id="st-cda-dc">—</span>
-      </div>
-      <div class="endpoint-row">
-        <div class="ep-name">GET /user/admin/vdms/VDMS760/docker/right_wing/devices<br><span style="color:#475569;font-size:10px">device-list join — uses Bacnet/Lorawan/Modbus etc. Clients for counts</span></div>
-        <button class="btn btn-primary btn-sm" onclick="call('cda-dl','GET','http://localhost:8085/user/admin/vdms/VDMS760/docker/right_wing/devices')">Call</button>
-        <span class="ep-status status-pending" id="st-cda-dl">—</span>
-      </div>
-
-      <div class="row">
-        <button class="btn btn-success btn-sm" onclick="runAllCda()">Run all Dapr-routed ▶</button>
-      </div>
-    </div>
-
-    <!-- ── Response panel ── -->
-    <div class="card">
-      <div class="card-hdr">
-        <h2>Last response</h2>
-        <button class="btn btn-neutral btn-sm" onclick="clearLog()">Clear</button>
-      </div>
-      <div id="res-meta" class="res-meta">Click any button above to issue a call. Responses appear here.</div>
-      <div id="res-body" class="res-panel">—</div>
-    </div>
-
+<!-- ── Sidebar ── -->
+<div class="sidebar">
+  <div class="sb-section">
+    <h4>Gateway</h4>
+    <div class="f"><label>URL</label><input id="s_gw" value="http://localhost:8080"></div>
+    <div class="hint">/asset/** → device-asset<br>/vdms/** → vdms-service<br>/audit/** → audit<br>/integrations/** → integrations<br>/inspection/** → inspection<br>/dapr/** → dapr sidecar</div>
+  </div>
+  <div class="sb-section">
+    <h4>Path Params</h4>
+    <div class="f"><label>Username</label><input id="s_user" value="admin"></div>
+    <div class="f"><label>VDMS ID</label><input id="s_vid" value="VDMS760"></div>
+    <div class="f"><label>Docker Name</label><input id="s_docker" value="right_wing"></div>
+    <div class="f"><label>Device ID</label><input id="s_device" value="VDMS760_right_wing_Demo_Device_1"></div>
+    <div class="f"><label>Parent Device ID</label><input id="s_parent" value=""></div>
+    <div class="f"><label>Location ID</label><input id="s_loc" value="loc-demo-1"></div>
+    <div class="f"><label>Condition ID</label><input id="s_cond_id" value=""></div>
+    <div class="f"><label>Note ID</label><input id="s_note_id" value=""></div>
+    <div class="f"><label>Record ID</label><input id="s_rec" value="rec-demo-1"></div>
+    <div class="f"><label>Email</label><input id="s_email" value="admin@sclera.com"></div>
+    <div class="f"><label>Address</label><input id="s_addr" value="123 Main St, Austin TX"></div>
+    <button class="btn btn-neutral btn-sm" style="width:100%;margin-top:6px" onclick="autoFillIds()">Auto-fill from device list</button>
+    <div id="s_hint" class="hint"></div>
   </div>
 </div>
 
+<!-- ── Main ── -->
+<div class="main">
+<div class="tabs">
+  <div class="tab active" onclick="tab('overview',this)">Overview</div>
+  <div class="tab" onclick="tab('devices',this)">Devices</div>
+  <div class="tab" onclick="tab('subsystem',this)">Subsystem & Virtual</div>
+  <div class="tab" onclick="tab('sensors',this)">Sensors & Details</div>
+  <div class="tab" onclick="tab('search',this)">Search & Filter</div>
+  <div class="tab" onclick="tab('notes',this)">Notes & Conditions</div>
+  <div class="tab" onclick="tab('specs',this)">Specifications</div>
+  <div class="tab" onclick="tab('topology',this)">Topology</div>
+  <div class="tab" onclick="tab('vdms',this)">VDMS Info</div>
+  <div class="tab" onclick="tab('dapr',this)">Dapr Pub/Sub</div>
+  <div class="tab" onclick="tab('integrations',this)">Integrations</div>
+  <div class="tab" onclick="tab('inspection',this)">Inspection</div>
+  <div class="tab" onclick="tab('audit',this)">Audit Log</div>
+  <div class="tab" onclick="tab('raw',this)">Raw</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ OVERVIEW -->
+<div id="tab-overview" class="panel active">
+  <div class="card">
+    <div class="card-hdr"><h2>Service Health</h2><button class="btn btn-neutral btn-sm" onclick="pingAll()">Check All</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <div class="svc-pill"><div class="dot" id="h-gw"></div>Gateway :8080</div>
+      <div class="svc-pill"><div class="dot" id="h-cda"></div>Device-Asset :8085</div>
+      <div class="svc-pill"><div class="dot" id="h-vdms"></div>VDMS :8089</div>
+      <div class="svc-pill"><div class="dot" id="h-aud"></div>Audit :8090</div>
+      <div class="svc-pill"><div class="dot" id="h-int"></div>Integrations :8096</div>
+      <div class="svc-pill"><div class="dot" id="h-ins"></div>Inspection :8095</div>
+    </div>
+    <pre id="ping-log" class="res" style="display:none"></pre>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><h2>Device Count</h2><span class="ep">GET …/getdevicecount</span><button class="btn btn-neutral btn-sm" onclick="loadDeviceCount()">Load</button></div>
+    <div id="ov-stats" class="stats-grid"></div>
+    <div id="ov-msg"></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><h2>VDMS Details</h2><span class="ep">GET /vdms/details</span><button class="btn btn-neutral btn-sm" onclick="loadVdmsDetails()">Load</button></div>
+    <div id="vdms-det-grid" class="fg" style="display:none"></div>
+    <div id="vdms-det-msg"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ DEVICES -->
+<div id="tab-devices" class="panel">
+  <div class="card">
+    <div class="card-hdr">
+      <h2>Device List</h2><span class="ep">GET …/devices</span>
+      <div style="display:flex;gap:8px;align-items:center"><span id="dev-badge" style="font-size:11px;color:#64748b"></span><button class="btn btn-neutral btn-sm" onclick="loadDevices()">Refresh</button></div>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Name / ID</th><th>Type</th><th>IP</th><th>Vendor</th><th>Status</th><th></th></tr></thead>
+      <tbody id="dev-tbody"><tr><td colspan="6" class="tbl-empty">Click Refresh</td></tr></tbody>
+    </table></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-hdr"><h2 id="dev-form-title">Add Device</h2><span class="ep" id="dev-form-ep">POST …/adddevice</span></div>
+      <div class="fg">
+        <div class="ff s1"><label>Device Name *</label><input id="df_name" placeholder="Lobby Sensor 01"></div>
+        <div class="ff s1"><label>Type</label><input id="df_type" placeholder="generic, virtual…"></div>
+        <div class="ff s1"><label>IP Address</label><input id="df_ip" placeholder="192.168.1.100"></div>
+        <div class="ff s1"><label>MAC Address</label><input id="df_mac" placeholder="AA:BB:CC:DD:EE:FF"></div>
+        <div class="ff s1"><label>Vendor</label><input id="df_vendor" placeholder="Cisco, Dell…"></div>
+        <div class="ff s1"><label>Description</label><input id="df_desc"></div>
+        <div class="row-actions">
+          <button class="btn btn-success" id="df_submit" onclick="submitDevice()">Add Device</button>
+          <button class="btn btn-neutral" id="df_cancel" style="display:none" onclick="cancelEdit()">Cancel</button>
+          <button class="btn btn-neutral btn-sm" onclick="clearForm()">Clear</button>
+        </div>
+      </div>
+      <div id="df-msg"></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Delete Devices</h2><span class="ep">DELETE …/deletedevices</span></div>
+      <div class="ff"><label>Device IDs (comma-separated — click row to fill)</label><input id="del_ids" placeholder="id1, id2"></div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button class="btn btn-danger" onclick="deleteDevices()">Delete</button>
+      </div>
+      <div id="del-msg"></div>
+      <div style="margin-top:14px;border-top:1px solid #2d3148;padding-top:12px">
+        <div class="card-hdr" style="margin-bottom:8px"><h2>Archive Devices</h2><span class="ep">POST …/archivedevices</span></div>
+        <div class="ff"><label>Device IDs (comma-separated)</label><input id="arc_ids" placeholder="id1, id2"></div>
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+          <div class="ff" style="width:80px"><label>Archive (1/0)</label><input id="arc_val" value="1"></div>
+          <button class="btn btn-warn" style="margin-top:14px" onclick="archiveDevices()">Archive</button>
+        </div>
+        <div id="arc-msg"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><h2>Quick Update (Bulk)</h2><span class="ep">POST …/devices/quickupdate</span></div>
+    <div class="fg">
+      <div class="ff s2"><label>Payload JSON</label><textarea id="qu_body" rows="3">{"device_ids": [], "field": "status", "value": "active"}</textarea></div>
+      <div class="row-actions"><button class="btn btn-primary" onclick="quickUpdate()">Quick Update</button></div>
+    </div>
+    <pre id="qu-res" class="res" style="display:none"></pre>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ SUBSYSTEM & VIRTUAL -->
+<div id="tab-subsystem" class="panel">
+  <div class="card">
+    <div class="card-hdr"><h2>About</h2></div>
+    <p style="font-size:12px;color:#64748b">Device ID from sidebar is used as the child device. Parent Device ID is used where a parent reference is needed.</p>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-hdr"><h2>Subsystem Parent Devices</h2><span class="ep">GET …/getsubsystemparentdevicesbypagination</span><button class="btn btn-primary btn-sm" onclick="getSubsystemParents()">Load</button></div>
+      <div class="fg">
+        <div class="ff s1"><label>Page</label><input id="sp_pg" value="1"></div>
+        <div class="ff s1"><label>Page Size</label><input id="sp_ps" value="10"></div>
+        <div class="ff s1"><label>Condition</label><input id="sp_cond" value="all"></div>
+        <div class="ff s1"><label>Assignee</label><input id="sp_asgn" value="all"></div>
+      </div>
+      <pre id="sp-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Subsystem Child Devices</h2><span class="ep">GET …/device/{id}/getsubsystemdevicesbypagination</span><button class="btn btn-primary btn-sm" onclick="getSubsystemChildren()">Load</button></div>
+      <div class="fg">
+        <div class="ff s2"><label>Parent Device ID (from sidebar)</label><input id="sc_dev" placeholder="auto from sidebar"></div>
+        <div class="ff s1"><label>Page</label><input id="sc_pg" value="1"></div>
+        <div class="ff s1"><label>Page Size</label><input id="sc_ps" value="10"></div>
+      </div>
+      <pre id="sc-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Parent Device Pagination</h2><span class="ep">POST …/getparentdevicebypagination</span><button class="btn btn-primary btn-sm" onclick="getParentDevicesPagination()">Load</button></div>
+      <div class="fg">
+        <div class="ff s1"><label>Search Key</label><input id="pd_search" value="null"></div>
+        <div class="ff s1"><label>Page / Size</label><div style="display:flex;gap:4px"><input id="pd_pg" value="1" style="width:50px"><input id="pd_ps" value="10" style="width:50px"></div></div>
+        <div class="ff s1"><label>Docker Names</label><input id="pd_dockers" value="all"></div>
+        <div class="ff s1"><label>Types</label><input id="pd_types" value="all"></div>
+      </div>
+      <pre id="pd-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Get Parent Device</h2><span class="ep">POST …/getparentdevice</span><button class="btn btn-primary btn-sm" onclick="getParentDevice()">Load</button></div>
+      <div class="ff s2"><label>Body JSON (Set of DeviceDTO)</label><textarea id="gpd_body" rows="3">[]</textarea></div>
+      <pre id="gpd-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Virtual Devices Pagination</h2><span class="ep">GET …/getfiltervirtualdevicesbypagination</span><button class="btn btn-primary btn-sm" onclick="getVirtualDevices()">Load</button></div>
+      <div class="fg">
+        <div class="ff s1"><label>Search Key</label><input id="vd_search" value="null"></div>
+        <div class="ff s1"><label>Page / Size</label><div style="display:flex;gap:4px"><input id="vd_pg" value="1" style="width:50px"><input id="vd_ps" value="10" style="width:50px"></div></div>
+        <div class="ff s1"><label>Docker Names</label><input id="vd_dockers" value="all"></div>
+        <div class="ff s1"><label>Types</label><input id="vd_types" value="all"></div>
+      </div>
+      <pre id="vd-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Delete Virtual Device</h2><span class="ep">DELETE …/virtual-device/{id}</span></div>
+      <div class="ff"><label>Virtual Device ID</label><input id="vdel_id" placeholder="virtual device id"></div>
+      <div style="margin-top:8px"><button class="btn btn-danger btn-sm" onclick="deleteVirtualDevice()">Delete Virtual Device</button></div>
+      <div id="vdel-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ SENSORS & DETAILS -->
+<div id="tab-sensors" class="panel">
+  <div class="card" style="background:#13151f;border-color:#7c8cf820">
+    <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+      <div class="ff" style="flex:1;min-width:200px"><label style="font-size:12px;color:#7c8cf8;font-weight:600">Device ID for this tab</label><input id="sens_device" placeholder="paste or auto-fill from Devices tab" style="border-color:#7c8cf8"></div>
+      <button class="btn btn-neutral btn-sm" onclick="$('sens_device').value=sv('s_device')">Use sidebar ID</button>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-hdr"><h2>All Device Sensors</h2><span class="ep">GET …/device/{id}/getalldevicesensors</span><button class="btn btn-primary btn-sm" onclick="getDeviceSensors()">Load</button></div>
+      <pre id="sensors-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Single Device</h2><span class="ep">GET …/device/{id}/getdevice</span><button class="btn btn-primary btn-sm" onclick="getSingleDevice()">Load</button></div>
+      <pre id="single-dev-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>All Device Details</h2><span class="ep">GET …/getalldevicedetails</span><button class="btn btn-primary btn-sm" onclick="getAllDeviceDetails()">Load</button></div>
+      <div class="fg">
+        <div class="ff s1"><label>Page / Size</label><div style="display:flex;gap:4px"><input id="add_pg" value="1" style="width:50px"><input id="add_ps" value="10" style="width:50px"></div></div>
+        <div class="ff s1"><label>Search Key</label><input id="add_sk" value="null"></div>
+        <div class="ff s1"><label>Profile Type</label><input id="add_pt" value="internal"></div>
+      </div>
+      <pre id="all-det-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Get Devices by IDs</h2><span class="ep">POST /docker/{d}/getdevicedetailsbyids</span><button class="btn btn-primary btn-sm" onclick="getDevicesByIds()">Load</button></div>
+      <div class="ff"><label>Device IDs (JSON array)</label><textarea id="byids_body" rows="3">["VDMS760_right_wing_Demo_Device_1"]</textarea></div>
+      <pre id="byids-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>All Device IDs</h2><span class="ep">GET /docker/{d}/getalldeviceids</span><button class="btn btn-primary btn-sm" onclick="getAllDeviceIds()">Load</button></div>
+      <div class="fg">
+        <div class="ff s1"><label>Page / Size</label><div style="display:flex;gap:4px"><input id="adid_pg" value="1" style="width:50px"><input id="adid_ps" value="10" style="width:50px"></div></div>
+        <div class="ff s1"><label>Search Key</label><input id="adid_sk" value="null"></div>
+      </div>
+      <pre id="adid-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Device Reboot Status</h2><span class="ep">GET …/getdevicerebootstatus</span><button class="btn btn-primary btn-sm" onclick="getRebootStatus()">Load</button></div>
+      <pre id="reboot-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Asset Images</h2><span class="ep">GET …/device/{id}/getassetimages</span><button class="btn btn-primary btn-sm" onclick="getAssetImages()">Load</button></div>
+      <pre id="assetimg-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>All Asset Images</h2><span class="ep">GET …/device/{id}/getallassetimages</span><button class="btn btn-primary btn-sm" onclick="getAllAssetImages()">Load</button></div>
+      <pre id="allassetimg-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Sync Onboard Status</h2><span class="ep">GET /vdms/{v}/device/{id}/syncsingledeviceonboardstatus</span><button class="btn btn-primary btn-sm" onclick="syncOnboard()">Sync</button></div>
+      <pre id="sync-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Device Alerts</h2><span class="ep">GET …/getalertmessages</span><button class="btn btn-primary btn-sm" onclick="getAlertMessages()">Load</button></div>
+      <pre id="devalert-res" class="res" style="display:none"></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ SEARCH & FILTER -->
+<div id="tab-search" class="panel">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-hdr"><h2>Search Devices</h2><span class="ep">POST …/searchdevices</span></div>
+      <div class="fg">
+        <div class="ff s2"><label>Search Value (blank = all devices)</label><input id="sr_val" placeholder="sensor, 192.168, Cisco…"></div>
+        <div class="ff s1"><label>Column</label><input id="sr_col" value="all" placeholder="all / user_data_name / ip_address"></div>
+        <div class="ff s1"><label>Condition</label><input id="sr_cond" value="all"></div>
+        <div class="ff s1"><label>Page / Size</label><div style="display:flex;gap:4px"><input id="sr_pg" value="1" style="width:50px"><input id="sr_ps" value="20" style="width:60px"></div></div>
+        <div class="row-actions"><button class="btn btn-primary" onclick="doSearch()">Search</button><button class="btn btn-neutral btn-sm" onclick="clearSR()">Clear</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Sort Devices</h2><span class="ep">POST …/sortdevices</span></div>
+      <div class="fg">
+        <div class="ff s1"><label>Sort Column (blank = user_data_name)</label><input id="so_col" placeholder="user_data_name, ip_address, type, vendor"></div>
+        <div class="ff s1"><label>Order</label><select id="so_ord"><option value="asc">Ascending</option><option value="desc">Descending</option></select></div>
+        <div class="ff s1"><label>Page / Size</label><div style="display:flex;gap:4px"><input id="so_pg" value="1" style="width:50px"><input id="so_ps" value="20" style="width:60px"></div></div>
+        <div class="row-actions"><button class="btn btn-primary" onclick="doSort()">Sort</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Filter Devices</h2><span class="ep">POST …/filterdevices (body = array)</span></div>
+      <div class="fg">
+        <div class="ff s1"><label>Filter Field</label><input id="fi_field" placeholder="type, vendor, status…"></div>
+        <div class="ff s1"><label>Filter Value</label><input id="fi_val" placeholder="generic, Cisco…"></div>
+        <div class="ff s1"><label>Page / Size</label><div style="display:flex;gap:4px"><input id="fi_pg" value="1" style="width:50px"><input id="fi_ps" value="20" style="width:60px"></div></div>
+        <div class="row-actions"><button class="btn btn-primary" onclick="doFilter()">Filter</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Filter Device (GET)</h2><span class="ep">GET …/getfilterdevice</span></div>
+      <div class="fg">
+        <div class="ff s1"><label>Search Key</label><input id="gfd_sk" value="null"></div>
+        <div class="ff s1"><label>Condition</label><input id="gfd_cond" value="all"></div>
+        <div class="ff s1"><label>Page / Size</label><div style="display:flex;gap:4px"><input id="gfd_pg" value="1" style="width:50px"><input id="gfd_ps" value="10" style="width:60px"></div></div>
+        <div class="row-actions"><button class="btn btn-primary" onclick="getFilterDevice()">Load</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Search + Sort + Filter Combined</h2><span class="ep">POST …/searchsortfilterdevices</span></div>
+      <div class="ff s2"><label>Payload JSON</label><textarea id="ssf_body" rows="4">{"search": {"column": "all", "value": ""}, "sort": {"column": "user_data_name", "order": "asc"}, "filter": []}</textarea></div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="doSSF()">Search+Sort+Filter</button>
+        <button class="btn btn-neutral btn-sm" onclick="doSSFCount()">Get Count</button>
+      </div>
+      <pre id="ssf-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Devices by Location</h2><span class="ep">GET …/location/{locId}/getdevicesbylocationid</span><button class="btn btn-primary btn-sm" onclick="getDevicesByLocation()">Load</button></div>
+      <div class="ff"><label>Location ID (from sidebar)</label><input id="loc_dev_id" placeholder="auto from sidebar"></div>
+      <pre id="loc-dev-res" class="res" style="display:none"></pre>
+    </div>
+  </div>
+  <div class="card" id="sr-card" style="display:none">
+    <div class="card-hdr"><h2 id="sr-title">Results</h2></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Name</th><th>Type</th><th>IP Address</th><th>Vendor</th><th>Status</th></tr></thead>
+      <tbody id="sr-tbody"><tr><td colspan="5" class="tbl-empty">—</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ NOTES & CONDITIONS -->
+<div id="tab-notes" class="panel">
+  <div class="card" style="background:#13151f;border-color:#7c8cf820">
+    <div class="ff"><label style="font-size:12px;color:#7c8cf8;font-weight:600">Device ID for Notes & Conditions</label><input id="nc_device" placeholder="paste device ID" style="border-color:#7c8cf8"><div style="margin-top:4px"><button class="btn btn-neutral btn-sm" onclick="$('nc_device').value=sv('s_device')">Use sidebar ID</button></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-hdr"><h2>Notes</h2></div>
+      <div class="ep-row">
+        <div class="ep-name">GET notes<small>get all notes for device</small></div>
+        <button class="btn btn-primary btn-sm" onclick="getNotes()">Load</button>
+        <span class="ep-st s-pend" id="st-notes-get">—</span>
+      </div>
+      <div style="margin-top:10px;border-top:1px solid #2d3148;padding-top:10px">
+        <div class="ff"><label>Note Text</label><textarea id="note_text" rows="2" placeholder="Write a note…"></textarea></div>
+        <div style="margin-top:6px;display:flex;gap:8px">
+          <button class="btn btn-success btn-sm" onclick="addNote()">Add Note</button>
+        </div>
+        <div id="note-add-msg"></div>
+      </div>
+      <div style="margin-top:10px;border-top:1px solid #2d3148;padding-top:10px">
+        <div class="ff"><label>Note ID (to delete)</label><input id="note_del_id" placeholder="note ID to delete"></div>
+        <button class="btn btn-danger btn-sm" style="margin-top:6px" onclick="deleteNote()">Delete Note</button>
+        <div id="note-del-msg"></div>
+      </div>
+      <pre id="notes-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Device Conditions</h2></div>
+      <div class="ep-row">
+        <div class="ep-name">GET conditions for device</div>
+        <button class="btn btn-primary btn-sm" onclick="getConditions()">Load</button>
+        <span class="ep-st s-pend" id="st-cond-get">—</span>
+      </div>
+      <div class="ep-row">
+        <div class="ep-name">DELETE all conditions for device</div>
+        <button class="btn btn-danger btn-sm" onclick="deleteAllConditions()">Delete</button>
+        <span class="ep-st s-pend" id="st-cond-delall">—</span>
+      </div>
+      <div style="margin-top:10px;border-top:1px solid #2d3148;padding-top:10px">
+        <div class="ff"><label>Upsert Conditions JSON (array)</label><textarea id="cond_body" rows="4">[{"condition_name":"Offline Check","condition_type":"status","condition_value":"offline","action":"alert"}]</textarea></div>
+        <div style="margin-top:6px"><button class="btn btn-success btn-sm" onclick="upsertConditions()">Upsert Conditions</button></div>
+        <div id="cond-upsert-msg"></div>
+      </div>
+      <pre id="cond-res" class="res" style="display:none"></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ SPECIFICATIONS -->
+<div id="tab-specs" class="panel">
+  <div class="card" style="background:#13151f;border-color:#7c8cf820">
+    <div class="ff"><label style="font-size:12px;color:#7c8cf8;font-weight:600">Device ID for Specifications</label><input id="spec_device" placeholder="paste device ID" style="border-color:#7c8cf8"><div style="margin-top:4px"><button class="btn btn-neutral btn-sm" onclick="$('spec_device').value=sv('s_device')">Use sidebar ID</button></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-hdr"><h2>Device Specification</h2><span class="ep">GET /asset/api/devicespecification/{id}</span><button class="btn btn-primary btn-sm" onclick="getDeviceSpec()">Load</button></div>
+      <pre id="spec-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Installed Apps</h2><span class="ep">GET /asset/api/installedapps/{id}</span><button class="btn btn-primary btn-sm" onclick="getInstalledApps()">Load</button></div>
+      <pre id="apps-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>System Updates</h2><span class="ep">GET /asset/api/systemupdates/{id}</span><button class="btn btn-primary btn-sm" onclick="getSystemUpdates()">Load</button></div>
+      <pre id="updates-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Remote Support Sessions</h2><span class="ep">GET /asset/api/remotesupport/user/{u}/device/{id}</span><button class="btn btn-primary btn-sm" onclick="getRemoteSessions()">Load</button></div>
+      <pre id="remote-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Create Remote Support</h2><span class="ep">POST /asset/api/remotesupport</span></div>
+      <div class="ff"><label>Payload JSON</label><textarea id="remote_body" rows="3">{"device_id": "", "username": "admin"}</textarea></div>
+      <div style="margin-top:8px"><button class="btn btn-primary btn-sm" onclick="createRemoteSession()">Create</button></div>
+      <pre id="remote-create-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Upsert Device Spec</h2><span class="ep">POST /asset/api/devicespecification</span></div>
+      <div class="ff"><label>Payload JSON</label><textarea id="specpost_body" rows="3">{"device_id": "", "os": "Linux", "cpu": "Intel i7"}</textarea></div>
+      <div style="margin-top:8px"><button class="btn btn-primary btn-sm" onclick="upsertDeviceSpec()">Upsert</button></div>
+      <pre id="specpost-res" class="res" style="display:none"></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ TOPOLOGY -->
+<div id="tab-topology" class="panel">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-hdr"><h2>Device Topology</h2><span class="ep">GET …/devicetopology</span><button class="btn btn-primary btn-sm" onclick="getTopology()">Load</button></div>
+      <pre id="topo-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Gateway ID</h2><span class="ep">GET /docker/{d}/getgatewayid</span><button class="btn btn-primary btn-sm" onclick="getGatewayId()">Load</button></div>
+      <pre id="gwid-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Power Source Topology Count</h2><span class="ep">GET …/getpowersourcetopologyconnectionscount</span><button class="btn btn-primary btn-sm" onclick="getPowerSourceCount()">Load</button></div>
+      <pre id="psc-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Power Source Topology</h2><span class="ep">GET …/getpowersourcetopologybypagination</span><button class="btn btn-primary btn-sm" onclick="getPowerSourceTopo()">Load</button></div>
+      <div class="fg">
+        <div class="ff s1"><label>Page / Size</label><div style="display:flex;gap:4px"><input id="pst_pg" value="1" style="width:50px"><input id="pst_ps" value="10" style="width:50px"></div></div>
+      </div>
+      <pre id="pst-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Device List Integration</h2><span class="ep">GET …/devicelistintegration</span><button class="btn btn-primary btn-sm" onclick="getDeviceListInt()">Load</button></div>
+      <pre id="dli-res" class="res" style="display:none"></pre>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Assignee Email by Network</h2><span class="ep">GET /vdms/{v}/device/network/{n}/getassigneeemail</span></div>
+      <div class="ff"><label>Network Name</label><input id="net_name" value="right_wing"></div>
+      <div style="margin-top:6px"><button class="btn btn-primary btn-sm" onclick="getAssigneeEmail()">Load</button></div>
+      <pre id="asgn-res" class="res" style="display:none"></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ VDMS INFO -->
+<div id="tab-vdms" class="panel">
+  <div class="card">
+    <div class="card-hdr"><h2>VDMS Service Endpoints</h2><button class="btn btn-success btn-sm" onclick="runAllVdms()">Run All ▶</button></div>
+    <div class="ep-row"><div class="ep-name">GET /vdms/id</div><button class="btn btn-primary btn-sm" onclick="vdmsCall('vdms-id','GET',gw()+'/vdms/id')">Call</button><span class="ep-st s-pend" id="st-vdms-id">—</span></div>
+    <div class="ep-row"><div class="ep-name">GET /vdms/details</div><button class="btn btn-primary btn-sm" onclick="vdmsCall('vdms-det','GET',gw()+'/vdms/details')">Call</button><span class="ep-st s-pend" id="st-vdms-det">—</span></div>
+    <div class="ep-row"><div class="ep-name">GET /vdms/master</div><button class="btn btn-primary btn-sm" onclick="vdmsCall('vdms-master','GET',gw()+'/vdms/master')">Call</button><span class="ep-st s-pend" id="st-vdms-master">—</span></div>
+    <div class="ep-row"><div class="ep-name">GET /vdms/has-secondary-device</div><button class="btn btn-primary btn-sm" onclick="vdmsCall('vdms-sec','GET',gw()+'/vdms/has-secondary-device')">Call</button><span class="ep-st s-pend" id="st-vdms-sec">—</span></div>
+    <div class="ep-row"><div class="ep-name">GET /vdms/secondary-device-id</div><button class="btn btn-primary btn-sm" onclick="vdmsCall('vdms-secid','GET',gw()+'/vdms/secondary-device-id')">Call</button><span class="ep-st s-pend" id="st-vdms-secid">—</span></div>
+    <div class="ep-row"><div class="ep-name">GET /vdms/customer-org-id/{vdmsId}</div><button class="btn btn-primary btn-sm" onclick="vdmsCall('vdms-org','GET',`${gw()}/vdms/customer-org-id/${enc(sv('s_vid'))}`)">Call</button><span class="ep-st s-pend" id="st-vdms-org">—</span></div>
+    <div class="ep-row"><div class="ep-name">GET /vdms/sync-details-for-adc</div><button class="btn btn-primary btn-sm" onclick="vdmsCall('vdms-adc','GET',gw()+'/vdms/sync-details-for-adc')">Call</button><span class="ep-st s-pend" id="st-vdms-adc">—</span></div>
+    <div class="ep-row"><div class="ep-name">GET /vdms/audit-log</div><button class="btn btn-primary btn-sm" onclick="vdmsCall('vdms-al','GET',gw()+'/vdms/audit-log?page=0&size=10')">Call</button><span class="ep-st s-pend" id="st-vdms-al">—</span></div>
+    <pre id="vdms-ep-res" class="res" style="display:none"></pre>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ DAPR PUB/SUB -->
+<div id="tab-dapr" class="panel">
+  <div class="card"><div class="card-hdr"><h2>About</h2></div><p style="font-size:12px;color:#64748b">Posts via gateway → /dapr/** → Dapr sidecar (/v1.0/publish/…). Events flow through Redis → subscriber. After publishing device.audit, check the <strong style="color:#c7d2fe">Audit Log</strong> tab.</p></div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-hdr"><h2>device.audit</h2><span class="ep">/dapr/v1.0/publish/pubsub/device.audit</span><div style="display:flex;gap:6px;align-items:center"><span class="ep-st s-pend" id="st-pub-audit">—</span><button class="btn btn-warn btn-sm" onclick="publishAudit()">Publish</button></div></div>
+      <div class="fg">
+        <div class="ff s1"><label>vdmsId</label><input id="pub_vmsid" placeholder="auto"></div>
+        <div class="ff s1"><label>deviceId</label><input id="pub_devid" placeholder="auto"></div>
+        <div class="ff s1"><label>action</label><input id="pub_action" value="TEST"></div>
+        <div class="ff s1"><label>status</label><input id="pub_status" value="success"></div>
+        <div class="ff s2"><label>message</label><input id="pub_msg" value="Test event from Sclera Test UI"></div>
+        <div class="ff s1"><label>userEmail</label><input id="pub_email" placeholder="auto"></div>
+      </div>
+      <div id="pub-audit-msg"></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>vdms.update-property-details</h2><span class="ep">/dapr/v1.0/publish/pubsub/…</span><div style="display:flex;gap:6px;align-items:center"><span class="ep-st s-pend" id="st-pub-prop">—</span><button class="btn btn-warn btn-sm" onclick="publishPropertyUpdate()">Publish</button></div></div>
+      <div class="fg">
+        <div class="ff s1"><label>id (VDMS ID)</label><input id="pub_prop_id" placeholder="auto"></div>
+        <div class="ff s1"><label>address</label><input id="pub_prop_addr" placeholder="auto"></div>
+      </div>
+      <div id="pub-prop-msg"></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>vdms.update-customer-org-id</h2><span class="ep">/dapr/v1.0/publish/pubsub/…</span><div style="display:flex;gap:6px;align-items:center"><span class="ep-st s-pend" id="st-pub-org">—</span><button class="btn btn-warn btn-sm" onclick="publishCustomerOrg()">Publish</button></div></div>
+      <div class="fg">
+        <div class="ff s1"><label>vdmsId</label><input id="pub_org_vdms" placeholder="auto"></div>
+        <div class="ff s1"><label>customerOrgId</label><input id="pub_org_id" value="ORG-DEMO-001"></div>
+      </div>
+      <div id="pub-org-msg"></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>vdms.set-agent-permission</h2><span class="ep">/dapr/v1.0/publish/pubsub/…</span><div style="display:flex;gap:6px;align-items:center"><span class="ep-st s-pend" id="st-pub-perm">—</span><button class="btn btn-warn btn-sm" onclick="publishAgentPermission()">Publish</button></div></div>
+      <div class="fg">
+        <div class="ff s1"><label>vdmsId</label><input id="pub_perm_vdms" placeholder="auto"></div>
+        <div class="ff s1"><label>agentId</label><input id="pub_perm_agent" value="AGENT-001"></div>
+        <div class="ff s2"><label>permission</label><input id="pub_perm_perm" value="READ_WRITE"></div>
+      </div>
+      <div id="pub-perm-msg"></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-hdr"><h2>Publish All 4 Events</h2></div><button class="btn btn-warn" onclick="publishAll()">Publish All ▶</button><div id="pub-all-msg"></div></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ INTEGRATIONS -->
+<div id="tab-integrations" class="panel">
+  <div class="card">
+    <div class="card-hdr"><h2>sclera-integrations :8096</h2><button class="btn btn-success btn-sm" onclick="runAllInt()">Run All ▶</button></div>
+    <div class="ep-row"><div class="ep-name">GET /actuator/health</div><button class="btn btn-primary btn-sm" onclick="epCall('int-h','GET',gw()+'/integrations/actuator/health')">Call</button><span class="ep-st s-pend" id="st-int-h">—</span></div>
+    <div class="ep-row"><div class="ep-name">GET /bacnet/getBacnetObjectCountByDeviceId</div><button class="btn btn-primary btn-sm" onclick="epCall('int-bcount','GET',`${gw()}/integrations/bacnet/getBacnetObjectCountByDeviceId?deviceId=${enc(sv('s_device'))}`)">Call</button><span class="ep-st s-pend" id="st-int-bcount">—</span></div>
+    <div class="ep-row"><div class="ep-name">GET /bacnet/getBacnetObjectsByDeviceId</div><button class="btn btn-primary btn-sm" onclick="epCall('int-bobj','GET',`${gw()}/integrations/bacnet/getBacnetObjectsByDeviceId?deviceId=${enc(sv('s_device'))}`)">Call</button><span class="ep-st s-pend" id="st-int-bobj">—</span></div>
+    <div class="ep-row"><div class="ep-name">GET /myDevices/getDeviceIdByMyDevicesSensorId</div><button class="btn btn-primary btn-sm" onclick="epCall('int-mdid','GET',`${gw()}/integrations/myDevices/getDeviceIdByMyDevicesSensorId?myDevicesSensorId=${enc(sv('s_rec'))}`)">Call</button><span class="ep-st s-pend" id="st-int-mdid">—</span></div>
+    <div class="ep-row"><div class="ep-name">POST /myDevices/deleteMyDevicesCompany</div><button class="btn btn-danger btn-sm" onclick="epCall('int-mdcdel','POST',gw()+'/integrations/myDevices/deleteMyDevicesCompany',{my_devices_company_id:sv('s_rec')})">Call</button><span class="ep-st s-pend" id="st-int-mdcdel">—</span></div>
+    <div class="ep-row"><div class="ep-name">GET /kNX/getKNXGroupCountByDeviceId</div><button class="btn btn-primary btn-sm" onclick="epCall('int-knx','GET',`${gw()}/integrations/kNX/getKNXGroupCountByDeviceId?deviceId=${enc(sv('s_device'))}`)">Call</button><span class="ep-st s-pend" id="st-int-knx">—</span></div>
+    <div class="ep-row"><div class="ep-name">GET /connectedDevices/getPowerSourceTopologyConnectionsCount</div><button class="btn btn-primary btn-sm" onclick="epCall('int-cd','GET',gw()+'/integrations/connectedDevices/getPowerSourceTopologyConnectionsCount')">Call</button><span class="ep-st s-pend" id="st-int-cd">—</span></div>
+    <div class="ep-row"><div class="ep-name">GET /datahoist/getDataHoistDeviceById</div><button class="btn btn-primary btn-sm" onclick="epCall('int-dh','GET',`${gw()}/integrations/datahoist/getDataHoistDeviceById?deviceId=${enc(sv('s_device'))}`)">Call</button><span class="ep-st s-pend" id="st-int-dh">—</span></div>
+    <pre id="int-res" class="res" style="display:none"></pre>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ INSPECTION -->
+<div id="tab-inspection" class="panel">
+  <div class="card">
+    <div class="card-hdr"><h2>sclera-inspection :8095</h2><button class="btn btn-success btn-sm" onclick="runAllIns()">Run All ▶</button></div>
+    <div class="ep-row"><div class="ep-name">GET /actuator/health</div><button class="btn btn-primary btn-sm" onclick="epCall('ins-h','GET',gw()+'/inspection/actuator/health')">Call</button><span class="ep-st s-pend" id="st-ins-h">—</span></div>
+    <div class="ep-row"><div class="ep-name">GET /checkListTemplate/getCheckListTemplatesCountByDeviceId</div><button class="btn btn-primary btn-sm" onclick="epCall('ins-ctc','GET',`${gw()}/inspection/checkListTemplate/getCheckListTemplatesCountByDeviceId?deviceId=${enc(sv('s_device'))}`)">Call</button><span class="ep-st s-pend" id="st-ins-ctc">—</span></div>
+    <div class="ep-row"><div class="ep-name">POST /inspectionRecord/updateInspectionRecordStatus</div><button class="btn btn-primary btn-sm" onclick="epCall('ins-irst','POST',`${gw()}/inspection/inspectionRecord/updateInspectionRecordStatus?id=${enc(sv('s_rec'))}&status=true`)">Call</button><span class="ep-st s-pend" id="st-ins-irst">—</span></div>
+    <div class="ep-row"><div class="ep-name">POST /inspectionRecord/updateInspectionStatusOnDeviceArchive</div><button class="btn btn-primary btn-sm" onclick="epCall('ins-iar','POST',gw()+'/inspection/inspectionRecord/updateInspectionStatusOnDeviceArchive',[sv('s_device')])">Call</button><span class="ep-st s-pend" id="st-ins-iar">—</span></div>
+    <div class="ep-row"><div class="ep-name">POST /globalChecklist/deleteGlobalChecklistByDeviceId</div><button class="btn btn-danger btn-sm" onclick="epCall('ins-gcdel','POST',`${gw()}/inspection/globalChecklist/deleteGlobalChecklistByDeviceId?deviceId=${enc(sv('s_device'))}`)">Call</button><span class="ep-st s-pend" id="st-ins-gcdel">—</span></div>
+    <div class="ep-row"><div class="ep-name">GET /recordChecklist/getRecordChecklistStatusByDeviceId</div><button class="btn btn-primary btn-sm" onclick="epCall('ins-rcs','GET',`${gw()}/inspection/recordChecklist/getRecordChecklistStatusByDeviceId?deviceId=${enc(sv('s_device'))}`)">Call</button><span class="ep-st s-pend" id="st-ins-rcs">—</span></div>
+    <div class="ep-row"><div class="ep-name">GET /recordChecklist/getChecklistStatusCountDeviceId</div><button class="btn btn-primary btn-sm" onclick="epCall('ins-rcc','GET',`${gw()}/inspection/recordChecklist/getChecklistStatusCountDeviceId?a=${enc(sv('s_device'))}`)">Call</button><span class="ep-st s-pend" id="st-ins-rcc">—</span></div>
+    <div class="ep-row"><div class="ep-name">POST /recordChecklist/deleteRecordChecklistByLocationId</div><button class="btn btn-danger btn-sm" onclick="epCall('ins-rcdel','POST',`${gw()}/inspection/recordChecklist/deleteRecordChecklistByLocationId?locationId=${enc(sv('s_loc'))}`)">Call</button><span class="ep-st s-pend" id="st-ins-rcdel">—</span></div>
+    <div class="ep-row"><div class="ep-name">POST /globalInspectionRecord/updateGlobalInspectionRecord</div><button class="btn btn-primary btn-sm" onclick="epCall('ins-gir','POST',`${gw()}/inspection/globalInspectionRecord/updateGlobalInspectionRecord?email=${enc(sv('s_email'))}`)">Call</button><span class="ep-st s-pend" id="st-ins-gir">—</span></div>
+    <pre id="ins-res" class="res" style="display:none"></pre>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ AUDIT LOG -->
+<div id="tab-audit" class="panel">
+  <div class="card">
+    <div class="card-hdr"><h2>Audit Log</h2><span class="ep">GET /vdms/audit-log</span></div>
+    <div class="fg">
+      <div class="ff s1"><label>VDMS ID (blank = all)</label><input id="au_vdms" placeholder="auto from sidebar"></div>
+      <div class="ff s1"><label>Page / Size</label><div style="display:flex;gap:4px"><input id="au_pg" value="0" style="width:50px"><input id="au_ps" value="20" style="width:60px"></div></div>
+      <div class="row-actions"><button class="btn btn-primary" onclick="loadAudit()">Load Filtered</button><button class="btn btn-neutral btn-sm" onclick="loadAuditAll()">All Entries</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><h2 id="au-title">Results</h2></div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>#</th><th>Action</th><th>Device ID</th><th>VDMS</th><th>User</th><th>Message</th><th>Time</th></tr></thead>
+      <tbody id="au-tbody"><tr><td colspan="7" class="tbl-empty">Click Load</td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ RAW -->
+<div id="tab-raw" class="panel">
+  <div class="card">
+    <div class="card-hdr"><h2>Raw Request (via Gateway)</h2></div>
+    <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px;flex-wrap:wrap">
+      <div class="ff" style="width:90px"><label>Method</label><select id="raw_m" style="background:#0f1117;border:1px solid #2d3148;color:#e2e8f0;border-radius:5px;padding:6px 8px;font-size:12px"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option></select></div>
+      <div class="ff" style="flex:1;min-width:300px"><label>Full Path (after gateway base)</label><input id="raw_path" value="/vdms/id" placeholder="/asset/user/admin/vdms/VDMS760/docker/right_wing/devices"></div>
+    </div>
+    <div class="ff"><label>Body JSON</label><textarea id="raw_body" rows="4" placeholder='{"key":"value"}'></textarea></div>
+    <div style="margin-top:8px;display:flex;gap:8px"><button class="btn btn-primary" onclick="sendRaw()">Send</button><button class="btn btn-neutral btn-sm" onclick="$('raw_res').style.display='none'">Clear</button></div>
+    <pre id="raw_res" class="res" style="display:none"></pre>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /body -->
+</div><!-- /app -->
+
 <script>
-const $ = (id) => document.getElementById(id);
+const $ = id => document.getElementById(id);
+const sv = id => ($(id) ? $(id).value.trim() : '');
 const enc = encodeURIComponent;
+const delay = ms => new Promise(r => setTimeout(r, ms));
 
-function setStatus(key, code) {
-  const el = $('st-' + key);
-  if (!el) return;
-  el.textContent = code || 'ERR';
-  el.className = 'ep-status ' + (code === 200 ? 'status-200' : code >= 400 ? 'status-' + (code >= 500 ? '500' : '404') : 'status-pending');
+// ── URL helpers ────────────────────────────────────────────────────────────────
+const gw    = () => sv('s_gw').replace(/\/$/, '');
+const aBase = () => `${gw()}/asset/user/${enc(sv('s_user'))}/vdms/${enc(sv('s_vid'))}/docker/${enc(sv('s_docker'))}`;
+const aVdms = () => `${gw()}/asset/user/${enc(sv('s_user'))}/vdms/${enc(sv('s_vid'))}`;
+const sensDevId = () => sv('sens_device') || sv('s_device');
+const ncDevId   = () => sv('nc_device')   || sv('s_device');
+const specDevId = () => sv('spec_device') || sv('s_device');
+
+// ── Core fetch ─────────────────────────────────────────────────────────────────
+function hdrs() {
+  const h = { 'Content-Type': 'application/json' };
+  const t = sv('s_token'); if (t) h['Authorization'] = 'Bearer ' + t;
+  return h;
 }
-
-function logResponse(method, url, status, body, ms) {
-  const meta = $('res-meta');
-  const klass = (status >= 200 && status < 300) ? 'ok' : 'err';
-  meta.innerHTML = `<span class="${klass}">[${status}]</span>  ${method} ${url}  <span style="color:#64748b">${ms}ms</span>`;
-  let pretty;
-  try { pretty = typeof body === 'string' ? body : JSON.stringify(body, null, 2); }
-  catch { pretty = String(body); }
-  $('res-body').textContent = pretty || '(empty)';
-}
-
-function clearLog() {
-  $('res-meta').textContent = '—';
-  $('res-body').textContent = '—';
-}
-
-async function call(key, method, url, body) {
-  setStatus(key, null);
-  const opts = { method, headers: {} };
-  if (body !== undefined) {
-    opts.headers['Content-Type'] = 'application/json';
-    opts.body = JSON.stringify(body);
-  }
-  const t0 = performance.now();
+async function go(url, opts = {}) {
   try {
-    const r = await fetch(url, opts);
-    const ms = Math.round(performance.now() - t0);
-    setStatus(key, r.status);
-    let parsed;
-    try { parsed = await r.json(); }
-    catch { try { parsed = await r.text(); } catch { parsed = '(no body)'; } }
-    logResponse(method, url, r.status, parsed, ms);
-  } catch (e) {
-    const ms = Math.round(performance.now() - t0);
-    setStatus(key, 0);
-    logResponse(method, url, 0, 'NETWORK ERROR: ' + e.message + '\n\nLikely cause: CORS, the service is down, or the URL is wrong. Check browser devtools Network tab.', ms);
-  }
+    const r = await fetch(url, { headers: hdrs(), ...opts });
+    let body; try { body = await r.json(); } catch { body = await r.text().catch(() => ''); }
+    return { ok: r.ok, status: r.status, body };
+  } catch (e) { return { ok: false, status: 0, body: e.message }; }
+}
+function pretty(v) { try { return JSON.stringify(typeof v==='string'?JSON.parse(v):v,null,2); } catch { return String(v); } }
+function showMsg(id, text, type) { const el=$(id); if(el) el.innerHTML=`<div class="msg msg-${type}">${text}</div>`; }
+function showRes(elId, r) { const el=$(elId); if(!el) return; el.style.display='block'; el.textContent=`[${r.status}]\n\n${pretty(r.body)}`; }
+
+function tab(name, el) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  $('tab-'+name).classList.add('active'); el.classList.add('active');
+  if (name==='audit') { if(!$('au_vdms').value) $('au_vdms').value=sv('s_vid'); }
+  if (name==='dapr') syncDaprInputs();
+  if (name==='subsystem') { $('sc_dev').value=sv('s_device'); }
+  if (name==='notes') { if(!$('nc_device').value) $('nc_device').value=sv('s_device'); }
+  if (name==='specs') { if(!$('spec_device').value) $('spec_device').value=sv('s_device'); }
 }
 
-// For endpoints that take query params on a POST (no body)
-async function callQuery(key, method, url, params) {
-  const qs = Object.entries(params).filter(([_,v]) => v !== undefined && v !== null && v !== '').map(([k,v]) => k + '=' + enc(v)).join('&');
-  const finalUrl = url + (qs ? (url.includes('?') ? '&' : '?') + qs : '');
-  return call(key, method, finalUrl);
+// ── Status badges ──────────────────────────────────────────────────────────────
+function setSt(key, code) {
+  const el = $('st-'+key); if(!el) return;
+  el.textContent = code===null?'…':(code||'ERR');
+  el.className = 'ep-st '+(code===null?'s-pend':code>=200&&code<300?'s-ok':'s-err');
 }
 
+// ── Ping ────────────────────────────────────────────────────────────────────────
 async function pingAll() {
-  const targets = [
-    { dot: 'dot-int', url: 'http://localhost:8096/actuator/health' },
-    { dot: 'dot-ins', url: 'http://localhost:8095/actuator/health' },
-    { dot: 'dot-cda', url: 'http://localhost:8085/actuator/health' },
+  const checks = [
+    { url: gw()+'/actuator/health',                dots:['dot-gw','h-gw'],   label:'Gateway :8080' },
+    { url: gw()+'/asset/actuator/health',          dots:['dot-cda','h-cda'],  label:'Device-Asset :8085' },
+    { url: gw()+'/vdms/id',                        dots:['dot-vdms','h-vdms'],label:'VDMS :8089' },
+    { url: gw()+'/audit/actuator/health',          dots:['dot-aud','h-aud'],  label:'Audit :8090' },
+    { url: gw()+'/integrations/actuator/health',   dots:['dot-int','h-int'],  label:'Integrations :8096' },
+    { url: gw()+'/inspection/actuator/health',     dots:['dot-ins','h-ins'],  label:'Inspection :8095' },
   ];
-  for (const t of targets) {
-    try {
-      const r = await fetch(t.url);
-      $(t.dot).className = 'dot ' + (r.ok ? 'up' : 'down');
-    } catch {
-      $(t.dot).className = 'dot down';
-    }
+  const log=$('ping-log'); log.style.display='block'; log.textContent='Pinging…';
+  const lines=[];
+  for (const c of checks) {
+    const r = await go(c.url);
+    const up = r.status>0 && r.status<500;
+    c.dots.forEach(id=>{ const d=$(id); if(d) d.className='dot '+(up?'up':'down'); });
+    lines.push(`${up?'✓':'✗'} ${c.label}  →  HTTP ${r.status}`);
   }
+  log.textContent = lines.join('\n');
 }
 
+// ── Overview ───────────────────────────────────────────────────────────────────
+async function loadDeviceCount() {
+  const r = await go(`${aBase()}/getdevicecount?assignee=all`);
+  const el = $('ov-stats');
+  if (!r.ok) { showMsg('ov-msg',`Error ${r.status}`,'err'); return; }
+  $('ov-msg').innerHTML='';
+  const clr = { online_device_count:'g', offline_device_count:'r', archived_device_count:'a' };
+  el.innerHTML = Object.entries(r.body||{}).map(([k,v])=>
+    `<div class="stat ${clr[k]||''}"><div class="v">${v}</div><div class="l">${k.replace(/_device_count|_count/g,'').replace(/_/g,' ')}</div></div>`
+  ).join('') || '<div style="color:#475569">No data</div>';
+}
+async function loadVdmsDetails() {
+  const r = await go(gw()+'/vdms/details');
+  const grid=$('vdms-det-grid');
+  if (!r.ok) { showMsg('vdms-det-msg',`Error ${r.status}`,'err'); grid.style.display='none'; return; }
+  $('vdms-det-msg').innerHTML='';
+  grid.style.display='grid';
+  const d=r.body||{};
+  const keys=['id','property_name','address','city','state','country','zip','status','activation_status','is_master','customer_org_id'];
+  grid.innerHTML = keys.filter(k=>d[k]!=null).map(k=>`<div class="ff"><label>${k}</label><input readonly value="${String(d[k]).replace(/"/g,'&quot;')}"></div>`).join('');
+}
+
+// ── Devices ────────────────────────────────────────────────────────────────────
+let allDevs=[], editId=null;
+async function loadDevices() {
+  const r = await go(aBase()+'/devices');
+  const tbody=$('dev-tbody');
+  if (!r.ok) { tbody.innerHTML=`<tr><td colspan="6"><div class="msg msg-err">Error ${r.status}</div></td></tr>`; return; }
+  allDevs = Array.isArray(r.body)?r.body:[];
+  $('dev-badge').textContent=`${allDevs.length} device${allDevs.length!==1?'s':''}`;
+  renderDevs(allDevs);
+}
+function renderDevs(devs) {
+  const tbody=$('dev-tbody');
+  if (!devs.length) { tbody.innerHTML='<tr><td colspan="6" class="tbl-empty">No devices</td></tr>'; return; }
+  tbody.innerHTML = devs.map((d,i)=>{
+    const name=d.user_data_name||d.display_name||'—';
+    const id=d.id||d.device_id||'';
+    return `<tr onclick="fillDevId('${id}')" style="cursor:pointer">
+      <td><div style="font-weight:500">${name}</div><div style="font-size:10px;color:#475569;font-family:monospace">${id}</div></td>
+      <td><span class="badge badge-blue">${d.type||'—'}</span></td>
+      <td style="font-family:monospace;font-size:11px">${d.ip_address||'—'}</td>
+      <td>${d.vendor||'—'}</td>
+      <td>${d.status||'—'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-neutral btn-sm" onclick="event.stopPropagation();fillEdit(${i})">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();quickDel('${id}')">Del</button>
+      </td></tr>`;
+  }).join('');
+}
+function fillDevId(id) {
+  $('s_device').value=id; $('del_ids').value=id;
+  if($('sens_device')) $('sens_device').value=id;
+  if($('nc_device'))   $('nc_device').value=id;
+  if($('spec_device')) $('spec_device').value=id;
+  $('s_hint').textContent='✓ Device ID set: '+id.substring(0,30)+'…';
+}
+async function autoFillIds() {
+  const r = await go(aBase()+'/devices');
+  if (r.ok && Array.isArray(r.body) && r.body.length>0) {
+    const d=r.body[0]; const id=d.id||d.device_id||'';
+    fillDevId(id);
+  } else $('s_hint').textContent='No devices found — click Devices tab → Refresh first';
+}
+function fillEdit(i) {
+  const d=allDevs[i]; editId=d.id||d.device_id||'';
+  $('df_name').value=d.user_data_name||d.display_name||''; $('df_type').value=d.type||'';
+  $('df_ip').value=d.ip_address||''; $('df_mac').value=d.mac_address||'';
+  $('df_vendor').value=d.vendor||''; $('df_desc').value=d.description||'';
+  $('dev-form-title').textContent='Edit Device'; $('dev-form-ep').textContent=`POST …/device/${editId}/edit`;
+  $('df_submit').textContent='Save'; $('df_submit').className='btn btn-primary';
+  $('df_cancel').style.display=''; $('df-msg').innerHTML='';
+}
+function cancelEdit() {
+  editId=null; clearForm();
+  $('dev-form-title').textContent='Add Device'; $('dev-form-ep').textContent='POST …/adddevice';
+  $('df_submit').textContent='Add Device'; $('df_submit').className='btn btn-success'; $('df_cancel').style.display='none';
+}
+function clearForm() { ['df_name','df_type','df_ip','df_mac','df_vendor','df_desc'].forEach(id=>$(id).value=''); $('df-msg').innerHTML=''; }
+async function submitDevice() {
+  const name=sv('df_name'); if(!name){showMsg('df-msg','Name required','err');return;}
+  const body={user_data_name:name,display_name:name,type:sv('df_type')||'generic',ip_address:sv('df_ip'),mac_address:sv('df_mac'),vendor:sv('df_vendor'),description:sv('df_desc'),onboard_data:{assignee_email:'',device_onboard_status_assignees:[]}};
+  const url=editId?`${aBase()}/device/${editId}/edit`:`${aBase()}/adddevice`;
+  const r=await go(url,{method:'POST',body:JSON.stringify(body)});
+  if(r.ok){showMsg('df-msg',editId?'Updated.':'Added.','ok');cancelEdit();loadDevices();}
+  else showMsg('df-msg',`Error ${r.status}: ${JSON.stringify(r.body)}`,'err');
+}
+async function quickDel(id) {
+  if(!confirm(`Delete ${id}?`)) return;
+  const r=await go(`${aBase()}/deletedevices`,{method:'DELETE',body:JSON.stringify([id])});
+  if(r.ok) loadDevices(); else showMsg('del-msg',`Error ${r.status}`,'err');
+}
+async function deleteDevices() {
+  const raw=sv('del_ids'); if(!raw){showMsg('del-msg','Enter IDs','err');return;}
+  const ids=raw.split(',').map(s=>s.trim()).filter(Boolean);
+  if(!confirm(`Delete ${ids.length} device(s)?`)) return;
+  const r=await go(`${aBase()}/deletedevices`,{method:'DELETE',body:JSON.stringify(ids)});
+  if(r.ok){showMsg('del-msg',`Deleted ${ids.length}.`,'ok');$('del_ids').value='';loadDevices();}
+  else showMsg('del-msg',`Error ${r.status}: ${JSON.stringify(r.body)}`,'err');
+}
+async function archiveDevices() {
+  const raw=sv('arc_ids'); if(!raw){showMsg('arc-msg','Enter IDs','err');return;}
+  const ids=raw.split(',').map(s=>s.trim()).filter(Boolean);
+  const r=await go(`${aBase()}/archivedevices?archive=${sv('arc_val')||1}&assignee=all`,{method:'POST',body:JSON.stringify(ids)});
+  if(r.ok) showMsg('arc-msg','Archived.','ok'); else showMsg('arc-msg',`Error ${r.status}`,'err');
+}
+async function quickUpdate() {
+  const body=sv('qu_body')||'{}';
+  const r=await go(`${aBase()}/devices/quickupdate?assignee=all`,{method:'POST',body});
+  showRes('qu-res',r);
+}
+
+// ── Subsystem & Virtual ────────────────────────────────────────────────────────
+async function getSubsystemParents() {
+  const r=await go(`${aBase()}/getsubsystemparentdevicesbypagination?condition=${sv('sp_cond')||'all'}&pageno=${sv('sp_pg')||1}&pagesize=${sv('sp_ps')||10}&assignee=${sv('sp_asgn')||'all'}`);
+  showRes('sp-res',r);
+}
+async function getSubsystemChildren() {
+  const devId=sv('sc_dev')||sv('s_device');
+  const r=await go(`${aBase()}/device/${enc(devId)}/getsubsystemdevicesbypagination?condition=all&pageno=${sv('sc_pg')||1}&pagesize=${sv('sc_ps')||10}`);
+  showRes('sc-res',r);
+}
+async function getParentDevicesPagination() {
+  const r=await go(`${aVdms()}/getparentdevicebypagination?searchKey=${sv('pd_search')||'null'}&pageno=${sv('pd_pg')||1}&pagesize=${sv('pd_ps')||10}&dockernames=${sv('pd_dockers')||'all'}&types=${sv('pd_types')||'all'}&virtual_device_types=all`,{method:'POST'});
+  showRes('pd-res',r);
+}
+async function getParentDevice() {
+  const body=sv('gpd_body')||'[]';
+  const r=await go(`${aBase()}/getparentdevice`,{method:'POST',body});
+  showRes('gpd-res',r);
+}
+async function getVirtualDevices() {
+  const r=await go(`${aVdms()}/getfiltervirtualdevicesbypagination?searchKey=${sv('vd_search')||'null'}&pageno=${sv('vd_pg')||1}&pagesize=${sv('vd_ps')||10}&dockernames=${sv('vd_dockers')||'all'}&types=${sv('vd_types')||'all'}&virtual_device_types=all`);
+  showRes('vd-res',r);
+}
+async function deleteVirtualDevice() {
+  const id=sv('vdel_id'); if(!id){showMsg('vdel-msg','Enter virtual device ID','err');return;}
+  if(!confirm(`Delete virtual device ${id}?`)) return;
+  const r=await go(`${aBase()}/virtual-device/${enc(id)}?assignee=all`,{method:'DELETE'});
+  if(r.ok) showMsg('vdel-msg','Deleted.','ok'); else showMsg('vdel-msg',`Error ${r.status}`,'err');
+}
+
+// ── Sensors & Details ──────────────────────────────────────────────────────────
+async function getDeviceSensors() { const r=await go(`${aBase()}/device/${enc(sensDevId())}/getalldevicesensors`); showRes('sensors-res',r); }
+async function getSingleDevice()  { const r=await go(`${aBase()}/device/${enc(sensDevId())}/getdevice`); showRes('single-dev-res',r); }
+async function getAllDeviceDetails() { const r=await go(`${aBase()}/getalldevicedetails?page_no=${sv('add_pg')||1}&page_size=${sv('add_ps')||10}&search_key=${sv('add_sk')||'null'}&profile_type=${sv('add_pt')||'internal'}`); showRes('all-det-res',r); }
+async function getDevicesByIds() { const r=await go(`${gw()}/asset/docker/${enc(sv('s_docker'))}/getdevicedetailsbyids?page_no=1&page_size=10`,{method:'POST',body:sv('byids_body')||'[]'}); showRes('byids-res',r); }
+async function getAllDeviceIds() { const r=await go(`${gw()}/asset/docker/${enc(sv('s_docker'))}/getalldeviceids?page_no=${sv('adid_pg')||1}&page_size=${sv('adid_ps')||10}&search_key=${sv('adid_sk')||'null'}`); showRes('adid-res',r); }
+async function getRebootStatus() { const r=await go(`${aBase()}/getdevicerebootstatus`); showRes('reboot-res',r); }
+async function getAssetImages()  { const r=await go(`${aVdms()}/device/${enc(sensDevId())}/getassetimages`); showRes('assetimg-res',r); }
+async function getAllAssetImages(){ const r=await go(`${aVdms()}/device/${enc(sensDevId())}/getallassetimages`); showRes('allassetimg-res',r); }
+async function syncOnboard()     { const r=await go(`${gw()}/asset/vdms/${enc(sv('s_vid'))}/device/${enc(sensDevId())}/syncsingledeviceonboardstatus`); showRes('sync-res',r); }
+async function getAlertMessages(){ const r=await go(`${aBase()}/getalertmessages`); showRes('devalert-res',r); }
+
+// ── Search & Filter ────────────────────────────────────────────────────────────
+async function doSearch() {
+  const val=sv('sr_val');
+  const body=val?{column:sv('sr_col')||'all',value:val}:{};
+  const r=await go(`${aBase()}/searchdevices?condition=${sv('sr_cond')||'all'}&pageno=${sv('sr_pg')||1}&pagesize=${sv('sr_ps')||20}`,{method:'POST',body:JSON.stringify(body)});
+  renderSR(r,val?`Search "${val}"`:'All Devices');
+}
+async function doSort() {
+  const col=sv('so_col')||'user_data_name';
+  const r=await go(`${aBase()}/sortdevices?condition=all&pageno=${sv('so_pg')||1}&pagesize=${sv('so_ps')||20}`,{method:'POST',body:JSON.stringify({column:col,order:sv('so_ord')||'asc'})});
+  renderSR(r,`Sort by ${col}`);
+}
+async function doFilter() {
+  const field=sv('fi_field'),val=sv('fi_val');
+  if(!field||!val){renderSR({ok:false,status:0,body:'Enter field and value'},'Filter');return;}
+  const r=await go(`${aBase()}/filterdevices?condition=all&pageno=${sv('fi_pg')||1}&pagesize=${sv('fi_ps')||20}`,{method:'POST',body:JSON.stringify([{[field]:val}])});
+  renderSR(r,`Filter ${field}=${val}`);
+}
+async function getFilterDevice() {
+  const r=await go(`${aBase()}/getfilterdevice?condition=${sv('gfd_cond')||'all'}&searchKey=${sv('gfd_sk')||'null'}&pageno=${sv('gfd_pg')||1}&pagesize=${sv('gfd_ps')||10}`);
+  renderSR(r,'Filter Device (GET)');
+}
+async function doSSF() {
+  const r=await go(`${aBase()}/searchsortfilterdevices?condition=all&pageno=1&pagesize=20`,{method:'POST',body:sv('ssf_body')||'{}'});
+  showRes('ssf-res',r);
+}
+async function doSSFCount() {
+  const r=await go(`${aBase()}/searchsortfilterdevicescount?condition=all`,{method:'POST',body:sv('ssf_body')||'{}'});
+  showRes('ssf-res',r);
+}
+async function getDevicesByLocation() {
+  const locId=sv('loc_dev_id')||sv('s_loc');
+  const r=await go(`${aVdms()}/location/${enc(locId)}/getdevicesbylocationid?pageno=1&pagesize=10`);
+  showRes('loc-dev-res',r);
+}
+function renderSR(r,title) {
+  $('sr-card').style.display='';
+  const tbody=$('sr-tbody');
+  if(!r.ok){$('sr-title').textContent=title;tbody.innerHTML=`<tr><td colspan="5"><div class="msg msg-err">Error ${r.status}: ${JSON.stringify(r.body)}</div></td></tr>`;return;}
+  const devs=Array.isArray(r.body)?r.body:[];
+  $('sr-title').textContent=`${title} — ${devs.length} result${devs.length!==1?'s':''}`;
+  tbody.innerHTML=devs.length
+    ?devs.map(d=>`<tr><td><strong>${d.user_data_name||d.display_name||'—'}</strong><br><span style="font-size:10px;color:#475569;font-family:monospace">${d.id||''}</span></td><td><span class="badge badge-blue">${d.type||'—'}</span></td><td style="font-family:monospace;font-size:11px">${d.ip_address||'—'}</td><td>${d.vendor||'—'}</td><td>${d.status||'—'}</td></tr>`).join('')
+    :'<tr><td colspan="5" class="tbl-empty">No results</td></tr>';
+}
+function clearSR() { $('sr_val').value=''; $('sr-card').style.display='none'; }
+
+// ── Notes & Conditions ──────────────────────────────────────────────────────────
+async function getNotes() {
+  setSt('notes-get',null);
+  const r=await go(`${aBase()}/device/${enc(ncDevId())}/notes`);
+  setSt('notes-get',r.status); showRes('notes-res',r);
+}
+async function addNote() {
+  const text=sv('note_text'); if(!text){showMsg('note-add-msg','Enter note text','err');return;}
+  const r=await go(`${aBase()}/device/${enc(ncDevId())}/note`,{method:'POST',body:JSON.stringify({note:text})});
+  if(r.ok){showMsg('note-add-msg','Note added.','ok');getNotes();}
+  else showMsg('note-add-msg',`Error ${r.status}`,'err');
+}
+async function deleteNote() {
+  const noteId=sv('note_del_id'); if(!noteId){showMsg('note-del-msg','Enter note ID','err');return;}
+  const r=await go(`${aBase()}/device/${enc(ncDevId())}/note/${enc(noteId)}`,{method:'DELETE'});
+  if(r.ok){showMsg('note-del-msg','Deleted.','ok');getNotes();}
+  else showMsg('note-del-msg',`Error ${r.status}`,'err');
+}
+async function getConditions() {
+  setSt('cond-get',null);
+  const r=await go(`${aBase()}/device/${enc(ncDevId())}/getdeviceconditions`);
+  setSt('cond-get',r.status); showRes('cond-res',r);
+}
+async function deleteAllConditions() {
+  setSt('cond-delall',null);
+  if(!confirm(`Delete all conditions for device ${ncDevId()}?`)) return;
+  const r=await go(`${aVdms()}/device/${enc(ncDevId())}/deletealldeviceconditions`,{method:'DELETE'});
+  setSt('cond-delall',r.status);
+  if(r.ok) showMsg('cond-upsert-msg','All conditions deleted.','ok');
+  else showMsg('cond-upsert-msg',`Error ${r.status}`,'err');
+}
+async function upsertConditions() {
+  const body=sv('cond_body')||'[]';
+  const r=await go(`${aBase()}/upsertdeviceconditions`,{method:'POST',body});
+  if(r.ok) showMsg('cond-upsert-msg','Upserted.','ok'); else showMsg('cond-upsert-msg',`Error ${r.status}`,'err');
+}
+
+// ── Specifications ──────────────────────────────────────────────────────────────
+async function getDeviceSpec()     { const r=await go(`${gw()}/asset/api/devicespecification/${enc(specDevId())}`); showRes('spec-res',r); }
+async function getInstalledApps()  { const r=await go(`${gw()}/asset/api/installedapps/${enc(specDevId())}`); showRes('apps-res',r); }
+async function getSystemUpdates()  { const r=await go(`${gw()}/asset/api/systemupdates/${enc(specDevId())}`); showRes('updates-res',r); }
+async function getRemoteSessions() { const r=await go(`${gw()}/asset/api/remotesupport/user/${enc(sv('s_user'))}/device/${enc(specDevId())}`); showRes('remote-res',r); }
+async function createRemoteSession(){ const r=await go(`${gw()}/asset/api/remotesupport`,{method:'POST',body:sv('remote_body')||'{}'}); showRes('remote-create-res',r); }
+async function upsertDeviceSpec()  { const r=await go(`${gw()}/asset/api/devicespecification?assignee=all`,{method:'POST',body:sv('specpost_body')||'{}'}); showRes('specpost-res',r); }
+
+// ── Topology ───────────────────────────────────────────────────────────────────
+async function getTopology()        { showRes('topo-res', await go(`${aBase()}/devicetopology`)); }
+async function getGatewayId()       { showRes('gwid-res', await go(`${gw()}/asset/docker/${enc(sv('s_docker'))}/getgatewayid`)); }
+async function getPowerSourceCount(){ showRes('psc-res', await go(`${aVdms()}/getpowersourcetopologyconnectionscount`)); }
+async function getPowerSourceTopo() { showRes('pst-res', await go(`${aVdms()}/getpowersourcetopologybypagination?pageno=${sv('pst_pg')||1}&pagesize=${sv('pst_ps')||10}`)); }
+async function getDeviceListInt()   { showRes('dli-res', await go(`${aBase()}/devicelistintegration`)); }
+async function getAssigneeEmail()   { showRes('asgn-res', await go(`${gw()}/asset/vdms/${enc(sv('s_vid'))}/device/network/${enc(sv('net_name'))}/getassigneeemail`)); }
+
+// ── VDMS endpoints ─────────────────────────────────────────────────────────────
+async function vdmsCall(key,method,url,body) {
+  setSt(key,null);
+  const r=await go(url,body!==undefined?{method,body:JSON.stringify(body)}:{method});
+  setSt(key,r.status);
+  $('vdms-ep-res').style.display='block';
+  $('vdms-ep-res').textContent=`[${r.status}] ${method} ${url}\n\n${pretty(r.body)}`;
+}
+async function runAllVdms() {
+  const calls=[
+    ()=>vdmsCall('vdms-id','GET',gw()+'/vdms/id'),
+    ()=>vdmsCall('vdms-det','GET',gw()+'/vdms/details'),
+    ()=>vdmsCall('vdms-master','GET',gw()+'/vdms/master'),
+    ()=>vdmsCall('vdms-sec','GET',gw()+'/vdms/has-secondary-device'),
+    ()=>vdmsCall('vdms-secid','GET',gw()+'/vdms/secondary-device-id'),
+    ()=>vdmsCall('vdms-org','GET',`${gw()}/vdms/customer-org-id/${enc(sv('s_vid'))}`),
+    ()=>vdmsCall('vdms-adc','GET',gw()+'/vdms/sync-details-for-adc'),
+    ()=>vdmsCall('vdms-al','GET',gw()+'/vdms/audit-log?page=0&size=10'),
+  ];
+  for(const fn of calls){await fn();await delay(250);}
+}
+
+// ── Dapr pub/sub ───────────────────────────────────────────────────────────────
+function syncDaprInputs() {
+  if(!$('pub_vmsid').value)  $('pub_vmsid').value=sv('s_vid');
+  if(!$('pub_devid').value)  $('pub_devid').value=sv('s_device');
+  if(!$('pub_email').value)  $('pub_email').value=sv('s_email');
+  if(!$('pub_prop_id').value)   $('pub_prop_id').value=sv('s_vid');
+  if(!$('pub_prop_addr').value) $('pub_prop_addr').value=sv('s_addr');
+  if(!$('pub_org_vdms').value)  $('pub_org_vdms').value=sv('s_vid');
+  if(!$('pub_perm_vdms').value) $('pub_perm_vdms').value=sv('s_vid');
+}
+async function daprPublish(topic,payload,stKey,msgId) {
+  setSt(stKey,null);
+  const r=await go(`${gw()}/dapr/v1.0/publish/pubsub/${topic}`,{method:'POST',body:JSON.stringify(payload)});
+  const ok=r.status===0||(r.status>=200&&r.status<300);
+  setSt(stKey,ok?204:r.status);
+  showMsg(msgId,ok?`✓ Published to <strong>${topic}</strong>`:`Error ${r.status}: ${JSON.stringify(r.body)}`,ok?'ok':'err');
+}
+async function publishAudit() { syncDaprInputs(); await daprPublish('device.audit',{vdmsId:sv('pub_vmsid'),deviceId:sv('pub_devid'),action:sv('pub_action'),status:sv('pub_status'),message:sv('pub_msg'),userEmail:sv('pub_email')},'pub-audit','pub-audit-msg'); }
+async function publishPropertyUpdate() { syncDaprInputs(); await daprPublish('vdms.update-property-details',{id:sv('pub_prop_id'),address:sv('pub_prop_addr')},'pub-prop','pub-prop-msg'); }
+async function publishCustomerOrg() { syncDaprInputs(); await daprPublish('vdms.update-customer-org-id',{vdmsId:sv('pub_org_vdms'),customerOrgId:sv('pub_org_id')},'pub-org','pub-org-msg'); }
+async function publishAgentPermission() { syncDaprInputs(); await daprPublish('vdms.set-agent-permission',{vdmsId:sv('pub_perm_vdms'),agentId:sv('pub_perm_agent'),permission:sv('pub_perm_perm')},'pub-perm','pub-perm-msg'); }
+async function publishAll() { syncDaprInputs(); showMsg('pub-all-msg','Publishing…','info'); await publishAudit();await delay(400);await publishPropertyUpdate();await delay(400);await publishCustomerOrg();await delay(400);await publishAgentPermission(); showMsg('pub-all-msg','✓ All 4 published. Check Audit Log tab.','ok'); }
+
+// ── Integrations & Inspection ──────────────────────────────────────────────────
+async function epCall(key,method,url,body) {
+  setSt(key,null);
+  const r=await go(url,body!==undefined?{method,body:JSON.stringify(body)}:{method});
+  setSt(key,r.status);
+  const resId=key.startsWith('int-')?'int-res':'ins-res';
+  const el=$(resId); el.style.display='block';
+  el.textContent=`[${r.status}] ${method} ${url}\n\n${pretty(r.body)}`;
+}
 async function runAllInt() {
-  const ids = ['int-bcount','int-bobj','int-mdid','int-mdcdel','int-knx','int-cd','int-dh'];
-  for (const id of ids) {
-    const btn = document.querySelector('#st-' + id).previousElementSibling;
-    if (btn) { btn.click(); await new Promise(r => setTimeout(r, 350)); }
-  }
+  const fns=[
+    ()=>epCall('int-h','GET',gw()+'/integrations/actuator/health'),
+    ()=>epCall('int-bcount','GET',`${gw()}/integrations/bacnet/getBacnetObjectCountByDeviceId?deviceId=${enc(sv('s_device'))}`),
+    ()=>epCall('int-bobj','GET',`${gw()}/integrations/bacnet/getBacnetObjectsByDeviceId?deviceId=${enc(sv('s_device'))}`),
+    ()=>epCall('int-mdid','GET',`${gw()}/integrations/myDevices/getDeviceIdByMyDevicesSensorId?myDevicesSensorId=${enc(sv('s_rec'))}`),
+    ()=>epCall('int-knx','GET',`${gw()}/integrations/kNX/getKNXGroupCountByDeviceId?deviceId=${enc(sv('s_device'))}`),
+    ()=>epCall('int-cd','GET',gw()+'/integrations/connectedDevices/getPowerSourceTopologyConnectionsCount'),
+    ()=>epCall('int-dh','GET',`${gw()}/integrations/datahoist/getDataHoistDeviceById?deviceId=${enc(sv('s_device'))}`),
+  ];
+  for(const fn of fns){await fn();await delay(300);}
 }
 async function runAllIns() {
-  const ids = ['ins-ctc','ins-irst','ins-iar','ins-gcdel','ins-rcs','ins-rcc','ins-rcdel','ins-gir'];
-  for (const id of ids) {
-    const btn = document.querySelector('#st-' + id).previousElementSibling;
-    if (btn) { btn.click(); await new Promise(r => setTimeout(r, 350)); }
-  }
-}
-async function runAllCda() {
-  const ids = ['cda-h','cda-dc','cda-dl'];
-  for (const id of ids) {
-    const btn = document.querySelector('#st-' + id).previousElementSibling;
-    if (btn) { btn.click(); await new Promise(r => setTimeout(r, 350)); }
-  }
+  const fns=[
+    ()=>epCall('ins-h','GET',gw()+'/inspection/actuator/health'),
+    ()=>epCall('ins-ctc','GET',`${gw()}/inspection/checkListTemplate/getCheckListTemplatesCountByDeviceId?deviceId=${enc(sv('s_device'))}`),
+    ()=>epCall('ins-irst','POST',`${gw()}/inspection/inspectionRecord/updateInspectionRecordStatus?id=${enc(sv('s_rec'))}&status=true`),
+    ()=>epCall('ins-iar','POST',gw()+'/inspection/inspectionRecord/updateInspectionStatusOnDeviceArchive',[sv('s_device')]),
+    ()=>epCall('ins-rcs','GET',`${gw()}/inspection/recordChecklist/getRecordChecklistStatusByDeviceId?deviceId=${enc(sv('s_device'))}`),
+    ()=>epCall('ins-rcc','GET',`${gw()}/inspection/recordChecklist/getChecklistStatusCountDeviceId?a=${enc(sv('s_device'))}`),
+    ()=>epCall('ins-gir','POST',`${gw()}/inspection/globalInspectionRecord/updateGlobalInspectionRecord?email=${enc(sv('s_email'))}`),
+  ];
+  for(const fn of fns){await fn();await delay(300);}
 }
 
-// Initial ping on load
+// ── Audit Log ──────────────────────────────────────────────────────────────────
+async function loadAudit() {
+  const vid=$('au_vdms').value||sv('s_vid');
+  await renderAudit(`${gw()}/vdms/audit-log?vdmsId=${enc(vid)}&page=${sv('au_pg')||0}&size=${sv('au_ps')||20}`,vid);
+}
+async function loadAuditAll() {
+  await renderAudit(`${gw()}/vdms/audit-log?page=${sv('au_pg')||0}&size=${sv('au_ps')||20}`,null);
+}
+async function renderAudit(url,vid) {
+  const r=await go(url); const tbody=$('au-tbody');
+  if(!r.ok){tbody.innerHTML=`<tr><td colspan="7"><div class="msg msg-err">Error ${r.status}</div></td></tr>`;return;}
+  const rows=Array.isArray(r.body)?r.body:[];
+  $('au-title').textContent=(vid?`Audit — ${vid}`:'All Entries')+` (${rows.length})`;
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="7" class="tbl-empty">No entries</td></tr>';return;}
+  const bc=a=>!a?'badge-gray':/add/i.test(a)?'badge-green':/del/i.test(a)?'badge-red':'badge-blue';
+  tbody.innerHTML=rows.map((e,i)=>`<tr>
+    <td style="color:#475569">${e.id||i+1}</td>
+    <td><span class="badge ${bc(e.action)}">${e.action||'—'}</span></td>
+    <td style="font-family:monospace;font-size:10px">${e.affectedRecordId||'—'}</td>
+    <td style="font-family:monospace;font-size:10px">${e.vdmsId||'—'}</td>
+    <td>${e.userEmail||'—'}</td>
+    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(e.message||'').replace(/"/g,'&quot;')}">${e.message||'—'}</td>
+    <td style="font-family:monospace;font-size:10px;white-space:nowrap">${e.createdAt||'—'}</td>
+  </tr>`).join('');
+}
+
+// ── Raw ────────────────────────────────────────────────────────────────────────
+async function sendRaw() {
+  const method=sv('raw_m'); const url=gw()+sv('raw_path'); const body=sv('raw_body');
+  const opts={method}; if(body&&method!=='GET') opts.body=body;
+  const r=await go(url,opts);
+  const el=$('raw_res'); el.style.display='block';
+  el.textContent=`Status: ${r.status}\n\n${pretty(r.body)}`;
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────────
 pingAll();
 </script>
 </body>

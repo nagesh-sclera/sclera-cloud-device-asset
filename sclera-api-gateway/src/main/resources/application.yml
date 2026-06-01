@@ -39,6 +39,30 @@ spring:
               uri: http://vdms-service:8089
               predicates:
                 - Path=/vdms/**
+            - id: audit-route
+              uri: http://sclera-audit:8090
+              predicates:
+                - Path=/audit/**
+              filters:
+                - StripPrefix=1
+            - id: integrations-route
+              uri: http://sclera-integrations:8096
+              predicates:
+                - Path=/integrations/**
+              filters:
+                - StripPrefix=1
+            - id: inspection-route
+              uri: http://sclera-inspection:8095
+              predicates:
+                - Path=/inspection/**
+              filters:
+                - StripPrefix=1
+            - id: dapr-route
+              uri: http://sclera-cloud-device-asset:3500
+              predicates:
+                - Path=/dapr/**
+              filters:
+                - StripPrefix=1
 
 management:
   endpoints:

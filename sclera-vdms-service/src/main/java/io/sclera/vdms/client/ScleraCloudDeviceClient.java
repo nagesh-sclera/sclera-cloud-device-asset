@@ -2,9 +2,6 @@ package io.sclera.vdms.client;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -26,7 +23,6 @@ public class ScleraCloudDeviceClient {
 
     private static final Logger log = LoggerFactory.getLogger(ScleraCloudDeviceClient.class);
     private static final String DEVICE_ASSET_APP_ID = "sclera-cloud-device-asset";
-    private static final String PUBSUB_NAME = "pubsub";
 
     private final RestTemplate rest = new RestTemplate();
     private final String daprBaseUrl = "http://localhost:" +
@@ -51,32 +47,6 @@ public class ScleraCloudDeviceClient {
     public Object getDevices(String username, String vdmsId, String dockerName) {
         String path = "user/" + username + "/vdms/" + vdmsId + "/docker/" + dockerName + "/devices";
         return invoke(path, Object.class);
-    }
-
-    // ── Pub/Sub ───────────────────────────────────────────────────────────────
-
-    /**
-     * Publish a VDMS lifecycle event to a Dapr topic.
-     *
-     * Topics consumed by sclera-cloud-device-asset (add a subscriber there to handle them):
-     *   vdms.activated       — VDMS has been activated; payload: {"vdmsId", "activationTimestamp"}
-     *   vdms.status-changed  — activation_status changed; payload: {"vdmsId", "status"}
-     *
-     * Best-effort: exceptions are logged and swallowed. Callers needing delivery
-     * confirmation should use synchronous service invocation instead.
-     */
-    public void publishEvent(String topic, Object payload) {
-        String url = daprBaseUrl + "/v1.0/publish/" + PUBSUB_NAME + "/" + topic;
-        log.info("[Dapr sidecar →] publish topic={} | url={}", topic, url);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Object> request = new HttpEntity<>(payload, headers);
-        try {
-            rest.postForEntity(url, request, Void.class);
-            log.info("[Dapr sidecar ←] publish accepted topic={}", topic);
-        } catch (Exception e) {
-            log.error("[Dapr sidecar ✗] publish failed topic={}: {}", topic, e.getMessage());
-        }
     }
 
     // ── Internal helpers ──────────────────────────────────────────────────────

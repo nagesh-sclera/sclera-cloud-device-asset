@@ -130,7 +130,7 @@ tr:hover td { background: #181b28; }
   <div class="sidebar">
     <div class="sb-section">
       <h4>Connection</h4>
-      <div class="f"><label>Gateway URL</label><input id="s_gw" value="http://localhost:8080"></div>
+      <div class="f"><label>Gateway URL</label><input id="s_gw" value="http://localhost:3000/proxy/8080"></div>
       <div class="f"><label>JWT Token</label><textarea id="s_token" rows="3" placeholder="eyJhbGci… paste JWT here"></textarea></div>
     </div>
     <div class="sb-section">
@@ -148,7 +148,10 @@ tr:hover td { background: #181b28; }
     <div class="tabs">
       <div class="tab active" onclick="tab('overview',this)">Overview</div>
       <div class="tab" onclick="tab('devices',this)">Devices</div>
+      <div class="tab" onclick="tab('subsystem',this)">Subsystem & Virtual</div>
+      <div class="tab" onclick="tab('sensors',this)">Sensors & Details</div>
       <div class="tab" onclick="tab('search',this)">Search & Filter</div>
+      <div class="tab" onclick="tab('notes',this)">Notes & Conditions</div>
       <div class="tab" onclick="tab('twoway',this)">VDMS ↔ Asset</div>
       <div class="tab" onclick="tab('audit',this)">Audit Log</div>
       <div class="tab" onclick="tab('raw',this)">Raw</div>
@@ -244,6 +247,76 @@ tr:hover td { background: #181b28; }
 
     </div>
 
+    <!-- ── SUBSYSTEM & VIRTUAL ── -->
+    <div id="tab-subsystem" class="panel">
+      <div class="card">
+        <div class="card-hdr"><h2>Subsystem Parent Devices</h2><span class="ep">GET /asset/…/getsubsystemparentdevicesbypagination</span><button class="btn btn-neutral btn-sm" onclick="idxSubsystemParents()">Load</button></div>
+        <div class="fg">
+          <div class="ff s1"><label>Page / Size</label><div style="display:flex;gap:6px"><input id="idx_sp_pg" value="1" style="width:70px"><input id="idx_sp_ps" value="10" style="width:70px"></div></div>
+          <div class="ff s1"><label>Assignee</label><input id="idx_sp_asgn" value="all"></div>
+        </div>
+        <pre id="idx-sp-res" class="res" style="display:none"></pre>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h2>Subsystem Child Devices</h2><span class="ep">GET /asset/…/device/{id}/getsubsystemdevicesbypagination</span><button class="btn btn-neutral btn-sm" onclick="idxSubsystemChildren()">Load</button></div>
+        <div class="fg">
+          <div class="ff s2"><label>Parent Device ID</label><input id="idx_sc_dev" placeholder="paste device ID or use sidebar"></div>
+          <div class="ff s1"><label>Page / Size</label><div style="display:flex;gap:6px"><input id="idx_sc_pg" value="1" style="width:70px"><input id="idx_sc_ps" value="10" style="width:70px"></div></div>
+        </div>
+        <pre id="idx-sc-res" class="res" style="display:none"></pre>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h2>Virtual Devices</h2><span class="ep">GET /asset/…/getfiltervirtualdevicesbypagination</span><button class="btn btn-neutral btn-sm" onclick="idxVirtualDevices()">Load</button></div>
+        <div class="fg">
+          <div class="ff s1"><label>Search Key</label><input id="idx_vd_sk" value="null"></div>
+          <div class="ff s1"><label>Page / Size</label><div style="display:flex;gap:6px"><input id="idx_vd_pg" value="1" style="width:70px"><input id="idx_vd_ps" value="10" style="width:70px"></div></div>
+        </div>
+        <pre id="idx-vd-res" class="res" style="display:none"></pre>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h2>Delete Virtual Device</h2><span class="ep">DELETE /asset/…/virtual-device/{id}</span></div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <div class="ff" style="flex:1"><label>Virtual Device ID</label><input id="idx_vdel_id" placeholder="virtual device id to delete"></div>
+          <button class="btn btn-danger" onclick="idxDeleteVirtualDevice()">Delete</button>
+        </div>
+        <div id="idx-vdel-msg"></div>
+      </div>
+    </div>
+
+    <!-- ── SENSORS & DETAILS ── -->
+    <div id="tab-sensors" class="panel">
+      <div class="card" style="background:#13151f;border:1px solid #7c8cf820">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+          <div class="ff" style="flex:1"><label style="color:#7c8cf8;font-weight:600">Device ID for Sensors & Details tab</label><input id="idx_sens_dev" placeholder="paste device ID here" style="border-color:#7c8cf8"></div>
+          <button class="btn btn-neutral btn-sm" onclick="$('idx_sens_dev').value=$('s_vdms').value+'_'+$('s_docker').value+'_Demo_Device_1'">Fill Demo ID</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h2>Device Sensors</h2><span class="ep">GET /asset/…/device/{id}/getalldevicesensors</span><button class="btn btn-neutral btn-sm" onclick="idxGetSensors()">Load</button></div>
+        <pre id="idx-sensors-res" class="res" style="display:none"></pre>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h2>Single Device</h2><span class="ep">GET /asset/…/device/{id}/getdevice</span><button class="btn btn-neutral btn-sm" onclick="idxGetDevice()">Load</button></div>
+        <pre id="idx-single-res" class="res" style="display:none"></pre>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h2>All Device Details</h2><span class="ep">GET /asset/…/getalldevicedetails</span><button class="btn btn-neutral btn-sm" onclick="idxAllDetails()">Load</button></div>
+        <div class="fg">
+          <div class="ff s1"><label>Page / Size</label><div style="display:flex;gap:6px"><input id="idx_add_pg" value="1" style="width:70px"><input id="idx_add_ps" value="10" style="width:70px"></div></div>
+          <div class="ff s1"><label>Profile Type</label><input id="idx_add_pt" value="internal"></div>
+        </div>
+        <pre id="idx-alldet-res" class="res" style="display:none"></pre>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h2>Device Topology</h2><span class="ep">GET /asset/…/devicetopology</span><button class="btn btn-neutral btn-sm" onclick="idxTopology()">Load</button></div>
+        <pre id="idx-topo-res" class="res" style="display:none"></pre>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h2>Alert Messages</h2><span class="ep">GET /asset/…/getalertmessages</span><button class="btn btn-neutral btn-sm" onclick="idxAlerts()">Load</button></div>
+        <pre id="idx-alerts-res" class="res" style="display:none"></pre>
+      </div>
+    </div>
+
     <!-- ── SEARCH & FILTER ── -->
     <div id="tab-search" class="panel">
 
@@ -287,6 +360,38 @@ tr:hover td { background: #181b28; }
         </div>
       </div>
 
+    </div>
+
+    <!-- ── NOTES & CONDITIONS ── -->
+    <div id="tab-notes" class="panel">
+      <div class="card" style="background:#13151f;border:1px solid #7c8cf820">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+          <div class="ff" style="flex:1"><label style="color:#7c8cf8;font-weight:600">Device ID for Notes & Conditions</label><input id="idx_nc_dev" placeholder="paste device ID" style="border-color:#7c8cf8"></div>
+          <button class="btn btn-neutral btn-sm" onclick="$('idx_nc_dev').value=$('s_vdms').value+'_'+$('s_docker').value+'_Demo_Device_1'">Fill Demo ID</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h2>Notes</h2><span class="ep">GET/POST/DELETE /asset/…/device/{id}/note(s)</span><button class="btn btn-neutral btn-sm" onclick="idxGetNotes()">Load Notes</button></div>
+        <div style="display:flex;gap:8px;align-items:flex-end;margin-top:10px;flex-wrap:wrap">
+          <div class="ff" style="flex:1"><label>Note Text</label><input id="idx_note_txt" placeholder="Write a note…"></div>
+          <button class="btn btn-success btn-sm" onclick="idxAddNote()">Add</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end;margin-top:8px;flex-wrap:wrap">
+          <div class="ff" style="flex:1"><label>Note ID (to delete)</label><input id="idx_note_del" placeholder="note ID"></div>
+          <button class="btn btn-danger btn-sm" onclick="idxDeleteNote()">Delete</button>
+        </div>
+        <div id="idx-note-msg"></div>
+        <pre id="idx-notes-res" class="res" style="display:none"></pre>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h2>Device Conditions</h2><span class="ep">GET/POST/DELETE /asset/…/device/{id}/conditions</span><button class="btn btn-neutral btn-sm" onclick="idxGetConditions()">Load</button></div>
+        <div class="fg">
+          <div class="ff s2"><label>Upsert Conditions JSON (array)</label><textarea id="idx_cond_body" rows="3">[{"condition_name":"Offline Check","condition_type":"status","condition_value":"offline","action":"alert"}]</textarea></div>
+          <div class="row-actions"><button class="btn btn-success btn-sm" onclick="idxUpsertConditions()">Upsert</button><button class="btn btn-danger btn-sm" onclick="idxDeleteAllConditions()">Delete All</button></div>
+        </div>
+        <div id="idx-cond-msg"></div>
+        <pre id="idx-cond-res" class="res" style="display:none"></pre>
+      </div>
     </div>
 
     <!-- ── VDMS ↔ ASSET ── -->
@@ -473,7 +578,7 @@ async function ping() {
   let skUp = 0;
   for (const s of skeletons) {
     try {
-      const r = await fetch(`http://${location.hostname}:${s.port}/actuator/health`, { method: 'GET' });
+      const r = await fetch(`http://localhost:3000/proxy/${s.port}/actuator/health`, { method: 'GET' });
       const up = r.ok;
       if (up) skUp++;
       lines.push(`${up ? '✓' : '✗'} ${s.id} :${s.port}  →  HTTP ${r.status}`);
@@ -762,6 +867,30 @@ async function sendRaw() {
   el.style.display = 'block';
   el.textContent = `Status: ${r.status}\n\n${pretty(r.body)}`;
 }
+
+// ── Subsystem & Virtual ────────────────────────────────────────────────────────
+function idxRes(elId, r) { const el=document.getElementById(elId); if(!el)return; el.style.display='block'; try{el.textContent=`[${r.status}]\n\n${JSON.stringify(typeof r.body==='string'?JSON.parse(r.body):r.body,null,2)}`;}catch{el.textContent=`[${r.status}]\n\n${r.body}`;} }
+async function idxSubsystemParents() { const r=await go(`${aBase()}/getsubsystemparentdevicesbypagination?condition=all&pageno=${document.getElementById('idx_sp_pg').value||1}&pagesize=${document.getElementById('idx_sp_ps').value||10}&assignee=${document.getElementById('idx_sp_asgn').value||'all'}`); idxRes('idx-sp-res',r); }
+async function idxSubsystemChildren() { const devId=document.getElementById('idx_sc_dev').value||vdmsId()+'_'+docker()+'_Demo_Device_1'; const r=await go(`${aBase()}/device/${encodeURIComponent(devId)}/getsubsystemdevicesbypagination?condition=all&pageno=${document.getElementById('idx_sc_pg').value||1}&pagesize=${document.getElementById('idx_sc_ps').value||10}`); idxRes('idx-sc-res',r); }
+async function idxVirtualDevices() { const r=await go(`${gw()}/asset/user/${user()}/vdms/${vdmsId()}/getfiltervirtualdevicesbypagination?searchKey=${document.getElementById('idx_vd_sk').value||'null'}&pageno=${document.getElementById('idx_vd_pg').value||1}&pagesize=${document.getElementById('idx_vd_ps').value||10}&dockernames=all&types=all&virtual_device_types=all`); idxRes('idx-vd-res',r); }
+async function idxDeleteVirtualDevice() { const id=document.getElementById('idx_vdel_id').value.trim(); if(!id){showMsg('idx-vdel-msg','Enter virtual device ID','err');return;} if(!confirm(`Delete virtual device ${id}?`)) return; const r=await go(`${aBase()}/virtual-device/${encodeURIComponent(id)}?assignee=all`,{method:'DELETE'}); if(r.ok) showMsg('idx-vdel-msg','Deleted.','ok'); else showMsg('idx-vdel-msg',`Error ${r.status}`,'err'); }
+
+// ── Sensors & Details ──────────────────────────────────────────────────────────
+function idxSensDevId() { return document.getElementById('idx_sens_dev').value.trim() || (vdmsId()+'_'+docker()+'_Demo_Device_1'); }
+async function idxGetSensors() { idxRes('idx-sensors-res', await go(`${aBase()}/device/${encodeURIComponent(idxSensDevId())}/getalldevicesensors`)); }
+async function idxGetDevice()  { idxRes('idx-single-res',  await go(`${aBase()}/device/${encodeURIComponent(idxSensDevId())}/getdevice`)); }
+async function idxAllDetails() { idxRes('idx-alldet-res',  await go(`${aBase()}/getalldevicedetails?page_no=${document.getElementById('idx_add_pg').value||1}&page_size=${document.getElementById('idx_add_ps').value||10}&search_key=null&profile_type=${document.getElementById('idx_add_pt').value||'internal'}`)); }
+async function idxTopology()   { idxRes('idx-topo-res',    await go(`${aBase()}/devicetopology`)); }
+async function idxAlerts()     { idxRes('idx-alerts-res',  await go(`${aBase()}/getalertmessages`)); }
+
+// ── Notes & Conditions ──────────────────────────────────────────────────────────
+function idxNcDevId() { return document.getElementById('idx_nc_dev').value.trim() || (vdmsId()+'_'+docker()+'_Demo_Device_1'); }
+async function idxGetNotes() { const r=await go(`${aBase()}/device/${encodeURIComponent(idxNcDevId())}/notes`); idxRes('idx-notes-res',r); }
+async function idxAddNote() { const txt=document.getElementById('idx_note_txt').value.trim(); if(!txt){showMsg('idx-note-msg','Enter note text','err');return;} const r=await go(`${aBase()}/device/${encodeURIComponent(idxNcDevId())}/note`,{method:'POST',body:JSON.stringify({note:txt})}); if(r.ok){showMsg('idx-note-msg','Added.','ok');idxGetNotes();}else showMsg('idx-note-msg',`Error ${r.status}`,'err'); }
+async function idxDeleteNote() { const id=document.getElementById('idx_note_del').value.trim(); if(!id){showMsg('idx-note-msg','Enter note ID','err');return;} const r=await go(`${aBase()}/device/${encodeURIComponent(idxNcDevId())}/note/${encodeURIComponent(id)}`,{method:'DELETE'}); if(r.ok){showMsg('idx-note-msg','Deleted.','ok');idxGetNotes();}else showMsg('idx-note-msg',`Error ${r.status}`,'err'); }
+async function idxGetConditions() { const r=await go(`${aBase()}/device/${encodeURIComponent(idxNcDevId())}/getdeviceconditions`); idxRes('idx-cond-res',r); }
+async function idxUpsertConditions() { const body=document.getElementById('idx_cond_body').value||'[]'; const r=await go(`${aBase()}/upsertdeviceconditions`,{method:'POST',body}); if(r.ok) showMsg('idx-cond-msg','Upserted.','ok'); else showMsg('idx-cond-msg',`Error ${r.status}`,'err'); }
+async function idxDeleteAllConditions() { if(!confirm(`Delete all conditions for ${idxNcDevId()}?`)) return; const r=await go(`${gw()}/asset/user/${user()}/vdms/${vdmsId()}/device/${encodeURIComponent(idxNcDevId())}/deletealldeviceconditions`,{method:'DELETE'}); if(r.ok) showMsg('idx-cond-msg','All deleted.','ok'); else showMsg('idx-cond-msg',`Error ${r.status}`,'err'); }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 ping();

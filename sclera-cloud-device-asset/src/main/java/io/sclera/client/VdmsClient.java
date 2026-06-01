@@ -3,6 +3,8 @@ package io.sclera.client;
 import io.dapr.client.DaprClient;
 import io.dapr.client.domain.HttpExtension;
 import io.dapr.client.domain.State;
+import io.sclera.dapr.DaprEventPublisher;
+import io.sclera.dapr.PublishResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,9 +27,11 @@ public class VdmsClient {
     private static final String CACHE_STORE = "statestore-vdmscache";
 
     private final DaprClient dapr;
+    private final DaprEventPublisher publisher;
 
-    public VdmsClient(DaprClient dapr) {
+    public VdmsClient(DaprClient dapr, DaprEventPublisher publisher) {
         this.dapr = dapr;
+        this.publisher = publisher;
     }
 
     // ── Service invocation (cached) ───────────────────────────────────────────
@@ -64,16 +68,12 @@ public class VdmsClient {
     // ── Pub/Sub ───────────────────────────────────────────────────────────────
 
     /**
-     * Publish an event to a Dapr topic.
+     * Publish an event to a Dapr topic via DaprEventPublisher.
      *
-     * <p>Best-effort: exceptions are logged and swallowed.
+     * <p>Never throws; returns a PublishResult indicating success or failure.
      */
-    public void publishEvent(String topic, Object payload) {
-        try {
-            dapr.publishEvent(PUBSUB_NAME, topic, payload).block();
-        } catch (Exception e) {
-            log.warn("VdmsClient publishEvent failed topic={}: {}", topic, e.getMessage());
-        }
+    public PublishResult publishEvent(String topic, Object payload) {
+        return publisher.publish(PUBSUB_NAME, topic, payload);
     }
 
     // ── Internal helpers ──────────────────────────────────────────────────────

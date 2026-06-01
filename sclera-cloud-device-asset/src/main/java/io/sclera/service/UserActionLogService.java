@@ -1,12 +1,13 @@
 package io.sclera.service;
 
 import io.sclera.client.VdmsClient;
+import io.sclera.dapr.PublishResult;
+import io.sclera.dapr.events.DeviceAuditEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,16 +24,21 @@ public class UserActionLogService {
     public void addUserAction(String username, String type, String action,
                               String message, String status, String subType, String recordId) {
         try {
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("vdmsId",    resolveVdmsId());
-            payload.put("userEmail", username  != null ? username  : "system");
-            payload.put("action",    action);
-            payload.put("status",    status);
-            payload.put("message",   message);
-            payload.put("deviceId",  recordId  != null ? recordId  : "");
-            log.info("[AuditLog] publishing device.audit | action={} device={} user={} vdmsId={}",
-                     action, recordId, username, payload.get("vdmsId"));
-            vdmsClient.publishEvent("device.audit", payload);
+            DeviceAuditEvent event = new DeviceAuditEvent(
+                resolveVdmsId(),
+                recordId  != null ? recordId  : "",
+                action,
+                status,
+                message,
+                username != null ? username : "system"
+            );
+            log.info("[AuditLog] publishing device.audit | type={} action={} device={} user={} vdmsId={}",
+                     type, action, recordId, username, event.vdmsId());
+            PublishResult result = vdmsClient.publishEvent("device.audit", event);
+            if (!result.success()) {
+                log.error("[AuditLog] Publish failed action={} eventId={} error={}",
+                    action, result.eventId(), result.error());
+            }
         } catch (Exception e) {
             log.warn("[UserActionLogService] Failed to publish audit event action={}: {}", action, e.getMessage());
         }

@@ -1,15 +1,19 @@
 package io.sclera.vdms.controller;
 
 import io.sclera.vdms.dto.VdmsDTO;
+import io.sclera.vdms.model.UserActionLog;
 import io.sclera.vdms.model.Vdms;
+import io.sclera.vdms.repository.UserActionLogRepository;
 import io.sclera.vdms.repository.VdmsJpaRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,9 +23,11 @@ import java.util.Optional;
 public class VdmsController {
 
     private final VdmsJpaRepository repo;
+    private final UserActionLogRepository auditRepo;
 
-    public VdmsController(VdmsJpaRepository repo) {
+    public VdmsController(VdmsJpaRepository repo, UserActionLogRepository auditRepo) {
         this.repo = repo;
+        this.auditRepo = auditRepo;
     }
 
     @GetMapping("/vdms/id")
@@ -80,16 +86,23 @@ public class VdmsController {
         return ResponseEntity.ok(dto);
     }
 
-    @GetMapping("/dapr/subscribe")
-    public List<Map<String, String>> daprSubscribe() {
-        return Arrays.asList(
-            // VDMS state updates (existing)
-            Map.of("pubsubname", "pubsub", "topic", "vdms.update-property-details", "route", "/vdms/update-property-details"),
-            Map.of("pubsubname", "pubsub", "topic", "vdms.update-customer-org-id",  "route", "/vdms/update-customer-org-id"),
-            Map.of("pubsubname", "pubsub", "topic", "vdms.set-agent-permission",    "route", "/vdms/set-agent-permission"),
-            // Audit events published by sclera-cloud-device-asset after device CRUD operations
-            Map.of("pubsubname", "pubsub", "topic", "device.audit",                 "route", "/vdms/device-audit")
-        );
+    /**
+     * GET /vdms/audit-log?vdmsId={vdmsId}&page=0&size=20
+     *
+     * Returns device audit log entries for a VDMS instance, newest first.
+     * size is capped at 100.
+     */
+    @GetMapping("/vdms/audit-log")
+    public List<UserActionLog> getAuditLog(
+            @RequestParam(required = false) String vdmsId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        int safeSize = Math.min(size, 100);
+        Pageable pageable = PageRequest.of(page, safeSize);
+        var p = (vdmsId == null || vdmsId.isBlank())
+            ? auditRepo.findAllByOrderByCreatedAtDesc(pageable)
+            : auditRepo.findByVdmsIdOrderByCreatedAtDesc(vdmsId, pageable);
+        return p != null ? p.getContent() : List.of();
     }
 
     private VdmsDTO toFullDto(Vdms v) {

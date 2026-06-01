@@ -14,8 +14,11 @@ $DbPass = "mypass123"
 
 $ErrorActionPreference = "Stop"
 $Root  = $PSScriptRoot
-$Dapr  = "$Root\dapr.exe"
-$Comps = "$Root\dapr\local-components"
+$Comps = "$Root\dapr\components\local"
+
+# Resolve dapr CLI: prefer PATH, fall back to local dapr.exe
+$DaprCmd = Get-Command dapr -ErrorAction SilentlyContinue
+$Dapr = if ($DaprCmd) { "dapr" } elseif (Test-Path "$Root\dapr.exe") { "$Root\dapr.exe" } else { $null }
 
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Cyan
@@ -26,11 +29,14 @@ Write-Host ""
 # ── 1. Prerequisites ─────────────────────────────────────────────────────────
 Write-Host "[1/6] Checking prerequisites..." -ForegroundColor Yellow
 
-if (-not (Test-Path $Dapr)) {
-    Write-Error "dapr.exe not found at $Dapr"
+if (-not $Dapr) {
+    Write-Host ""
+    Write-Host "  [ERROR] Dapr CLI not found. Install it with:" -ForegroundColor Red
+    Write-Host "    winget install Dapr.CLI" -ForegroundColor Yellow
+    Write-Host "  Then re-run this script." -ForegroundColor Yellow
     exit 1
 }
-Write-Host "  [OK] dapr.exe"
+Write-Host "  [OK] dapr CLI: $Dapr"
 
 if (-not (Get-Command java -ErrorAction SilentlyContinue)) {
     Write-Error "java not found in PATH"

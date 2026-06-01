@@ -1,6 +1,7 @@
 package io.sclera.client;
 
-import io.dapr.client.DaprClient;
+import io.sclera.dapr.DaprEventPublisher;
+import io.sclera.dapr.PublishResult;
 import io.sclera.dto.touchscreen.DeviceHistoryDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,34 +27,34 @@ public class RabbitmqClient {
     private static final String TOPIC_DEVICE_EVENT = "device.event-recorded";
     private static final String TOPIC_SENSOR_READING = "device.sensor-reading";
 
-    private final DaprClient dapr;
+    private final DaprEventPublisher publisher;
 
-    public RabbitmqClient(DaprClient dapr) {
-        this.dapr = dapr;
+    public RabbitmqClient(DaprEventPublisher publisher) {
+        this.publisher = publisher;
     }
 
     public void rabbitmqDeviceEvent(String eventType, DeviceHistoryDTO dto) {
-        try {
-            Map<String, Object> evt = new HashMap<>();
-            evt.put("eventType", eventType);
-            evt.put("payload", dto);
-            dapr.publishEvent(PUBSUB_NAME, TOPIC_DEVICE_EVENT, evt).block();
-        } catch (Exception e) {
-            log.warn("RabbitmqClient.rabbitmqDeviceEvent publish failed; swallowing", e);
+        Map<String, Object> evt = new HashMap<>();
+        evt.put("eventType", eventType);
+        evt.put("payload", dto);
+        PublishResult result = publisher.publish(PUBSUB_NAME, TOPIC_DEVICE_EVENT, evt);
+        if (!result.success()) {
+            log.error("RabbitmqClient publish failed topic={} eventId={} error={}",
+                TOPIC_DEVICE_EVENT, result.eventId(), result.error());
         }
     }
 
     public void rabbitmqMeasuringInstrumentData(String deviceId, String sensorType,
                                                 BigInteger sensorValue, String unit) {
-        try {
-            Map<String, Object> evt = new HashMap<>();
-            evt.put("deviceId", deviceId);
-            evt.put("sensorType", sensorType);
-            evt.put("sensorValue", sensorValue);
-            evt.put("unit", unit);
-            dapr.publishEvent(PUBSUB_NAME, TOPIC_SENSOR_READING, evt).block();
-        } catch (Exception e) {
-            log.warn("RabbitmqClient.rabbitmqMeasuringInstrumentData publish failed; swallowing", e);
+        Map<String, Object> evt = new HashMap<>();
+        evt.put("deviceId", deviceId);
+        evt.put("sensorType", sensorType);
+        evt.put("sensorValue", sensorValue);
+        evt.put("unit", unit);
+        PublishResult result = publisher.publish(PUBSUB_NAME, TOPIC_SENSOR_READING, evt);
+        if (!result.success()) {
+            log.error("RabbitmqClient publish failed topic={} eventId={} error={}",
+                TOPIC_SENSOR_READING, result.eventId(), result.error());
         }
     }
 }

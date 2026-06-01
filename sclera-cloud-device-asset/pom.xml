@@ -449,6 +449,11 @@
             <artifactId>dapr-sdk-springboot</artifactId>
             <version>1.12.0</version>
         </dependency>
+        <dependency>
+            <groupId>io.sclera</groupId>
+            <artifactId>dapr-commons</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
 
     </dependencies>
 
