@@ -237,7 +237,7 @@ if (!result.success()) {
 |---------|--------|
 | `dapr-commons` | **New module** — base class, publisher, DTOs |
 | `sclera-cloud-device-asset` | `VdmsClient.publishEvent()` → `DaprEventPublisher`; DTO payloads |
-| `sclera-vdms-service` | `VdmsSubscriber` extends base; `AuditSubscriber` extends base; remove manual `/dapr/subscribe`; `ScleraCloudDeviceClient` uses SDK not raw HTTP |
+| `sclera-vdms-service` | `VdmsSubscriber` extends base; `AuditSubscriber` extends base; remove manual `/dapr/subscribe`; `ScleraCloudDeviceClient` deleted — its publish calls move to `DaprEventPublisher` using the SDK (raw HTTP removed) |
 | `sclera-audit` | `DeviceAuditSubscriber` already closest to target — migrate to base class, remove boilerplate |
 | `sclera-cloud-device-asset` | `RabbitmqClient` uses `DaprEventPublisher` |
 | `dapr/components/local/pubsub.yaml` | Add DLQ topic configuration |
