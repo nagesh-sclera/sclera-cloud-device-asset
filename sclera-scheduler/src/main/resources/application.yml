@@ -33,6 +33,7 @@ management:
 
 dapr:
   http-port: ${DAPR_HTTP_PORT:3500}
+  grpc-port: ${DAPR_GRPC_PORT:50001}
 
 scheduler:
   pubsub-name: pubsub
