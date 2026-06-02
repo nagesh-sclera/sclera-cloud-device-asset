@@ -5,8 +5,10 @@ import io.sclera.scheduler.service.JobService;
 import io.sclera.scheduler.web.dto.JobView;
 import io.sclera.scheduler.web.dto.RunView;
 import org.springframework.data.domain.Limit;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
@@ -40,6 +42,11 @@ public class SchedulerApiController {
     @GetMapping("/{name}/runs")
     public List<RunView> history(@PathVariable String name,
                                  @RequestParam(defaultValue = "50") int limit) {
+        // Reject a bad limit explicitly: Limit.of(<=0) would otherwise throw
+        // IllegalArgumentException and be misclassified as 404 by the handler below.
+        if (limit <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "limit must be > 0");
+        }
         return runs.findByJobNameOrderByFiredAtDesc(name, Limit.of(limit))
             .stream().map(this::toRunView).toList();
     }
@@ -56,8 +63,10 @@ public class SchedulerApiController {
     @PostMapping("/{name}/run")
     public void run(@PathVariable String name) { jobService.runNow(name); }
 
+    // Thrown by JobService.require() for an unknown job name. The bad-limit case is
+    // handled separately above (400) so this only ever means "no such job" (404).
     @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(org.springframework.http.HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public void notFound() {}
 
     private JobView toView(JobEntity j) {
