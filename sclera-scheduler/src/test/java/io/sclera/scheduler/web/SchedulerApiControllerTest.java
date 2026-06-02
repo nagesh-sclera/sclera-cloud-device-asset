@@ -3,7 +3,6 @@ package io.sclera.scheduler.web;
 import io.sclera.dapr.DaprEventPublisher;
 import io.sclera.dapr.PublishResult;
 import io.sclera.scheduler.AbstractPostgresTest;
-import io.sclera.scheduler.catalog.CatalogStartupRunner;
 import io.sclera.scheduler.client.SchedulerClient;
 import io.sclera.scheduler.domain.*;
 import org.junit.jupiter.api.Test;
@@ -34,8 +33,8 @@ class SchedulerApiControllerTest extends AbstractPostgresTest {
     @Autowired JobRunRepository runs;
 
     @MockitoBean SchedulerClient schedulerClient;          // pause/resume/disable delegate here
-    @MockitoBean CatalogStartupRunner catalogStartupRunner; // no-op: keep DB clean
     @MockitoBean DaprEventPublisher publisher;              // run-now publishes here
+    // CatalogStartupRunner is mocked in AbstractPostgresTest (keeps the job table clean).
 
     MockMvc mvc() { return MockMvcBuilders.webAppContextSetup(ctx).build(); }
 

@@ -2,6 +2,7 @@ package io.sclera.scheduler.service;
 
 import io.sclera.scheduler.AbstractPostgresTest;
 import io.sclera.scheduler.domain.*;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,10 @@ class HousekeepingServiceTest extends AbstractPostgresTest {
     @Autowired JobRepository jobs;
     @Autowired JobRunRepository runs;
 
+    // This test commits rows (pruneHistory) and is not @Transactional, so it must leave the
+    // shared singleton container's tables empty both before and after each test.
     @BeforeEach
+    @AfterEach
     void clean() { runs.deleteAll(); jobs.deleteAll(); }
 
     @Test
