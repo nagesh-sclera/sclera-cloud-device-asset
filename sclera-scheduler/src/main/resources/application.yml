@@ -1,0 +1,47 @@
+server:
+  port: 8098
+
+spring:
+  application:
+    name: sclera-scheduler
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/sclera}
+    username: ${DB_USER:sclera}
+    password: ${DB_PASS:sclera}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: sclera_scheduler
+    open-in-view: false
+  flyway:
+    enabled: true
+    schemas: sclera_scheduler
+    default-schema: sclera_scheduler
+    create-schemas: true
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+dapr:
+  http-port: ${DAPR_HTTP_PORT:3500}
+
+scheduler:
+  pubsub-name: pubsub
+  trigger-topic: scheduler.trigger
+  result-topic: scheduler.result
+  orphan-timeout-seconds: 900
+  history-retention-days: 30
+
+logging:
+  level:
+    io.sclera.scheduler: INFO
+    io.dapr: INFO
