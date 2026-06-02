@@ -1,0 +1,87 @@
+scheduler:
+  catalog:
+    jobs:
+      - name: historyRecord
+        schedule: "0 0 0 */1 * *"
+        owner: device-asset
+      - name: snmpTrapRecord
+        schedule: "0 0 0 */3 * *"
+        owner: integrations
+      - name: unlinkVendorOrganisation
+        schedule: "0 0 0 */3 * *"
+        owner: device-asset
+      - name: unlinkedProductDetails
+        schedule: "0 0 0 */3 * *"
+        owner: inventory
+      - name: productDetailResync
+        schedule: "0 0 0 */15 * *"
+        owner: inventory
+      - name: internetBandwidthCheck
+        schedule: "0 0 1 * * *"
+        owner: device-asset
+      - name: monnitValueUpdate
+        schedule: "0 0 * * * *"
+        owner: integrations
+      - name: globalInspectionRecords
+        schedule: "0 0 * * * *"
+        owner: inspection
+      - name: daintreeValueUpdate
+        schedule: "0 0 */3 * * *"
+        owner: integrations
+      - name: vdmsSystemHealth
+        schedule: "0 0 0 * * *"
+        owner: device-asset
+      - name: recordChecklistStatusSync
+        schedule: "0 0 0 * * *"
+        owner: inspection
+      - name: siemensEventsSync
+        schedule: "0 */15 * * * *"
+        owner: integrations
+      - name: recordChecklistStatusUpdate
+        schedule: "0 5 */1 * * *"
+        owner: inspection
+      - name: connectedStatusForIOC
+        schedule: "0 0 * * * *"
+        owner: device-asset
+      - name: siemensMeasuringInstrumentUpdate
+        schedule: "0 */30 * * * *"
+        owner: integrations
+      - name: snmpSync
+        schedule: "0 0 */3 * * *"
+        owner: integrations
+      - name: polyLensSync
+        schedule: "0 0 */1 * * *"
+        owner: integrations
+      - name: hourlyIntegrationsSync
+        schedule: "0 0 */1 * * *"
+        owner: integrations
+      - name: awairSync
+        schedule: "0 */30 * * * *"
+        owner: integrations
+      - name: qrcodeNfcBarcodeSync
+        schedule: "0 0 3 * * *"
+        owner: device-asset
+      - name: syncAssetCountToCloud
+        schedule: "0 0 0,12 * * *"
+        owner: device-asset
+      - name: airthingSync
+        schedule: "0 */15 * * * *"
+        owner: integrations
+      - name: modbusSync
+        schedule: "0 */5 * * * *"
+        owner: integrations
+      - name: userActionLog
+        schedule: "0 0 * * * *"
+        owner: device-asset
+      - name: deviceDndEnable
+        schedule: "0 0/30 * * * *"
+        owner: device-asset
+      - name: offlineDeviceCheck
+        schedule: "@every 90s"
+        owner: device-asset
+      - name: gaiameshSync
+        schedule: "0 */5 * * * *"
+        owner: integrations
+      - name: createSqliteFile
+        schedule: "0 30 3 * * ?"
+        owner: edge

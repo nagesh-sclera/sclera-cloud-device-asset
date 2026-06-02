@@ -2,6 +2,8 @@ server:
   port: 8098
 
 spring:
+  config:
+    import: "classpath:jobs.yaml"
   application:
     name: sclera-scheduler
   datasource:
