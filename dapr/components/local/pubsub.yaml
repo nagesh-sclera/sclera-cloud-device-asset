@@ -1,3 +1,7 @@
+# Redis pub/sub auto-creates topics on first publish, so the scheduler topics
+# (scheduler.trigger, scheduler.result) need no per-topic config here. Their dead-letter
+# companions (scheduler.trigger.dlq, scheduler.result.dlq) are routed per-subscriber via
+# @Topic(deadLetterTopic=...) in the subscriber code, not in this component.
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:

@@ -492,6 +492,72 @@ services:
     restart: on-failure
     depends_on: [api-gateway, redis, otel-collector]
 
+  # --- Scheduler service + its Dapr Scheduler control plane -------------------
+  # NOTE: the Dapr Jobs API (v1.0-alpha1/jobs) used by sclera-scheduler requires the
+  # Dapr Scheduler control plane, which only exists in daprd >= 1.14. The rest of this
+  # compose pins daprd 1.12.0; bumping every service is a separate platform decision, so
+  # ONLY the scheduler's sidecar + control plane are pinned to 1.15 here. The exact
+  # scheduler control-plane flags/ports below must be verified against the pinned Dapr
+  # release on a live stack (see Task 15 manual acceptance) before relying on them.
+  sclera-scheduler:
+    build: ./sclera-scheduler
+    container_name: sclera-scheduler
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_URL: jdbc:postgresql://postgres:5432/vdms
+      DB_USER: root
+      DB_PASS: mypass123
+      DAPR_HTTP_PORT: "3500"
+      DAPR_GRPC_PORT: "50001"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
+      JAVA_TOOL_OPTIONS: "-javaagent:/otel/agent.jar"
+      OTEL_SERVICE_NAME: "sclera-scheduler"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+      OTEL_TRACES_EXPORTER: "otlp"
+      OTEL_METRICS_EXPORTER: "none"
+      OTEL_LOGS_EXPORTER: "none"
+      OTEL_PROPAGATORS: "tracecontext,baggage,b3"
+    volumes:
+      - ./infra/otel/opentelemetry-javaagent.jar:/otel/agent.jar:ro
+    ports: ["8098:8098"]
+    networks: [sclera-net]
+    restart: on-failure
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  sclera-scheduler-dapr:
+    image: daprio/daprd:1.15.5
+    command: ["./daprd",
+      "--app-id", "sclera-scheduler", "--app-port", "8098",
+      "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
+      "--placement-host-address", "",
+      "--scheduler-host-address", "dapr-scheduler:50006",
+      "--config", "/dapr/config.yaml",
+      "--resources-path", "/dapr/components",
+      "--log-level", "info"]
+    volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
+    network_mode: "service:sclera-scheduler"
+    restart: on-failure
+    depends_on: [sclera-scheduler, redis, dapr-scheduler]
+
+  # Dapr Scheduler control plane: persists jobs in embedded etcd and fires them
+  # exactly-once cluster-wide by calling back POST /job/{name} on the app.
+  dapr-scheduler:
+    image: daprio/scheduler:1.15.5
+    container_name: dapr-scheduler
+    command: ["./scheduler",
+      "--port", "50006",
+      "--etcd-data-dir", "/var/run/dapr/scheduler",
+      "--log-level", "info"]
+    volumes:
+      - scheduler-data:/var/run/dapr/scheduler
+    networks: [sclera-net]
+    restart: on-failure
+
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.95.0
     container_name: sclera-otel-collector
@@ -552,3 +618,4 @@ networks:
 
 volumes:
   pgdata:
+  scheduler-data:
