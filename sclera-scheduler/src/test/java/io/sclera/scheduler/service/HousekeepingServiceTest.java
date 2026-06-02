@@ -40,6 +40,8 @@ class HousekeepingServiceTest extends AbstractPostgresTest {
             .isEqualTo(RunStatus.FAILED);
         assertThat(runs.findById(old)).get().extracting(JobRunEntity::getError)
             .isEqualTo("timed out: no result received");
+        assertThat(runs.findById(old)).get().extracting(JobRunEntity::getFinishedAt)
+            .isNotNull();
     }
 
     @Test
@@ -53,5 +55,8 @@ class HousekeepingServiceTest extends AbstractPostgresTest {
         housekeeping.pruneHistory();
 
         assertThat(runs.count()).isEqualTo(1);
+        // the RECENT row must be the survivor (guards against inverted cutoff math)
+        assertThat(runs.findAll().get(0).getFiredAt())
+            .isAfter(Instant.now().minus(2, ChronoUnit.DAYS));
     }
 }
