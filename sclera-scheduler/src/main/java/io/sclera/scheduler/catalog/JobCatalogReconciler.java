@@ -27,6 +27,7 @@ public class JobCatalogReconciler {
                 existing.setOwner(e.owner());
                 existing.setTriggerTopic(e.triggerTopic());
                 // state, lastRunId, nextFireAt are runtime-owned — left untouched
+                log.info("Catalog: updated job name={} schedule={}", e.name(), e.schedule());
             }, () -> {
                 jobs.save(new JobEntity(e.name(), e.schedule(), e.owner(),
                         e.triggerTopic(), JobState.ENABLED));

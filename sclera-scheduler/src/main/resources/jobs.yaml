@@ -76,12 +76,14 @@ scheduler:
       - name: deviceDndEnable
         schedule: "0 0/30 * * * *"
         owner: device-asset
+      # "@every <dur>" is Dapr-native job-schedule shorthand (not a cron expression).
       - name: offlineDeviceCheck
         schedule: "@every 90s"
         owner: device-asset
       - name: gaiameshSync
         schedule: "0 */5 * * * *"
         owner: integrations
+      # 03:30 daily. Monolith used Quartz "?"; Dapr cron rejects it, so use "*".
       - name: createSqliteFile
-        schedule: "0 30 3 * * ?"
+        schedule: "0 30 3 * * *"
         owner: edge
