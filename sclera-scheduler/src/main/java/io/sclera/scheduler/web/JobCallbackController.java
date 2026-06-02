@@ -1,0 +1,53 @@
+package io.sclera.scheduler.web;
+
+import io.sclera.dapr.DaprEventPublisher;
+import io.sclera.dapr.PublishResult;
+import io.sclera.dapr.events.SchedulerTriggerEvent;
+import io.sclera.scheduler.service.RunRecorder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
+
+/**
+ * Dapr Scheduler invokes POST /job/{name} when a registered job fires. We record the run
+ * and publish a scheduler.trigger event for the owning service to execute.
+ */
+@RestController
+public class JobCallbackController {
+
+    private static final Logger log = LoggerFactory.getLogger(JobCallbackController.class);
+
+    private final RunRecorder recorder;
+    private final DaprEventPublisher publisher;
+
+    @Value("${scheduler.pubsub-name}") private String pubsubName;
+    @Value("${scheduler.trigger-topic}") private String triggerTopic;
+
+    public JobCallbackController(RunRecorder recorder, DaprEventPublisher publisher) {
+        this.recorder = recorder;
+        this.publisher = publisher;
+    }
+
+    void setPubsubName(String v) { this.pubsubName = v; }
+    void setTriggerTopic(String v) { this.triggerTopic = v; }
+
+    @PostMapping("/job/{name}")
+    public ResponseEntity<Void> onJobFired(@PathVariable("name") String name) {
+        UUID runId = UUID.randomUUID();
+        recorder.recordFired(name, runId, false);
+        PublishResult result = publisher.publish(pubsubName, triggerTopic,
+            new SchedulerTriggerEvent(name, runId.toString(), System.currentTimeMillis()));
+        if (!result.success()) {
+            log.error("Trigger publish failed job={} runId={} error={}",
+                name, runId, result.error());
+            return ResponseEntity.internalServerError().build();
+        }
+        return ResponseEntity.ok().build();
+    }
+}
