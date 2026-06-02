@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Sclera Scheduler</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 1.5rem; color: #222; }
+    h1 { font-size: 1.3rem; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #eee; }
+    th { background: #fafafa; }
+    .SUCCESS { color: #137333; font-weight: 600; }
+    .FAILED  { color: #c5221f; font-weight: 600; }
+    .FIRED   { color: #888; }
+    .state-PAUSED   { color: #b06000; }
+    .state-DISABLED { color: #999; text-decoration: line-through; }
+    button { margin-right: 4px; cursor: pointer; }
+    #runs { margin-top: 1rem; }
+    code { background: #f4f4f4; padding: 1px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <h1>Sclera Scheduler</h1>
+  <table id="jobs">
+    <thead><tr>
+      <th>Job</th><th>Owner</th><th>Schedule</th><th>State</th>
+      <th>Last run</th><th>Duration</th><th>Actions</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table>
+  <div id="runs"></div>
+
+  <script>
+    async function api(path, method) {
+      const r = await fetch(path, { method: method || 'GET' });
+      if (method) return;            // control actions return no body
+      return r.json();
+    }
+    function fmt(t) { return t ? new Date(t).toLocaleString() : '—'; }
+
+    async function load() {
+      const jobs = await api('/api/jobs');
+      const tb = document.querySelector('#jobs tbody');
+      tb.innerHTML = '';
+      for (const j of jobs) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><a href="#" data-job="${j.name}">${j.name}</a></td>
+          <td>${j.owner}</td>
+          <td><code>${j.schedule}</code></td>
+          <td class="state-${j.state}">${j.state}</td>
+          <td class="${j.lastStatus||''}">${j.lastStatus||'—'} <small>${fmt(j.lastFiredAt)}</small></td>
+          <td>${j.lastDurationMs!=null ? j.lastDurationMs+' ms' : '—'}</td>
+          <td>
+            <button data-act="run">Run now</button>
+            <button data-act="pause">Pause</button>
+            <button data-act="resume">Resume</button>
+            <button data-act="disable">Disable</button>
+          </td>`;
+        tr.querySelectorAll('button').forEach(b =>
+          b.onclick = async () => {
+            await api(`/api/jobs/${j.name}/${b.dataset.act}`, 'POST');
+            load();
+          });
+        tr.querySelector('a').onclick = (e) => { e.preventDefault(); showRuns(j.name); };
+        tb.appendChild(tr);
+      }
+    }
+
+    async function showRuns(name) {
+      const runs = await api(`/api/jobs/${name}/runs?limit=50`);
+      const div = document.getElementById('runs');
+      div.innerHTML = `<h2>${name} — last ${runs.length} runs</h2>` +
+        '<table><thead><tr><th>Fired</th><th>Status</th><th>Duration</th><th>Error</th></tr></thead><tbody>' +
+        runs.map(r => `<tr><td>${fmt(r.firedAt)}</td>
+          <td class="${r.status}">${r.status}${r.manual?' (manual)':''}</td>
+          <td>${r.durationMs!=null?r.durationMs+' ms':'—'}</td>
+          <td>${r.error||''}</td></tr>`).join('') +
+        '</tbody></table>';
+    }
+
+    load();
+    setInterval(load, 5000);
+  </script>
+</body>
+</html>
