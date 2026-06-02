@@ -4,6 +4,7 @@ import io.sclera.dapr.DaprEventPublisher;
 import io.sclera.dapr.PublishResult;
 import io.sclera.scheduler.client.JobSchedule;
 import io.sclera.scheduler.client.SchedulerClient;
+import io.sclera.dapr.events.SchedulerTriggerEvent;
 import io.sclera.scheduler.domain.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,7 +13,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,7 +52,18 @@ class JobServiceTest {
         service().pause("a");
 
         verify(scheduler).delete("a");
-        org.assertj.core.api.Assertions.assertThat(job.getState()).isEqualTo(JobState.PAUSED);
+        assertThat(job.getState()).isEqualTo(JobState.PAUSED);
+    }
+
+    @Test
+    void disableDeletesFromSchedulerAndSetsState() {
+        JobEntity job = new JobEntity("a", "@every 1m", "x", "scheduler.trigger", JobState.ENABLED);
+        when(jobs.findById("a")).thenReturn(Optional.of(job));
+
+        service().disable("a");
+
+        verify(scheduler).delete("a");
+        assertThat(job.getState()).isEqualTo(JobState.DISABLED);
     }
 
     @Test
@@ -60,11 +74,11 @@ class JobServiceTest {
         service().resume("a");
 
         verify(scheduler).schedule(new JobSchedule("a", "@every 1m"));
-        org.assertj.core.api.Assertions.assertThat(job.getState()).isEqualTo(JobState.ENABLED);
+        assertThat(job.getState()).isEqualTo(JobState.ENABLED);
     }
 
     @Test
-    void runNowPublishesTriggerAndRecordsManualRun() {
+    void runNowPublishesTriggerAndRecordsManualRunWithSameRunId() {
         JobEntity job = new JobEntity("a", "@every 1m", "x", "scheduler.trigger", JobState.ENABLED);
         when(jobs.findById("a")).thenReturn(Optional.of(job));
         when(publisher.publish(anyString(), anyString(), any()))
@@ -72,14 +86,20 @@ class JobServiceTest {
 
         service().runNow("a");
 
-        verify(recorder).recordFired(eq("a"), any(), eq(true));
-        verify(publisher).publish(eq("pubsub"), eq("scheduler.trigger"), any());
+        // The recorded run and the published trigger MUST share one runId so the
+        // result subscriber can correlate them.
+        ArgumentCaptor<UUID> recordedRunId = ArgumentCaptor.forClass(UUID.class);
+        verify(recorder).recordFired(eq("a"), recordedRunId.capture(), eq(true));
+        verify(publisher).publish(eq("pubsub"), eq("scheduler.trigger"), argThat(payload ->
+            payload instanceof SchedulerTriggerEvent e
+                && e.runId().equals(recordedRunId.getValue().toString())
+                && e.jobName().equals("a")));
     }
 
     @Test
     void unknownJobThrows() {
         when(jobs.findById("nope")).thenReturn(Optional.empty());
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service().pause("nope"))
+        assertThatThrownBy(() -> service().pause("nope"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 }

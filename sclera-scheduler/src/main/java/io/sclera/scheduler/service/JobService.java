@@ -39,10 +39,20 @@ public class JobService {
 
     /** Called once at startup (Task 8 wires the runner). Registers all ENABLED jobs. */
     public void registerAll() {
+        int ok = 0, failed = 0;
         for (JobEntity job : jobs.findByState(JobState.ENABLED)) {
-            scheduler.schedule(new JobSchedule(job.getName(), job.getSchedule()));
+            // Isolate each registration: one bad job (e.g. a schedule Dapr rejects) must
+            // not prevent the remaining jobs from registering at startup.
+            try {
+                scheduler.schedule(new JobSchedule(job.getName(), job.getSchedule()));
+                ok++;
+            } catch (Exception e) {
+                failed++;
+                log.error("Failed to register job={} schedule={} error={}",
+                    job.getName(), job.getSchedule(), e.getMessage());
+            }
         }
-        log.info("Registered all enabled jobs with Dapr Scheduler");
+        log.info("Registered enabled jobs with Dapr Scheduler: ok={} failed={}", ok, failed);
     }
 
     @Transactional
@@ -52,6 +62,12 @@ public class JobService {
         job.setState(JobState.PAUSED);
     }
 
+    /**
+     * Re-arms a job from either PAUSED or DISABLED (there is no separate enable op).
+     * schedule() runs before the state flip: on a tx rollback Dapr would hold the job
+     * while the DB still shows the prior state — registerAll() on restart reconciles
+     * ENABLED jobs, and a repeat resume is idempotent on the Dapr side.
+     */
     @Transactional
     public void resume(String name) {
         JobEntity job = require(name);
@@ -66,7 +82,12 @@ public class JobService {
         job.setState(JobState.DISABLED);
     }
 
-    /** Fire immediately, bypassing the schedule. Records a manual run. */
+    /**
+     * Fire immediately, bypassing the schedule. Records a manual run.
+     * Best-effort: the FIRED run is recorded before publish. If publish fails we log
+     * (not throw) — the run stays FIRED and the housekeeping reaper sweeps it to FAILED,
+     * so a transient broker hiccup does not surface as an error to the operator.
+     */
     public void runNow(String name) {
         require(name);
         UUID runId = UUID.randomUUID();
