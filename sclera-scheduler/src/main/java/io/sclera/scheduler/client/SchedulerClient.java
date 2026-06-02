@@ -4,6 +4,7 @@ import io.sclera.scheduler.config.DaprProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -41,17 +42,21 @@ public class SchedulerClient {
         );
         http.post()
             .uri("/v1.0-alpha1/jobs/{name}", job.name())
+            .contentType(MediaType.APPLICATION_JSON)
             .body(body)
             .retrieve()
             .toBodilessEntity();
         log.info("Scheduled job name={} schedule={}", job.name(), job.schedule());
     }
 
-    /** Remove a job from the Scheduler. Safe to call if it does not exist. */
+    /** Remove a job from the Scheduler. Safe to call if it does not exist (404 is ignored). */
     public void delete(String name) {
         http.delete()
             .uri("/v1.0-alpha1/jobs/{name}", name)
             .retrieve()
+            // Deleting a job the Scheduler never registered returns 404 — that is a no-op
+            // for us (pause/disable on an unregistered job must not surface an error).
+            .onStatus(status -> status.value() == 404, (req, res) -> { })
             .toBodilessEntity();
         log.info("Deleted job name={}", name);
     }

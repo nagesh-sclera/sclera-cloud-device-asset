@@ -26,7 +26,9 @@ class SchedulerClientTest {
             String body = new String(ex.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
             requests.add(ex.getRequestMethod() + " " + ex.getRequestURI().getPath());
             bodies.add(body);
-            ex.sendResponseHeaders(204, -1);
+            // Jobs named "missing" simulate a not-registered job → Dapr returns 404.
+            int status = ex.getRequestURI().getPath().endsWith("/missing") ? 404 : 204;
+            ex.sendResponseHeaders(status, -1);
             ex.close();
         });
         server.start();
@@ -54,5 +56,12 @@ class SchedulerClientTest {
     void deleteJobCallsDelete() {
         client().delete("snmpSync");
         assertThat(requests).containsExactly("DELETE /v1.0-alpha1/jobs/snmpSync");
+    }
+
+    @Test
+    void deleteSwallows404ForUnregisteredJob() {
+        // Must NOT throw: pause/disable on a job the Scheduler never registered is a no-op.
+        client().delete("missing");
+        assertThat(requests).containsExactly("DELETE /v1.0-alpha1/jobs/missing");
     }
 }
