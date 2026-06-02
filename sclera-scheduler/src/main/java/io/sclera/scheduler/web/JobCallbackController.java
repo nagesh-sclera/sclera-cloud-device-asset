@@ -17,6 +17,11 @@ import java.util.UUID;
 /**
  * Dapr Scheduler invokes POST /job/{name} when a registered job fires. We record the run
  * and publish a scheduler.trigger event for the owning service to execute.
+ *
+ * <p>If publish fails, 500 is returned so Dapr retries the fire (scheduled triggers must
+ * not be silently dropped). A retry creates a new runId; any orphaned FIRED row from the
+ * failed attempt is reclaimed by the housekeeping reaper. This is the expected
+ * at-least-once behavior, not a defect.
  */
 @RestController
 public class JobCallbackController {

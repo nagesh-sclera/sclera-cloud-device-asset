@@ -2,12 +2,17 @@ package io.sclera.scheduler.web;
 
 import io.sclera.dapr.DaprEventPublisher;
 import io.sclera.dapr.PublishResult;
+import io.sclera.dapr.events.SchedulerTriggerEvent;
 import io.sclera.scheduler.service.RunRecorder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -25,13 +30,33 @@ class JobCallbackControllerTest {
     }
 
     @Test
-    void onFireRecordsRunAndPublishesTrigger() {
+    void onFireRecordsRunAndPublishesTriggerWithSameRunId() {
         when(publisher.publish(anyString(), anyString(), any()))
             .thenReturn(new PublishResult(true, "evt", null));
 
-        controller().onJobFired("snmpSync");
+        ResponseEntity<Void> response = controller().onJobFired("snmpSync");
 
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        // The recorded run and the published trigger MUST share one runId so the
+        // result subscriber can correlate them.
+        ArgumentCaptor<UUID> recordedRunId = ArgumentCaptor.forClass(UUID.class);
+        verify(recorder).recordFired(eq("snmpSync"), recordedRunId.capture(), eq(false));
+        verify(publisher).publish(eq("pubsub"), eq("scheduler.trigger"), argThat(payload ->
+            payload instanceof SchedulerTriggerEvent e
+                && e.jobName().equals("snmpSync")
+                && e.runId().equals(recordedRunId.getValue().toString())));
+    }
+
+    @Test
+    void onFireReturns500WhenPublishFails() {
+        when(publisher.publish(anyString(), anyString(), any()))
+            .thenReturn(new PublishResult(false, null, "broker-unavailable"));
+
+        ResponseEntity<Void> response = controller().onJobFired("snmpSync");
+
+        // 500 signals the Dapr Scheduler to retry the fire.
+        assertThat(response.getStatusCode().value()).isEqualTo(500);
+        // The run was still recorded as FIRED (reaper reclaims it if the retry mints a new one).
         verify(recorder).recordFired(eq("snmpSync"), any(), eq(false));
-        verify(publisher).publish(eq("pubsub"), eq("scheduler.trigger"), any());
     }
 }
