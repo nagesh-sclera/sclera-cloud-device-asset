@@ -35,7 +35,15 @@ public class ResultSubscriber extends DaprEventSubscriber<SchedulerResultEvent> 
 
     @Override
     protected void handleEvent(SchedulerResultEvent data) {
+        // A result event must carry a terminal status. An unparseable status or a
+        // non-terminal FIRED is structurally invalid and can never succeed on retry —
+        // it throws IllegalArgumentException, which the base class classifies as a
+        // permanent error and routes to scheduler.result.dlq.
         RunStatus status = RunStatus.valueOf(data.status());
+        if (status == RunStatus.FIRED) {
+            throw new IllegalArgumentException(
+                "Result event carried non-terminal status FIRED runId=" + data.runId());
+        }
         recorder.recordResult(UUID.fromString(data.runId()), status, data.durationMs(), data.error());
     }
 }
