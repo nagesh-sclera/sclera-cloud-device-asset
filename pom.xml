@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+      Pure aggregator (reactor) POM. It does NOT act as a parent for the modules — each
+      module keeps spring-boot-starter-parent as its parent and still builds on its own via
+      its own Maven wrapper. This file exists only so the whole repo builds/reloads as one
+      reactor, which lets dependent modules resolve the in-repo io.sclera:dapr-commons
+      library without it first being `mvn install`-ed to the local repo.
+
+      Build everything:        ./mvnw install
+      Build one module + deps: ./mvnw -pl sclera-scheduler -am install
+    -->
+    <groupId>io.sclera</groupId>
+    <artifactId>sclera-platform</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>sclera-platform (aggregator)</name>
+    <description>Reactor aggregator for the Sclera microservices and shared libraries</description>
+
+    <modules>
+        <!-- shared library first (dependents resolve it from the reactor) -->
+        <module>dapr-commons</module>
+
+        <!-- services -->
+        <module>sclera-cloud-device-asset</module>
+        <module>sclera-vdms-service</module>
+        <module>sclera-audit</module>
+        <module>sclera-identity</module>
+        <module>sclera-alerts</module>
+        <module>sclera-inventory</module>
+        <module>sclera-workorders</module>
+        <module>sclera-inspection</module>
+        <module>sclera-integrations</module>
+        <module>sclera-edge</module>
+        <module>sclera-scheduler</module>
+        <module>sclera-api-gateway</module>
+    </modules>
+</project>
