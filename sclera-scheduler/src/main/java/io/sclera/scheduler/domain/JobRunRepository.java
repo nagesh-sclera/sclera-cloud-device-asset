@@ -10,6 +10,9 @@ public interface JobRunRepository extends JpaRepository<JobRunEntity, java.util.
 
     List<JobRunEntity> findByJobNameOrderByFiredAtDesc(String jobName, Limit limit);
 
+    // Global feed across all jobs (newest first) — powers the dashboard timelines + live feed.
+    List<JobRunEntity> findByOrderByFiredAtDesc(Limit limit);
+
     List<JobRunEntity> findByStatusAndFiredAtBefore(RunStatus status, Instant before);
 
     // Derived delete: needs an active transaction. Annotated here so it is safe

@@ -1,86 +1,341 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <title>Sclera Scheduler</title>
-  <style>
-    body { font-family: system-ui, sans-serif; margin: 1.5rem; color: #222; }
-    h1 { font-size: 1.3rem; }
-    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
-    th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #eee; }
-    th { background: #fafafa; }
-    .SUCCESS { color: #137333; font-weight: 600; }
-    .FAILED  { color: #c5221f; font-weight: 600; }
-    .FIRED   { color: #888; }
-    .state-PAUSED   { color: #b06000; }
-    .state-DISABLED { color: #999; text-decoration: line-through; }
-    button { margin-right: 4px; cursor: pointer; }
-    #runs { margin-top: 1rem; }
-    code { background: #f4f4f4; padding: 1px 4px; border-radius: 3px; }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Sclera Scheduler</title>
+<style>
+  :root{
+    --bg:#0a0e1a; --panel:#0f1626; --panel2:#131c30; --line:#1e2942;
+    --txt:#e6eaf2; --muted:#8b95ad; --muted2:#5d6783;
+    --green:#22c55e; --green-d:#16a34a; --red:#ef4444; --amber:#f59e0b;
+    --blue:#3b82f6; --blue-d:#1d4ed8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+       font:13px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+  a{color:inherit}
+  .app{display:flex;flex-direction:column;height:100vh}
+
+  /* ---- top bar ---- */
+  .topbar{display:flex;align-items:flex-start;justify-content:space-between;
+          gap:1rem;padding:.8rem 1.1rem;border-bottom:1px solid var(--line);
+          background:linear-gradient(180deg,#0c1322,#0a0e1a)}
+  .brand h1{margin:0;font-size:1.15rem;font-weight:700;letter-spacing:.2px}
+  .brand p{margin:.15rem 0 0;color:var(--muted);font-size:.78rem}
+  .clocks{display:flex;gap:1.4rem;flex-wrap:wrap}
+  .clock{text-align:left;min-width:84px}
+  .clock .t{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.02rem;letter-spacing:.5px}
+  .clock .l{color:var(--muted);font-size:.62rem;text-transform:uppercase;letter-spacing:.4px}
+  .clock .d{color:var(--muted2);font-size:.62rem}
+  .topright{display:flex;align-items:center;gap:.7rem}
+  .pill{display:inline-flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--muted);
+        background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:.25rem .6rem}
+  .dot-live{width:8px;height:8px;border-radius:50%;background:var(--green);
+            box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.5)}70%{box-shadow:0 0 0 7px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+  .icon-btn{background:var(--panel);border:1px solid var(--line);color:var(--muted);
+            border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:.95rem}
+  .icon-btn:hover{color:var(--txt);border-color:#2b3a5e}
+
+  /* ---- controls ---- */
+  .controls{padding:.7rem 1.1rem;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:.6rem}
+  .search{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:9px;
+          color:var(--txt);padding:.55rem .8rem;font-size:.85rem}
+  .search::placeholder{color:var(--muted2)}
+  .legend{display:flex;align-items:center;gap:1.1rem;color:var(--muted);font-size:.74rem}
+  .legend .sp{margin-left:auto;color:var(--muted2)}
+  .lg{display:inline-flex;align-items:center;gap:.35rem}
+  .sw{width:9px;height:9px;border-radius:50%}
+  .sw.ok{background:var(--green)} .sw.fail{background:var(--red)}
+  .sw.pend{background:var(--amber)} .sw.now{width:3px;height:11px;border-radius:1px;background:var(--blue)}
+  .btn{background:var(--panel);border:1px solid var(--line);color:var(--muted);
+       border-radius:7px;padding:.3rem .65rem;cursor:pointer;font-size:.74rem}
+  .btn:hover{color:var(--txt);border-color:#2b3a5e}
+
+  /* ---- body split ---- */
+  .body{flex:1;display:flex;min-height:0}
+  .main{flex:1;overflow-y:auto;padding:.8rem 1.1rem 2rem}
+  .feed{width:320px;border-left:1px solid var(--line);background:var(--panel);
+        display:flex;flex-direction:column;min-height:0}
+
+  /* ---- owner group ---- */
+  .group{margin-bottom:.8rem;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--panel)}
+  .ghead{display:flex;align-items:center;gap:.6rem;padding:.6rem .85rem;cursor:pointer;
+         background:var(--panel2);border-bottom:1px solid var(--line)}
+  .ghead:hover{background:#16203a}
+  .caret{color:var(--muted);transition:transform .15s;font-size:.8rem}
+  .group.collapsed .caret{transform:rotate(-90deg)}
+  .group.collapsed .gbody{display:none}
+  .gname{font-weight:700;text-transform:capitalize}
+  .gloc{color:var(--muted2);font-size:.72rem}
+  .gstats{margin-left:auto;display:flex;gap:.9rem;font-size:.74rem}
+  .gstats .f{color:var(--red)} .gstats .o{color:var(--green)}
+  .gbody{padding:.2rem 0}
+
+  /* ---- job row ---- */
+  .job{display:grid;grid-template-columns:188px 1fr 132px;align-items:center;
+       gap:.6rem;padding:.5rem .85rem;border-bottom:1px solid #16203a}
+  .job:last-child{border-bottom:none}
+  .job:hover{background:#111a2e}
+  .jname{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .jsched{color:var(--muted2);font-size:.7rem;margin-top:.1rem}
+  .track{position:relative;height:30px;border:1px solid var(--line);border-radius:7px;
+         background:repeating-linear-gradient(90deg,#0c1322 0,#0c1322 1px,transparent 1px,transparent 25%);overflow:hidden}
+  .gl{position:absolute;top:0;bottom:0;width:1px;background:#15203a}
+  .gl span{position:absolute;bottom:1px;left:3px;font-size:.58rem;color:var(--muted2)}
+  .nowline{position:absolute;top:0;bottom:0;width:2px;background:var(--blue);box-shadow:0 0 6px rgba(59,130,246,.7)}
+  .pt{position:absolute;top:50%;width:9px;height:9px;border-radius:50%;transform:translate(-50%,-50%);
+      cursor:pointer;border:1px solid rgba(0,0,0,.35)}
+  .pt.ok{background:var(--green)} .pt.fail{background:var(--red)}
+  .pt.pend{background:var(--amber)}
+  .pt:hover{outline:2px solid rgba(255,255,255,.4)}
+  .jstatus{text-align:right}
+  .jstatus .s{font-weight:700;font-size:.78rem}
+  .s.ok{color:var(--green)} .s.fail{color:var(--red)} .s.pend{color:var(--amber)} .s.none{color:var(--muted2)}
+  .jfail{color:var(--red);font-size:.68rem;margin-top:.1rem}
+  .jactions{display:none;gap:.25rem;justify-content:flex-end;margin-top:.25rem}
+  .job:hover .jactions{display:flex}
+  .ab{background:#15203a;border:1px solid var(--line);color:var(--muted);border-radius:5px;
+      padding:.12rem .4rem;cursor:pointer;font-size:.64rem}
+  .ab:hover{color:var(--txt)} .ab.run:hover{color:var(--green)} .ab.danger:hover{color:var(--red)}
+  .badge-state{font-size:.6rem;padding:.05rem .35rem;border-radius:4px;margin-left:.4rem;vertical-align:middle}
+  .st-PAUSED{background:rgba(245,158,11,.15);color:var(--amber)}
+  .st-DISABLED{background:rgba(148,163,184,.15);color:var(--muted)}
+
+  /* ---- live feed ---- */
+  .fhead{display:flex;align-items:center;gap:.5rem;padding:.7rem .9rem;border-bottom:1px solid var(--line)}
+  .fhead b{font-size:.92rem}
+  .fconn{margin-left:auto;font-size:.68rem;color:var(--green);display:inline-flex;align-items:center;gap:.35rem}
+  .flist{overflow-y:auto;padding:.3rem .5rem .9rem}
+  .fitem{display:block;padding:.5rem .55rem;border-bottom:1px solid #16203a}
+  .fitem .r1{display:flex;align-items:center;gap:.5rem}
+  .fitem .who{color:var(--muted);font-size:.72rem}
+  .fbadge{margin-left:auto;font-size:.62rem;font-weight:700;padding:.05rem .4rem;border-radius:4px}
+  .fbadge.ok{background:rgba(34,197,94,.14);color:var(--green)}
+  .fbadge.fail{background:rgba(239,68,68,.14);color:var(--red)}
+  .fbadge.pend{background:rgba(245,158,11,.14);color:var(--amber)}
+  .fitem .job{display:block;font-weight:600;margin:.2rem 0 .12rem;padding:0;border:none;background:none}
+  .fitem .meta{color:var(--muted2);font-size:.66rem}
+  .empty{color:var(--muted2);text-align:center;padding:2rem 1rem;font-size:.8rem}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:#1c2742;border-radius:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+</style>
 </head>
 <body>
-  <h1>Sclera Scheduler</h1>
-  <table id="jobs">
-    <thead><tr>
-      <th>Job</th><th>Owner</th><th>Schedule</th><th>State</th>
-      <th>Last run</th><th>Duration</th><th>Actions</th>
-    </tr></thead>
-    <tbody></tbody>
-  </table>
-  <div id="runs"></div>
+<div class="app">
 
-  <script>
-    async function api(path, method) {
-      const r = await fetch(path, { method: method || 'GET' });
-      if (method) return;            // control actions return no body
-      return r.json();
-    }
-    function fmt(t) { return t ? new Date(t).toLocaleString() : '—'; }
+  <div class="topbar">
+    <div class="brand">
+      <h1>Scheduler</h1>
+      <p>Real-time view of jobs across all owners</p>
+    </div>
+    <div class="clocks" id="clocks"></div>
+    <div class="topright">
+      <span class="pill"><span class="dot-live"></span> live</span>
+      <button class="icon-btn" id="refresh" title="Refresh now">&#x21bb;</button>
+    </div>
+  </div>
 
-    async function load() {
-      const jobs = await api('/api/jobs');
-      const tb = document.querySelector('#jobs tbody');
-      tb.innerHTML = '';
-      for (const j of jobs) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><a href="#" data-job="${j.name}">${j.name}</a></td>
-          <td>${j.owner}</td>
-          <td><code>${j.schedule}</code></td>
-          <td class="state-${j.state}">${j.state}</td>
-          <td class="${j.lastStatus||''}">${j.lastStatus||'—'} <small>${fmt(j.lastFiredAt)}</small></td>
-          <td>${j.lastDurationMs!=null ? j.lastDurationMs+' ms' : '—'}</td>
-          <td>
-            <button data-act="run">Run now</button>
-            <button data-act="pause">Pause</button>
-            <button data-act="resume">Resume</button>
-            <button data-act="disable">Disable</button>
-          </td>`;
-        tr.querySelectorAll('button').forEach(b =>
-          b.onclick = async () => {
-            await api(`/api/jobs/${j.name}/${b.dataset.act}`, 'POST');
-            load();
-          });
-        tr.querySelector('a').onclick = (e) => { e.preventDefault(); showRuns(j.name); };
-        tb.appendChild(tr);
+  <div class="controls">
+    <input class="search" id="search" placeholder="Search jobs or owners…" autocomplete="off"/>
+    <div class="legend">
+      <span class="lg"><span class="sw ok"></span> Success</span>
+      <span class="lg"><span class="sw fail"></span> Failed</span>
+      <span class="lg"><span class="sw pend"></span> Pending</span>
+      <span class="lg"><span class="sw now"></span> Now</span>
+      <span class="sp" id="window-note">last 14h · hover a dot for details</span>
+      <button class="btn" id="collapse">Collapse all</button>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="main" id="groups"></div>
+    <aside class="feed">
+      <div class="fhead">
+        <b>Live Feed</b>
+        <span class="fconn"><span class="dot-live"></span> connected</span>
+      </div>
+      <div class="flist" id="flist"></div>
+    </aside>
+  </div>
+</div>
+
+<script>
+// ---- timeline window: 10h back, 4h forward (now sits ~71% across, like the design) ----
+const BACK_MS = 10*3600*1000, FWD_MS = 4*3600*1000, SPAN = BACK_MS + FWD_MS;
+const CLOCKS = [
+  {l:'Asia/Kolkata', tz:'Asia/Kolkata'},
+  {l:'UTC',          tz:'UTC'},
+  {l:'Casablanca',   tz:'Africa/Casablanca'},
+  {l:'Berlin',       tz:'Europe/Berlin'},
+  {l:'Chicago',      tz:'America/Chicago'},
+  {l:'Brussels',     tz:'Europe/Brussels'},
+];
+
+const collapsed = new Set();
+let allCollapsed = false;
+let lastData = {jobs:[], runs:[]};
+
+function cls(status){ return status==='SUCCESS'?'ok':status==='FAILED'?'fail':'pend'; }
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function ago(t){
+  if(!t) return '';
+  const d=(Date.now()-new Date(t))/1000;
+  if(d<60) return Math.floor(d)+'s ago';
+  if(d<3600) return Math.floor(d/60)+'m ago';
+  if(d<86400) return Math.floor(d/3600)+'h ago';
+  return Math.floor(d/86400)+'d ago';
+}
+function hhmm(t,tz){ return new Date(t).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:tz||undefined}); }
+
+// ---------- world clocks ----------
+function renderClocks(){
+  const now=new Date();
+  document.getElementById('clocks').innerHTML = CLOCKS.map(c=>{
+    const t=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:c.tz});
+    const d=now.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:c.tz});
+    const off=now.toLocaleTimeString('en-US',{timeZoneName:'shortOffset',timeZone:c.tz}).split(' ').pop();
+    return `<div class="clock"><div class="t">${t}</div><div class="l">${c.l}</div><div class="d">${d} · ${off}</div></div>`;
+  }).join('');
+}
+setInterval(renderClocks, 1000); renderClocks();
+
+// ---------- data ----------
+async function fetchData(){
+  const [j,r] = await Promise.all([
+    fetch('/api/jobs').then(x=>x.json()),
+    fetch('/api/runs?limit=1500').then(x=>x.json())
+  ]);
+  lastData = {jobs:j, runs:r};
+  render();
+}
+
+function render(){
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const {jobs, runs} = lastData;
+
+  // bucket runs by job
+  const byJob = {};
+  for(const run of runs){ (byJob[run.jobName] ||= []).push(run); }
+
+  // group jobs by owner
+  const groups = {};
+  for(const job of jobs){ (groups[job.owner] ||= []).push(job); }
+
+  const start = Date.now() - BACK_MS, nowPct = (BACK_MS/SPAN)*100;
+
+  // hour gridlines every 2h
+  let gl='';
+  for(let h=-10; h<=4; h+=2){
+    const pct = ((BACK_MS + h*3600*1000)/SPAN)*100;
+    if(pct<0||pct>100) continue;
+    const lbl = h===0 ? 'now' : new Date(Date.now()+h*3600*1000).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false});
+    gl += `<div class="gl" style="left:${pct}%"><span>${lbl}</span></div>`;
+  }
+
+  const ownerNames = Object.keys(groups).sort();
+  let html='';
+  for(const owner of ownerNames){
+    let list = groups[owner].slice().sort((a,b)=>a.name.localeCompare(b.name));
+    if(q) list = list.filter(j=>j.name.toLowerCase().includes(q) || owner.toLowerCase().includes(q));
+    if(!list.length) continue;
+
+    let ok=0, fail=0;
+    for(const job of list){ for(const r of (byJob[job.name]||[])){ if(r.status==='SUCCESS')ok++; else if(r.status==='FAILED')fail++; } }
+    const isCol = collapsed.has(owner);
+
+    let rows='';
+    for(const job of list){
+      const jr = byJob[job.name]||[];
+      let dots='';
+      for(const r of jr){
+        const x=((new Date(r.firedAt)-start)/SPAN)*100;
+        if(x<0||x>100) continue;
+        const dur = r.durationMs!=null ? r.durationMs+' ms' : 'pending';
+        dots += `<div class="pt ${cls(r.status)}" style="left:${x}%" title="${esc(job.name)} · ${r.status} · ${hhmm(r.firedAt)} · ${dur}${r.error?' · '+esc(r.error):''}"></div>`;
       }
+      const ls = job.lastStatus;
+      const sCls = ls? cls(ls):'none';
+      const stateBadge = job.state!=='ENABLED' ? `<span class="badge-state st-${job.state}">${job.state}</span>` : '';
+      const failCount = jr.filter(r=>r.status==='FAILED').length;
+      rows += `
+        <div class="job">
+          <div>
+            <div class="jname">${esc(job.name)}${stateBadge}</div>
+            <div class="jsched">${esc(job.schedule)}</div>
+          </div>
+          <div class="track">${gl}<div class="nowline" style="left:${nowPct}%"></div>${dots}</div>
+          <div class="jstatus">
+            <div class="s ${sCls}">${ls||'—'}</div>
+            ${failCount?`<div class="jfail">${failCount} failure${failCount>1?'s':''}</div>`:''}
+            <div class="jactions" data-job="${esc(job.name)}">
+              <button class="ab run" data-act="run" title="Run now">Run</button>
+              <button class="ab" data-act="pause" title="Pause">Pause</button>
+              <button class="ab" data-act="resume" title="Resume">Resume</button>
+              <button class="ab danger" data-act="disable" title="Disable">Disable</button>
+            </div>
+          </div>
+        </div>`;
     }
 
-    async function showRuns(name) {
-      const runs = await api(`/api/jobs/${name}/runs?limit=50`);
-      const div = document.getElementById('runs');
-      div.innerHTML = `<h2>${name} — last ${runs.length} runs</h2>` +
-        '<table><thead><tr><th>Fired</th><th>Status</th><th>Duration</th><th>Error</th></tr></thead><tbody>' +
-        runs.map(r => `<tr><td>${fmt(r.firedAt)}</td>
-          <td class="${r.status}">${r.status}${r.manual?' (manual)':''}</td>
-          <td>${r.durationMs!=null?r.durationMs+' ms':'—'}</td>
-          <td>${r.error||''}</td></tr>`).join('') +
-        '</tbody></table>';
-    }
+    html += `
+      <div class="group ${isCol?'collapsed':''}" data-owner="${esc(owner)}">
+        <div class="ghead" data-toggle="${esc(owner)}">
+          <span class="caret">▾</span>
+          <span class="gname">${esc(owner)}</span>
+          <span class="gloc">${list.length} job${list.length>1?'s':''}</span>
+          <span class="gstats">
+            ${fail?`<span class="f">⚠ ${fail} failed</span>`:''}
+            <span class="o">✔ ${ok} ok</span>
+          </span>
+        </div>
+        <div class="gbody">${rows}</div>
+      </div>`;
+  }
+  document.getElementById('groups').innerHTML = html || `<div class="empty">No jobs match “${esc(q)}”.</div>`;
 
-    load();
-    setInterval(load, 5000);
-  </script>
+  // ---------- live feed ----------
+  const feed = runs.slice(0, 90).map(r=>{
+    const dur = r.durationMs!=null ? r.durationMs+' ms' : '—';
+    const fin = r.finishedAt || r.firedAt;
+    return `<div class="fitem">
+      <div class="r1">
+        <span class="who">${esc(r.jobName.length>22?r.jobName.slice(0,21)+'…':r.jobName)}</span>
+        <span class="fbadge ${cls(r.status)}">${r.status}</span>
+      </div>
+      <div class="meta">${hhmm(fin)} · ${dur}${r.manual?' · manual':''} · ${ago(fin)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('flist').innerHTML = feed || `<div class="empty">No runs yet.</div>`;
+}
+
+// ---------- interactions ----------
+document.getElementById('groups').addEventListener('click', async e=>{
+  const head = e.target.closest('[data-toggle]');
+  if(head){ const o=head.dataset.toggle; collapsed.has(o)?collapsed.delete(o):collapsed.add(o); render(); return; }
+  const btn = e.target.closest('.ab');
+  if(btn){
+    const job = btn.closest('.jactions').dataset.job;
+    btn.disabled=true;
+    try{ await fetch(`/api/jobs/${encodeURIComponent(job)}/${btn.dataset.act}`,{method:'POST'}); }
+    catch(_){}
+    setTimeout(fetchData, 300);
+  }
+});
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('refresh').addEventListener('click', fetchData);
+document.getElementById('collapse').addEventListener('click', ()=>{
+  allCollapsed=!allCollapsed;
+  collapsed.clear();
+  if(allCollapsed){ for(const o of new Set(lastData.jobs.map(j=>j.owner))) collapsed.add(o); }
+  document.getElementById('collapse').textContent = allCollapsed?'Expand all':'Collapse all';
+  render();
+});
+
+fetchData();
+setInterval(fetchData, 5000);
+</script>
 </body>
 </html>
