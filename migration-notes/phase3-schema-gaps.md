@@ -143,3 +143,22 @@ All five were confirmed via `EXPLAIN` → `ERROR: relation "X" does not exist`. 
 4. **[BLOCKING — Schema]** Create `alert_profile` table (or stub it); update FK references in `conditions` and `device_conditions`.
 5. **[BLOCKING — Schema]** Create `vendor`, `report_attributes`, `location_global_checklist`, `customer_organisation` tables or redirect the JOINs.
 6. **[MECHANICAL — Dialect]** Script-translate all 43 files: IFNULL→COALESCE, IF()→CASE, ON DUPLICATE KEY→ON CONFLICT, JSON_*→jsonb equivalents, date functions→PG equivalents.
+
+---
+
+## Resolution Update — 2026-06-05
+
+**All remediation items 1–6 above are DONE and committed.** Verified against current code (this survey was point-in-time on 2026-05-26; the work landed afterward):
+
+- **Missing columns restored:** `Conditions` (String `id` + 23 scalars + all 13 sensor FKs as scalar `*_id` fields + `alert_profile_id`), `Product_Details` (`image_url_1/2/3`, `global_image_url_1`), `User.customer_org_id`.
+- **Missing tables stubbed as minimal `@Entity`:** `AlertProfile` (id/name/ioc), `CustomerOrganisation` (id), `Vendor` (full + scalar `vendor_org_id`), `ReportAttributes` (+ scalar `report_template_id`; no `ReportTemplate` entity needed — JOIN replaced by scalar FK), `LocationGlobalChecklist` (`@IdClass`, incl. `is_removed`).
+- **Dialect port committed:** `IF/IFNULL→CASE/COALESCE`, `ON DUPLICATE KEY→ON CONFLICT`, `JSON_*→jsonb`, date funcs (commits `3f9ea16`, `bf61ad1`, `a855dcd`, `ced1f54`, `89557eb`, `f732ea5 "Postgres and swagger tested"`). Remaining `ON DUPLICATE KEY`/`IF(`/`JSON_*` grep hits are `// PG-port:` breadcrumbs or dead `//`-commented MySQL, not live SQL.
+
+### Technician exception-day epoch PG-gap — FIXED (2026-06-05)
+
+The 4 `// PG-gap` markers in `Technician.java` (one computation reused across 4 named queries, 5 occurrences) were a genuine behavioral bug, now resolved.
+
+- **MySQL original:** `UNIX_TIMESTAMP(CONVERT_TZ(DATE(FROM_UNIXTIME(?/1000)),'UTC',tz))*1000` = `midnightUTC(?) + offset(tz)`.
+- **Bug:** the prior PG translation applied `AT TIME ZONE t.time_zone` directly to the naive UTC midnight, which **inverts** the offset → `midnightUTC − offset(tz)`. Only correct for UTC technicians; every non-UTC technician's exception-day `@>` containment check matched the wrong instant.
+- **Fix:** pin midnight as UTC *before* converting — `((..)::date::timestamp AT TIME ZONE 'UTC') AT TIME ZONE t.time_zone`.
+- **Validated against live containers** (`sclera-postgres` + `mysql`, both server_tz=UTC): fixed PG expr is byte-for-byte equal to MySQL for `UTC`, `America/New_York`, `Asia/Kolkata`, and a post-DST-fallback Nov date; full query parses & executes on live PG; end-to-end jsonb containment confirmed (stored MySQL-format value matches). Assumes MySQL server_tz=UTC (the live container's setting).
