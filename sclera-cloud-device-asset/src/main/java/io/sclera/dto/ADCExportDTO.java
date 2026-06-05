@@ -6,6 +6,10 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * Aggregates a property's buildings, floors, and locations for export to the
+ * Alarm.com (ADC) integration, keyed by property, VDMS, and Sclera organization identifiers.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

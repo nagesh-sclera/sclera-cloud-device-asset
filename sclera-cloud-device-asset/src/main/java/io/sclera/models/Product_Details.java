@@ -6,6 +6,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 // PG-restore: scalar columns referenced by device-listing native queries (loose coupling).
+/**
+ * JPA entity holding product-catalog image references for a device's product, used to enrich
+ * device listings within the asset-management domain.
+ */
 @Entity
 @Table(name = "product_details")
 public class Product_Details {

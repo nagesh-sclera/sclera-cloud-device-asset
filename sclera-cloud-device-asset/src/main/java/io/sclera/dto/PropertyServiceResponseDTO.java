@@ -4,6 +4,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigInteger;
 
+/**
+ * Represents a captured answer to a property service request field, combining the request
+ * definition with the submitted value, alert flag and timestamp. Used to record and report the
+ * results of a property inspection performed via a QR code.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PropertyServiceResponseDTO {
     // Property Service Request Fields

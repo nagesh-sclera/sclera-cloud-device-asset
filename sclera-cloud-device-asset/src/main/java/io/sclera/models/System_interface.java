@@ -48,6 +48,9 @@ import io.sclera.dto.VlanDTO;
     @NamedNativeQuery(name = "System_interface.updateVlanDiscoverPidByInterfaceName", query = "UPDATE system_interface SET pid = ?1, timestamp = ?2 WHERE interface_name = ?3", resultClass = System_interface.class),
     @NamedNativeQuery(name = "System_interface.deleteAllInterface", query = "DELETE from system_interface", resultClass = System_interface.class)
 })
+/**
+ * Represents a system network interface tracked for discovery, holding its name, status and the PID of any running discovery process.
+ */
 @Entity
 public class System_interface {
 	

@@ -5,6 +5,11 @@ import io.sclera.dto.CorrigoUserSettingsDTO;
 
 import java.math.BigInteger;
 
+/**
+ * Represents a user and their profile, contact, organisation, and application-URL settings in the
+ * touchscreen settings flow. Used to convey user account details, including embedded Corrigo
+ * settings, between the cloud service and devices.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDTO {
     private String email;

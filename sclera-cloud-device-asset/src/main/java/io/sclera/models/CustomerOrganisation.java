@@ -6,6 +6,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+/**
+ * Minimal compatibility stub representing a customer organisation, exposing only the identifier
+ * referenced by native queries in this extracted service.
+ */
 @Entity
 @Table(name = "customer_organisation")
 public class CustomerOrganisation {

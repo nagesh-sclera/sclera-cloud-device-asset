@@ -6,6 +6,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigInteger;
 import java.util.Set;
 
+/**
+ * Represents a floor within a building, including its map image, geo-bounding
+ * coordinates, zoom settings, and contained locations. Used for floor-plan rendering
+ * and spatial placement of assets.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FloorDTO {
 

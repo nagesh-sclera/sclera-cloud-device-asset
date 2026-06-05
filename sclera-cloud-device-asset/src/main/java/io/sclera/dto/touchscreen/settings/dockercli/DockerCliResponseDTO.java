@@ -2,6 +2,10 @@ package io.sclera.dto.touchscreen.settings.dockercli;
 
 import java.util.List;
 
+/**
+ * Data-transfer object capturing the response returned from a Docker CLI operation, holding the
+ * created resource id along with any warnings or message produced by the daemon.
+ */
 public class DockerCliResponseDTO {
 
   private String id;

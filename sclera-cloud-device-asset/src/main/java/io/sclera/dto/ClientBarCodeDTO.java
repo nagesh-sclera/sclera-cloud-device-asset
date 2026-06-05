@@ -4,6 +4,10 @@ package io.sclera.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigInteger;
 
+/**
+ * Represents a client-assigned barcode mapping that associates a barcode with a device
+ * and location, including audit metadata for who added or last updated it.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ClientBarCodeDTO {
     private String id;

@@ -4,6 +4,11 @@ package io.sclera.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigInteger;
 
+/**
+ * Represents an NFC tag binding a UUID to a device or location, along with its
+ * creation metadata. Used to associate scanned NFC tags with assets in the
+ * asset-management domain.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class NfcDTO {
     private String id;

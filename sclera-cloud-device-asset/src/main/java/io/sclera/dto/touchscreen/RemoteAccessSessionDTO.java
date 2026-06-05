@@ -1,5 +1,10 @@
 package io.sclera.dto.touchscreen;
 
+/**
+ * Represents an active or recorded remote-access session to a device on the
+ * touchscreen, capturing the target device, network and port mapping, address
+ * details, liveness state and the requesting user's display information.
+ */
 public class RemoteAccessSessionDTO {
 
     private String id;

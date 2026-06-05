@@ -6,6 +6,10 @@ import jakarta.persistence.*;
 
 @SqlResultSetMapping(name = "deviceonboardassigneemapping", classes = {@ConstructorResult(targetClass = DeviceOnboardStatusAssigneeDTO.class, columns = {@ColumnResult(name = "id", type = String.class), @ColumnResult(name = "type", type = String.class), @ColumnResult(name = "email", type = String.class), @ColumnResult(name = "device_onboard_status_id", type = String.class)})})
 @NamedNativeQuery(name = "DeviceOnboardStatusAssignee.getDeviceOnboardStatusAssignees", query = "SELECT dosa.id, dosa.type, dosa.email, dosa.device_onboard_status_id FROM device_onboard_status_assignee dosa" + " WHERE dosa.device_onboard_status_id = ?1 ", resultSetMapping = "deviceonboardassigneemapping")
+/**
+ * Represents a user assigned to a device onboarding task, identified by type and email and linked to its
+ * parent {@link DeviceOnboardStatus}. Used to track who is responsible for completing onboarding steps.
+ */
 @Entity
 public class DeviceOnboardStatusAssignee {
     @Id

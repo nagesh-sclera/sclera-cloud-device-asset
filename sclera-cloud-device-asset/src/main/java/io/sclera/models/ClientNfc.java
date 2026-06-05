@@ -6,6 +6,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import java.math.BigInteger;
 
+/**
+ * JPA entity representing a client NFC tag that can be associated with a device or location,
+ * tracking its batch, creation metadata, identifiers, and soft-deletion state. Used to manage NFC
+ * tagging within the asset-management domain.
+ */
 @Entity
 public class ClientNfc {
     @Id

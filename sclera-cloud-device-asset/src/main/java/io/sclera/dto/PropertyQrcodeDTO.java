@@ -4,6 +4,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.Set;
 
+/**
+ * Represents a QR code bound to a property service and physical location, enriched with location,
+ * floor and building names along with its captured service responses. Used to scan and report on
+ * property inspections within the asset-management domain.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PropertyQrcodeDTO {
     private String id;

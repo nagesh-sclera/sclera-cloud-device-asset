@@ -7,6 +7,11 @@ import io.sclera.dto.touchscreen.settings.VdmsDTO;
 import java.math.BigInteger;
 import java.util.Set;
 
+/**
+ * Carries the full payload for a device or sensor alert across all supported protocols
+ * (BACnet, LoRaWAN, Disruptive, Monnit, Pelican, KNX, SNMP, Daintree, and others), including
+ * notification routing, vendor contact, location context, and ticket details for downstream delivery.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AlertDTO {
 

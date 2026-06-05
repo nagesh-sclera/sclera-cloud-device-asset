@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.Set;
 
+/**
+ * Represents a property service definition together with the set of request fields that make up
+ * its inspection form. Used to configure the questions captured when a property QR code is scanned.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PropertyServiceDTO {
     private String id;

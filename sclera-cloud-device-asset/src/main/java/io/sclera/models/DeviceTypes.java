@@ -5,6 +5,10 @@ import io.sclera.dto.DeviceTypesDTO;
 import jakarta.persistence.*;
 import java.math.BigInteger;
 
+/**
+ * Represents a category of device (device type) along with its display name and rename history.
+ * Used to classify devices and to track renaming of device types across the asset catalogue.
+ */
 @SqlResultSetMapping(
         name = "deviceTypesMapping",
         classes = @ConstructorResult(

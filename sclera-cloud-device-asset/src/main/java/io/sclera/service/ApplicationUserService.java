@@ -13,6 +13,16 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
+/**
+ * Synchronizes inventory application-user records into the local asset store and
+ * reconciles the resulting software-risk status on matching devices.
+ *
+ * <p>Collaborates with {@link ApplicationUserRepository} to upsert and delete user rows,
+ * {@link ManagedSoftwareRepository} to resolve the managed-software identifier for an
+ * application, {@link DeviceInstalledAppsRepository} to map managed software to device
+ * specifications and to update their risk status, and {@link DeviceSpecificationRepository}
+ * to load the device specifications whose user email is matched against the inventory user.
+ */
 @Service
 public class ApplicationUserService {
     @java.lang.SuppressWarnings("all")
@@ -27,6 +37,12 @@ public class ApplicationUserService {
     @Autowired
     DeviceSpecificationRepository deviceSpecificationRepository;
 
+    /**
+     * Upserts each supplied inventory application user in its own transaction, isolating failures.
+     *
+     * @param taggedApplicationUsers the inventory application users to upsert; may be null or empty
+     * @return the set of user ids whose upsert transaction failed; empty when all succeed or input is empty
+     */
     public Set<String> upsertApplicationUsersSync(List<InventoryApplicationUserDTO> taggedApplicationUsers) {
         if (taggedApplicationUsers == null || taggedApplicationUsers.isEmpty()) {
             log.info("No application user ids provided for upsert.");
@@ -51,6 +67,12 @@ public class ApplicationUserService {
         return failedIds;
     }
 
+    /**
+     * Deletes each supplied inventory application user in its own transaction, isolating failures.
+     *
+     * @param taggedApplicationUsers the inventory application users to delete; may be null or empty
+     * @return the set of user ids whose delete transaction failed; empty when all succeed or input is empty
+     */
     public Set<String> deleteApplicationUsersSync(List<InventoryApplicationUserDTO> taggedApplicationUsers) {
         if (taggedApplicationUsers == null || taggedApplicationUsers.isEmpty()) {
             log.info("No application user ids provided for deletion.");
@@ -77,6 +99,12 @@ public class ApplicationUserService {
 
     // Helper methods for Application Users SYNC
     // Starts a brand-new, independent transaction for each user
+    /**
+     * Upserts a single inventory user, resolves its managed software, applies the status-driven
+     * assignment or removal, and reconciles device risk status, all in a new independent transaction.
+     *
+     * @param user the inventory application user to process
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processSingleUserUpsertTransaction(InventoryApplicationUserDTO user) {
         String userId = user.getId();
@@ -119,6 +147,12 @@ public class ApplicationUserService {
     }
 
     // Starts a brand-new, independent transaction for each user
+    /**
+     * Deletes a single inventory user when its status is IN, resolves its managed software, and
+     * marks matching devices as risky, all in a new independent transaction.
+     *
+     * @param user the inventory application user to process
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processSingleUserDeleteTransaction(InventoryApplicationUserDTO user) {
         String userId = user.getId();

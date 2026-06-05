@@ -4,6 +4,10 @@ package io.sclera.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents a link between a device and another connected device via shared specifications.
+ * Used to convey device interconnection details within the asset-management API.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ConnectedDevicesDTO {
 

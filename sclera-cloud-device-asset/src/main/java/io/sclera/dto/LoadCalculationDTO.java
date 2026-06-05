@@ -5,6 +5,10 @@ package io.sclera.dto;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Holds power-load calculation data for a device, associating a named metric with its
+ * power values for energy and capacity analysis.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class
 LoadCalculationDTO {

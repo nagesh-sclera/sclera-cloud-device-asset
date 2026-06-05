@@ -4,6 +4,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
+/**
+ * Represents a remote-access session opened against a managed device, linking the session to its target {@link Device}.
+ */
 @Entity
 public class RemoteAccessSession {
     @Id

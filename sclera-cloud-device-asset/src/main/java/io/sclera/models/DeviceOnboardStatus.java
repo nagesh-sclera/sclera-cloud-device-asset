@@ -31,6 +31,10 @@ import java.util.Set;
         resultSetMapping = "deviceonboardstatusmapping"
 )
 
+/**
+ * Represents the onboarding progress of a device, tracking per-step completion status (image, geolocation,
+ * tag, and field) along with the assignees responsible. Used to drive the device onboarding workflow.
+ */
 @Entity
 public class DeviceOnboardStatus {
     @Id

@@ -8,6 +8,10 @@ import java.math.BigInteger;
 @SqlResultSetMapping(name = "nfcdetails", classes = {@ConstructorResult(targetClass = NfcDTO.class, columns = {@ColumnResult(name = "id", type = String.class), @ColumnResult(name = "device_id", type = String.class), @ColumnResult(name = "location_id", type = String.class)})})
 @NamedNativeQuery(name = "Nfc.getNfcsByDeviceIds", query = "(SELECT nfc.id, nfc.device_id, nfc.location_id FROM nfc WHERE nfc.device_id IN (?1))\n" + "UNION ALL \n" + "(SELECT cnfc.id, cnfc.device_id, cnfc.location_id FROM client_nfc cnfc WHERE cnfc.device_id IN (?1))\n", resultSetMapping = "nfcdetails")
 @NamedNativeQuery(name = "Nfc.getNfcsByLocationIds", query = "(SELECT nfc.id, nfc.device_id, nfc.location_id FROM nfc WHERE nfc.location_id IN ?1)\n" + "UNION ALL \n" + "(SELECT cnfc.id, cnfc.device_id, cnfc.location_id FROM client_nfc cnfc WHERE cnfc.location_id IN ?1)\n", resultSetMapping = "nfcdetails")
+/**
+ * JPA entity representing an NFC tag associated with a device and location, used to enable
+ * tag-based identification and scanning within the asset-management domain.
+ */
 @Entity
 public class Nfc {
     @Id

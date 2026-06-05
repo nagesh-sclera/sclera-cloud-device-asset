@@ -3,6 +3,10 @@ package io.sclera.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Carries an AI-generated suggestion of suitable technicians for a given device type,
+ * used when recommending assignees for device service or maintenance work.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeviceTechnicianAISuggestionDTO {
     private String id;

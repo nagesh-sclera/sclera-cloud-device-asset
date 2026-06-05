@@ -1,5 +1,10 @@
 package io.sclera.dto.touchscreen.settings.dockercli;
 
+/**
+ * Data-transfer object describing a Docker network definition, including its name, driver, IPAM
+ * subnet and gateway, and parent interface. Serialized into the JSON payload used to create a
+ * network through the Docker CLI.
+ */
 public class NetworkDTO {
 
   private String name;

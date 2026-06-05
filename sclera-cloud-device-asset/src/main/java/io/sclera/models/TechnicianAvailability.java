@@ -20,6 +20,9 @@ import jakarta.persistence.*;
     // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED); backticks removed (condition is not reserved in PG)
     @NamedNativeQuery(name = "TechnicianAvailability.upsertTechnicianAvailability", query = "INSERT INTO technician_availability (id, start_date, end_date, start_time, end_time, is_all_day, frequency, condition, technician_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9) ON CONFLICT (id) DO UPDATE SET start_date = EXCLUDED.start_date, end_date = EXCLUDED.end_date, start_time = EXCLUDED.start_time, end_time = EXCLUDED.end_time, is_all_day = EXCLUDED.is_all_day, frequency = EXCLUDED.frequency, condition = EXCLUDED.condition", resultClass = TechnicianAvailability.class)
 })
+/**
+ * Represents a recurring availability window for a {@link Technician}, defining the date range, time range, frequency and any scheduling conditions or exceptions.
+ */
 @Entity
 public class TechnicianAvailability {
     @Id

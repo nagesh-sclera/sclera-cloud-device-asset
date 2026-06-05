@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.Set;
 
+/**
+ * Tracks the onboarding progress of a device across its image, geolocation, tag, and field steps,
+ * including per-step comments and assignees. Used to report and update device onboarding status.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeviceOnboardStatusDTO {
     private String id;

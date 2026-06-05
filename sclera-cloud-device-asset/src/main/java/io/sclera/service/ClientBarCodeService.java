@@ -14,6 +14,19 @@ import java.sql.PreparedStatement;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Manages client bar-code records for the device-asset service, keeping the local
+ * store synchronized with the cloud and serving bar-code lookups.
+ * <p>
+ * Collaborators:
+ * <ul>
+ *   <li>{@link APICallClient} — fetches client bar codes from the cloud, page by page.</li>
+ *   <li>{@link ClientBarCodeRepository} — reads counts and bar-code records and applies
+ *       soft-delete bookkeeping.</li>
+ *   <li>{@link ClientBarCodeQueryRepository} — supplies the SQL used for batched upserts.</li>
+ *   <li>{@link DataSource} — provides JDBC connections for batch upsert operations.</li>
+ * </ul>
+ */
 @Service
 public class ClientBarCodeService {
     @java.lang.SuppressWarnings("all")
@@ -28,11 +41,24 @@ public class ClientBarCodeService {
     @Autowired
     ClientBarCodeRepository clientBarCodeRepository;
 
+    /**
+     * Returns the number of client bar codes tagged to the given device.
+     *
+     * @param deviceId the device identifier
+     * @return the count of client bar codes associated with the device
+     */
     public Integer getClientBarCodeCountByDeviceId(String deviceId) {
         log.info("getClientBarCodeCountByDeviceId");
         return clientBarCodeRepository.getClientBarCodeCountByDeviceId(deviceId);
     }
 
+    /**
+     * Performs a full synchronization of client bar codes for the given VDMS by paging all
+     * cloud records, marking existing local records as deleted, upserting the fetched records,
+     * and purging any that remain flagged as deleted.
+     *
+     * @param vdmsId the VDMS identifier whose client bar codes are synchronized
+     */
     public void syncAllClientBarCode(String vdmsId) {
         log.info("Syncing syncAllClientBarCode");
         Set<ClientBarCodeDTO> clientBarCodeInCloud = new HashSet<>();
@@ -63,6 +89,13 @@ public class ClientBarCodeService {
         clientBarCodeRepository.updateIsDeletedForAllClientBarCode();
     }
 
+    /**
+     * Inserts or updates the given client bar codes in batches of up to 100 using a JDBC
+     * prepared statement. Failures on individual records or the batch are logged and do not
+     * abort the operation.
+     *
+     * @param clientBarCodeDTOS the client bar codes to upsert
+     */
     public void upsertClientBarCodeInBatch(Set<ClientBarCodeDTO> clientBarCodeDTOS) {
         log.info("upsertBarCodeInBatch");
         try (Connection connection = dataSource.getConnection()) {
@@ -103,16 +136,34 @@ public class ClientBarCodeService {
         }
     }
 
+    /**
+     * Returns the location identifiers tagged to client bar codes for the given VDMS.
+     *
+     * @param vdmsid the VDMS identifier
+     * @return a JSON array of location identifiers
+     */
     public JSONArray getLocationIdsTaggedToClientBarCode(String vdmsid) {
         log.info("getLocationIdsTaggedToClientBarCode");
         return clientBarCodeRepository.getLocationIdsTaggedToClientBarCode(vdmsid);
     }
 
+    /**
+     * Returns the device identifiers tagged to client bar codes for the given VDMS.
+     *
+     * @param vdmsid the VDMS identifier
+     * @return a JSON array of device identifiers
+     */
     public JSONArray getDeviceIdsTaggedToClientBarCode(String vdmsid) {
         log.info("getDeviceIdsTaggedToClientBarCode");
         return clientBarCodeRepository.getDeviceIdsTaggedToClientBarCode(vdmsid);
     }
 
+    /**
+     * Performs an incremental synchronization of client bar codes for the given VDMS by paging
+     * the cloud's synced records and upserting them locally.
+     *
+     * @param vdmsId the VDMS identifier whose client bar codes are synchronized
+     */
     public void syncClientBarCode(String vdmsId) {
         log.info("syncClientBarCode");
         Set<ClientBarCodeDTO> clientBarCodeInCloud = new HashSet<>();
@@ -131,11 +182,23 @@ public class ClientBarCodeService {
         this.upsertClientBarCodeInBatch(clientBarCodeInCloud);
     }
 
+    /**
+     * Returns the client bar codes tagged to any of the given locations.
+     *
+     * @param locationIds the location identifiers to match
+     * @return the set of matching client bar codes
+     */
     public Set<ClientBarCodeDTO> getBarCodesByLocationIds(Set<String> locationIds) {
         log.info("getBarCodesByLocationIds");
         return clientBarCodeRepository.getBarCodesByLocationIds(locationIds);
     }
 
+    /**
+     * Returns the client bar codes tagged to any of the given devices.
+     *
+     * @param deviceIds the device identifiers to match
+     * @return the set of matching client bar codes
+     */
     public Set<ClientBarCodeDTO> getBarCodesByDeviceIds(Set<String> deviceIds) {
         log.info("getBarCodesByDeviceIds");
         return clientBarCodeRepository.getBarCodesByDeviceIds(deviceIds);

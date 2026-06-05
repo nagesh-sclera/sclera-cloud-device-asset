@@ -1,5 +1,9 @@
 package io.sclera.dto.touchscreen.settings;
 
+/**
+ * Minimal sample data holder carrying a name and age, used for testing and demonstration in the
+ * settings flow.
+ */
 public class TestDTO {
     private String name;
     private String age;

@@ -334,6 +334,12 @@ import java.util.List;
                 + "FROM asset WHERE import_type = ?1",
         resultSetMapping = "subsystemAssetMapping")
 
+/**
+ * JPA entity representing a managed asset (e.g. a discovered or imported piece of equipment) with
+ * its descriptive, network, and matching attributes. Supports hierarchical subsystems, links to
+ * devices via {@link AssetDeviceMapping}, and backs the paginated, filtered, and subsystem asset
+ * queries.
+ */
 public class Asset {
 
     @Id

@@ -6,6 +6,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigInteger;
 import java.util.List;
 
+/**
+ * Represents a physical location (area, floor or building reference) within the
+ * asset-management domain. Carries location metadata, checklist and status counts,
+ * and associated sensors for map, scan and reporting responses.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class LocationDTO {
 

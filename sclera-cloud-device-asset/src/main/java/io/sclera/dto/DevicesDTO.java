@@ -5,6 +5,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigDecimal;
 import java.util.Set;
 
+/**
+ * Aggregates the editable attributes applied to one or more devices, including vendor,
+ * location, monitoring, alerting, and SNMP settings. Used as the payload for bulk device
+ * create and update operations.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DevicesDTO {
 

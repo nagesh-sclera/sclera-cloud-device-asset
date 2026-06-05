@@ -4,6 +4,11 @@ import io.sclera.dto.InterfaceDTO;
 
 import java.util.List;
 
+/**
+ * Associates a device identifier with its list of SNMP-discovered network
+ * interfaces for the touchscreen, used to present the interfaces reported by an
+ * SNMP-managed device.
+ */
 public class SnmpInterfaceDTO {
 
 	private String id;

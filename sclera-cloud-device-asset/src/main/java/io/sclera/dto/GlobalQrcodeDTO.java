@@ -3,6 +3,10 @@ package io.sclera.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents a QR code generated for a device or location, linking its image to the
+ * associated device, location, floor, and building for scan-based lookup and navigation.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class GlobalQrcodeDTO {
 

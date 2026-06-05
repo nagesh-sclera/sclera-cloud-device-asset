@@ -4,6 +4,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 
+/**
+ * JPA entity linking a Docker instance to remote-access configuration, used to manage
+ * remote connectivity to devices within the asset-management domain.
+ */
 @Entity
 public class RemoteAccess {
     @Id

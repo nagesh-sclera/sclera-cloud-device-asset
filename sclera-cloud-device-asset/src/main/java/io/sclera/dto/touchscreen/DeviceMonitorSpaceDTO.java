@@ -3,6 +3,11 @@ package io.sclera.dto.touchscreen;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents a space (room/area) and its device placement on the touchscreen
+ * monitor floor plan, carrying status, sensor status, positioning and checklist
+ * details used to render the spatial device-monitor view.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 

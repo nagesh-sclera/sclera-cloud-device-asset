@@ -2,6 +2,11 @@ package io.sclera.dto.touchscreen.assetmapper;
 
 import java.util.List;
 
+/**
+ * Represents a device in the asset-mapper workflow together with the assets linked to it.
+ * Used to expose a device and its associated {@link AssetDTO} entries when presenting
+ * asset-to-device relationships.
+ */
 public class AssetDeviceDTO {
 
   private String id; //72

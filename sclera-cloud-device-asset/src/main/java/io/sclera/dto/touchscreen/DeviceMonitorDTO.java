@@ -6,6 +6,11 @@ import java.math.BigInteger;
 import java.util.List;
 
 
+/**
+ * Represents a monitored device's connectivity and alarm snapshot as shown on
+ * the touchscreen device-monitor view, including IP/MAC identifiers, status,
+ * last-seen timestamp and any associated SNMP parent and address list.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeviceMonitorDTO {
 

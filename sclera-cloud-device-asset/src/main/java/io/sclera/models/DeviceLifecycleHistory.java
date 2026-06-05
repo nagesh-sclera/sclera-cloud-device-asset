@@ -35,6 +35,11 @@ import java.math.BigInteger;
         resultSetMapping = "deviceLifeCycleHistoryMapping"
 )
 
+/**
+ * Represents a historical record of a device's lifecycle changes, capturing operational and usage status,
+ * assignment details, and timestamps. Used to provide an audit trail of how a device has been assigned and
+ * used over time.
+ */
 @Entity
 @Table(name = "device_lifecycle_history")
 public class DeviceLifecycleHistory {

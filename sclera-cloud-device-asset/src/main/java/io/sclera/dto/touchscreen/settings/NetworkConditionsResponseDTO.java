@@ -3,6 +3,10 @@ package io.sclera.dto.touchscreen.settings;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.http.HttpStatus;
 
+/**
+ * Standard response wrapper for network-conditions operations in the settings flow, conveying a
+ * message, HTTP status code, and success flag back to the caller.
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NetworkConditionsResponseDTO {
 

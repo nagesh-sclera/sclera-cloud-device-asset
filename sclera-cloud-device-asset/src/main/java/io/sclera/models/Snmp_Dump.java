@@ -4,6 +4,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
+/**
+ * Represents a captured SNMP data dump collected from a {@link Device}.
+ */
 @Entity
 public class Snmp_Dump {
     @Id

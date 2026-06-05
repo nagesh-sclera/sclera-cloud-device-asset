@@ -2,6 +2,11 @@ package io.sclera.dto.touchscreen;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Carries VDMS (Visual Device Management System) display details such as weather, layout, and
+ * custom-field configuration for a touchscreen device. Exchanged between the cloud asset service
+ * and edge touchscreens to drive their on-screen presentation.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VdmsDetailsDTO {
 

@@ -1,5 +1,9 @@
 package io.sclera.dto;
 
+/**
+ * Represents a scheduled job and the condition that triggers it, including its type, interval and
+ * the condition grouping it evaluates. Used by the scheduler to define recurring asset-management tasks.
+ */
 public class ScheduledJobDTO {
     private String id;
     private String job_type;

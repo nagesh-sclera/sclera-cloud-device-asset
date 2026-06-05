@@ -4,6 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.ArrayList;
 
+/**
+ * Defines how a source column (or columns) from imported data maps to a device field in the
+ * asset-mapper workflow, including flags for advanced, custom, and composite mappings. Used to
+ * translate raw import keys into normalized device attributes.
+ */
 @JsonIgnoreProperties
 public class FieldMappingDTO {
 

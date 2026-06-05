@@ -30,6 +30,10 @@ import io.sclera.dto.touchscreen.ContactListDTO;
 @NamedNativeQuery(name = "Phonebook.getphonebooklist",
     query = "SELECT DISTINCT p.id , p.vendor_name , p.company_name FROM phonebook as p JOIN device d on d.local_vendor_id = p.id OR d.other_vendor_1_id = p.id OR d.other_vendor_2_id = p.id OR d.other_vendor_3_id = p.id ORDER BY p.vendor_name ASC",
     resultSetMapping = "phonebooklist")
+/**
+ * JPA entity representing a vendor or contact directory entry, used to associate vendor
+ * contact details with devices within the asset-management domain.
+ */
 public class Phonebook {
     @Id private String id;
     private String account_number;

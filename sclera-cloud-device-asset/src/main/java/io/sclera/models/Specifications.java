@@ -45,6 +45,9 @@ import java.util.Set;
         resultSetMapping = "specificationsdatamapping"
 )
 
+/**
+ * Represents a single key/value/unit specification attribute describing a {@link Device}.
+ */
 @Entity
 public class Specifications {
 

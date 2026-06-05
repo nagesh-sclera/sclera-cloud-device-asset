@@ -2,6 +2,11 @@ package io.sclera.dto;
 
 import java.math.BigInteger;
 
+/**
+ * Represents a single audited change to a location, recording the type, status,
+ * description, timestamp and the user who made the update. Used to expose a
+ * location's change history.
+ */
 public class LocationHistoryDTO {
     private String id;
     private String type;

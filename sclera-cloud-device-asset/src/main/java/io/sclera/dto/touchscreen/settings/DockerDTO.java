@@ -5,6 +5,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Represents the network configuration of a Docker-based VDMS network in the settings flow,
+ * covering addressing, VLAN tagging, DNS, internet access, and approval state. Used to provision
+ * and report container network settings for a device.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DockerDTO {
     private String name;

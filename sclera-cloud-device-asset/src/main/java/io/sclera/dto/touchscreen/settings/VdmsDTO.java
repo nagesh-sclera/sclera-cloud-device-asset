@@ -3,6 +3,11 @@ package io.sclera.dto.touchscreen.settings;
 
 import java.math.BigInteger;
 
+/**
+ * Data-transfer object carrying VDMS (edge device) details such as activation status, location,
+ * deployment type, and master/slave topology. Used to move VDMS information between the persistence
+ * layer and touchscreen settings endpoints.
+ */
 public class VdmsDTO {
     private String id;
     private String activation_status;

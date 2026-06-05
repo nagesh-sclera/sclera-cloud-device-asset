@@ -18,6 +18,15 @@ import io.sclera.dto.DockerInfoDto;
 import io.sclera.dto.VlanDTO;
 import io.sclera.client.SocketClient;
 
+/**
+ * Manages persistence and lookup of system network interface state, including
+ * VLAN discovery process identifiers.
+ *
+ * <p>Collaborates with {@link SystemInterfaceRepository} for interface storage,
+ * {@link SocketClient} for touchscreen notifications, {@link DockerService} for
+ * Docker interface information, and {@link MasterSlaveAPICallService} for
+ * cross-device communication in master-slave deployments.
+ */
 @Service
 public class SystemInterfaceService {
     private static final Logger log = LoggerFactory.getLogger(SystemInterfaceService.class);
@@ -122,6 +131,9 @@ public class SystemInterfaceService {
 //		}
 //	}
 
+	/**
+	 * Removes all stored system interface records.
+	 */
 	public void deleteAllInterface() {
 		systemInterfaceRepository.deleteAllInterface();
 	}
@@ -171,10 +183,23 @@ public class SystemInterfaceService {
 //		return interface_status_list;
 //	}
 
+	/**
+	 * Returns the VLAN discovery process identifier associated with the given interface.
+	 *
+	 * @param interface_name the name of the interface to look up
+	 * @return the matching {@link VlanDTO}, or {@code null} if none exists
+	 */
 	public VlanDTO getVlanDiscoverPidByInterfaceName(String interface_name) {
 		return systemInterfaceRepository.getVlanDiscoverPidByInterfaceName(interface_name);
 	}
 
+	/**
+	 * Updates the VLAN discovery process identifier and timestamp for the given interface.
+	 *
+	 * @param pid the VLAN discovery process identifier to store
+	 * @param timestamp the timestamp of the discovery
+	 * @param interface_name the name of the interface to update
+	 */
 	public void updateVlanDiscoverPidByInterfaceName(String pid, BigInteger timestamp, String interface_name) {
 		systemInterfaceRepository.updateVlanDiscoverPidByInterfaceName(pid, timestamp, interface_name);
 	}

@@ -5,6 +5,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.List;
 
+/**
+ * Represents the complete power-source topology as a graph of devices and the power connections
+ * between them. Returned to clients that visualize how devices are powered within a deployment.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PowerSourceTopologyDTO {
 

@@ -1,5 +1,9 @@
 package io.sclera.dto.touchscreen;
 
+/**
+ * Detailed view of a single device for the touchscreen UI, aggregating identity,
+ * network, location, vendor, imagery and per-protocol status information.
+ */
 public class DeviceDetailsDTO {
 
 	private String id;

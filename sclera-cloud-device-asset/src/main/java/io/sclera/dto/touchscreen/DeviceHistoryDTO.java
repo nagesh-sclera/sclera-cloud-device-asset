@@ -2,6 +2,10 @@ package io.sclera.dto.touchscreen;
 
 import java.math.BigInteger;
 
+/**
+ * Represents a historical record of a device's network state for the touchscreen UI,
+ * capturing IP/MAC changes and alarm status at a given timestamp.
+ */
 public class DeviceHistoryDTO {
 	
 	private String id;

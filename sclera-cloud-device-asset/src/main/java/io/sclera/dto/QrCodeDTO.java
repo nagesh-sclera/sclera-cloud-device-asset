@@ -4,6 +4,10 @@ package io.sclera.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigInteger;
 
+/**
+ * Represents a generated QR code that links a device or location to the system, carrying its image,
+ * batch, audit and soft-delete metadata. Used when creating, distributing and resolving device QR codes.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class QrCodeDTO {
     private String id;

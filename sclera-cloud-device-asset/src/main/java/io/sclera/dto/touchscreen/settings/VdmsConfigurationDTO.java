@@ -1,5 +1,10 @@
 package io.sclera.dto.touchscreen.settings;
 
+/**
+ * Holds the network configuration of a VDMS device in the settings flow, including interface
+ * binding, addressing, DNS, VLAN tagging, and Sclera-agent permission. Used to apply or report a
+ * device's VDMS network setup.
+ */
 public class VdmsConfigurationDTO {
 
     private String id;

@@ -22,6 +22,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+/**
+ * Synchronizes and persists device type reference data.
+ *
+ * <p>Reconciles locally stored device types against the remote asset-type source, performs
+ * incremental upserts, and propagates renamed types onto existing devices. Collaborates with
+ * {@link DeviceTypesRepository} for device-type CRUD, {@link DeviceRepository} for cascading
+ * device-type renames, {@link DeviceTypeQueryRepository} for batch upsert SQL, {@link APICallClient}
+ * for fetching updated asset types from the remote API, and a {@link DataSource} for JDBC batch
+ * execution.
+ */
 @Service
 public class DeviceTypeService {
     private static final Logger log = LoggerFactory.getLogger(DeviceTypeService.class);
@@ -38,6 +48,11 @@ public class DeviceTypeService {
     public DeviceTypeService(DeviceTypesRepository deviceTypesRepository) {
         this.deviceTypesRepository = deviceTypesRepository;
     }
+    /**
+     * Upserts the given device types, skipping entries that are already up to date.
+     *
+     * @param deviceTypes the device types to upsert; ignored when null or empty
+     */
     public void upsertDeviceType(List<DeviceTypesDTO> deviceTypes) {
         if (deviceTypes == null || deviceTypes.isEmpty()) {
             log.warn("No device types provided for upsert.");
@@ -85,6 +100,11 @@ public class DeviceTypeService {
         }
     }
 
+    /**
+     * Refreshes the device type table from the remote source and asynchronously applies any renames.
+     *
+     * @param vdmsId the VDMS identifier scoping the device types to synchronize
+     */
     public void syncAndUpsertDeviceTypes(String vdmsId) {
         try {
             this.updateDeviceTypesTable(vdmsId);
@@ -141,6 +161,11 @@ public class DeviceTypeService {
         this.batchUpdateDeviceTypes(deviceTypesDTOS);
     }
 
+    /**
+     * Upserts the given device types in JDBC batches of up to 100 statements.
+     *
+     * @param deviceTypesDTOS the device types to persist in batch
+     */
     public void batchUpdateDeviceTypes(Set<DeviceTypesDTO> deviceTypesDTOS){
         log.info("batchUpdateDeviceTypes");
         try (Connection connection = dataSource.getConnection()) {
@@ -182,6 +207,11 @@ public class DeviceTypeService {
         }
     }
 
+    /**
+     * Returns all stored device types.
+     *
+     * @return all device types, or an empty list if retrieval fails
+     */
     public List<DeviceTypesDTO> getAllDeviceTypes() {
         try {
             return deviceTypesRepository.getAllDeviceTypes();

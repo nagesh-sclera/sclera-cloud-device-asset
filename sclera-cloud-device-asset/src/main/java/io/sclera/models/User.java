@@ -102,6 +102,9 @@ import java.util.Set;
 )
 
 
+/**
+ * Represents an application user identified by email, holding contact, company, address and locale details along with owned {@link Device}s.
+ */
 @Entity
 @Table(name = "\"user\"")
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "email", scope = User.class)

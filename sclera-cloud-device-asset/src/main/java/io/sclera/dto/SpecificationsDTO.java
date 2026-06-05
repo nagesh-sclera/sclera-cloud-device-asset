@@ -8,6 +8,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Objects;
 
 
+/**
+ * Represents a single technical specification key/value pair (with optional unit and
+ * power metadata) attached to a device or a connected device in the asset inventory.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SpecificationsDTO {
 

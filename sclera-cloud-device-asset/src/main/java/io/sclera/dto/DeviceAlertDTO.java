@@ -5,6 +5,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigInteger;
 
+/**
+ * Represents a device together with its alerting context, including location, vendor, and
+ * alert message details. Used to convey alert notifications for monitored devices.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeviceAlertDTO {
 

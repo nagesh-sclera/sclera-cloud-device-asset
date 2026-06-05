@@ -6,6 +6,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigInteger;
 import java.util.Set;
 
+/**
+ * Represents a discovered or configured BACnet device, including its network addressing,
+ * vendor and segmentation capabilities, sync state, and the set of BACnet objects it exposes.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BacnetDeviceDTO {

@@ -5,6 +5,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+/**
+ * JPA entity linking a device to its historical record, used to track per-device
+ * history within the asset-management domain.
+ */
 @Entity
 @Table(name = "history")
 public class History {

@@ -6,6 +6,10 @@ import jakarta.persistence.Id;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+/**
+ * Represents a QR code provisioned for a client and linked to a device and location.
+ * Used to transfer QR code identification and audit details across the asset-management API.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ClientQrCodeDTO {
     @Id

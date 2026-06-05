@@ -2,6 +2,10 @@ package io.sclera.dto.touchscreen;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents an IP address assigned to a device for the touchscreen UI, including its
+ * conflict status and the owning device.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeviceIPAddressDTO {
 	

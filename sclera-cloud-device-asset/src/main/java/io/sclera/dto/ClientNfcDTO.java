@@ -5,6 +5,10 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigInteger;
 
+/**
+ * Represents an NFC tag provisioned for a client and associated with a device and location.
+ * Used to carry NFC identification details between the asset-management API and its clients.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ClientNfcDTO {
     private String id;

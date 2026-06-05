@@ -4,6 +4,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigDecimal;
 
+/**
+ * Represents a device together with its vendor, location, alert and onboarding
+ * details for bulk device operations. Used to create or update multiple devices
+ * in the asset-management domain.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MultiDeviceDTO {
 

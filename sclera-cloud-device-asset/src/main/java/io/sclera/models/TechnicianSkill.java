@@ -9,6 +9,9 @@ import java.math.BigDecimal;
 @NamedNativeQuery(name = "TechnicianSkill.getAll", query = "SELECT id, name, type, rating, ranking, created_by, created_at, technician_id FROM technician_skill", resultSetMapping = "technicianSkillMapping")
 @NamedNativeQuery(name = "TechnicianSkill.getById", query = "SELECT id, name, type, rating, ranking, created_by, created_at, technician_id FROM technician_skill WHERE id = ?1", resultSetMapping = "technicianSkillMapping")
 @NamedNativeQuery(name = "TechnicianSkill.getByTechnicianId", query = "SELECT id, name, type, rating, ranking, created_by, created_at, technician_id FROM technician_skill WHERE technician_id = ?1", resultSetMapping = "technicianSkillMapping")
+/**
+ * Represents a skill held by a {@link Technician}, including its name, type, rating and ranking used for technician matching.
+ */
 @Entity
 public class TechnicianSkill {
     @Id

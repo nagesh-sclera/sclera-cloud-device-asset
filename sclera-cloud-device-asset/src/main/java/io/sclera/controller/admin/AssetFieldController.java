@@ -7,6 +7,10 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 
+/**
+ * REST endpoints exposing the configurable asset (custom) fields for a VDMS.
+ * Delegates to {@link AssetFieldService}.
+ */
 @RestController
 @RequestMapping("/user/{username}/vdms/{vdms_id}/asset-fields")
 public class AssetFieldController {
@@ -17,6 +21,14 @@ public class AssetFieldController {
         this.assetFieldService = assetFieldService;
     }
 
+    /**
+     * Returns all asset fields configured for the VDMS resolved from the request.
+     *
+     * @param username           owning user
+     * @param vdms_id            owning VDMS id
+     * @param httpServletRequest current request, used to resolve tenant/VDMS context
+     * @return list of asset field definitions
+     */
     @GetMapping
     public List<AssetFieldDTO> getAllAssetFields(@PathVariable String username, @PathVariable String vdms_id, HttpServletRequest httpServletRequest) {
         return assetFieldService.getAssetFields(httpServletRequest);

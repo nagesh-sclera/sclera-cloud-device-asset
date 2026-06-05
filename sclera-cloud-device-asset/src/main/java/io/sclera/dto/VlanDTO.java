@@ -6,6 +6,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigInteger;
 
+/**
+ * Represents the VLAN/network interface configuration of a device, holding addressing
+ * details such as IP, gateway, subnet and CIDR used during device discovery and networking.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VlanDTO {

@@ -6,6 +6,10 @@ import io.sclera.dto.GlobalQrcodeDTO;
 import jakarta.persistence.*;
 
 
+/**
+ * Represents a globally generated QR code that can be bound to either a device or a location.
+ * Used to tag and look up devices and locations via scannable codes across the asset-management system.
+ */
 @SqlResultSetMapping(
         name = "globalqrlocationmapping",
         classes = {

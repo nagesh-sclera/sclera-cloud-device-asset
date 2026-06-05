@@ -15,6 +15,10 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import io.sclera.dto.InterfaceDTO;
 
+/**
+ * JPA entity representing a network interface (port) belonging to a device, capturing
+ * traffic, status, and connectivity details surfaced through device interface listings.
+ */
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class , property = "id" , scope = Interface.class)
 

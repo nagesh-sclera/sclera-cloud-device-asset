@@ -5,6 +5,11 @@ import io.sclera.utils.Utils;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Data-transfer object describing a Docker container's runtime configuration, including image,
+ * environment, network mode, DNS, restart policy, and logging options. Serialized into the JSON
+ * body used to create a container through the Docker CLI.
+ */
 public class ContainerDTO {
 
   private String containerName;

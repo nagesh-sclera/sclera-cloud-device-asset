@@ -3,6 +3,10 @@ package io.sclera.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents an assignee responsible for a device onboarding task, identified by type and email.
+ * Used to associate users with a device onboarding status record.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeviceOnboardStatusAssigneeDTO {
     private String id;

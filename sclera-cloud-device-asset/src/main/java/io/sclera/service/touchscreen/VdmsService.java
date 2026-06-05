@@ -38,6 +38,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+/**
+ * Manages VDMS (touchscreen device) identity, configuration, weather, layout, and
+ * device-field metadata for the asset-management service.
+ *
+ * <p>Reads and persists VDMS state through {@link VdmsRepository},
+ * {@link VdmsDetailsRepository}, {@link VdmsconfigurationRepository},
+ * {@link RemoteAgentServerDetailsRepository}, and {@link DockerRepository}.
+ * Coordinates with {@link APICallClient} for VDMS access tokens,
+ * {@link RabbitmqClient}, {@link CorrigoClient}, and {@link IntegrationClient} for
+ * external integrations, and {@link DeviceService} for device operations. Uses
+ * {@link Utils} and {@link AuthenticationUtils} for shared helpers and authentication
+ * context.
+ */
 @Service
 public class VdmsService {
     private static final Logger log = LoggerFactory.getLogger(VdmsService.class);
@@ -80,6 +93,10 @@ public class VdmsService {
     @Autowired
     DockerRepository dockerRepository;
 
+    /**
+     * Bootstraps the VDMS session by resolving the VDMS id, storing it in the
+     * authentication context, and requesting an access token using the stored password.
+     */
     public void startVdmsService() {
 
         try {
@@ -96,6 +113,11 @@ public class VdmsService {
     }
 
 
+    /**
+     * Returns the VDMS id.
+     *
+     * @return the VDMS id
+     */
     //get vdms id
     public String getVDMSId() {
         return vdmsRepository.getVDMSId();
@@ -121,6 +143,11 @@ public class VdmsService {
 //
 //    }
 
+    /**
+     * Inserts or updates VDMS weather data by city, zip code, or geolocation.
+     *
+     * @param vdms_details the VDMS details carrying the weather fields to persist
+     */
     //update vdms weather data by city, zipcode or geolocation
     public void upsertWeatherData(VdmsDetailsDTO vdms_details) {
         vdmsDetailsRepository.upsertWeatherData(vdms_details.getId(), vdms_details.getWeather_city(), vdms_details.getWeather_country_code(),
@@ -128,17 +155,34 @@ public class VdmsService {
                 vdms_details.getWeather_zip_code(), vdms_details.getWeather_units(), vdms_details.getVdms_id());
     }
 
+    /**
+     * Returns the stored VDMS weather details.
+     *
+     * @return the VDMS weather details
+     */
     //get weather details
     public VdmsDetailsDTO getWeatherData() {
         return vdmsDetailsRepository.getWeatherData();
     }
 
+    /**
+     * Returns the VDMS details record id.
+     *
+     * @return the VDMS details id
+     */
     //get vdms details id
     public String getVdmsDetailsId() {
         return vdmsDetailsRepository.getVdmsDetailsId();
     }
 
 
+    /**
+     * Reads the bundled base device-fields definition and merges it with the
+     * VDMS-specific custom device fields.
+     *
+     * @return the merged device-fields list as a JSON string, or {@code null} if the
+     *         file cannot be read
+     */
     public String getDeviceFieldsList() {
         try {
 
@@ -158,6 +202,15 @@ public class VdmsService {
         return null;
     }
 
+    /**
+     * Merges the base device-fields JSON with any custom device fields, skipping
+     * columns already present in the base definition.
+     *
+     * @param file           the base device-fields JSON content
+     * @param vdmsDetailsDTO the VDMS details supplying custom device fields, may be
+     *                       {@code null}
+     * @return the merged device-fields list as a JSON string, or {@code null} on error
+     */
     public String getMergedDeviceFieldsList(StringBuilder file, VdmsDetailsDTO vdmsDetailsDTO) {
         JSONArray result = null;
         Set<String> existingColumns = new HashSet<>();
@@ -196,10 +249,20 @@ public class VdmsService {
         return null;
     }
 
+    /**
+     * Returns the VDMS details holding the device custom fields.
+     *
+     * @return the VDMS device custom fields details
+     */
     public VdmsDetailsDTO getVdmsDeviceCustomFields() {
         return vdmsDetailsRepository.getVdmsDeviceCustomFields();
     }
 
+    /**
+     * Inserts or updates the VDMS device custom fields, generating an id when absent.
+     *
+     * @param vdms_details the VDMS details carrying the custom fields to persist
+     */
     public void upsertVdmsDeviceCustomFields(VdmsDetailsDTO vdms_details) {
 
         if (vdms_details.getId() == null) {
@@ -210,6 +273,13 @@ public class VdmsService {
     }
 
 
+    /**
+     * Inserts or updates the VDMS layout data, reusing the existing details id or
+     * generating a new one.
+     *
+     * @param vdms_id      the VDMS id to associate with the layout data
+     * @param vdms_details the VDMS details carrying the layout data to persist
+     */
     public void updateVdmsLayoutData(String vdms_id, VdmsDetailsDTO vdms_details) {
 
         String id = this.getVdmsDetailsId();
@@ -224,6 +294,11 @@ public class VdmsService {
     }
 
 
+    /**
+     * Returns the stored VDMS layout data.
+     *
+     * @return the VDMS layout data details
+     */
     public VdmsDetailsDTO getVdmsLayoutData() {
         return vdmsDetailsRepository.getVdmsLayoutData();
     }
@@ -235,6 +310,13 @@ public class VdmsService {
 //                propertyAddress.getActivation_timestamp(), propertyAddress.getDeployment_type(), propertyAddress.getRegion());
 //    }
 
+    /**
+     * Inserts or updates the Corrigo layout data, reusing the existing details id or
+     * generating a new one.
+     *
+     * @param vdms_id      the VDMS id to associate with the layout data
+     * @param vdms_details the VDMS details carrying the Corrigo layout data to persist
+     */
     public void upsertCorrigoLayoutData(String vdms_id, VdmsDetailsDTO vdms_details) {
         String id = this.getVdmsDetailsId();
 
@@ -246,6 +328,11 @@ public class VdmsService {
         vdmsDetailsRepository.upsertCorrigoLayoutData(vdms_details.getId(), vdms_details.getCorrigo_layout_data(), vdms_id);
     }
 
+    /**
+     * Returns the VDMS configuration.
+     *
+     * @return the VDMS configuration
+     */
     public VdmsConfigurationDTO getConfiguration() {
         return vdmsconfigurationRepository.getConfiguration();
     }
@@ -278,6 +365,15 @@ public class VdmsService {
 //            log.error("Error activating agent: {}", e.getMessage());
 //        }
 
+    /**
+     * Merges the supplied device custom fields into the stored VDMS custom fields,
+     * adding only columns not already present, and persists the result.
+     *
+     * @param username               the requesting user's name
+     * @param vdms_id                the VDMS id used when creating a new details record
+     * @param deviceCustomFieldsList the device custom fields to merge, may be
+     *                               {@code null}
+     */
     public void upsertDeviceCustomFields(String username, String vdms_id, com.alibaba.fastjson.JSONArray deviceCustomFieldsList) {
         if (deviceCustomFieldsList != null) {
             VdmsDetailsDTO vdmsDetailsDTO = this.getVdmsDeviceCustomFields();
@@ -312,14 +408,32 @@ public class VdmsService {
         }
     }
 
+    /**
+     * Returns the VDMS device custom fields for the given user and VDMS.
+     *
+     * @param username the requesting user's name
+     * @param vdms_id  the VDMS id
+     * @return the VDMS device custom fields details
+     */
     public VdmsDetailsDTO getDeviceCustomFields(String username, String vdms_id) {
         return this.getVdmsDeviceCustomFields();
     }
 
+    /**
+     * Returns the VDMS details.
+     *
+     * @return the VDMS details
+     */
     public VdmsDTO getVDMSDetails() {
         return vdmsRepository.getVdmsDetails();
     }
 
+    /**
+     * Updates the customer organisation id associated with the given VDMS.
+     *
+     * @param vdms_id         the VDMS id
+     * @param customer_org_id the customer organisation id to set
+     */
     public void updateCustomerOrgIdByVdmsId(String vdms_id, String customer_org_id) {
         vdmsRepository.updateCustomerOrgIdByVdmsId(vdms_id, customer_org_id);
     }
@@ -337,6 +451,12 @@ public class VdmsService {
         return result;
     }
 
+    /**
+     * Requests a VDMS access token for the given credentials via {@link APICallClient}.
+     *
+     * @param vdms_id  the VDMS id
+     * @param password the VDMS password
+     */
     public void getVdmsAccessToken(String vdms_id, String password) {
         try {
             apiCallService.getVdmsAccessToken(vdms_id, password);
@@ -347,16 +467,32 @@ public class VdmsService {
 
 
 
+    /**
+     * Returns the stored VDMS password.
+     *
+     * @return the VDMS password
+     */
     public String getVDMSPassword() {
         return vdmsRepository.getVDMSPassword();
     }
 
 
 
+    /**
+     * Returns the customer organisation id associated with the given VDMS.
+     *
+     * @param vdms_id the VDMS id
+     * @return the customer organisation id
+     */
     public String getCustomerOrgIdByVdmsId(String vdms_id) {
         return vdmsRepository.getCustomerOrgIdByVdmsId(vdms_id);
     }
 
+    /**
+     * Returns the master flag for the VDMS.
+     *
+     * @return the master indicator
+     */
     public Integer getIsMaster() {
         return vdmsRepository.getIsMaster();
     }

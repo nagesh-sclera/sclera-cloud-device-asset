@@ -5,6 +5,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigInteger;
 import java.util.Set;
 
+/**
+ * Carries the descriptive data of a managed device, including discovered and
+ * user-supplied attributes plus its change history, for display and reporting.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DevicedataDTO {
 

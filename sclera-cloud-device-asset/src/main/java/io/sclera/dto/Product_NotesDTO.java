@@ -1,5 +1,9 @@
 package io.sclera.dto;
 
+/**
+ * Represents a free-text note attached to a product or device, optionally flagged as global.
+ * Used to carry product annotations between the API and persistence layers.
+ */
 public class Product_NotesDTO {
 
 	private String id;

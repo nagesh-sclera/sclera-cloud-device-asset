@@ -2,6 +2,11 @@ package io.sclera.dto;
 
 import java.util.Set;
 
+/**
+ * Represents a product or device model in the asset catalog, including manufacturer, specifications,
+ * imagery, vendor links and associated ports, notes and SNMP details. Used to transfer product
+ * definitions between the API and persistence layers.
+ */
 public class ProductDTO {
 
     private String id;

@@ -5,6 +5,10 @@ package io.sclera.models;
 import java.io.Serializable;
 import java.util.Objects;
 
+/**
+ * Composite-key holder identifying the association between a location and a global
+ * checklist, used as the identity for location-checklist join records.
+ */
 public class LocationGlobalChecklistId implements Serializable {
 
     private static final long serialVersionUID = 1L;

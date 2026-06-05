@@ -3,6 +3,10 @@ package io.sclera.dto;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Carries a user's natural-language query and conversation history to the ChatGPT-backed
+ * assistant, scoped to a specific device, docker, and organization context.
+ */
 public class ChatGPTDTO {
 
     private String dockerId;

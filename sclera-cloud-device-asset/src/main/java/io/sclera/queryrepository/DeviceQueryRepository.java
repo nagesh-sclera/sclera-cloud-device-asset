@@ -2,14 +2,28 @@ package io.sclera.queryrepository;
 
 import org.springframework.stereotype.Component;
 
+/**
+ * Supplies native SQL statements for persisting and updating device records.
+ */
 @Component
 public class DeviceQueryRepository {
 
+    /**
+     * Returns the native SQL that updates a device's record-checklist status and count by id.
+     *
+     * @return the parameterized {@code UPDATE device SET record_checklist_status, record_checklist_count WHERE id} statement
+     */
     public String getQueryForUpdateDeviceRecordChecklistStatus() {
         return "UPDATE device SET record_checklist_status = ?, record_checklist_count =? WHERE id = ?";
     }
 
 
+    /**
+     * Returns the native upsert SQL that inserts a device row or updates it on primary-key conflict,
+     * casting the {@code adc_json} parameter to {@code jsonb}.
+     *
+     * @return the parameterized {@code INSERT ... ON CONFLICT (id) DO UPDATE} statement for {@code device}
+     */
     public String getQueryForUpsertCollection() {
         // PG-port: ON DUPLICATE KEY UPDATE -> ON CONFLICT (id) DO UPDATE SET ... (VALUES()->EXCLUDED)
         // PG-port: adc_json is a jsonb column; the bound String must be cast (pgjdbc binds setString as
@@ -55,6 +69,11 @@ public class DeviceQueryRepository {
                 "user_data_vendor = EXCLUDED.user_data_vendor";
     }
 
+    /**
+     * Returns the native SQL that updates a device's asset image, OCR image, and tag image URLs by id.
+     *
+     * @return the parameterized {@code UPDATE device SET asset_image_url, asset_ocr_image_url, asset_tag_images_url WHERE id} statement
+     */
     public String getQueryForUpdateImage(){
         return " UPDATE device SET asset_image_url = ?, asset_ocr_image_url = ?, asset_tag_images_url = ? WHERE id = ? ";
     }

@@ -16,6 +16,14 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Manages technician availability records, providing create, update, upsert,
+ * delete and query operations over availability windows (date/time ranges,
+ * all-day flags, recurrence frequency and conditions) for technicians.
+ * <p>
+ * Persistence is delegated to {@link TechnicianAvailabilityRepository}, and
+ * availability data is exchanged via {@link TechnicianAvailabilityDTO}.
+ */
 @Service
 public class TechnicianAvailabilityService {
     private static final Logger log = LoggerFactory.getLogger(TechnicianAvailabilityService.class);
@@ -27,6 +35,12 @@ public class TechnicianAvailabilityService {
         this.technicianAvailabilityRepository = technicianAvailabilityRepository;
     }
 
+    /**
+     * Inserts or updates each supplied availability record, skipping any that fail.
+     *
+     * @param technicianAvailabilityDTOS the availability records to upsert; null or empty yields an empty result
+     * @return the set of IDs that were successfully inserted or updated
+     */
     public Set<String> upsertTechnicianAvailability(List<TechnicianAvailabilityDTO> technicianAvailabilityDTOS) {
         Set<String> insertedTechnicianAvailabilityIds = new HashSet<>();
         if(technicianAvailabilityDTOS != null && !technicianAvailabilityDTOS.isEmpty()) {
@@ -54,6 +68,12 @@ public class TechnicianAvailabilityService {
         return insertedTechnicianAvailabilityIds;
     }
 
+    /**
+     * Deletes the availability records whose IDs exist in the store, resolving existence first.
+     *
+     * @param technicianAvailabilityDTOS the records identifying which availability entries to delete
+     * @return the set of IDs that existed and were deleted; empty when none matched
+     */
     public Set<String> deleteTechnicianAvailabilityById(List<TechnicianAvailabilityDTO> technicianAvailabilityDTOS) {
         Set<String> existingIds = Set.of();
         if (technicianAvailabilityDTOS != null && !technicianAvailabilityDTOS.isEmpty()) {
@@ -90,6 +110,11 @@ public class TechnicianAvailabilityService {
         log.info("No of ids got to delete : {}, Number of TechnicianAvailabilityByIds records got deleted : {} ", ids.size(), noOfRecordsDeleted);
     }
 
+    /**
+     * Creates a new availability record, assigning it a generated time-based UUID.
+     *
+     * @param technicianAvailabilityDto the availability record to create
+     */
     public void createTechnicianAvailability(TechnicianAvailabilityDTO technicianAvailabilityDto) {
         technicianAvailabilityDto.setId(Generators.timeBasedGenerator().generate().toString());
 
@@ -109,6 +134,11 @@ public class TechnicianAvailabilityService {
 
     }
 
+    /**
+     * Updates an existing availability record when a non-empty ID is supplied.
+     *
+     * @param technicianAvailabilityDto the availability record carrying the ID and updated values
+     */
     public void updateTechnicianAvailability(TechnicianAvailabilityDTO technicianAvailabilityDto) {
         if (technicianAvailabilityDto.getId() != null && !technicianAvailabilityDto.getId().isEmpty()) {
             Integer rows = technicianAvailabilityRepository.updateTechnicianAvailability(
@@ -128,14 +158,36 @@ public class TechnicianAvailabilityService {
     }
 
 
+    /**
+     * Returns the availability record matching the given ID.
+     *
+     * @param id the availability record identifier
+     * @param httpServletRequest the originating HTTP request
+     * @return the matching availability record, or null if none exists
+     */
     public TechnicianAvailabilityDTO getTechnicianAvailabilityById(String id, HttpServletRequest httpServletRequest) {
         return  technicianAvailabilityRepository.getTechnicianAvailabilityById(id);
     }
 
+    /**
+     * Returns all technician availability records.
+     *
+     * @param httpServletRequest the originating HTTP request
+     * @return the list of all availability records
+     */
     public List<TechnicianAvailabilityDTO> getAllTechnicianAvailability(HttpServletRequest httpServletRequest) {
         return technicianAvailabilityRepository.getAllTechnicianAvailability();
     }
 
+    /**
+     * Returns a technician's availability records that fall within the given time range.
+     *
+     * @param technicianId the technician identifier
+     * @param startTime the inclusive start of the time range
+     * @param endTime the inclusive end of the time range
+     * @param httpServletRequest the originating HTTP request
+     * @return the list of availability records within the range
+     */
     public List<TechnicianAvailabilityDTO> getAvailabilityInRange(String technicianId, String startTime, String endTime,HttpServletRequest httpServletRequest) {
         return technicianAvailabilityRepository.getTechnicianAvailabilityInRange(technicianId, startTime, endTime);
     }

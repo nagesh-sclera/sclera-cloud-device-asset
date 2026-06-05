@@ -48,6 +48,10 @@ import java.math.BigInteger;
                 "FROM asset_field WHERE is_deleted = false ",
         resultSetMapping = "assetFieldMappings"
 )
+/**
+ * JPA entity defining a configurable asset field (custom or global), describing its name, type,
+ * tooltip, default value, options, and display section. Used to drive dynamic asset metadata forms.
+ */
 @Entity
 public class AssetField {
     @Id

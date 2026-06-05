@@ -32,6 +32,14 @@ import io.sclera.utils.FileUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+/**
+ * Manages document media: persistence, device tagging, PDF encryption detection, and ChatBot synchronization.
+ * <p>
+ * Collaborates with {@link DocumentRepository} for document and tag persistence,
+ * {@link DeviceService} for device lookups and document-count maintenance,
+ * {@link APICallClient} for pushing tagged document data to the ChatBot,
+ * {@link AuthenticationUtils} for service access tokens, and {@link FileUtils} for document file storage.
+ */
 @Service
 public class DocumentService {
     private static final Logger log = LoggerFactory.getLogger(DocumentService.class);
@@ -80,6 +88,14 @@ public class DocumentService {
 //		
 //	}
 
+    /**
+     * Creates or updates a document, deriving its PDF encryption type from the linked file.
+     *
+     * @param username the acting user
+     * @param vdmsid the VDMS identifier scoping the request
+     * @param document the document to persist; receives a generated id when new
+     * @param httpServletRequest the request, used to read the {@code Authorization} header for fetching the document file
+     */
     public void upsertDocument(String username, String vdmsid, DocumentMediaDTO document, HttpServletRequest httpServletRequest) {
 
         String token = httpServletRequest.getHeader("Authorization");
@@ -151,6 +167,13 @@ public class DocumentService {
 
     }
 
+    /**
+     * Removes a document along with all of its device tag records.
+     *
+     * @param username the acting user
+     * @param vdmsid the VDMS identifier scoping the request
+     * @param documentid the id of the document to delete
+     */
     public void deleteDocument(String username, String vdmsid, String documentid) {
 
 //		fileUtils.removeDocumentFromServer(documentid + ".pdf");
@@ -164,18 +187,46 @@ public class DocumentService {
 //
 //	}
 
+    /**
+     * Returns a paginated, search-filtered page of documents.
+     *
+     * @param username the acting user
+     * @param vdmsid the VDMS identifier scoping the request
+     * @param pageno the 1-based page number
+     * @param pagesize the number of documents per page
+     * @param searchkey the search filter applied to documents
+     * @return the matching documents for the requested page
+     */
     public Set<DocumentMediaDTO> getDocuments(String username, String vdmsid, Integer pageno, Integer pagesize, String searchkey) {
         // TODO Auto-generated method stub
         Integer offset = pagesize * (pageno - 1);
         return documentRepository.getDocuments(pagesize, offset, searchkey);
     }
 
+    /**
+     * Returns a paginated page of documents tagged to a specific device.
+     *
+     * @param username the acting user
+     * @param vdmsid the VDMS identifier scoping the request
+     * @param deviceid the id of the device whose documents are requested
+     * @param pageno the 1-based page number
+     * @param pagesize the number of documents per page
+     * @return the documents tagged to the device for the requested page
+     */
     public Set<DocumentMediaDTO> getDocumentsByDeviceId(String username, String vdmsid, String deviceid, Integer pageno, Integer pagesize) {
         // TODO Auto-generated method stub
         Integer offset = pagesize * (pageno - 1);
         return documentRepository.getDocumentsByDeviceIdByPagination(deviceid, pagesize, offset);
     }
 
+    /**
+     * Tags documents to devices, lazily computing missing encryption types and refreshing device document counts and the ChatBot.
+     *
+     * @param username the acting user
+     * @param vdmsid the VDMS identifier scoping the request
+     * @param share_method when {@code "replace"}, existing tags on each affected device are removed before tagging
+     * @param documents the document-to-device tagging pairs to apply
+     */
     public void tagDocumentToDevice(String username, String vdmsid, String share_method, Set<DocumentMediaDTO> documents) {
 
         if (share_method != null && share_method.equals("replace")) {
@@ -216,6 +267,14 @@ public class DocumentService {
 
     }
 
+    /**
+     * Pushes unencrypted document links, grouped by device vendor and model, to the ChatBot.
+     *
+     * @param username the acting user
+     * @param vdmsid the VDMS identifier scoping the request
+     * @param documents the tagged documents whose links and devices drive the ChatBot update
+     * @throws JSONException if building the ChatBot request payload fails
+     */
     public void updateChatBotOnTagDocument(String username, String vdmsid, Set<DocumentMediaDTO> documents) throws JSONException {
 
         if (documents.isEmpty()) {
@@ -282,6 +341,13 @@ public class DocumentService {
         }
     }
 
+    /**
+     * Removes document-to-device tags and refreshes each affected device's document count.
+     *
+     * @param username the acting user
+     * @param vdmsid the VDMS identifier scoping the request
+     * @param documents the document-to-device tagging pairs to remove
+     */
     public void untagDocumentToDevice(String username, String vdmsid, Set<DocumentMediaDTO> documents) {
         for (DocumentMediaDTO document : documents) {
             try {
@@ -294,6 +360,11 @@ public class DocumentService {
 
     }
 
+    /**
+     * Deletes all device tag records for a document and refreshes the document counts of the previously tagged devices.
+     *
+     * @param document_id the id of the document whose tag records are removed
+     */
     public void deleteTagRecordByDocumentId(String document_id) {
         List<String> device_ids = documentRepository.getDocumentByDeviceId(document_id);
         documentRepository.deleteTagRecordByDocumentId(document_id);
@@ -303,11 +374,24 @@ public class DocumentService {
         }
     }
 
+    /**
+     * Returns the number of documents tagged to a device.
+     *
+     * @param device_id the id of the device
+     * @return the count of documents tagged to the device
+     */
     public Integer getDocumentsCountByDeviceId(String device_id) {
         return documentRepository.getDocumentsCountByDeviceId(device_id);
     }
 
 
+    /**
+     * Reassigns a document's device tags from one device to another and refreshes the affected device document counts.
+     *
+     * @param device_id the new device id to assign
+     * @param existing_device_id the current device id being replaced
+     * @param retainDevices device ids whose counts should also be refreshed when they include the existing device
+     */
     public void updateDocumentDeviceId(String device_id, String existing_device_id, Set<String> retainDevices) {
         documentRepository.updateDocumentDeviceId(device_id, existing_device_id);
         deviceService.updateDeviceDocumentsCountByDeviceId(device_id);

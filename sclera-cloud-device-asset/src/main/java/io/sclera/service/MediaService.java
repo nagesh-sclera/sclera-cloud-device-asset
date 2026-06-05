@@ -14,6 +14,17 @@ import io.sclera.Repository.MediaRepository;
 import io.sclera.dto.DocumentMediaDTO;
 import io.sclera.utils.FileUtils;
 
+/**
+ * Manages document/media assets and their associations with devices.
+ *
+ * <p>Supports creating and updating media records, deleting media, paginated
+ * retrieval (globally or scoped to a device), and tagging/untagging media to
+ * devices while keeping per-device media counts in sync.
+ *
+ * <p>Collaborators: {@link MediaRepository} for persistence,
+ * {@link DeviceService} for updating device media counts, and {@link FileUtils}
+ * for file-related utilities.
+ */
 @Service
 public class MediaService {
 
@@ -26,6 +37,17 @@ public class MediaService {
 	@Autowired
 	DeviceService deviceService;
 
+	/**
+	 * Creates a new media record or updates an existing one.
+	 *
+	 * <p>When the supplied media has no id, a new time-based id and creation
+	 * timestamp are generated; otherwise the existing record is updated.
+	 *
+	 * @param username the user performing the operation
+	 * @param vdmsid the VDMS identifier scoping the operation
+	 * @param media the media payload to persist
+	 * @return the id of the created or updated media record
+	 */
 	public String upsertMedia(String username, String vdmsid, DocumentMediaDTO media) {
 
 		if (media.getId() == null) {
@@ -50,6 +72,13 @@ public class MediaService {
 	}
 
 
+	/**
+	 * Deletes a media record and its device tag associations.
+	 *
+	 * @param username the user performing the operation
+	 * @param vdmsid the VDMS identifier scoping the operation
+	 * @param mediaid the id of the media record to delete
+	 */
 	public void deleteMedia(String username, String vdmsid, String mediaid) {
 
 		deleteTagRecordByMediaId(mediaid);
@@ -57,6 +86,12 @@ public class MediaService {
 
 	}
 
+	/**
+	 * Removes all device tag records for a media item and refreshes the media
+	 * count of each previously tagged device.
+	 *
+	 * @param mediaid the id of the media whose tag records are removed
+	 */
 	public void deleteTagRecordByMediaId(String mediaid) {
 		List<String> device_ids = mediaRepository.getMediaByDeviceId(mediaid);
 		mediaRepository.deleteTagRecordByMediaId(mediaid);
@@ -67,18 +102,50 @@ public class MediaService {
 	}
 
 
+	/**
+	 * Returns a paginated set of media records matching an optional search key.
+	 *
+	 * @param username the user performing the operation
+	 * @param vdmsid the VDMS identifier scoping the operation
+	 * @param pageno the one-based page number
+	 * @param pagesize the number of records per page
+	 * @param searchkey the search filter applied to media records
+	 * @return the matching media records for the requested page
+	 */
 	public Set<DocumentMediaDTO> getMedias(String username, String vdmsid, Integer pageno, Integer pagesize, String searchkey) {
 		// TODO Auto-generated method stub
 		Integer offset = pagesize * (pageno - 1);
 		return mediaRepository.getMedias(pagesize, offset, searchkey);
 	}
 
+	/**
+	 * Returns a paginated set of media records tagged to a specific device.
+	 *
+	 * @param username the user performing the operation
+	 * @param vdmsid the VDMS identifier scoping the operation
+	 * @param deviceid the id of the device whose media are retrieved
+	 * @param pageno the one-based page number
+	 * @param pagesize the number of records per page
+	 * @return the media records tagged to the device for the requested page
+	 */
 	public Set<DocumentMediaDTO> getMediasByDeviceId(String username, String vdmsid, String deviceid, Integer pageno, Integer pagesize) {
 		// TODO Auto-generated method stub
 		Integer offset = pagesize * (pageno - 1);
 		return mediaRepository.getMediasByDeviceIdByPagination(deviceid, pagesize, offset);
 	}
 
+	/**
+	 * Tags media to devices according to the given share method.
+	 *
+	 * <p>When the share method is {@code replace}, existing tags on the affected
+	 * devices are cleared first; for {@code add} or {@code replace} the supplied
+	 * media are tagged and the device media counts are refreshed.
+	 *
+	 * @param username the user performing the operation
+	 * @param vdmsid the VDMS identifier scoping the operation
+	 * @param share_method the tagging mode, {@code add} or {@code replace}
+	 * @param medias the media-to-device associations to apply
+	 */
 	public void tagMediaToDevice(String username, String vdmsid, String share_method, Set<DocumentMediaDTO> medias) {
 
 
@@ -112,6 +179,14 @@ public class MediaService {
 		}
 	}
 
+	/**
+	 * Removes the given media-to-device tags and refreshes the affected device
+	 * media counts.
+	 *
+	 * @param username the user performing the operation
+	 * @param vdmsid the VDMS identifier scoping the operation
+	 * @param medias the media-to-device associations to untag
+	 */
 	public void untagMediaToDevice(String username, String vdmsid, Set<DocumentMediaDTO> medias) {
 
 		for (DocumentMediaDTO media : medias) {
@@ -125,10 +200,25 @@ public class MediaService {
 
 	}
 
+	/**
+	 * Returns the number of media records tagged to a device.
+	 *
+	 * @param device_id the id of the device
+	 * @return the count of media tagged to the device
+	 */
 	public Integer getMediasCountByDeviceId(String device_id) {
 		return mediaRepository.getMediasCountByDeviceId(device_id);
 	}
 
+	/**
+	 * Reassigns media tagged to one device over to another device and refreshes
+	 * the relevant device media counts.
+	 *
+	 * @param device_id the target device id receiving the media
+	 * @param existing_device_id the source device id whose media are reassigned
+	 * @param retainDevices device ids whose counts should also be refreshed when
+	 *        the source device is among them
+	 */
 	public void updateMediaDeviceId(String device_id, String existing_device_id, Set<String> retainDevices) {
 		mediaRepository.updateMediaDeviceId(device_id, existing_device_id);
 		deviceService.updateDeviceMediaCountByDeviceId(device_id);

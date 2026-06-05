@@ -1,5 +1,10 @@
 package io.sclera.dto;
 
+/**
+ * Represents a single configurable attribute of a measuring instrument, such as
+ * its protocol, category, value and identifier mappings. Used to describe the
+ * attributes attached to a measuring instrument.
+ */
 public class MeasuringInstrumentAttributesDTO {
     private String id;
     private String name;

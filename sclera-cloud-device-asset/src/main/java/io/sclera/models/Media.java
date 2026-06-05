@@ -76,6 +76,10 @@ import java.util.Set;
 )
 
 
+/**
+ * JPA entity representing a media document or file (such as a manual or image) that can be
+ * linked to one or more devices within the asset-management domain.
+ */
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", scope = Media.class)
 public class Media {

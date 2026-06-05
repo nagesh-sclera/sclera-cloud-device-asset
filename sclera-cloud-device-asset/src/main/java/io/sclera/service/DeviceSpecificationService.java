@@ -27,6 +27,21 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Persists and serves device hardware, software and network specifications collected by agents.
+ *
+ * <p>Ingests full and delta system-info payloads, reconciling them against the existing
+ * {@link Device} record (status, IP, model, MAC, name, vendor), and stores the structured
+ * detail in {@link DeviceSpecification} and {@link DeviceNetworkSpecification}. Installed
+ * applications are registered through {@link ManagedSoftwareService} and saved as
+ * {@link DeviceInstalledApps}. Discovered child/subsystem devices are materialised as virtual
+ * devices in collaboration with {@link DeviceService}.
+ *
+ * <p>Key collaborators: {@link DeviceSpecificationRepository}, {@link DeviceNetworkSpecificationRepository},
+ * {@link DeviceInstalledAppsRepository}, {@link DeviceRepository}, {@link UserRepository},
+ * {@link RemoteAgentServerDetailsRepository}, {@link RemoteDesktopSessionRepository},
+ * {@link DeviceService}, {@link ManagedSoftwareService}, {@link APICallClient} and {@link Utils}.
+ */
 @Service
 public class DeviceSpecificationService {
     private static final Logger log = LoggerFactory.getLogger(DeviceSpecificationService.class);
@@ -95,6 +110,15 @@ public class DeviceSpecificationService {
         return obj != null && obj.containsKey(key) ? obj.getString(key) : null;
     }
 
+    /**
+     * Ingests a full agent system-info payload: reconciles device fields, stores the device
+     * specification, network specification and installed apps, and onboards any child devices.
+     *
+     * @param json the full agent payload; must contain a {@code systemInfo} object
+     * @param httpServletRequest the originating HTTP request
+     * @param assignee the assignee associated with the device
+     * @return the resolved device id, or {@code null} if the payload is invalid or processing fails
+     */
     @Transactional
     public String saveFullJson(JSONObject json, HttpServletRequest httpServletRequest, String assignee) {
 
@@ -301,6 +325,14 @@ public class DeviceSpecificationService {
 
     }
 
+    /**
+     * Applies a delta agent payload to an existing device, updating only the supplied process,
+     * child-device, battery and network fields and refreshing the online status and timestamps.
+     *
+     * @param json the delta agent payload; must contain a {@code systemInfo} object
+     * @return {@code "success"} when applied, or {@code null} if the payload, device or
+     *         specification cannot be resolved
+     */
     @Transactional
     public String upsertDeltaJson(JSONObject json) {
         if (json == null || !json.containsKey("systemInfo")) {
@@ -410,6 +442,13 @@ public class DeviceSpecificationService {
 //    }
 
 
+    /**
+     * Assembles a {@link DeviceSpecificationDTO} combining the device specification, its network
+     * specification and identity fields for the given device.
+     *
+     * @param deviceId the device id
+     * @return the populated specification DTO, or {@code null} if no specification exists
+     */
     public DeviceSpecificationDTO getSpecDtoByDeviceId(String deviceId) {
         DeviceSpecification spec = deviceSpecificationRepository.findByDeviceId(deviceId);
 
@@ -466,6 +505,12 @@ public class DeviceSpecificationService {
         }
     }
 
+    /**
+     * Returns the system-updates array recorded for the given device.
+     *
+     * @param deviceId the device id
+     * @return the parsed system-updates array, or an empty array if none are stored
+     */
     public JSONArray getSystemUpdatesArrayByDeviceId(String deviceId) {
         DeviceSpecification spec = deviceSpecificationRepository.findByDeviceId(deviceId);
         if (spec != null && spec.getSystemUpdates() != null) {
@@ -474,11 +519,22 @@ public class DeviceSpecificationService {
         return new JSONArray();
     }
 
+    /**
+     * Links the device and network specifications identified by serial number to a device id.
+     *
+     * @param serialNumber the specification serial number
+     * @param deviceId the device id to associate
+     */
     public void updateDeviceIdBySerialNumber(String serialNumber, String deviceId) {
         deviceSpecificationRepository.updateDeviceIdBySerialNumber(serialNumber, deviceId);
         deviceNetworkSpecificationRepository.updateDeviceIdBySerialNumber(serialNumber, deviceId);
     }
 
+    /**
+     * Marks the given device online and records its last-seen timestamp if it is currently offline.
+     *
+     * @param deviceId the device id
+     */
     public void updateDeviceStatusToOnline(String deviceId) {
         Device device = deviceRepository.findById(deviceId).orElse(null);
         if (device != null && device.getStatus() == 0) {
@@ -488,6 +544,10 @@ public class DeviceSpecificationService {
         }
     }
 
+    /**
+     * Marks online devices offline when their specification has not been updated within the
+     * inactivity threshold (90 seconds).
+     */
     public void updateDeviceStatusToOffline() {
         List<Device> onlineDevices = deviceRepository.findByStatus(1); // status == 1 → online
 
@@ -512,6 +572,14 @@ public class DeviceSpecificationService {
         }
     }
 
+    /**
+     * Onboards child/subsystem devices discovered in the device's stored child-device data,
+     * creating virtual device records and updating the parent's subsystem count and onboard status.
+     *
+     * @param deviceId the parent device id
+     * @param vdmsid the VDMS identifier used to compose child device ids
+     * @param username the user attributed with onboarding the created virtual devices
+     */
     public void updateChildDevices(String deviceId, String vdmsid, String username) {
 
         String childDevices = deviceSpecificationRepository.getChildDeviceByDeviceId(deviceId);
@@ -578,6 +646,12 @@ public class DeviceSpecificationService {
         }
     }
 
+    /**
+     * Fetches device DTOs for the supplied set of device ids.
+     *
+     * @param deviceIds the device ids to look up
+     * @return the matching device DTOs, or an empty set if none are supplied
+     */
     public Set<DeviceDTO> getDevicesByIdList(Set<String> deviceIds) {
         if (deviceIds == null || deviceIds.isEmpty()) {
             return new HashSet<>();

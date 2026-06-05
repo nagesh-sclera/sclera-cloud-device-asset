@@ -725,6 +725,10 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
 )
 
 
+/**
+ * JPA entity representing a measuring instrument or sensor tied to a device, holding its
+ * latest reading, metadata, and alert state for monitoring across the asset-management domain.
+ */
 @Entity
 public class MeasuringInstrument {
 

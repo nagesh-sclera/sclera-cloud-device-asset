@@ -35,6 +35,26 @@ import io.sclera.utils.ConditionUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+/**
+ * Manages sensor alert conditions across all supported protocol groups (BACnet, LoRaWAN,
+ * SNMP, Disruptive, MyDevices, Monnit, Pelican, KNX, Daintree, Ecobee, Modbus and measuring
+ * instruments).
+ *
+ * <p>Provides create/update/delete of conditions, evaluation of incoming sensor values against
+ * configured thresholds, alert-count and schedule handling, reset of alert state, scheduling of
+ * deferred ("alert after") jobs, and dispatch of alert notifications. Persistence is handled
+ * through {@link ConditionsRepository} and {@link ScheduledJobRepository}; threshold/schedule
+ * evaluation helpers come from {@link ConditionUtils}.
+ *
+ * <p>Key collaborators include {@link DeviceService} (device status roll-up),
+ * {@link MeasuringInstrumentService}, {@link JobSchedulerService} (deferred alert jobs), and the
+ * protocol/integration clients {@link BacnetClient}, {@link LorawanClient}, {@link SnmpClient},
+ * {@link DisruptiveClient}, {@link MyDevicesClient}, {@link MonnitClient}, {@link PelicanClient},
+ * {@link KNXClient}, {@link DaintreeClient}, {@link EcobeeClient}, {@link ModbusClient},
+ * {@link SiemensClient}, {@link HistoryClient}, {@link RabbitmqClient}, {@link SocketClient},
+ * {@link IOCClient} and the alert clients ({@link io.sclera.client.AlertClient},
+ * {@link io.sclera.client.AlertProfileClient}, {@link io.sclera.client.AlertDowntimeScheduleClient}).
+ */
 @Service
 public class ConditionsService {
 
@@ -119,6 +139,18 @@ public class ConditionsService {
     SiemensClient siemensService;
 
 
+    /**
+     * Inserts or updates each supplied condition, preserving or resetting alert-count and
+     * last-alerted state based on what changed, (re)scheduling deferred alert jobs as needed, and
+     * re-evaluating the condition's current alert state afterwards.
+     *
+     * @param username           the requesting user
+     * @param vdmsid             the VDMS identifier
+     * @param dockername         the docker/container name
+     * @param conditionGroup     the protocol group the conditions belong to (e.g. {@code "bacnet"})
+     * @param conditions         the set of conditions to insert or update
+     * @param httpServletRequest the originating request, used for endpoint logging
+     */
     public void upsertConditions(String username, String vdmsid, String dockername, String conditionGroup, Set<ConditionsDTO> conditions, HttpServletRequest httpServletRequest) {
         for (ConditionsDTO condition : conditions) {
             try {
@@ -242,6 +274,15 @@ public class ConditionsService {
     }
 
 
+    /**
+     * Resolves the protocol-specific primary/secondary identifiers from the given condition and
+     * triggers re-evaluation of all conditions bound to that sensor via
+     * {@link #updateConditionAlert}.
+     *
+     * @param conditionType  the operation context (e.g. {@code ""} or {@code "delete"})
+     * @param conditionGroup the protocol group the condition belongs to
+     * @param condition      the condition whose sensor binding drives the re-evaluation
+     */
     public void updateConditionAlertOnUpsert(String conditionType, String conditionGroup, ConditionsDTO condition) {
         String id, sub_id;
         String value = condition.getCurrent_value();
@@ -321,6 +362,19 @@ public class ConditionsService {
     }
 
 
+    /**
+     * Evaluates every condition bound to the identified sensor against the supplied value,
+     * applying the configured operator ({@code lt}, {@code gt}, {@code eq}, {@code neq},
+     * {@code lt_gt}), alert-count thresholds and schedule windows; persists the resulting alert
+     * state, rolls up device status, and dispatches alert notifications when an alert is raised.
+     *
+     * @param conditionGroup the protocol group the sensor belongs to
+     * @param id             the sensor primary identifier
+     * @param sub_id         the sensor secondary identifier (may be unused for some groups)
+     * @param value          the current sensor value to evaluate
+     * @param conditionType  the operation context (e.g. {@code ""} or {@code "delete"})
+     * @param type           the evaluation mode (e.g. {@code "sync"} or {@code "update"})
+     */
     public void updateConditionAlert(String conditionGroup, String id, String sub_id, String value, String conditionType, String type) {
 
         String bacnet_device_id = "null";
@@ -1330,6 +1384,16 @@ public class ConditionsService {
     }
 
 
+    /**
+     * Deletes each supplied condition by id and re-evaluates the affected sensor's alert state.
+     *
+     * @param username           the requesting user
+     * @param vdmsid             the VDMS identifier
+     * @param dockername         the docker/container name
+     * @param conditionGroup     the protocol group the conditions belong to
+     * @param conditions         the conditions to delete
+     * @param httpServletRequest the originating request, used for endpoint logging
+     */
     public void deleteConditions(String username, String vdmsid, String dockername, String conditionGroup, Set<ConditionsDTO> conditions, HttpServletRequest httpServletRequest) {
         for (ConditionsDTO condition : conditions) {
             try {
@@ -1345,16 +1409,41 @@ public class ConditionsService {
         }
     }
 
+    /**
+     * Returns the conditions configured for the given sensor.
+     *
+     * @param username       the requesting user
+     * @param vdmsid         the VDMS identifier
+     * @param dockername     the docker/container name
+     * @param conditionGroup the protocol group the sensor belongs to
+     * @param sensorData     the sensor whose conditions are requested
+     * @return the set of matching conditions, or {@code null} for an unrecognised group
+     */
     public Set<ConditionsDTO> getConditions(String username, String vdmsid, String dockername, String conditionGroup, SensorDTO sensorData) {
         return getSensorConditions(conditionGroup, sensorData);
     }
 
     // new changes
 
+    /**
+     * Returns the conditions configured for the given sensor (touchscreen variant).
+     *
+     * @param conditionGroup the protocol group the sensor belongs to
+     * @param sensorData     the sensor whose conditions are requested
+     * @return the set of matching conditions, or {@code null} for an unrecognised group
+     */
     public Set<ConditionsDTO> getConditionsTS(String conditionGroup, SensorDTO sensorData) {
         return getSensorConditions(conditionGroup, sensorData);
     }
 
+    /**
+     * Resolves the protocol-specific identifiers from the sensor, loads its conditions, and
+     * attaches the resolved alert profile to each condition that references one.
+     *
+     * @param conditionGroup the protocol group the sensor belongs to
+     * @param sensorData     the sensor whose conditions are requested
+     * @return the set of matching conditions, or {@code null} for an unrecognised group
+     */
     public Set<ConditionsDTO> getSensorConditions(String conditionGroup, SensorDTO sensorData) {
 
         String bacnet_device_id = "null";
@@ -1451,6 +1540,18 @@ public class ConditionsService {
     }
 
     //remove after frontend upload
+    /**
+     * Returns the conditions configured for a sensor identified directly by its primary and
+     * secondary identifiers.
+     *
+     * @param username       the requesting user
+     * @param vdmsid         the VDMS identifier
+     * @param dockername     the docker/container name
+     * @param conditionGroup the protocol group the sensor belongs to
+     * @param id             the sensor primary identifier
+     * @param sub_id         the sensor secondary identifier
+     * @return the set of matching conditions, or {@code null} for an unrecognised group
+     */
     public Set<ConditionsDTO> getConditionsFrontend(String username, String vdmsid, String dockername, String conditionGroup, String id, String sub_id) {
         String bacnet_device_id = "null";
         String bacnet_object_id = "null";
@@ -1609,6 +1710,17 @@ public class ConditionsService {
 //
 //    }
 
+    /**
+     * Builds a copy of the given condition rebound to the target sensor's identifiers, used when
+     * sharing conditions across sensors; in {@code "replace"} mode all non-target identifiers are
+     * reset.
+     *
+     * @param conditionMethod the share mode (e.g. {@code "add"} or {@code "replace"})
+     * @param conditionGroup  the protocol group the condition belongs to
+     * @param condition       the source condition to copy
+     * @param sensor          the target sensor whose identifiers are applied
+     * @return a new {@link ConditionsDTO} bound to the target sensor
+     */
     public ConditionsDTO updateShareConditionSensorIds(String conditionMethod, String conditionGroup, ConditionsDTO condition, SensorDTO sensor) {
 
 
@@ -1749,29 +1861,73 @@ public class ConditionsService {
     }
 
 
+    /**
+     * Deletes all conditions for each of the supplied sensors.
+     *
+     * @param username           the requesting user
+     * @param vdmsid             the VDMS identifier
+     * @param dockername         the docker/container name
+     * @param conditionGroup     the protocol group the sensors belong to
+     * @param sensorData         the sensors whose conditions are to be deleted
+     * @param httpServletRequest the originating request, used for endpoint logging
+     */
     public void deleteAllSensorConditions(String username, String vdmsid, String dockername, String conditionGroup, Set<SensorDTO> sensorData, HttpServletRequest httpServletRequest) {
         for (SensorDTO sensor : sensorData) {
             deleteSensorConditions(username, vdmsid, dockername, conditionGroup, sensor, httpServletRequest);
         }
     }
 
+    /**
+     * Deletes all conditions configured for a single sensor.
+     *
+     * @param username           the requesting user
+     * @param vdmsid             the VDMS identifier
+     * @param dockername         the docker/container name
+     * @param conditionGroup     the protocol group the sensor belongs to
+     * @param sensor             the sensor whose conditions are to be deleted
+     * @param httpServletRequest the originating request, used for endpoint logging
+     */
     public void deleteSensorConditions(String username, String vdmsid, String dockername, String conditionGroup, SensorDTO sensor, HttpServletRequest httpServletRequest) {
         Set<ConditionsDTO> conditions = getConditions(username, vdmsid, dockername, conditionGroup, sensor);
         deleteConditions(username, vdmsid, dockername, conditionGroup, conditions, httpServletRequest);
     }
 
     //reset condition alert count
+    /**
+     * Resets the alert count and last-alerted state of the supplied conditions and re-evaluates
+     * their alert state.
+     *
+     * @param username       the requesting user
+     * @param vdmsid         the VDMS identifier
+     * @param dockername     the docker/container name
+     * @param conditionGroup the protocol group the conditions belong to
+     * @param conditions     the conditions to reset
+     */
     public void resetConditions(String username, String vdmsid, String dockername, String conditionGroup, Set<ConditionsDTO> conditions) {
         resetConditionsAlerted(conditionGroup, conditions);
     }
 
     //reset condition alert count TS
+    /**
+     * Resets the alert count and last-alerted state of the supplied conditions (touchscreen
+     * variant) and re-evaluates their alert state.
+     *
+     * @param conditionGroup the protocol group the conditions belong to
+     * @param conditions     the conditions to reset
+     */
     public void resetConditionsTS(String conditionGroup, Set<ConditionsDTO> conditions) {
         resetConditionsAlerted(conditionGroup, conditions);
     }
 
     // reset conditions
 
+    /**
+     * Clears the alert count, last-alerted flag and last-alerted timestamp of each condition, then
+     * re-evaluates its alert state against the sensor's current value.
+     *
+     * @param conditionGroup the protocol group the conditions belong to
+     * @param conditions     the conditions to reset
+     */
     public void resetConditionsAlerted(String conditionGroup, Set<ConditionsDTO> conditions) {
         for (ConditionsDTO conditionDTO : conditions) {
             String current_value = null;
@@ -1884,6 +2040,14 @@ public class ConditionsService {
     }
 
 
+    /**
+     * Dispatches a BACnet object alert to the configured notification platforms (socket, history,
+     * email/SMS and RabbitMQ).
+     *
+     * @param bacnet_device_id the BACnet device identifier
+     * @param bacnet_object_id the BACnet object identifier
+     * @param alert_message    the alert message to send
+     */
     //send bacnet alert info for all required platforms
     public void sendBacnetAlertInfo(String bacnet_device_id, String bacnet_object_id, String alert_message) {
         try {
@@ -1905,6 +2069,13 @@ public class ConditionsService {
         }
     }
 
+    /**
+     * Dispatches a LoRaWAN sensor-attribute alert to the configured notification platforms.
+     *
+     * @param lorawan_sensor_id              the LoRaWAN sensor identifier
+     * @param lorawan_sensor_attributes_name the sensor attribute name
+     * @param alert_message                  the alert message to send
+     */
     //send lorawan alert info for all required platforms
     public void sendLorawanAlertInfo(String lorawan_sensor_id, String lorawan_sensor_attributes_name, String alert_message) {
         try {
@@ -1926,6 +2097,12 @@ public class ConditionsService {
         }
     }
 
+    /**
+     * Dispatches a Disruptive sensor alert to the configured notification platforms.
+     *
+     * @param disruptive_sensor_id the Disruptive sensor identifier
+     * @param alert_message        the alert message to send
+     */
     //send disruptive alert info for all required platforms
     public void sendDisruptiveAlertInfo(String disruptive_sensor_id, String alert_message) {
         try {
@@ -1947,6 +2124,13 @@ public class ConditionsService {
         }
     }
 
+    /**
+     * Dispatches a MyDevices sensor-attribute alert to the configured notification platforms.
+     *
+     * @param my_devices_sensor_id              the MyDevices sensor identifier
+     * @param my_devices_sensor_attributes_name the sensor attribute name
+     * @param alert_message                     the alert message to send
+     */
     //send mydevices alert info for all required platforms
     public void sendMyDevicesAlertInfo(String my_devices_sensor_id, String my_devices_sensor_attributes_name, String alert_message) {
         try {
@@ -1968,6 +2152,12 @@ public class ConditionsService {
         }
     }
 
+    /**
+     * Dispatches a Monnit sensor alert to the configured notification platforms.
+     *
+     * @param monnit_sensor_id the Monnit sensor identifier
+     * @param alert_message    the alert message to send
+     */
     //send monnit alert info for all required platforms
     public void sendMonnitAlertInfo(String monnit_sensor_id, String alert_message) {
         try {
@@ -1989,6 +2179,13 @@ public class ConditionsService {
         }
     }
 
+    /**
+     * Dispatches a Pelican sensor-attribute alert to the configured notification platforms.
+     *
+     * @param pelican_sensor_id              the Pelican sensor identifier
+     * @param pelican_sensor_attributes_name the sensor attribute name
+     * @param alert_message                  the alert message to send
+     */
     //send pelican alert info for all required platforms
     public void sendPelicanAlertInfo(String pelican_sensor_id, String pelican_sensor_attributes_name, String alert_message) {
         try {
@@ -2010,6 +2207,13 @@ public class ConditionsService {
         }
     }
 
+    /**
+     * Dispatches a KNX group alert to the configured notification platforms.
+     *
+     * @param knx_device_address the KNX device address
+     * @param knx_group_address  the KNX group address
+     * @param alert_message      the alert message to send
+     */
     //send knx alert info for all required platforms
     public void sendKNXAlertInfo(String knx_device_address, String knx_group_address, String alert_message) {
         try {
@@ -2046,6 +2250,12 @@ public class ConditionsService {
 //        rabbitmqService.rabbitmqSnmpObjectAlertData(snmpObjectDetails);
     }
 
+    /**
+     * Dispatches a measuring-instrument sensor alert to the configured notification platforms.
+     *
+     * @param measuring_instrument_id the measuring instrument identifier
+     * @param alert_message           the alert message to send
+     */
     //send measuring instrument alert info for all required platforms
     public void sendMeasuringInstrumentAlertInfo(String measuring_instrument_id, String alert_message) {
         try {
@@ -2090,6 +2300,16 @@ public class ConditionsService {
         }
     }
 
+    /**
+     * Sends a sensor alert notification for the given condition, resolving the sensor, device and
+     * alert-profile details, honouring any alert-downtime schedule, and optionally forwarding the
+     * alert to the IOC integration.
+     *
+     * @param conditionGroup            the protocol group the condition belongs to
+     * @param condition                 the condition that triggered the alert
+     * @param alert_message             the alert message to send
+     * @param schedule_job_created_time the creation time of the originating scheduled job, if any
+     */
     public void sendAlertInfo(String conditionGroup, ConditionsDTO condition, String alert_message, BigInteger schedule_job_created_time) {
 
 //        SensorAlertDTO sensorAlert = null;
@@ -2245,6 +2465,14 @@ public class ConditionsService {
 //        }
 //    }
 
+    /**
+     * Creates a deferred ("alert after") job in the scheduler for the given condition and persists
+     * the resulting scheduled-job record.
+     *
+     * @param job_type        the scheduler job type (e.g. {@code "add"})
+     * @param condition       the condition whose alert-time drives the job delay
+     * @param condition_group the protocol group the condition belongs to
+     */
     public void scheduleSensorAlertJob(String job_type, ConditionsDTO condition, String condition_group) {
         //api call to quartz to add the job
         ScheduledJobDTO jobSchedulerDTO = new ScheduledJobDTO();
@@ -2265,6 +2493,15 @@ public class ConditionsService {
         }
     }
 
+    /**
+     * Replaces an existing deferred alert job with a new one for the given condition, deleting the
+     * old scheduled-job record and persisting the replacement.
+     *
+     * @param job_type        the scheduler job type (e.g. {@code "replace"})
+     * @param condition       the condition whose alert-time drives the job delay
+     * @param condition_group the protocol group the condition belongs to
+     * @param job_key         the identifier of the existing job to replace
+     */
     public void replaceSensorAlertJob(String job_type, ConditionsDTO condition, String condition_group, String job_key) {
         //api call to quartz to add the job
         ScheduledJobDTO jobSchedulerDTO = new ScheduledJobDTO();
@@ -2287,10 +2524,22 @@ public class ConditionsService {
         }
     }
 
+    /**
+     * Returns the condition with the given identifier.
+     *
+     * @param condition_id the condition identifier
+     * @return the matching condition, or {@code null} if none exists
+     */
     public ConditionsDTO getConditionByConditionId(String condition_id) {
         return conditionsRepository.getConditionByConditionId(condition_id);
     }
 
+    /**
+     * Cancels and removes the deferred alert job associated with the given condition, if one
+     * exists, in both the scheduler and the local scheduled-job table.
+     *
+     * @param conditionId the condition identifier whose job is to be deleted
+     */
     public void deleteSensorAlertJob(String conditionId) {
         try {
             ScheduledJobDTO scheduledJobDTO = jobSchedulerService.getScheduledJobByConditionId(conditionId);
@@ -2312,6 +2561,15 @@ public class ConditionsService {
             System.out.println(ex.getMessage());
         }
     }
+    /**
+     * Loads the conditions configured for a device and maps them into export rows for the advanced
+     * Excel export.
+     *
+     * @param username  the requesting user
+     * @param vdmsid    the VDMS identifier
+     * @param device_id the device whose conditions are exported
+     * @return the export DTOs, or an empty list if the device has no conditions
+     */
     public List<ConditionsAdvanceExportExcelDto> getConditionsForAdvanceExcelExport(String username, String vdmsid, String device_id) {
         List<Map<String, Object>> rows = conditionsRepository.getConditionsForAdvanceExcelExport(device_id);
 

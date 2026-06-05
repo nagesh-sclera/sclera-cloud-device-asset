@@ -11,6 +11,14 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Records user and device audit actions by publishing {@link DeviceAuditEvent} messages
+ * to the {@code device.audit} topic via {@link VdmsClient}.
+ *
+ * <p>The originating VDMS identifier is resolved lazily through {@link VdmsClient} and cached
+ * for the lifetime of the service. Publishing is best-effort: failures are logged and swallowed
+ * rather than propagated to callers.</p>
+ */
 @Service
 public class UserActionLogService {
 
@@ -21,6 +29,17 @@ public class UserActionLogService {
 
     private volatile String cachedVdmsId;
 
+    /**
+     * Builds and publishes a single device audit event to the {@code device.audit} topic.
+     *
+     * @param username the acting user; defaults to {@code "system"} when {@code null}
+     * @param type the action type, used for logging context
+     * @param action the action performed, carried on the published event
+     * @param message a human-readable description of the action
+     * @param status the outcome status of the action
+     * @param subType the action sub-type, used for logging context
+     * @param recordId the identifier of the affected record; defaults to an empty string when {@code null}
+     */
     public void addUserAction(String username, String type, String action,
                               String message, String status, String subType, String recordId) {
         try {
@@ -44,6 +63,11 @@ public class UserActionLogService {
         }
     }
 
+    /**
+     * Publishes an audit event for each entry in the supplied batch via {@link #addUserAction}.
+     *
+     * @param logs the user action log entries to publish; a {@code null} list is ignored
+     */
     public void batchUpdateUserActionLogs(List<UserActionLogDTO> logs) {
         if (logs == null) return;
         for (UserActionLogDTO entry : logs) {

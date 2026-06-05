@@ -2,9 +2,17 @@ package io.sclera.queryrepository;
 
 import org.springframework.stereotype.Component;
 
+/**
+ * Provides native upsert SQL for persisting asset field records.
+ */
 @Component
 public class AssetFieldQueryRepository {
 
+    /**
+     * Returns the native SQL statement that inserts or updates an asset field row.
+     *
+     * @return the asset field upsert SQL
+     */
     public String getQueryForUpsertAssetField() {
         // PG-port: ON DUPLICATE KEY UPDATE -> ON CONFLICT (id) DO UPDATE SET ... (VALUES()->EXCLUDED)
         return "INSERT INTO asset_field(" +

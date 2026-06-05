@@ -2,6 +2,10 @@ package io.sclera.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents an alert profile that defines how alerts are notified (email/SMS) and
+ * links them to a notification profile and an optional work-order template.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AlertProfileDTO {
 

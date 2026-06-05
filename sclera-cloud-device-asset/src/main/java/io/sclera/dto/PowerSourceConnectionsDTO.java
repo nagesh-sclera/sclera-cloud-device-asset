@@ -4,6 +4,10 @@ package io.sclera.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents a directed power connection between a source and target device, including their
+ * specification identifiers and names. Used to describe edges within a power-source topology graph.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PowerSourceConnectionsDTO {
 

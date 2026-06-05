@@ -2,6 +2,11 @@ package io.sclera.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents a Maximo work order and its associated scheduling, asset and crew
+ * attributes. Used to exchange maintenance work-order data with the IBM Maximo
+ * system in the asset-management domain.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MaximoDTO {
 

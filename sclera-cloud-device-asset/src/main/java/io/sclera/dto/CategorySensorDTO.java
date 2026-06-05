@@ -2,6 +2,10 @@ package io.sclera.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents a sensor grouped by category, exposing its latest value, alert state, protocol,
+ * and location for category-based sensor listings.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CategorySensorDTO {
 

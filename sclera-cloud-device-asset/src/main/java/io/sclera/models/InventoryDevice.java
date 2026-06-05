@@ -4,6 +4,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 
+/**
+ * JPA entity associating an inventory tracking identifier with a device, used to manage
+ * devices held in inventory within the asset-management domain.
+ */
 @Entity
 public class InventoryDevice {
 

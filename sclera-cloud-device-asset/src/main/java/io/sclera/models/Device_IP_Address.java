@@ -15,6 +15,10 @@ import jakarta.persistence.SqlResultSetMapping;
 // removed: unused import io.sclera.dto.HistoryDTO (AP-C6 history)
 import io.sclera.dto.touchscreen.DeviceIPAddressDTO;
 
+/**
+ * Represents an IP address associated with a device, including its IP-conflict status. Used to track
+ * device network addressing and to detect IP address conflicts across devices.
+ */
 @Entity
 
 

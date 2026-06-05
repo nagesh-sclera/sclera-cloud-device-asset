@@ -1,5 +1,10 @@
 package io.sclera.dto.touchscreen;
 
+/**
+ * Represents a summary entry in a network/device listing for the touchscreen,
+ * carrying a device's name, system type, owning vendor organisation and
+ * external IP address.
+ */
 public class NetworkListDTO {
 
 	

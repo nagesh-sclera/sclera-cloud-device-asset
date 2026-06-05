@@ -18,6 +18,10 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
+/**
+ * JPA entity representing a postal address (street, city, state, country, zip) associated
+ * one-to-one with a {@link User} in the asset-management domain.
+ */
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class , property = "id" , scope = Address.class)
 public class Address {

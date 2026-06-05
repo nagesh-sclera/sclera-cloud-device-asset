@@ -15,6 +15,11 @@ import java.math.BigInteger;
     @NamedNativeQuery(name = "ClientBarCode.getBarCodesByLocationIds", query = "SELECT cbc.id, cbc.device_id, cbc.location_id FROM client_bar_code cbc WHERE cbc.location_id IN ?1", resultSetMapping = "clientbarcodedetails"),
     @NamedNativeQuery(name = "ClientBarCode.getBarCodesByDeviceIds", query = "SELECT cbc.id, cbc.device_id, cbc.location_id FROM client_bar_code cbc WHERE cbc.device_id IN ?1", resultSetMapping = "clientbarcodedetails")
 })
+/**
+ * JPA entity representing a client barcode tag that can be associated with a device or location,
+ * tracking its batch, audit metadata, and soft-deletion state. Used to manage barcode tagging within
+ * the asset-management domain.
+ */
 @Entity
 public class ClientBarCode {
     @Id

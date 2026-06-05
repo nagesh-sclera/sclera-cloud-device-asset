@@ -3,6 +3,10 @@ package io.sclera.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents a software application tracked in the inventory, including its vendor,
+ * subscription details, licensing counts, and sync status. Used for software asset management.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class InventoryApplicationDTO {
     private String id;

@@ -6,6 +6,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.List;
 
+/**
+ * Represents a network interface or port on a device, including its status, throughput,
+ * MAC address, and the devices connected to it. Used in topology and connectivity views.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class InterfaceDTO {

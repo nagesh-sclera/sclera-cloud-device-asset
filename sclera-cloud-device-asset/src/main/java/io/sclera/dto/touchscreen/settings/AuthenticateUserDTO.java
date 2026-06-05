@@ -1,5 +1,9 @@
 package io.sclera.dto.touchscreen.settings;
 
+/**
+ * Carries credentials for authenticating a user against a VDMS device from the settings flow,
+ * including the user email/password and the VDMS identifier and password.
+ */
 public class AuthenticateUserDTO {
     private String email;
     private String password;

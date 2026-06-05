@@ -13,6 +13,15 @@ import java.math.BigInteger;
 import java.util.Collections;
 import java.util.Set;
 
+/**
+ * Records and queries device lifecycle history, tracking operational status,
+ * usage status, and user assignments over a device's lifetime.
+ *
+ * <p>Persists history entries through {@link DeviceLifeCycleHistoryRepository},
+ * synchronises the owning device's operational status and assigned-user fields
+ * via {@link DeviceRepository}, and delegates retirement handling to
+ * {@link DeviceService} and {@link InventoryDeviceClient}.
+ */
 @Service
 public class DeviceLifecycleHistoryService {
 
@@ -28,6 +37,15 @@ public class DeviceLifecycleHistoryService {
     @Autowired
     InventoryDeviceClient inventoryDeviceClient;
 
+    /**
+     * Creates a new device lifecycle history entry, deriving usage status and
+     * assignment count, updating the device's operational status, and persisting the record.
+     *
+     * @param username the user performing the action
+     * @param vdmsid the VDMS identifier for the request context
+     * @param deviceLifecycleHistoryDTO the history details to record
+     * @param retireStatus retirement flag ("true"/"false") controlling assigned-user reset and retirement
+     */
     public void addDeviceHistory(String username, String vdmsid, DeviceLifecycleHistoryDTO deviceLifecycleHistoryDTO, String retireStatus) {
 
         if (deviceLifecycleHistoryDTO.getId() == null) {
@@ -89,6 +107,17 @@ public class DeviceLifecycleHistoryService {
 
 
 
+    /**
+     * Updates the device's operational status when it differs from the latest recorded status,
+     * clears the assigned-user email on retirement, and archives/retires the device in inventory when retired.
+     *
+     * @param device_id the device identifier
+     * @param operational_status the new operational status to apply
+     * @param retireStatus retirement flag ("true"/"false") controlling assigned-user reset and retirement
+     * @param username the user performing the action
+     * @param vdmsid the VDMS identifier for the request context
+     * @param description the reason or note associated with the change
+     */
     public void updateOperationalStatus(String device_id , String operational_status, String retireStatus, String username, String vdmsid, String description){
         String latestStatus = deviceLifeCycleHistoryRepository.getLatestOperationalStatusFromHistory(device_id);
         if (operational_status != null && !operational_status.equalsIgnoreCase(latestStatus)) {
@@ -121,6 +150,16 @@ public class DeviceLifecycleHistoryService {
 
 
 
+    /**
+     * Retrieves a paginated set of lifecycle history entries for a device.
+     *
+     * @param username the user requesting the history
+     * @param vdmsid the VDMS identifier for the request context
+     * @param deviceId the device identifier
+     * @param pageno the one-based page number
+     * @param pagesize the number of entries per page
+     * @return the lifecycle history entries for the requested page
+     */
     public Set<DeviceLifecycleHistoryDTO> getDeviceHistory(String username, String vdmsid, String deviceId, Integer pageno, Integer pagesize) {
         Integer offset = pagesize * (pageno - 1);
         return deviceLifeCycleHistoryRepository.getDeviceLifeCycleHistory(deviceId, pagesize, offset);

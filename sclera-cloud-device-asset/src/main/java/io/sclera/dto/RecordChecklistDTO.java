@@ -1,5 +1,9 @@
 package io.sclera.dto;
 
+/**
+ * Represents the location context for an inspection checklist record, identifying the building,
+ * floor, location and record type. Used to associate an inspection record with where it was performed.
+ */
 public class RecordChecklistDTO {
     private String building_id;
     private String record_type;

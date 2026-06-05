@@ -19,6 +19,11 @@ import io.sclera.dto.DocumentMediaDTO;
 import org.hibernate.annotations.ColumnDefault;
 
 
+/**
+ * Represents a document or media file (e.g. manual, image, or attachment) that can be associated with one
+ * or more devices. Used to store and retrieve supporting documentation for assets, including encryption and
+ * source metadata.
+ */
 //getDocuments
 @SqlResultSetMapping(
         name = "documentdetailmapping",

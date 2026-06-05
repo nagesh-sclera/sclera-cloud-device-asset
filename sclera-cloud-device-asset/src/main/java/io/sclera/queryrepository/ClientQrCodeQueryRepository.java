@@ -2,9 +2,17 @@ package io.sclera.queryrepository;
 
 import org.springframework.stereotype.Component;
 
+/**
+ * Supplies native SQL statements for persisting client QR code records.
+ */
 @Component
 public class ClientQrCodeQueryRepository {
 
+    /**
+     * Returns the native upsert SQL that inserts a client QR code row or updates it on primary-key conflict.
+     *
+     * @return the parameterized {@code INSERT ... ON CONFLICT (id) DO UPDATE} statement for {@code client_qr_code}
+     */
     public String getQueryForUpsertClientQrcodes() {
         // PG-port: ON DUPLICATE KEY UPDATE -> ON CONFLICT (id) DO UPDATE SET ... (VALUES()->EXCLUDED)
         return "INSERT INTO client_qr_code (id, added_at, added_by, client_qr_code_id, device_id, location_id, updated_at, updated_by, vdms_id, batch_id, is_deleted) "

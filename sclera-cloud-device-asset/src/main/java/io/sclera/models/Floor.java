@@ -9,6 +9,10 @@ import jakarta.persistence.*;
 import java.math.BigInteger;
 import java.util.Set;
 
+/**
+ * Represents a floor within a building, including its floor plan image, zoom/positioning metadata, and the
+ * locations it contains. Used to organise devices spatially and to render floor plans in the asset-mapping UI.
+ */
 @SqlResultSetMapping(
         name = "floormapping",
         classes = {

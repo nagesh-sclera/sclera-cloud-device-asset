@@ -3,6 +3,10 @@ package io.sclera.dto;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Carries the criteria used when sharing devices, pairing a list of devices and
+ * per-device conditions with the matching method that determines how they apply.
+ */
 public class ShareConditionsDTO {
     private List<DeviceDTO> devices;
     private String condition_method;

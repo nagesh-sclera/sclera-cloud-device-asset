@@ -15,6 +15,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Manages persistence of technician skill records.
+ *
+ * <p>Provides create, update, bulk upsert, lookup, and bulk delete operations,
+ * delegating all data access to {@link TechnicianSkillRepository} and exchanging
+ * data through {@link TechnicianSkillDTO}.
+ */
 @Service
 public class TechnicianSkillService {
     private static final Logger log = LoggerFactory.getLogger(TechnicianSkillService.class);
@@ -26,6 +33,12 @@ public class TechnicianSkillService {
         this.technicianSkillRepository = technicianSkillRepository;
     }
 
+    /**
+     * Inserts or updates each supplied technician skill record, skipping any that fail.
+     *
+     * @param technicianSkillDTOs the technician skills to upsert; may be {@code null} or empty
+     * @return the set of IDs that were successfully inserted or updated
+     */
     public Set<String> upsertTechnicianSkill(List<TechnicianSkillDTO> technicianSkillDTOs) {
         Set<String> insertedTechnicianSkillIds = new HashSet<>();
         if (technicianSkillDTOs != null && !technicianSkillDTOs.isEmpty()) {
@@ -54,6 +67,11 @@ public class TechnicianSkillService {
         return insertedTechnicianSkillIds;
     }
 
+    /**
+     * Creates a new technician skill record, assigning it a freshly generated time-based ID.
+     *
+     * @param technicianSkillDto the technician skill to create
+     */
     public void createTechnicianSkill(TechnicianSkillDTO technicianSkillDto) {
         technicianSkillDto.setId(Generators.timeBasedGenerator().generate().toString());
         technicianSkillRepository.createTechnicianSkill(
@@ -68,6 +86,11 @@ public class TechnicianSkillService {
         );
     }
 
+    /**
+     * Updates an existing technician skill record; logs and skips the update when the ID is {@code null}.
+     *
+     * @param technicianSkillDto the technician skill carrying the ID and updated values
+     */
     public void updateTechnicianSkill(TechnicianSkillDTO technicianSkillDto) {
         if (technicianSkillDto.getId() != null) {
             technicianSkillRepository.updateTechnicianSkill(
@@ -85,14 +108,31 @@ public class TechnicianSkillService {
         }
     }
 
+    /**
+     * Retrieves a single technician skill record by its ID.
+     *
+     * @param id the technician skill ID
+     * @return the matching technician skill, or {@code null} if none exists
+     */
     public TechnicianSkillDTO getTechnicianSkillById(String id) {
         return technicianSkillRepository.getTechnicianSkillById(id);
     }
 
+    /**
+     * Retrieves all technician skill records.
+     *
+     * @return the list of all technician skills
+     */
     public List<TechnicianSkillDTO> getAllTechnicianSkill() {
         return technicianSkillRepository.getAllTechnicianSkill();
     }
 
+    /**
+     * Deletes the technician skill records whose IDs are present and currently exist in the store.
+     *
+     * @param technicianSkillDTOS the technician skills identifying the records to delete; may be {@code null} or empty
+     * @return the set of IDs that existed and were deleted; empty when nothing matched or an error occurred
+     */
     public Set<String> deleteTechnicianSkillsById(List<TechnicianSkillDTO> technicianSkillDTOS) {
         Set<String> existingIds = Set.of();
         if (technicianSkillDTOS != null && !technicianSkillDTOS.isEmpty()) {

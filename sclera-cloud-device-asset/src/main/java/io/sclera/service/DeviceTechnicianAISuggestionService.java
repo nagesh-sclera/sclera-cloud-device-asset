@@ -15,6 +15,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Manages AI-generated technician suggestions for device types.
+ *
+ * <p>Persists and retrieves {@link DeviceTechnicianAISuggestionDTO} records that map a
+ * device type (scoped by VDMS) to a set of suggested technicians, and resolves those
+ * suggestions into full technician profiles for skill-profile recommendations.
+ *
+ * <p>Key collaborators:
+ * <ul>
+ *   <li>{@link DeviceTechnicianAISuggestionRepository} — persistence of the suggestion records.</li>
+ *   <li>{@link TechnicianService} — resolves technician identifiers into skill-profile, primary-skill
+ *       and availability details.</li>
+ * </ul>
+ */
 @Service
 
 public class DeviceTechnicianAISuggestionService {
@@ -30,6 +44,12 @@ public class DeviceTechnicianAISuggestionService {
         this.technicianService = technicianService;
     }
 
+    /**
+     * Inserts or updates a batch of technician suggestion records, skipping any that fail.
+     *
+     * @param deviceTechnicianAISuggestionDTOS the suggestion records to upsert
+     * @return the set of identifiers that were successfully inserted or updated
+     */
     public Set<String> upsertTechnicianSuggestion(List<DeviceTechnicianAISuggestionDTO> deviceTechnicianAISuggestionDTOS) {
         Set<String> insertedDeviceTechnicianSuggestionIds = new HashSet<>();
         if (deviceTechnicianAISuggestionDTOS != null && !deviceTechnicianAISuggestionDTOS.isEmpty()) {
@@ -53,6 +73,12 @@ public class DeviceTechnicianAISuggestionService {
         return insertedDeviceTechnicianSuggestionIds;
     }
 
+    /**
+     * Creates a new technician suggestion record, assigning it a freshly generated identifier.
+     *
+     * @param deviceTechnicianAiSuggestionDto the suggestion to create
+     * @param httpServletRequest the incoming HTTP request
+     */
     public void createTechnicianSuggestion(DeviceTechnicianAISuggestionDTO deviceTechnicianAiSuggestionDto, HttpServletRequest httpServletRequest) {
         deviceTechnicianAiSuggestionDto.setId((Generators.timeBasedGenerator().generate().toString()));
 
@@ -62,6 +88,12 @@ public class DeviceTechnicianAISuggestionService {
 
     }
 
+    /**
+     * Updates an existing technician suggestion record identified by its id, or logs when the id is absent.
+     *
+     * @param deviceTechnicianAiSuggestionDto the suggestion carrying the id and updated values
+     * @param httpServletRequest the incoming HTTP request
+     */
     public void updateTechnicianSuggestion(DeviceTechnicianAISuggestionDTO deviceTechnicianAiSuggestionDto, HttpServletRequest httpServletRequest) {
         if (deviceTechnicianAiSuggestionDto.getId() != null) {
 
@@ -73,15 +105,39 @@ public class DeviceTechnicianAISuggestionService {
         }
     }
 
+    /**
+     * Returns the technician suggestion record with the given identifier.
+     *
+     * @param id the suggestion identifier
+     * @param httpServletRequest the incoming HTTP request
+     * @return the matching suggestion, or {@code null} if none exists
+     */
     public DeviceTechnicianAISuggestionDTO getdevicetechnicianbyid(String id, HttpServletRequest httpServletRequest) {
         return deviceTechnicianAISuggestionRepository.getdevicetechnicianbyid(id);
     }
 
+    /**
+     * Returns all technician suggestion records.
+     *
+     * @param httpServletRequest the incoming HTTP request
+     * @return the list of all suggestion records
+     */
     public List<DeviceTechnicianAISuggestionDTO> getAlldevicetechnician(HttpServletRequest httpServletRequest) {
         return deviceTechnicianAISuggestionRepository.getAlldevicetechnician();
     }
 
     // AI Suggestions for Skill Profiles
+    /**
+     * Resolves the AI-suggested technicians for a device type into full technician profiles.
+     *
+     * <p>Reads the stored JSON array of technician identifiers for the given device type and VDMS,
+     * then loads each technician's skill-profile, primary-skill and availability details.
+     *
+     * @param deviceType the device type to look up suggestions for
+     * @param vdmsId the VDMS scope identifier
+     * @param httpServletRequest the incoming HTTP request
+     * @return the resolved technician profiles, or an empty list if no suggestions exist
+     */
     public List<TechnicianDTO> getDeviceTechnicianAISuggestionsByDeviceType(String deviceType, String vdmsId, HttpServletRequest httpServletRequest) {
         String techniciansJsonArray = deviceTechnicianAISuggestionRepository.getDeviceTechnicianAISuggestionByDeviceType(deviceType, vdmsId);
 

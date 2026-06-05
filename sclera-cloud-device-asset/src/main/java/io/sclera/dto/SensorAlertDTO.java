@@ -2,6 +2,11 @@ package io.sclera.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents an alert raised from a device sensor reading, carrying the offending value, message,
+ * priority and the hierarchy of entities (primary, secondary, tertiary) it relates to. Used to
+ * surface threshold and protocol-based alerts within the asset-management domain.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SensorAlertDTO {
 

@@ -8,6 +8,9 @@ import jakarta.persistence.*;
 @NamedNativeQuery(name = "TechnicianCertificate.getAll", query = "SELECT id, name, type, url, technician_id FROM technician_certificate", resultSetMapping = "technicianCertificateMapping")
 @NamedNativeQuery(name = "TechnicianCertificate.getById", query = "SELECT id, name, type, url, technician_id FROM technician_certificate WHERE id = ?1", resultSetMapping = "technicianCertificateMapping")
 @NamedNativeQuery(name = "TechnicianCertificate.getByTechnicianId", query = "SELECT id, name, type, url, technician_id FROM technician_certificate WHERE technician_id = ?1", resultSetMapping = "technicianCertificateMapping")
+/**
+ * Represents a certificate or credential held by a {@link Technician}, including its name, type and document URL.
+ */
 @Entity
 public class TechnicianCertificate {
     @Id

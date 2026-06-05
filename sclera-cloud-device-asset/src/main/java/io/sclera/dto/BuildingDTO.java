@@ -6,6 +6,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigInteger;
 import java.util.Set;
 
+/**
+ * Represents a building within the site hierarchy, holding its identifiers, code,
+ * contained floors, and aggregate counts used in location and asset listings.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BuildingDTO {
 

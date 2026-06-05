@@ -1,5 +1,9 @@
 package io.sclera.dto;
 
+/**
+ * Holds a user's Corrigo integration credentials and OAuth settings.
+ * Used to authenticate asset-management requests against the Corrigo work-order system.
+ */
 public class CorrigoUserSettingsDTO {
 
     private String id;

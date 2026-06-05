@@ -1,5 +1,9 @@
 package io.sclera.dto.touchscreen.assetmapper;
 
+/**
+ * Lightweight pairing of an asset identifier with a device identifier. Used to express a single
+ * asset-to-device association in the asset-mapper workflow.
+ */
 public class AssetDeviceMappingDTO {
 
   private String asset_id;

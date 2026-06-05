@@ -4,6 +4,10 @@ package io.sclera.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigDecimal;
 
+/**
+ * Represents a skill associated with a technician, including its rating and ranking,
+ * used to build technician skill profiles for service assignment.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TechnicianSkillDTO {
     private String id;

@@ -3,6 +3,10 @@ package io.sclera.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigInteger;
+/**
+ * Represents a configurable custom asset field definition, describing its type, default value,
+ * selectable options, and presentation settings used when capturing asset metadata.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AssetFieldDTO {
     private String id;

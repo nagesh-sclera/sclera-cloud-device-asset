@@ -3,6 +3,10 @@ package io.sclera.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents a certificate held by a technician, referencing the stored document
+ * (name, type and URL) and the technician it belongs to.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TechnicianCertificateDTO {
     private String id;

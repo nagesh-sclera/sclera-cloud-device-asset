@@ -5,6 +5,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigInteger;
 
+/**
+ * Represents an alert condition associated with a specific device, including its alert profile,
+ * scheduling, and alert-count tracking. Used to manage per-device monitoring rules.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeviceConditionsDTO {
 

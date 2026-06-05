@@ -3,6 +3,10 @@ package io.sclera.dto.touchscreen;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Summary view of a device for touchscreen list displays, combining identity, location,
+ * vendor and per-protocol status fields used when rendering device listings.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 

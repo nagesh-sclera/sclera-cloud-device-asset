@@ -7,6 +7,10 @@ import io.sclera.models.compositeclass.NoteIds;
 
 import jakarta.persistence.*;
 
+/**
+ * JPA entity representing a free-text note attached to a device, optionally marked global,
+ * used to capture user annotations within the asset-management domain.
+ */
 @Entity
 @IdClass(NoteIds.class)
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class , property = "id" , scope = Notes.class)

@@ -2,6 +2,11 @@ package io.sclera.dto.touchscreen;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Combines a Docker container's network configuration with its associated
+ * phonebook (vendor/contact) details for the touchscreen, used to present a
+ * device's connectivity settings and support contacts together.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DockerPhonebookDTO {
 	

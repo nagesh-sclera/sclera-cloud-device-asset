@@ -31,6 +31,10 @@ import java.math.BigInteger;
                 + " ORDER BY  lh.updated_timestamp DESC, lh.id ",
         resultSetMapping = "locationhistorymapping"
 )
+/**
+ * JPA entity recording a status-change event for a location, used to build the audit
+ * trail of location history within the asset-management domain.
+ */
 @Entity
 public class LocationHistory {
     @Id

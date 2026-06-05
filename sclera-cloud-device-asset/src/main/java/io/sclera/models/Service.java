@@ -81,6 +81,9 @@ import io.sclera.models.compositeclass.ServiceIds;
 		)
 
 
+/**
+ * Represents a network service or open port exposed by a {@link Device}, capturing its port, status and discovery timestamp.
+ */
 public class Service {
 
 	@Id

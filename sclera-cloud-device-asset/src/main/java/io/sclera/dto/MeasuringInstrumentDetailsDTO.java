@@ -5,6 +5,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigInteger;
 import java.util.List;
 
+/**
+ * Represents the detailed view of a measuring instrument together with the full
+ * device, vendor, alert and location context. Used to serve the complete
+ * instrument-detail response in the asset-management domain.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MeasuringInstrumentDetailsDTO {
     private String id;

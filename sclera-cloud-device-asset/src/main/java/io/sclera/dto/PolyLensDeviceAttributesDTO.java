@@ -5,6 +5,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigInteger;
 
 
+/**
+ * Represents a single attribute reading retrieved from the Poly Lens platform for a device,
+ * carrying its name, value, unit and categorization. Used when ingesting and exposing
+ * Poly Lens device telemetry within the asset-management domain.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PolyLensDeviceAttributesDTO {
 

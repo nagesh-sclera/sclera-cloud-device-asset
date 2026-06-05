@@ -2,6 +2,11 @@ package io.sclera.dto;
 
 import java.math.BigInteger;
 
+/**
+ * Provides a detailed view of a single BACnet object together with its parent BACnet device
+ * and the owning Sclera device, enriching the present value and alert state with full
+ * device, location, and vendor context for display and alerting.
+ */
 public class BacnetObjectDetailsDTO {
     private String id;
     private String name;

@@ -3,6 +3,11 @@ package io.sclera.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents up to five measuring parameters of an instrument, each with its own
+ * name, type, identifiers, protocol, value and unit. Used to carry a fixed-width
+ * set of parameter readings in the asset-management domain.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MeasuringParameterDTO {

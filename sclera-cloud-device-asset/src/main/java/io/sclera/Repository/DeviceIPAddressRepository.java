@@ -13,17 +13,39 @@ import io.sclera.dto.touchscreen.DeviceIPAddressDTO;
 import io.sclera.models.Device_IP_Address;
 
 
+/**
+ * Manages persistence and querying of {@link Device_IP_Address} entities.
+ */
 @Repository
 public interface DeviceIPAddressRepository extends JpaRepository<Device_IP_Address, String> {
 
+	/**
+	 * Deletes all IP-address records for the given device.
+	 *
+	 * @param id the device identifier
+	 */
 	@Modifying
 	@Transactional
 	@Query(value = "DELETE FROM device_ip_address WHERE device_id = ?1", nativeQuery = true)
 	void deleteIPAddressByDeviceId(String id);
 
+	/**
+	 * Returns the IP-address records for the given device.
+	 *
+	 * @param id the device identifier
+	 * @return the matching IP-address projections
+	 */
 	@Query(nativeQuery = true)
 	List<DeviceIPAddressDTO> getIPAddressByDeviceId(String id);
 
+	/**
+	 * Inserts an IP-address record for a device.
+	 *
+	 * @param id                 the IP-address record identifier
+	 * @param ip_address         the IP address
+	 * @param ip_conflict_status the IP conflict status flag
+	 * @param device_id          the device identifier
+	 */
 	@Modifying
 	@Transactional
 	@Query(value = "INSERT INTO device_ip_address (id, ip_address, ip_conflict_status, device_id)"

@@ -81,6 +81,11 @@ import java.util.Set;
 
 
 
+/**
+ * JPA entity representing an AI-generated service call log raised against a device, tracking issue
+ * type, priority, status, and the assigned technician. Maintains its lifecycle history and backs the
+ * call-status reporting queries.
+ */
 @Entity
 public class AiCallLog {
     @Id

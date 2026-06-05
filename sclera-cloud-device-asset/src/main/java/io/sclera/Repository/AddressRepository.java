@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import io.sclera.models.Address;
 
+/**
+ * Manages persistence and querying of {@link Address} entities.
+ */
 @Repository
 public interface AddressRepository extends JpaRepository<Address, String> {
 

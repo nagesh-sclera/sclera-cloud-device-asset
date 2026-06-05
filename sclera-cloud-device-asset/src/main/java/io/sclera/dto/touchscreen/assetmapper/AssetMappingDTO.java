@@ -1,5 +1,10 @@
 package io.sclera.dto.touchscreen.assetmapper;
 
+/**
+ * Describes a request to change or remove an asset-to-device match, carrying the previous and new
+ * device identifiers for the given asset. Used by the asset-mapper workflow when re-mapping or
+ * un-mapping an asset.
+ */
 public class AssetMappingDTO {
 
   private String previous_device_id;

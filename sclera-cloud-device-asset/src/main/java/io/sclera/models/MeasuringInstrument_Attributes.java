@@ -49,6 +49,10 @@ import jakarta.persistence.*;
                 + " WHERE ma.measuring_instrument_id=?1 ORDER BY ma.attribute_index",
         resultSetMapping = "measuringinstrumentattributemapping"
 )
+/**
+ * JPA entity holding an individual protocol-specific attribute of a measuring instrument,
+ * used to describe the configuration and addressing of a sensor's data points.
+ */
 @Entity
 public class MeasuringInstrument_Attributes {
     @Id

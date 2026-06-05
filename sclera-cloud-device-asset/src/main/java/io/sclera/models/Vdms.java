@@ -121,6 +121,9 @@ import java.util.Set;
         resultSetMapping = "vdmsmasterslaveinfomapping"
 )
 
+/**
+ * Represents a VDMS edge gateway deployed at a customer site, holding its identity, network, location and activation details and owning the buildings, assets and technician suggestions managed there.
+ */
 public class Vdms {
     @Id
     @Column(length = 64)

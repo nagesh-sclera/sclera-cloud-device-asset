@@ -2,6 +2,10 @@ package io.sclera.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents a vendor or service organisation with its contact, company and address
+ * details, used for managing vendors associated with devices in the asset inventory.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VendorDTO {
 

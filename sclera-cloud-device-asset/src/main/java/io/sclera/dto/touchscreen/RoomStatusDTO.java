@@ -6,6 +6,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.Set;
 
+/**
+ * Represents the aggregated status of a room on the touchscreen, combining the
+ * overall device status and sensor-alert status with the set of contributing
+ * sensors.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RoomStatusDTO {

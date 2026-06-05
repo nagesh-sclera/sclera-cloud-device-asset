@@ -18,6 +18,22 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Service that manages technicians and their associated skill profiles,
+ * certificates, availability, and device tagging.
+ *
+ * <p>Provides CRUD and upsert operations over technicians, assembles enriched
+ * skill profiles for AI suggestions, and tags/un-tags technicians to devices.
+ * Cascading deletes also clear related skill, availability, certificate, and AI
+ * call-log records.
+ *
+ * <p>Key collaborators: {@link TechnicianRepository},
+ * {@link TechnicianAvailabilityService}, {@link TechnicianCertificateService},
+ * {@link TechnicianSkillService}, {@link TechnicianSkillRepository},
+ * {@link TechnicianCertificateRepository},
+ * {@link TechnicianAvailabilityRepository}, {@link AiCallLogRepository}, and
+ * {@link AiCallLogHistoryRepository}.
+ */
 @Service
 public class TechnicianService {
     private static final Logger log = LoggerFactory.getLogger(TechnicianService.class);
@@ -48,18 +64,41 @@ public class TechnicianService {
         this.aiCallLogHistoryRepository = aiCallLogHistoryRepository;
     }
 
+    /**
+     * Returns the technician with the given identifier.
+     *
+     * @param id the technician identifier
+     * @param httpServletRequest the incoming HTTP request
+     * @return the matching {@link TechnicianDTO}, or {@code null} if none exists
+     */
     public TechnicianDTO getTechnicianById(String id, HttpServletRequest httpServletRequest) {
         return technicianRepository.getTechnicianById(id);
     }
 
+    /**
+     * Returns all technicians.
+     *
+     * @return the list of all {@link TechnicianDTO} records
+     */
     public List<TechnicianDTO> getAllTechnician() {
         return  technicianRepository.getAllTechnician();
     }
 
+    /**
+     * Returns the email addresses of all technicians.
+     *
+     * @return a list of sets containing technician email addresses
+     */
     public List<Set> getAllTechniciansEmail(){
         return technicianRepository.getAllTechniciansEmail();
     }
 
+    /**
+     * Inserts or updates the supplied technicians, logging and skipping any that fail.
+     *
+     * @param technicianDtos the technicians to upsert
+     * @return the set of identifiers that were successfully inserted or updated
+     */
     public Set<String> upsertTechnician(List<TechnicianDTO> technicianDtos) {
         Set<String> insertedTechnicianIds = new HashSet<>();
         if (technicianDtos != null && !technicianDtos.isEmpty()) {
@@ -94,6 +133,13 @@ public class TechnicianService {
         return insertedTechnicianIds;
     }
 
+    /**
+     * Deletes the supplied technicians together with their related skill,
+     * availability, certificate, device-tagging, and AI call-log records.
+     *
+     * @param technicianDtos the technicians to delete
+     * @return the set of technician identifiers that existed and were deleted
+     */
     public Set<String> deleteTechniciansById(List<TechnicianDTO> technicianDtos) {
         Set<String> existingIds = Set.of();
         if (technicianDtos != null && !technicianDtos.isEmpty()) {
@@ -132,6 +178,12 @@ public class TechnicianService {
         return existingIds;
     }
 
+    /**
+     * Returns the subset of the given identifiers that correspond to existing technicians.
+     *
+     * @param ids the technician identifiers to check
+     * @return the set of identifiers that exist
+     */
     public Set<String> findExistingTechniciansByIds(List<String> ids) {
         Set<String> existingIds = new HashSet<>();
         if (ids != null && !ids.isEmpty()) {
@@ -140,6 +192,13 @@ public class TechnicianService {
         return existingIds;
     }
 
+    /**
+     * Updates technicians matched by email and phone, and creates or updates
+     * their associated availability, certificate, and skill records.
+     *
+     * @param technicianDtos the technicians to update
+     * @param httpServletRequest the incoming HTTP request
+     */
     public void updateTechnician(List<TechnicianDTO> technicianDtos, HttpServletRequest httpServletRequest) {
         for (TechnicianDTO technicianDto : technicianDtos) {
             if (technicianDto.getEmail() != null && technicianDto.getPhone() != null) {
@@ -204,6 +263,13 @@ public class TechnicianService {
 
 
 
+    /**
+     * Creates technicians with newly generated identifiers along with their
+     * associated availability, certificate, and skill records.
+     *
+     * @param technicianDtos the technicians to create
+     * @param httpServletRequest the incoming HTTP request
+     */
     public void createTechnician(List<TechnicianDTO> technicianDtos,HttpServletRequest httpServletRequest) {
         for (TechnicianDTO technicianDto : technicianDtos) {
             technicianDto.setId((Generators.timeBasedGenerator().generate().toString()));
@@ -244,6 +310,12 @@ public class TechnicianService {
     }
 
 
+    /**
+     * Returns the technician with the given identifier, enriched with its skills and certificates.
+     *
+     * @param id the technician identifier
+     * @return the enriched {@link TechnicianDTO}
+     */
     public TechnicianDTO getTechnicianDetailsById(String id) {
         TechnicianDTO technician = technicianRepository.getTechnicianById(id);
         if (technician == null) {
@@ -261,6 +333,13 @@ public class TechnicianService {
 
 
     // For AI Suggestions skill profiles and list all Tagged Technicians
+    /**
+     * Returns the technician's skill profile including primary skill and current
+     * availability, resolved against the current UTC time.
+     *
+     * @param id the technician identifier
+     * @return the {@link TechnicianDTO} skill profile
+     */
     public TechnicianDTO getTechnicianSkillProfileWithPrimarySkillAndAvailabilityById(String id) {
         try {
             Instant nowUtc = Instant.now();
@@ -281,6 +360,14 @@ public class TechnicianService {
     }
 
     // List all skill profiles
+    /**
+     * Returns a page of technician skill profiles including primary skill and
+     * current availability, resolved against the current UTC time.
+     *
+     * @param size the page size
+     * @param page the one-based page number
+     * @return the list of {@link TechnicianDTO} skill profiles for the page
+     */
     public List<TechnicianDTO> getAllTechnicianSkillProfilesWithPrimarySkillAndAvailability(int size, int page) {
         try {
             Instant nowUtc = Instant.now();
@@ -302,6 +389,12 @@ public class TechnicianService {
     }
 
     // Tag technicians to a device
+    /**
+     * Tags the given technicians to the specified device.
+     *
+     * @param deviceId the device identifier
+     * @param technicianIds the technician identifiers to tag
+     */
     @Transactional
     public void tagTechniciansToDevice(String deviceId, List<String> technicianIds) {
         if (technicianIds != null && !technicianIds.isEmpty() && deviceId != null && !deviceId.isEmpty()) {
@@ -319,6 +412,12 @@ public class TechnicianService {
     }
 
     // Un-Tag technicians from a device
+    /**
+     * Removes the tagging between the given technicians and the specified device.
+     *
+     * @param deviceId the device identifier
+     * @param technicianIds the technician identifiers to un-tag
+     */
     @Transactional
     public void unTagTechniciansFromDevice(String deviceId, List<String> technicianIds) {
         if (technicianIds != null && !technicianIds.isEmpty() && deviceId != null && !deviceId.isEmpty()) {
@@ -336,6 +435,12 @@ public class TechnicianService {
     }
 
     // Get all technicians tagged to a specific device
+    /**
+     * Returns the skill profiles of all technicians tagged to the specified device.
+     *
+     * @param deviceId the device identifier
+     * @return the list of tagged {@link TechnicianDTO} skill profiles, or an empty list if none
+     */
     public List<TechnicianDTO> getAllTechniciansByDeviceId(String deviceId) {
         try {
             if (deviceId != null && !deviceId.isEmpty()) {
@@ -365,6 +470,13 @@ public class TechnicianService {
     }
 
     // Get all Available technicians tagged to a specific device
+    /**
+     * Returns the skill profiles of technicians tagged to the specified device
+     * that are currently available.
+     *
+     * @param deviceId the device identifier
+     * @return the list of available tagged {@link TechnicianDTO} skill profiles, or an empty list if none
+     */
     public List<TechnicianDTO> getAllAvailableTechnicianByDeviceId(String deviceId) {
         try {
             List<TechnicianDTO> taggedTechnicianSkillProfiles = this.getAllTechniciansByDeviceId(deviceId);
@@ -385,6 +497,13 @@ public class TechnicianService {
     }
 
     // Get all Available technicians tagged to a specific device with country code and phone number
+    /**
+     * Returns currently available technicians tagged to the specified device,
+     * each including country code and phone number.
+     *
+     * @param deviceId the device identifier
+     * @return the list of available tagged {@link TechnicianDTO} records, or an empty list if none
+     */
     public List<TechnicianDTO> getAvailableTechnicianCountryCodePhoneByDeviceId(String deviceId) {
         System.out.println("Fetching all available technicians with country code and phone for device ID: " + deviceId);
         try {
@@ -432,11 +551,28 @@ public class TechnicianService {
         }
     }
 
+    /**
+     * Returns the name of the technician with the given identifier.
+     *
+     * @param technicianId the technician identifier
+     * @return the technician name
+     */
     public String getTechnicianNameById(String technicianId) {
         return technicianRepository.getTechnicianNameById(technicianId);
     }
 
     // List all skill profiles by filter
+    /**
+     * Returns a page of technician skill profiles filtered by technician id,
+     * department, and availability, resolved against the current UTC time.
+     *
+     * @param size the page size
+     * @param page the one-based page number
+     * @param technicianIdFilter the technician id filter
+     * @param departmentFilter the department filter
+     * @param availabilityFilter the availability filter
+     * @return the list of matching {@link TechnicianDTO} skill profiles for the page
+     */
     public List<TechnicianDTO> getAllTechniciansByFilterByPagination(int size, int page, String technicianIdFilter, String departmentFilter, String availabilityFilter) {
         try {
             Instant nowUtc = Instant.now();
@@ -458,12 +594,25 @@ public class TechnicianService {
     }
 
     // Get all technician names and IDs for filtering
+    /**
+     * Returns a page of technician names and identifiers matching the search key.
+     *
+     * @param page the one-based page number
+     * @param size the page size
+     * @param searchKey the search term to match against technicians
+     * @return the list of matching {@link TechnicianDTO} records carrying name and id
+     */
     public List<TechnicianDTO> getAllTechnicianNamesAndIds(int page, int size, String searchKey) {
         int offset = (page - 1) * size;
         return technicianRepository.getAllTechnicianNamesAndIds(size, offset, searchKey);
     }
 
     // Get all technician departments for filtering
+    /**
+     * Returns the distinct set of technician departments.
+     *
+     * @return the list of unique department names
+     */
     public List<String> getUniqueTechnicianDepartments() {
         return technicianRepository.getUniqueTechnicianDepartments();
     }

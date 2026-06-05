@@ -5,6 +5,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigInteger;
 import java.util.List;
 
+/**
+ * Represents a sensor and its current reading on the touchscreen, carrying
+ * identifiers, category/protocol, alert state, value/unit and the owning
+ * device and location, along with any nested per-metric sensor values.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SensorDTO {
 	

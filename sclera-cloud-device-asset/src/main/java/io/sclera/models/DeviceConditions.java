@@ -8,6 +8,11 @@ import jakarta.persistence.*;
 import java.math.BigInteger;
 
 
+/**
+ * Represents an alert condition attached directly to a device, including its alert profile, scheduling,
+ * and alert-count settings. Used by the device-monitoring subsystem to track device-level alerts such as
+ * offline AI-call alerts.
+ */
 @Entity
 @SqlResultSetMapping(
         name = "deviceconditionsmapping",

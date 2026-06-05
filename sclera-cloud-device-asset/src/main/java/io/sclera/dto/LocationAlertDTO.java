@@ -2,6 +2,10 @@ package io.sclera.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents a location referenced by an alert, resolving its identifier together with
+ * the containing floor and building names for display in alert notifications.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class LocationAlertDTO {
 

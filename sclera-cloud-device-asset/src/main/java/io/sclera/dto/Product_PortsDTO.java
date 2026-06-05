@@ -2,6 +2,10 @@ package io.sclera.dto;
 
 import java.math.BigInteger;
 
+/**
+ * Represents a network port associated with a product or device, including its status, IP address
+ * and last-seen timestamp. Used by product and service-monitoring flows to track port availability.
+ */
 public class Product_PortsDTO {
 	private String id;
 	private String port;

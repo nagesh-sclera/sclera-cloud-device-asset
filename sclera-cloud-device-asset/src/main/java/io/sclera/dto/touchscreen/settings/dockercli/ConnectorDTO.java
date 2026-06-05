@@ -1,5 +1,10 @@
 package io.sclera.dto.touchscreen.settings.dockercli;
 
+/**
+ * Data-transfer object describing the connection of a container to a Docker network endpoint,
+ * pairing a container with its assigned IPv4 address. Serialized into the JSON payload sent to the
+ * Docker CLI when attaching a container to a network.
+ */
 public class ConnectorDTO {
 
   private String container;

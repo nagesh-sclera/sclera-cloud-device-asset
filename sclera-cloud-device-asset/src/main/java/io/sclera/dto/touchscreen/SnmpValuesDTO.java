@@ -7,6 +7,12 @@ import java.util.List;
 import java.util.Map;
 
 
+/**
+ * Carries SNMP query and credential data for a device on the touchscreen,
+ * including OID values, community string/version, security parameters and
+ * discovered interface, port and connected-MAC mappings used for SNMP polling
+ * and topology resolution.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SnmpValuesDTO {

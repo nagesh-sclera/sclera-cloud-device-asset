@@ -5,6 +5,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigInteger;
 import java.util.Set;
 
+/**
+ * Represents an alert condition defined for a device or sensor across the various supported
+ * integrations (BACnet, LoRaWAN, SNMP, KNX, Modbus, and others), including thresholds,
+ * scheduling, and alert-count settings. Used to configure and evaluate device monitoring rules.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ConditionsDTO {
 

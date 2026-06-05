@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigInteger;
 
+/**
+ * Captures a single entry in a device's lifecycle history, recording operational and usage status
+ * along with assignment details and timestamps. Used to track device state changes over time.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeviceLifecycleHistoryDTO {
 

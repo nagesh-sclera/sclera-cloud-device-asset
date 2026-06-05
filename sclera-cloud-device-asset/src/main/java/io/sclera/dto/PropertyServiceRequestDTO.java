@@ -2,6 +2,10 @@ package io.sclera.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents a single input field within a property service form, defining its label, type and
+ * available options. Used to describe the individual questions a user answers during a property inspection.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PropertyServiceRequestDTO {
     private String id;

@@ -4,6 +4,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
+/**
+ * Represents SNMP configuration associated with a {@link Docker} container used for device monitoring.
+ */
 @Entity
 public class SnmpDeviceConfiguration {
     @Id

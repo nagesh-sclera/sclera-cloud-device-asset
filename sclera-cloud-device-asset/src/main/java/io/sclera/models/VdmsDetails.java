@@ -75,6 +75,12 @@ import io.sclera.dto.touchscreen.VdmsDetailsDTO;
         resultSetMapping = "devicecustomfieldsmapping"
 )
 
+/**
+ * JPA entity holding per-VDMS presentation and configuration details such as weather data,
+ * screen layout, device custom fields, and Corrigo layout. Linked one-to-one to a {@link Vdms}
+ * and backed by the {@code vdms_details} table; supplies the named native queries used to
+ * project this data onto {@code VdmsDetailsDTO}.
+ */
 @Entity
 @Table(name = "vdms_details")
 public class VdmsDetails {

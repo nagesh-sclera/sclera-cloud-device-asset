@@ -15,6 +15,15 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Builds and executes dynamic search, sort, filter, and count queries over managed-software
+ * records and their device associations.
+ *
+ * <p>Constructs raw SQL against the {@code managed_software}, {@code device_installed_apps},
+ * and {@code device_specification} tables and runs it through {@link JdbcTemplate} to resolve
+ * matching managed-software identifiers, then hydrates them into DTOs via
+ * {@link ManagedSoftwareRepository}.</p>
+ */
 @Service
 public class ManagedSoftwareSearchService {
     private static final Logger log = LoggerFactory.getLogger(ManagedSoftwareSearchService.class);
@@ -25,6 +34,12 @@ public class ManagedSoftwareSearchService {
     @Autowired
     ManagedSoftwareRepository managedSoftwareRepository;
 
+    /**
+     * Maps a logical search column name to its qualified SQL column expression.
+     *
+     * @param searchColumn the logical column identifier supplied by the caller
+     * @return the qualified SQL column or expression to use in the query; defaults to {@code ms.name}
+     */
     public String updateSearchColumnName(String searchColumn) {
         String updateSearchColumn;
 
@@ -111,6 +126,18 @@ public class ManagedSoftwareSearchService {
         return updateSearchColumn;
     }
 
+    /**
+     * Resolves the page of managed-software records matching the given search, sort, and filter criteria.
+     *
+     * @param username the requesting user's name
+     * @param vdmsId the VDMS identifier scoping the request
+     * @param dockerName the docker/container name scoping the request
+     * @param condition status condition to apply ({@code all}, {@code active}, {@code expired}, or {@code others})
+     * @param pageNo the one-based page number to retrieve
+     * @param pageSize the number of records per page
+     * @param search_sort_filter_details JSON payload carrying search, filter, and sort details
+     * @return the set of matching {@link ManagedSoftwareDTO} records, or an empty set if none match
+     */
     // Managed Software filter
     public Set<ManagedSoftwareDTO> searchSortFilterManagedSoftware(String username, String vdmsId, String dockerName,
                                                                    String condition, Integer pageNo, Integer pageSize,
@@ -164,6 +191,12 @@ public class ManagedSoftwareSearchService {
         return Collections.emptySet();
     }
 
+    /**
+     * Builds the combined SQL fragment applying both filter and search criteria from the supplied details.
+     *
+     * @param searchAndFilterDetails JSON payload optionally containing {@code filter_details} and {@code search_details}
+     * @return the SQL predicate fragment, or an empty string when no applicable criteria are present
+     */
     // All helper methods for search and filter queries
     public String generateSearchAndFilterCustomQuery(JSONObject searchAndFilterDetails) {
         StringBuilder searchAndFilterCustomQuery = new StringBuilder();
@@ -181,6 +214,12 @@ public class ManagedSoftwareSearchService {
         return searchAndFilterCustomQuery.toString();
     }
 
+    /**
+     * Builds the SQL filter predicate from a list of column/value filter entries.
+     *
+     * @param filterDetails the array of filter entries, each carrying a {@code column} and optional {@code value}
+     * @return the {@code AND (...)} SQL predicate fragment, or an empty string when no filters are supplied
+     */
     public String generateFilterQuery(JSONArray filterDetails) {
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -215,6 +254,13 @@ public class ManagedSoftwareSearchService {
         return stringBuilder.toString();
     }
 
+    /**
+     * Builds the SQL search predicate that matches the supplied term against the chosen column
+     * (or a concatenation of all searchable columns when none is specified), ignoring special characters.
+     *
+     * @param searchDetails JSON payload carrying the search {@code column} and {@code value}
+     * @return the {@code AND (...)} SQL predicate fragment, or an empty string when the search term is null
+     */
     public String generateSearchQuery(JSONObject searchDetails) {
         StringBuilder stringBuilder = new StringBuilder();
         String searchColumn = String.valueOf(searchDetails.get("column")).replaceAll("\\s", "");
@@ -266,6 +312,13 @@ public class ManagedSoftwareSearchService {
         return stringBuilder.toString();
     }
 
+    /**
+     * Builds the {@code GROUP BY}/{@code ORDER BY} SQL clause, ordering by the requested sort column
+     * (with null and empty values pushed to the end) or by managed-software id when none is given.
+     *
+     * @param sortDetails JSON payload optionally containing a {@code sort_details} object with a {@code column}
+     * @return the {@code GROUP BY ... ORDER BY ...} SQL clause
+     */
     // All helper methods for sort query
     public String generateGroupByAndSortCustomQuery(JSONObject sortDetails) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -306,6 +359,16 @@ public class ManagedSoftwareSearchService {
         return stringBuilder.toString();
     }
 
+    /**
+     * Counts the distinct managed-software records matching the given search and filter criteria.
+     *
+     * @param username the requesting user's name
+     * @param vdmsId the VDMS identifier scoping the request
+     * @param dockerName the docker/container name scoping the request
+     * @param condition status condition to apply ({@code all}, {@code active}, {@code expired}, or {@code others})
+     * @param search_sort_filter_details JSON payload carrying search and filter details
+     * @return the matching record count as a string, or {@code null} if the count query returns no row
+     */
     // Managed Software filter count
     public String searchSortFilterManagedSoftwareCount(String username, String vdmsId, String dockerName,
                                                        String condition, JSONObject search_sort_filter_details) {

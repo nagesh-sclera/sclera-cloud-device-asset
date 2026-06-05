@@ -27,6 +27,10 @@ import jakarta.persistence.SqlResultSetMapping;
 
 @NamedNativeQuery(name = "AssetDeviceMapping.findMappings", query = "SELECT asset_id,device_id FROM asset_device_mapping", resultSetMapping = "assetDeviceRelationMapping")
 
+/**
+ * JPA entity representing the many-to-many link between an {@link Asset} and a {@link Device},
+ * recording the match score for the pairing. Used to track which assets are mapped to which devices.
+ */
 public class AssetDeviceMapping {
 
   @Id

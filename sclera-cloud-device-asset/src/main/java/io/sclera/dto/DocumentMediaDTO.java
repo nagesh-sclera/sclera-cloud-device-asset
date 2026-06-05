@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigInteger;
 
+/**
+ * Represents a document or media file attached to a device, capturing its name,
+ * category, storage link, and creation metadata for the asset's document library.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DocumentMediaDTO {
 

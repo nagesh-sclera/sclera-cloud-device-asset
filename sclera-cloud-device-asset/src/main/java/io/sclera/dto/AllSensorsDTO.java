@@ -2,6 +2,11 @@ package io.sclera.dto;
 
 import java.util.Set;
 
+/**
+ * Aggregates the sensors and devices of every supported protocol (LoRaWAN, BACnet,
+ * Disruptive, Monnit, Pelican, KNX, SNMP, Daintree, Ecobee, Modbus, PolyLens, MQTT, and more)
+ * into a single response used when listing all sensors discovered for a device or location.
+ */
 public class AllSensorsDTO {
 	private Set<LorawanSensorDTO> lorawan_sensors;
 	private Set<BacnetObjectDTO> bacnet_objects;

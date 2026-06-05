@@ -6,6 +6,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import java.math.BigInteger;
 
+/**
+ * Represents a client-specific QR code printed on or assigned to a physical asset, linking a device
+ * and location to an external VDMS identifier and onboarding batch. Used to tag and track devices
+ * during asset onboarding and inventory management.
+ */
 @Entity
 public class ClientQrCode {
     @Id

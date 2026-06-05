@@ -4,6 +4,10 @@ package io.sclera.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 
+/**
+ * Represents a field-service technician along with their contact details, skills,
+ * certificates and availability, used across technician management and scheduling flows.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TechnicianDTO {
     private String id;

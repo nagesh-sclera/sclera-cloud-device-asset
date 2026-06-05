@@ -5,6 +5,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigInteger;
 
+/**
+ * Represents a single history entry for an AI call log, recording a state change
+ * along with its description, timestamp, and the technician responsible.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AiCallLogHistoryDTO {

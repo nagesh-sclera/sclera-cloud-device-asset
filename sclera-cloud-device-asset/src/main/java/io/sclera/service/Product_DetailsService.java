@@ -13,6 +13,13 @@ import io.sclera.Repository.Product_DetailsRepository;
 import io.sclera.dto.ProductDTO;
 import io.sclera.utils.Utils;
 
+/**
+ * Manages product detail records and their associated product images.
+ *
+ * <p>Persists and removes product metadata through {@link Product_DetailsRepository},
+ * collaborates with {@link DeviceService} and {@link APICallClient} for device and
+ * remote data, and relies on {@link Utils} for server-side image file handling.
+ */
 @Service
 public class Product_DetailsService {
 
@@ -32,14 +39,36 @@ public class Product_DetailsService {
 
     String absolutePathProductImages = "/home/sclera/images/";
 
+    /**
+     * Checks whether a product exists for the given identifier.
+     *
+     * @param product_id the product identifier to check
+     * @return the result of the existence check
+     */
     public Integer checkProductId(String product_id) {
         return 0;
     }
 
+    /**
+     * Associates local and global image URLs with the given product.
+     *
+     * @param product_id the product identifier
+     * @param image_url_1 the first local image URL
+     * @param image_url_2 the second local image URL
+     * @param image_url_3 the third local image URL
+     * @param global_image_url_1 the first global image URL
+     * @param global_image_url_2 the second global image URL
+     * @param global_image_url_3 the third global image URL
+     */
     public void addProductImages(String product_id, String image_url_1, String image_url_2, String image_url_3, String global_image_url_1, String global_image_url_2, String global_image_url_3) {
     }
 
 
+    /**
+     * Inserts a new product detail record or updates the existing one.
+     *
+     * @param db_product the product detail to persist
+     */
     public void upsertProductDetail(ProductDTO db_product)
     {
     }

@@ -2,6 +2,11 @@ package io.sclera.dto;
 
 
 
+/**
+ * Represents a phonebook vendor contact and its address details, including
+ * company, email, phone and postal fields. Used to capture vendor contact
+ * information for devices in the asset-management domain.
+ */
 public class PhonebookAddressDto {
    
 	

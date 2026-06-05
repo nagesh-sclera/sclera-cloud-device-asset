@@ -1,5 +1,10 @@
 package io.sclera.dto.touchscreen.settings;
 
+/**
+ * Describes the boundary conditions of a device network in the settings flow, binding a network to
+ * an interface along with VLAN tagging and host details. Used to validate or constrain network
+ * configuration choices.
+ */
 public class NetworkBoundaryConditionsDTO {
     private String network_name;
     private String interface_name;

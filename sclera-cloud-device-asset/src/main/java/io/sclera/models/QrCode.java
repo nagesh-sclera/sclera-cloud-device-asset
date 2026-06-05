@@ -10,6 +10,10 @@ import java.math.BigInteger;
 @NamedNativeQuery(name = "QrCode.getQrCodesByLocationIds", query = "(SELECT qc.id, qc.device_id, qc.location_id, qc.updated_by, qc.updated_time FROM qr_code qc WHERE qc.location_id IN ?1)\n" + "UNION ALL \n" + "(SELECT cqc.id, cqc.device_id, cqc.location_id, cqc.updated_by, cqc.updated_at as updated_time FROM client_qr_code cqc WHERE cqc.location_id IN ?1)\n", resultSetMapping = "qrcodedetails")
 @NamedNativeQuery(name = "QrCode.getQrCodeDetailsByIds", query = "(SELECT qc.id, qc.device_id, qc.location_id, qc.updated_by, qc.updated_time FROM qr_code qc WHERE qc.id IN ?1)\n", resultSetMapping = "qrcodedetails")
 @NamedNativeQuery(name = "QrCode.getClientQrCodeDetailsByIds", query = "(SELECT cqc.id, cqc.device_id, cqc.location_id, cqc.updated_by, cqc.updated_at as updated_time FROM client_qr_code cqc WHERE cqc.id IN ?1)", resultSetMapping = "qrcodedetails")
+/**
+ * JPA entity representing a QR code associated with a device and location, used to enable
+ * code-based identification and scanning within the asset-management domain.
+ */
 @Entity
 public class QrCode {
     @Id

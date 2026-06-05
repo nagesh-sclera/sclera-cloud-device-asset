@@ -16,6 +16,18 @@ import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Manages device alert conditions: their persistence, sharing, resetting, and
+ * alert-count bookkeeping, including a dedicated path for AI-call conditions.
+ *
+ * <p>Collaborators:
+ * <ul>
+ *   <li>{@link DeviceConditionsRepository} — reads and writes device condition records.</li>
+ *   <li>{@link io.sclera.client.AlertProfileClient} — resolves alert profile details by id.</li>
+ *   <li>{@link DeviceService} — fetches device details and recomputes device condition status.</li>
+ *   <li>{@link JobSchedulerService} — looks up scheduled jobs tied to a condition.</li>
+ * </ul>
+ */
 @Service
 public class DeviceConditionsService {
     private static final Logger log = LoggerFactory.getLogger(DeviceConditionsService.class);
@@ -32,6 +44,16 @@ public class DeviceConditionsService {
     @Autowired
     JobSchedulerService jobSchedulerService;
 
+    /**
+     * Inserts new device conditions or updates existing ones, resetting alert counters and
+     * cancelling scheduled alert jobs when schedule-affecting fields change, and refreshes
+     * the affected device's condition status.
+     *
+     * @param username the requesting user
+     * @param vdmsid the VDMS identifier
+     * @param dockername the docker name
+     * @param device_conditions the conditions to upsert
+     */
     public void upsertDeviceConditions(String username, String vdmsid, String dockername, Set<DeviceConditionsDTO> device_conditions) {
         for (DeviceConditionsDTO device_condition : device_conditions) {
 
@@ -114,6 +136,15 @@ public class DeviceConditionsService {
         }
     }
 
+    /**
+     * Returns the conditions for a device, enriching each with its resolved alert profile.
+     *
+     * @param username the requesting user
+     * @param vdmsid the VDMS identifier
+     * @param dockername the docker name
+     * @param device_id the device whose conditions are retrieved
+     * @return the device's conditions with alert profiles populated
+     */
     public Set<DeviceConditionsDTO> getDeviceConditions(String username, String vdmsid, String dockername, String device_id) {
         Set<DeviceConditionsDTO> deviceConditions = deviceConditionsRepository.getDeviceConditions(device_id);
         for (DeviceConditionsDTO deviceCondition : deviceConditions) {
@@ -124,6 +155,13 @@ public class DeviceConditionsService {
         return deviceConditions;
     }
 
+    /**
+     * Deletes every condition associated with the given device.
+     *
+     * @param username the requesting user
+     * @param vdmsid the VDMS identifier
+     * @param device_id the device whose conditions are deleted
+     */
     public void deleteAllDeviceConditions(String username, String vdmsid, String device_id) {
         Set<DeviceConditionsDTO> device_conditions = deviceConditionsRepository.getDeviceConditions(device_id);
         for (DeviceConditionsDTO deviceCondition : device_conditions) {
@@ -132,6 +170,14 @@ public class DeviceConditionsService {
 
     }
 
+    /**
+     * Returns a single condition by id, enriched with its resolved alert profile.
+     *
+     * @param username the requesting user
+     * @param vdmsid the VDMS identifier
+     * @param device_condition_id the condition identifier
+     * @return the matching condition with its alert profile populated
+     */
     public DeviceConditionsDTO getDeviceConditionsById(String username, String vdmsid, String device_condition_id) {
         DeviceConditionsDTO deviceConditions = deviceConditionsRepository.getDeviceConditionsById(device_condition_id);
         if (deviceConditions.getAlert_profile_id() != null) {
@@ -140,17 +186,42 @@ public class DeviceConditionsService {
         return deviceConditions;
     }
 
+    /**
+     * Deletes the supplied conditions by their ids.
+     *
+     * @param username the requesting user
+     * @param vdmsid the VDMS identifier
+     * @param device_conditions the conditions to delete
+     */
     public void deleteDeviceConditions(String username, String vdmsid, Set<DeviceConditionsDTO> device_conditions) {
         for (DeviceConditionsDTO deviceCondition : device_conditions) {
             deviceConditionsRepository.deleteById(deviceCondition.getId());
         }
     }
 
+    /**
+     * Updates a condition's last-alerted timestamp, last-alerted flag, and alert count.
+     *
+     * @param id the condition identifier
+     * @param current_timestamp the timestamp of the most recent alert
+     * @param last_alerted whether the condition has alerted
+     * @param alert_count the updated alert count
+     */
     public void updateLastAlertedDetails(String id, BigInteger current_timestamp, Boolean last_alerted, Integer alert_count) {
         deviceConditionsRepository.updateLastAlertedDetails(id, current_timestamp, last_alerted, alert_count);
 
     }
 
+    /**
+     * Shares a set of conditions across target devices, replacing existing conditions first
+     * when the share method is {@code replace} and adding new conditions for {@code add} or
+     * {@code replace} methods.
+     *
+     * @param username the requesting user
+     * @param vdmsid the VDMS identifier
+     * @param dockername the docker name
+     * @param shareConditions the share request describing target devices, method, and conditions
+     */
     public void shareDeviceConditions(String username, String vdmsid, String dockername, ShareConditionsDTO shareConditions) {
         for (DeviceDTO device : shareConditions.getDevices()) {
             try {
@@ -185,10 +256,24 @@ public class DeviceConditionsService {
 
     }
 
+    /**
+     * Clears the given alert profile id from any conditions referencing it.
+     *
+     * @param alert_profile_id the alert profile identifier to update
+     */
     public void updateAlertProfileId(String alert_profile_id) {
         deviceConditionsRepository.updateAlertProfileId(alert_profile_id);
     }
 
+    /**
+     * Resets each condition's alert count and last-alerted flag and refreshes the affected
+     * device's condition status.
+     *
+     * @param username the requesting user
+     * @param vdmsid the VDMS identifier
+     * @param dockername the docker name
+     * @param deviceConditions the conditions to reset
+     */
     public void resetDeviceConditions(String username, String vdmsid, String dockername, Set<DeviceConditionsDTO> deviceConditions) {
         for (DeviceConditionsDTO deviceConditionsDTO : deviceConditions) {
             DeviceDTO device = deviceService.getDeviceDetails(deviceConditionsDTO.getDevice_id());
@@ -201,6 +286,16 @@ public class DeviceConditionsService {
 
     }
 
+    /**
+     * Upserts AI-call device conditions: adds a new condition when none exists for the device,
+     * or replaces it once the alert count reaches the threshold, then refreshes the device's
+     * AI-call offline condition status.
+     *
+     * @param username the requesting user
+     * @param vdmsid the VDMS identifier
+     * @param dockername the docker name
+     * @param device_conditions the AI-call conditions to upsert
+     */
     public void upsertDeviceConditionsForAiCall(String username, String vdmsid, String dockername, Set<DeviceConditionsDTO> device_conditions) {
         for (DeviceConditionsDTO device_condition : device_conditions) {
             try {
@@ -237,6 +332,12 @@ public class DeviceConditionsService {
 
     }
 
+    /**
+     * Returns the current alert count for a device.
+     *
+     * @param deviceId the device identifier
+     * @return the device's alert count
+     */
     public Integer getAlertCount(String deviceId) {
         return deviceConditionsRepository.getAlertCount(deviceId);
     }
@@ -250,11 +351,28 @@ public class DeviceConditionsService {
         }
     }
 
+    /**
+     * Returns the AI-call conditions for a device.
+     *
+     * @param username the requesting user
+     * @param vdmsid the VDMS identifier
+     * @param dockername the docker name
+     * @param device_id the device whose AI-call conditions are retrieved
+     * @return the device's AI-call conditions
+     */
     public Set<DeviceConditionsDTO> getDeviceConditionsForAiCall(String username, String vdmsid, String dockername, String device_id) {
         Set<DeviceConditionsDTO> deviceConditions = deviceConditionsRepository.getDeviceConditionsForAiCall(device_id);
         return deviceConditions;
     }
 
+    /**
+     * Returns a single AI-call condition by id.
+     *
+     * @param username the requesting user
+     * @param vdmsid the VDMS identifier
+     * @param device_condition_id the condition identifier
+     * @return the matching AI-call condition
+     */
     public DeviceConditionsDTO getDeviceConditionsByIdForAiCall(String username, String vdmsid, String device_condition_id) {
         System.out.println("Fetching device conditions for AI call with ID: " + device_condition_id);
         DeviceConditionsDTO deviceConditions = deviceConditionsRepository.getDeviceConditionsByIdForAiCall(device_condition_id);
@@ -262,6 +380,12 @@ public class DeviceConditionsService {
         return deviceConditions;
     }
 
+    /**
+     * Updates a condition's alert count when the id is non-null and the count is positive.
+     *
+     * @param id the condition identifier
+     * @param alertCount the new alert count
+     */
     public void updateAlertCountByConditionId(String id, int alertCount) {
         if(id!=null && alertCount > 0) {
             deviceConditionsRepository.updateAlertCountByConditionId(id,alertCount);

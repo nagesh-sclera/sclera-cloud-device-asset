@@ -1,5 +1,9 @@
 package io.sclera.dto.touchscreen;
 
+/**
+ * Lightweight vendor contact entry exposed to the touchscreen UI, pairing a vendor
+ * identifier with its vendor and company names.
+ */
 public class ContactListDTO {
 
 	

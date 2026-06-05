@@ -3,6 +3,11 @@ package io.sclera.dto.touchscreen;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 
+/**
+ * Carries the parameters for a network diagnostic/tools request from the
+ * touchscreen, such as the target network, input, private/public IP and port
+ * mappings and Docker addressing used to run network operations on a device.
+ */
 public class NetworkToolsDTO {
     private String username;
     private String vdmsId;

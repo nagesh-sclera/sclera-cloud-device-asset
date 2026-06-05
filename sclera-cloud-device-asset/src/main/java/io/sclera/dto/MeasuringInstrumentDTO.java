@@ -5,6 +5,11 @@ import java.util.List;
 import java.util.Set;
 
 
+/**
+ * Represents a measuring instrument and its latest reading, including value,
+ * unit, alert state, location and associated attributes. Used to expose sensor
+ * measurements and their context in the asset-management domain.
+ */
 public class MeasuringInstrumentDTO {
     private String id;
     private String type;

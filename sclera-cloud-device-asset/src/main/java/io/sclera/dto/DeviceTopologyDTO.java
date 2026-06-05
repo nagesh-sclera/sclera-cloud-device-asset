@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.List;
 
+/**
+ * Represents a device as a node in the network topology, including its identity,
+ * location, parent links, and ports. Used to render and traverse the device connectivity graph.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeviceTopologyDTO {
 	

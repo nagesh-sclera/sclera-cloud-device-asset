@@ -2,6 +2,11 @@ package io.sclera.dto.touchscreen;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents a single named measurement reported by a sensor on the
+ * touchscreen, pairing a value with its category and alert state. Typically
+ * nested within a {@link SensorDTO}.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SensorValueDTO {
 

@@ -4,6 +4,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 
+/**
+ * Represents the SNMP configuration bound one-to-one to a {@link Device} for monitoring that device.
+ */
 @Entity
 public class Snmp_Configuration {
     @Id

@@ -3,6 +3,10 @@ package io.sclera.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Represents a user assigned to an inventoried application, linking a technician's
+ * identity and email to an application along with assignment and sync status.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class InventoryApplicationUserDTO {
     private String id;

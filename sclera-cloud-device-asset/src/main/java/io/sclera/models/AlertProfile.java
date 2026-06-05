@@ -7,6 +7,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+/**
+ * Minimal JPA entity representing an alert profile, exposing only the columns referenced by native
+ * queries in the extracted service. Used as a loosely coupled compatibility stub.
+ */
 @Entity
 @Table(name = "alert_profile")
 public class AlertProfile {

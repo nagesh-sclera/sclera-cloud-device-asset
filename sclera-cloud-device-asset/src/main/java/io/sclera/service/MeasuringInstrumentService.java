@@ -30,6 +30,19 @@ import io.sclera.utils.InstrumentFormula;
 import jakarta.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 
+/**
+ * Manages measuring instruments (sensors) and their attributes: upsert, deletion,
+ * value recalculation via formulas, location tagging, and category/analytics lookups.
+ *
+ * <p>Persistence is handled through {@link MeasuringInstrumentRepository},
+ * {@link MeasuringInstrumentAttributesRepository}, and
+ * {@link MeasuringInstrumentsQueryRepository}, plus a {@link JdbcTemplate}/{@link DataSource}
+ * for direct SQL. Instrument values are derived by {@link InstrumentFormula}. Collaborating
+ * services include {@link DeviceService} (measure counts and alert status), {@link ConditionsService}
+ * (alert evaluation), {@link LocationService} (tagged locations), and {@link UserActionLogService}
+ * (audit logging). Outbound notifications and integrations flow through {@link SocketClient},
+ * {@link RabbitmqClient}, {@link IOCClient}, {@link DaintreeClient}, and {@link APICallClient}.
+ */
 @Service
 public class MeasuringInstrumentService {
     private static final Logger log = LoggerFactory.getLogger(MeasuringInstrumentService.class);
@@ -80,6 +93,18 @@ public class MeasuringInstrumentService {
     IOCClient iocService;
 
 
+    /**
+     * Inserts or updates the supplied instruments, honouring the share method: {@code replace}
+     * first deletes existing instruments for the affected devices, while {@code add} or
+     * {@code replace} then upserts each instrument and its attributes, recalculates values,
+     * refreshes device measure counts, and logs the user action.
+     *
+     * @param username the user performing the operation, recorded in the audit log
+     * @param vdmsid the VDMS identifier of the requesting context
+     * @param share_method the merge strategy; {@code add} or {@code replace}
+     * @param instruments the instruments to upsert
+     * @param httpServletRequest the originating HTTP request, used for endpoint logging
+     */
     public void upsertInstrument(String username, String vdmsid, String share_method, Set<MeasuringInstrumentDTO> instruments, HttpServletRequest httpServletRequest) {
 
         if (share_method != null && share_method.equals("replace")) {
@@ -144,11 +169,28 @@ public class MeasuringInstrumentService {
 
 
     //delete instruments tagged to a device
+    /**
+     * Deletes all measuring instruments tagged to the given device.
+     *
+     * @param username the user performing the operation, recorded in the audit log
+     * @param vdmsid the VDMS identifier of the requesting context
+     * @param device_id the device whose instruments are removed
+     * @param httpServletRequest the originating HTTP request, used for endpoint logging
+     */
     public void deleteInstrumentsByDeviceId(String username, String vdmsid, String device_id,HttpServletRequest httpServletRequest) {
         Set<MeasuringInstrumentDTO> delete_instruments = measuingInstrumentRepository.getInstrumentByDeviceId(device_id);
         this.deleteInstrumentById(username, vdmsid, delete_instruments,httpServletRequest);
     }
 
+    /**
+     * Recalculates instrument values for the device, then returns its instruments with
+     * their attributes populated.
+     *
+     * @param username the requesting user
+     * @param vdmsid the VDMS identifier of the requesting context
+     * @param device_id the device whose instruments are returned
+     * @return the device's measuring instruments with attributes
+     */
     public Set<MeasuringInstrumentDTO> getInstrumentByDeviceId(String username, String vdmsid, String device_id) {
         // TODO Auto-generated method stub
         updateMultipleInstrumentValueByFormula(device_id);
@@ -161,6 +203,15 @@ public class MeasuringInstrumentService {
     }
 
 
+    /**
+     * Returns the device's measuring instruments with their attributes and tagged locations
+     * populated.
+     *
+     * @param username the requesting user
+     * @param vdmsid the VDMS identifier of the requesting context
+     * @param device_id the device whose instruments are returned
+     * @return the device's measuring instruments with attributes and locations
+     */
     public Set<MeasuringInstrumentDTO> getInstrumentsByDeviceId(String username, String vdmsid, String device_id) {
         Set<MeasuringInstrumentDTO> measuringInstruments = measuingInstrumentRepository.getInstrumentByDeviceId(device_id);
         for (MeasuringInstrumentDTO measuringInstrument : measuringInstruments) {
@@ -218,6 +269,12 @@ public class MeasuringInstrumentService {
 //        }
 //    }
 
+    /**
+     * Returns the highest {@code parameter_N} index found in the given string.
+     *
+     * @param input the text to scan for {@code parameter_N} tokens
+     * @return the maximum parameter number, or {@code 0} if none are found
+     */
     public Integer getNoOfParametersFromString(String input) {
         Integer maxNumber = 0;
         Pattern pattern = Pattern.compile("parameter_\\d+");
@@ -234,6 +291,15 @@ public class MeasuringInstrumentService {
     }
 
 
+    /**
+     * Deletes each given instrument, refreshes the owning device's measure count and alert
+     * status, and records the user action.
+     *
+     * @param username the user performing the operation, recorded in the audit log
+     * @param vdmsid the VDMS identifier of the requesting context
+     * @param measuring_instruments the instruments to delete
+     * @param httpServletRequest the originating HTTP request, used for endpoint logging
+     */
     public void deleteInstrumentById(String username, String vdmsid, Set<MeasuringInstrumentDTO> measuring_instruments, HttpServletRequest httpServletRequest) {
         // TODO Auto-generated method stub
 
@@ -381,6 +447,11 @@ public class MeasuringInstrumentService {
 //        }
 //    }
 
+    /**
+     * Returns all Daintree-sourced measuring instruments with their attributes populated.
+     *
+     * @return the Daintree measuring instruments
+     */
     public List<MeasuringInstrumentDTO> getDaintreeMeasuringIntruments() {
         List<MeasuringInstrumentDTO> measuringInstruments = measuingInstrumentRepository.getDaintreeMeasuringInstruments();
         for (MeasuringInstrumentDTO measuringInstrument : measuringInstruments) {
@@ -389,6 +460,12 @@ public class MeasuringInstrumentService {
         return measuringInstruments;
     }
 
+    /**
+     * Recalculates and persists the value of every instrument on the given device when the
+     * formula-derived value differs from the stored one.
+     *
+     * @param device_id the device whose instrument values are recalculated
+     */
     public void updateMultipleInstrumentValueByFormula(String device_id) // NEW CHANGE
     {
         try {
@@ -408,6 +485,15 @@ public class MeasuringInstrumentService {
         }
     }
 
+    /**
+     * Persists a new instrument value and timestamp, then re-evaluates alerts and emits the
+     * update to IOC, the socket channel, and RabbitMQ.
+     *
+     * @param measuingInstrument_id the instrument to update
+     * @param value the new value to store
+     * @param timestamp the value timestamp in milliseconds
+     * @param sensor_type the sensor type included in the outbound RabbitMQ message
+     */
     public void updateInstrumentValueById(String measuingInstrument_id, String value, BigInteger timestamp, String sensor_type) {
         measuingInstrumentRepository.updateInstrumentValueById(measuingInstrument_id, value, timestamp);
 
@@ -434,6 +520,12 @@ public class MeasuringInstrumentService {
     }
 
 
+    /**
+     * Returns the number of measuring instruments tagged to the given device.
+     *
+     * @param device_id the device to count instruments for
+     * @return the instrument count
+     */
     public Integer getInstrumentCountByDeviceId(String device_id) {
         return measuingInstrumentRepository.getInstrumentCountByDeviceId(device_id);
     }
@@ -466,18 +558,47 @@ public class MeasuringInstrumentService {
 //        }
 //    }
 
+    /**
+     * Returns the distinct sensor categories present on the given floor.
+     *
+     * @param floorid the floor to query
+     * @return the set of unique sensor categories
+     */
     public Set<String> getUniqueSensorCategoryByFloor(String floorid) {
         return measuingInstrumentRepository.getUniqueSensorCategoryByFloor(floorid);
     }
 
+    /**
+     * Returns the sensors of a given category on the given floor.
+     *
+     * @param floorid the floor to query
+     * @param category the sensor category to filter by
+     * @return the matching category sensors
+     */
     public Set<CategorySensorDTO> getSensorCategoryByFloor(String floorid, String category) {
         return measuingInstrumentRepository.getSensorCategoryByFloor(floorid, category);
     }
 
+    /**
+     * Returns the number of sensors of a given category on the given floor.
+     *
+     * @param floorid the floor to query
+     * @param category the sensor category to filter by
+     * @return the matching sensor count
+     */
     public Integer getSensorCategoryByFloorCount(String floorid, String category) {
         return measuingInstrumentRepository.getSensorCategoryByFloorCount(floorid, category);
     }
 
+    /**
+     * Returns a paginated page of sensors of a given category on the given floor.
+     *
+     * @param floorid the floor to query
+     * @param category the sensor category to filter by
+     * @param pagesize the maximum number of results to return
+     * @param offset the number of results to skip
+     * @return the paginated category sensors
+     */
     public List<CategorySensorDTO> getSensorCategoryByFloorPagination(String floorid, String category, Integer pagesize, Integer offset) {
         return measuingInstrumentRepository.getSensorCategoryByFloorPagination(floorid, category, pagesize, offset);
     }
@@ -493,10 +614,22 @@ public class MeasuringInstrumentService {
 //	}
 
 
+    /**
+     * Sets the alert flag on the given measuring instrument sensor.
+     *
+     * @param measuring_instrument_id the instrument to update
+     * @param newAlert the new alert state
+     */
     public void updateMeasuringInstrumentSensorAlert(String measuring_instrument_id, Boolean newAlert) {
         measuingInstrumentRepository.updateMeasuringInstrumentSensorAlert(measuring_instrument_id, newAlert);
     }
 
+    /**
+     * Returns counts of measuring instruments with and without an active alert.
+     *
+     * @return a map with {@code measuring_instrument_with_alert_count} and
+     *         {@code measuring_instrument_without_alert_count} entries
+     */
     public Map<String, Integer> getMeasuringInstrumentsAlertsCount() {
         Map<String, Integer> measuringinstrumentAlertCount = new HashMap<>();
         measuringinstrumentAlertCount.put("measuring_instrument_with_alert_count", measuingInstrumentRepository.getMeasuringInstrumentAlertSensorCount(true));
@@ -507,6 +640,12 @@ public class MeasuringInstrumentService {
 
 
     //get measuring instrument sensor by id for all required platforms
+    /**
+     * Returns full sensor details for the given instrument, with attributes populated.
+     *
+     * @param measuring_instrument_id the instrument to fetch
+     * @return the instrument details with attributes
+     */
     public MeasuringInstrumentDetailsDTO getMeasuringInstrumentSensorDetailsById(String measuring_instrument_id) {
         MeasuringInstrumentDetailsDTO measuringInstrumentDetails = measuingInstrumentRepository.getMeasuringInstrumentSensorDetailsById(measuring_instrument_id);
         measuringInstrumentDetails.setMeasuring_instrument_attributes(getMeasuringInstrumentAttributesByMeasuringInstrumentId(measuringInstrumentDetails.getId()));
@@ -515,16 +654,34 @@ public class MeasuringInstrumentService {
 
 
     //update measuring instrument user data value
+    /**
+     * Updates the user-entered data value for the given measuring instrument sensor.
+     *
+     * @param measuring_instrument_id the instrument to update
+     * @param user_data_value the new user data value
+     */
     public void updateMeasuringinstrumentSensorUserDataValue(String measuring_instrument_id, String user_data_value) {
         measuingInstrumentRepository.updateMeasuringinstrumentSensorUserDataValue(measuring_instrument_id, user_data_value);
     }
 
     // get device id by measuring instrument sensor id
+    /**
+     * Returns the device id that owns the given measuring instrument sensor.
+     *
+     * @param measuring_instrument_id the instrument to resolve
+     * @return the owning device id
+     */
     public String getDeviceIdByMeasuringInstrumentSensorId(String measuring_instrument_id) {
         return measuingInstrumentRepository.getDeviceIdByMeasuringInstrumentSensorId(measuring_instrument_id);
     }
 
     // get measuring instrument alert status by device id
+    /**
+     * Indicates whether the given device has any measuring instrument in an alert state.
+     *
+     * @param device_id the device to check
+     * @return {@code true} if at least one instrument has an active alert, otherwise {@code false}
+     */
     public Boolean getMeasuringInstrumentAlertStatusByDeviceId(String device_id) {
         Integer measuring_instrument_alert_count = measuingInstrumentRepository.getMeasuringInstrumentAlertCountDeviceId(device_id, true);
 
@@ -535,16 +692,41 @@ public class MeasuringInstrumentService {
         }
     }
 
+    /**
+     * Returns the current stored value of the given measuring instrument sensor.
+     *
+     * @param measuring_instrument_id the instrument to query
+     * @return the current value
+     */
     public String getMeasuringInstrumentSensorCurrentValue(String measuring_instrument_id) {
         return measuingInstrumentRepository.getMeasuringInstrumentSensorCurrentValue(measuring_instrument_id);
     }
 
+    /**
+     * Returns the given measuring instrument sensor with its attributes populated.
+     *
+     * @param username the requesting user
+     * @param vdmsid the VDMS identifier of the requesting context
+     * @param measuring_instrument_id the instrument to fetch
+     * @return the instrument with attributes
+     */
     public MeasuringInstrumentDTO getMeasuringInstrumentSensorById(String username, String vdmsid, String measuring_instrument_id) {
         MeasuringInstrumentDTO measuringInstrument = measuingInstrumentRepository.getMeasuringInstrumentSensorById(measuring_instrument_id);
         measuringInstrument.setMeasuring_instrument_attributes(getMeasuringInstrumentAttributesByMeasuringInstrumentId(measuringInstrument.getId()));
         return measuringInstrument;
     }
 
+    /**
+     * Returns a paginated, search-filtered list of measuring instruments across devices,
+     * each with its attributes populated.
+     *
+     * @param username the requesting user
+     * @param vdmsid the VDMS identifier of the requesting context
+     * @param searchkey the search term applied to the instruments
+     * @param pageno the one-based page number
+     * @param pagesize the number of results per page
+     * @return the paginated instruments with attributes
+     */
     public List<MeasuringInstrumentDTO> getAllMeasuringInstrumentDeviceByPagination(String username, String vdmsid, String searchkey, Integer pageno, Integer pagesize) {
         Integer offset = pagesize * (pageno - 1);
         List<MeasuringInstrumentDTO> measuringInstruments = measuingInstrumentRepository.getAllMeasuringInstrumentDeviceByPagination(searchkey, pagesize, offset);
@@ -554,38 +736,88 @@ public class MeasuringInstrumentService {
         return measuringInstruments;
     }
 
+    /**
+     * Returns the sensors tagged to the given device.
+     *
+     * @param device_id the device to query
+     * @return the device's sensors
+     */
     public List<SensorDTO> getMeasuringInstrumentSensorsByDeviceId(String device_id) {
 
         return measuingInstrumentRepository.getmeasuringInstrumentsByDeviceId(device_id);
 
     }
 
+    /**
+     * Returns a paginated set of analytics measuring instruments matching the given filters.
+     *
+     * @param category the sensor category to filter by
+     * @param searchkey the search term applied to the instruments
+     * @param pageno the one-based page number
+     * @param pagesize the number of results per page
+     * @param report_template_id the report template to scope results to
+     * @return the matching analytics sensors
+     */
     public Set<AnalyticSensorDTO> getAnalyticsMeasuringInstruments(String category, String searchkey, Integer pageno, Integer pagesize, String report_template_id) {
         Integer offset = pagesize * (pageno - 1);
         return measuingInstrumentRepository.getAnalyticsMeasuringInstruments(category, searchkey, pagesize, offset, report_template_id);
     }
 
+    /**
+     * Returns the alert condition messages for instruments on the given devices.
+     *
+     * @param ids the device ids to query
+     * @return the matching alert conditions
+     */
     public List<ConditionsDTO> listMeasuringIntrumentDevicesAlertMessagesByDeviceIds(List<String> ids) {
         return measuingInstrumentRepository.listMeasuringIntrumentDevicesAlertMessagesByDevice(ids);
     }
 
+    /**
+     * Returns the alert details for the given measuring instrument.
+     *
+     * @param measuring_instrument_id the instrument to query
+     * @return the instrument's alert details
+     */
     public SensorAlertDTO getMeasuringInstrumentAlertDetails(String measuring_instrument_id) {
         return measuingInstrumentRepository.getMeasuringInstrumentAlertDetails(measuring_instrument_id);
 
     }
 
+    /**
+     * Returns the sensors tagged to the given device.
+     *
+     * @param deviceid the device to query
+     * @return the device's sensors
+     */
     public Set<SensorDTO> getSensorByDeviceId(String deviceid) {
         return measuingInstrumentRepository.getSensorByDeviceId(deviceid);
     }
 
+    /**
+     * Returns the sensors tagged to the given location.
+     *
+     * @param locationid the location to query
+     * @return the location's sensors
+     */
     public Set<SensorDTO> getSensorByLocationId(String locationid) {
         return measuingInstrumentRepository.getSensorByLocationId(locationid);
     }
 
+    /**
+     * Returns all persisted measuring instruments.
+     *
+     * @return every measuring instrument
+     */
     public List<MeasuringInstrument> getMeasuringInstruments() {
         return measuingInstrumentRepository.findAll();
     }
 
+    /**
+     * Persists the given instruments in batches of 500.
+     *
+     * @param measuringInstruments the instruments to save
+     */
     public void updateAllInstrumentValue(List<MeasuringInstrument> measuringInstruments) {
         if (measuringInstruments != null && measuringInstruments.size() > 0) {
             int batchSize = 500;
@@ -605,23 +837,61 @@ public class MeasuringInstrumentService {
 
     }
 
+    /**
+     * Returns a paginated page of sensors of a given category at the given location.
+     *
+     * @param locationid the location to query
+     * @param category the sensor category to filter by
+     * @param pagesize the maximum number of results to return
+     * @param offset the number of results to skip
+     * @return the paginated category sensors
+     */
     public List<CategorySensorDTO> getSensorCategoryByLocationPagination(String locationid, String category, Integer pagesize, Integer offset) {
         return measuingInstrumentRepository.getSensorCategoryByLocationPagination(locationid, category, pagesize, offset);
     }
 
+    /**
+     * Returns the number of sensors of a given category at the given location.
+     *
+     * @param locationid the location to query
+     * @param category the sensor category to filter by
+     * @return the matching sensor count
+     */
     public Integer getSensorCategoryByLocationCount(String locationid, String category) {
         return measuingInstrumentRepository.getSensorCategoryByLocationCount(locationid, category);
     }
 
+    /**
+     * Returns the analytics sensor for the given instrument scoped to a report template attribute.
+     *
+     * @param measuring_instrument_id the instrument to fetch
+     * @param searchkey the search term applied to the instrument
+     * @param report_attribute_id the report attribute to scope to
+     * @return the matching analytics sensor
+     */
     public AnalyticSensorDTO getMeasuringInstrumentsByTemplateId(String measuring_instrument_id, String searchkey, String report_attribute_id) {
         return measuingInstrumentRepository.getMeasuringInstrumentsByTemplateId(measuring_instrument_id, searchkey, report_attribute_id);
     }
 
+    /**
+     * Removes all instrument-to-location tags for the given location.
+     *
+     * @param location_id the location whose instrument tags are removed
+     */
     public void deleteMeasuringIntrumentLocationsByLocationId(String location_id) {
         measuingInstrumentRepository.deleteMeasuringIntrumentLocationsByLocationId(location_id);
     }
 
 
+    /**
+     * Tags each instrument to its location when the tag does not already exist, recording the
+     * user action.
+     *
+     * @param username the user performing the operation, recorded in the audit log
+     * @param vdmsid the VDMS identifier of the requesting context
+     * @param measuringInstrumentDTOS the instrument/location pairs to tag
+     * @param httpServletRequest the originating HTTP request, used for endpoint logging
+     */
     public void upsertMeasuringInstrumentLocations(String username, String vdmsid, Set<MeasuringInstrumentDTO> measuringInstrumentDTOS, HttpServletRequest httpServletRequest) {
         for (MeasuringInstrumentDTO measuringInstrumentDTO : measuringInstrumentDTOS) {
             try {
@@ -639,10 +909,25 @@ public class MeasuringInstrumentService {
 
     }
 
+    /**
+     * Returns the count of existing tags between the given instrument and location.
+     *
+     * @param measuring_instrument_id the instrument to check
+     * @param location_id the location to check
+     * @return the number of matching instrument-to-location tags
+     */
     public int checkMeasuringInstrumentsExists(String measuring_instrument_id, String location_id) {
         return measuingInstrumentRepository.checkMeasuringInstrumentsExists(measuring_instrument_id, location_id);
     }
 
+    /**
+     * Removes the location tag from each given instrument, recording the user action.
+     *
+     * @param username the user performing the operation, recorded in the audit log
+     * @param vdmsid the VDMS identifier of the requesting context
+     * @param measuringInstruments the instrument/location pairs to untag
+     * @param httpServletRequest the originating HTTP request, used for endpoint logging
+     */
     public void untagLocationsFromMeasuringInstruments(String username, String vdmsid, List<MeasuringInstrumentDTO> measuringInstruments,HttpServletRequest httpServletRequest) {
 
         for (MeasuringInstrumentDTO measuringInstrumentDTO : measuringInstruments) {
@@ -692,10 +977,23 @@ public class MeasuringInstrumentService {
 //        }
 //    }
 
+    /**
+     * Returns the integration sensors tagged to the given location.
+     *
+     * @param locationid the location to query
+     * @return the location's integration sensors
+     */
     public Set<SensorDTO> getIntegrationSensorByLocationId(String locationid) {
         return measuingInstrumentRepository.getIntegrationSensorByLocationId(locationid);
     }
 
+    /**
+     * Builds the processed attribute data array for the given instrument, falling back to a
+     * single entry derived from the instrument itself when no sensor attributes are present.
+     *
+     * @param id the instrument to build attribute data for
+     * @return the processed attribute data as a JSON array
+     */
     public JSONArray getMeasuringInstrumentsAttributes(String id) {
         MeasuringInstrumentDTO measuringInstrumentDTO = measuingInstrumentRepository.getMeasuringInstrumentSensorById(id);
         List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributes = this.getMeasuringInstrumentAttributesByMeasuringInstrumentId(id);
@@ -715,6 +1013,14 @@ public class MeasuringInstrumentService {
     }
 
 
+    /**
+     * Converts sensor-type attributes into JSON objects carrying value, id, category, protocol,
+     * and timestamp.
+     *
+     * @param measuringInstrumentAttributes the attributes to process
+     * @param timestamp the timestamp applied to each emitted entry
+     * @return the JSON array of sensor attribute entries
+     */
     public JSONArray processData(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributes, BigInteger timestamp) {
         JSONArray jsonArray = new JSONArray();
         for (MeasuringInstrumentAttributesDTO measuringInstrumentAttributesDTO : measuringInstrumentAttributes) {
@@ -738,6 +1044,11 @@ public class MeasuringInstrumentService {
         return jsonArray;
     }
 
+    /**
+     * Returns all Siemens-sourced measuring instruments with their attributes populated.
+     *
+     * @return the Siemens measuring instruments
+     */
     public List<MeasuringInstrumentDTO> getSiemensMeasuringInstruments() {
         List<MeasuringInstrumentDTO> measuringInstruments = measuingInstrumentRepository.getSiemensMeasuringInstruments();
         for (MeasuringInstrumentDTO measuringInstrument : measuringInstruments) {
@@ -746,6 +1057,13 @@ public class MeasuringInstrumentService {
         return measuringInstruments;
     }
 
+    /**
+     * Returns the measuring instruments tagged to the given device, each with its attributes
+     * populated.
+     *
+     * @param deviceId the device to query
+     * @return the device's measuring instruments with attributes
+     */
     public List<MeasuringInstrumentDTO> getMeasuringInstrumentsByDeviceId(String deviceId) {
         List<MeasuringInstrumentDTO> measuringInstruments = measuingInstrumentRepository.getMeasuringInstrumentsByDeviceId(deviceId);
         for (MeasuringInstrumentDTO measuringInstrument : measuringInstruments) {
@@ -755,6 +1073,14 @@ public class MeasuringInstrumentService {
     }
 
 
+    /**
+     * Reassigns instruments from an existing device to a new device and refreshes measure counts
+     * and alert status for both, plus any retained devices.
+     *
+     * @param device_id the target device receiving the instruments
+     * @param existing_device_id the source device the instruments were tagged to
+     * @param retainDevices device ids whose counts and status are also refreshed when applicable
+     */
     public void updateMeasuringInstrumentDeviceId(String device_id, String existing_device_id, Set<String> retainDevices) {
         measuingInstrumentRepository.updateMeasuringInstrumentDeviceId(device_id, existing_device_id);
         deviceService.updateDeviceMeasureCountByDeviceId(device_id);
@@ -767,10 +1093,23 @@ public class MeasuringInstrumentService {
 
     }
 
+    /**
+     * Updates the value, timestamp, and attribute blob of the given instrument.
+     *
+     * @param id the instrument to update
+     * @param value the new value
+     * @param timeStamp the value timestamp in milliseconds
+     * @param attributes the new attribute payload
+     */
     public void updateInstrumentValueAndAttributeById(String id, String value, BigInteger timeStamp, String attributes) {
         measuingInstrumentRepository.updateInstrumentValueAndAttributeById(id, value, timeStamp, attributes);
     }
 
+    /**
+     * Upserts the given instrument and its attributes when it carries at least one attribute.
+     *
+     * @param instrument the instrument to upsert
+     */
     public void upsertMeasuringInstrument(MeasuringInstrumentDTO instrument) {
 
         if (instrument.getMeasuring_instrument_attributes() != null && instrument.getMeasuring_instrument_attributes().size() > 0) {
@@ -786,6 +1125,11 @@ public class MeasuringInstrumentService {
 
     }
 
+    /**
+     * Refreshes the measure count for each of the given devices.
+     *
+     * @param device_ids the devices whose measure counts are refreshed
+     */
     public void updateDeviceMeasureCountByDeviceIds(Set<String> device_ids) {
         for (String device : device_ids) {
             deviceService.updateDeviceMeasureCountByDeviceId(device);
@@ -793,10 +1137,25 @@ public class MeasuringInstrumentService {
         }
     }
 
+    /**
+     * Clears the digital twin positions of the given device's instruments.
+     *
+     * @param device_id the device whose digital twin positions are cleared
+     */
     public void deleteDigitalTwinPositions(String device_id) {
         measuingInstrumentRepository.deleteDigitalTwinPositions(device_id);
     }
 
+    /**
+     * Matches the given BACnet parameter identifiers against each instrument's attributes and,
+     * for matching instruments, recalculates and persists their value via the formula.
+     *
+     * @param protocol the protocol to match
+     * @param primary_id the primary id to match
+     * @param secondary_id the secondary id to match
+     * @param value the incoming parameter value
+     * @param measuringInstrumentList the candidate instruments with their attribute payloads
+     */
     public void updateBacnetMeasuringIntrumentParametersByIds(String protocol, String primary_id, String secondary_id, String value, List<Map<String, Object>> measuringInstrumentList) {
         try {
             for (Map<String, Object> measuringInstrument : measuringInstrumentList) {
@@ -829,6 +1188,11 @@ public class MeasuringInstrumentService {
         }
     }
 
+    /**
+     * Upserts a single measuring instrument attribute, generating an id when none is supplied.
+     *
+     * @param measuringInstrumentAttributesDTO the attribute to upsert
+     */
     public void upsertMeasuringInstrumentAttribute(MeasuringInstrumentAttributesDTO measuringInstrumentAttributesDTO) {
         if (measuringInstrumentAttributesDTO.getId() == null || measuringInstrumentAttributesDTO.getId().equals("")) {
             measuringInstrumentAttributesDTO.setId(Generators.timeBasedGenerator().generate().toString());
@@ -843,14 +1207,31 @@ public class MeasuringInstrumentService {
         }
     }
 
+    /**
+     * Returns the measuring instrument attribute with the given id.
+     *
+     * @param id the attribute id
+     * @return the matching attribute
+     */
     public MeasuringInstrumentAttributesDTO getMeasuringInstrumentAttributeById(String id) {
         return measuringInstrumentAttributesRepository.getMeasuringInstrumentAttributeById(id);
     }
 
+    /**
+     * Returns every measuring instrument attribute.
+     *
+     * @return all attributes
+     */
     public List<MeasuringInstrumentAttributesDTO> getAllMeasuringInstrumentAttributes() {
         return measuringInstrumentAttributesRepository.getAllMeasuringInstrumentAttributes();
     }
 
+    /**
+     * Returns the attributes belonging to the given measuring instrument.
+     *
+     * @param measuringInstrumentId the owning instrument id
+     * @return the instrument's attributes
+     */
     public List<MeasuringInstrumentAttributesDTO> getMeasuringInstrumentAttributesByMeasuringInstrumentId(String measuringInstrumentId) {
         return measuringInstrumentAttributesRepository.getMeasuringInstrumentAttributesByMeasuringInstrumentId(measuringInstrumentId);
     }
@@ -872,6 +1253,13 @@ public class MeasuringInstrumentService {
 //        }
 //    }
 
+    /**
+     * Recalculates the given instrument's value from its attributes and, when it has changed or
+     * a change is forced, persists and propagates the new value.
+     *
+     * @param id the instrument to recalculate
+     * @param value_changed_status when {@code 1}, forces the update even if the value is unchanged
+     */
     public void updateMeasuringInstrumentValueByFormula(String id, Integer value_changed_status) {
         try {
             MeasuringInstrumentDTO measuingInstrument = measuingInstrumentRepository.getInstrumentByInstrumentId(id);
@@ -891,14 +1279,34 @@ public class MeasuringInstrumentService {
     }
 
     // MIA changes
+    /**
+     * Returns the ids of instruments whose attributes match the given protocol and primary ids.
+     *
+     * @param protocol the protocol to match
+     * @param primaryIds the primary ids to match
+     * @return the matching instrument ids
+     */
     public Set<String> getMeasuringInstrumentIdsByProtocolAndPrimaryIds(String protocol, Set<String> primaryIds) {
         return measuingInstrumentRepository.getMeasuringInstrumentIdsByProtocolAndPrimaryIds(protocol, primaryIds);
     }
 
+    /**
+     * Returns the number of measuring instruments of the given type.
+     *
+     * @param type the instrument type to count
+     * @return the matching instrument count
+     */
     public Integer getMeasuringInstrumentCountByType(String type) {
         return measuingInstrumentRepository.getMeasuringInstrumentCountByType(type);
     }
 
+    /**
+     * Upserts the given instrument and its attributes under an explicit instrument id, supporting
+     * multi digital-twin scenarios where a single instrument is duplicated per twin.
+     *
+     * @param instrument the instrument to upsert
+     * @param measuring_instrument_id the explicit id to store the instrument and attributes under
+     */
     public void upsertMeasuringInstrumentForMultiDigitaltwin(MeasuringInstrumentDTO instrument, String measuring_instrument_id) {
 
         if (instrument.getMeasuring_instrument_attributes() != null && instrument.getMeasuring_instrument_attributes().size() > 0) {
@@ -922,6 +1330,12 @@ public class MeasuringInstrumentService {
         }
     }
 
+    /**
+     * Upserts a single measuring instrument attribute for a multi digital-twin instrument,
+     * generating an attribute id when none is supplied.
+     *
+     * @param measuringInstrumentAttributesDTO the attribute to upsert
+     */
     public void upsertMeasuringInstrumentAttributeForMultiDigitaltwin(MeasuringInstrumentAttributesDTO measuringInstrumentAttributesDTO) {
         String measuring_instrumnet_attribute_id = measuringInstrumentAttributesDTO.getId();
         if (measuringInstrumentAttributesDTO.getId() == null || measuringInstrumentAttributesDTO.getId().equals("")) {

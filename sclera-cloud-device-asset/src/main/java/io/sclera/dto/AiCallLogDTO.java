@@ -7,6 +7,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigInteger;
 import java.util.List;
 
+/**
+ * Represents an AI-assisted service call log for a device, capturing the reported issue,
+ * priority, status, assigned technician, and the chronological history of state changes.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AiCallLogDTO {

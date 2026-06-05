@@ -3,6 +3,10 @@ package io.sclera.dto;
 
 import java.math.BigInteger;
 
+/**
+ * Represents a sensor reading surfaced for analytics and reporting, combining the sensor's
+ * identity, latest value, protocol, location, and owning device with reporting metadata.
+ */
 public class AnalyticSensorDTO {
     private String primary_id;
     private String secondary_id;

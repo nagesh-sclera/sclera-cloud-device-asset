@@ -24,6 +24,19 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Coordinates onboarding of assets and virtual devices into the platform.
+ *
+ * <p>Translates temporary product data into {@link DeviceDTO} instances, persists onboarded
+ * assets, and tracks onboarding status. Long-running work is dispatched to single-thread
+ * executors so callers are not blocked.
+ *
+ * <p>Key collaborators: {@link APICallClient} for temporary product retrieval and cleanup,
+ * {@link DeviceService} for device persistence and onboard status updates,
+ * {@link LocationService} for location lookups, {@link CorrigoClient} for Corrigo asset
+ * synchronization, {@link AssetRepository} for asset upsert/delete operations, and
+ * {@link VdmsRepository} for VDMS property details.
+ */
 @Service
 @ConfigurationProperties(prefix = "sclera")
 public class AssetOnboardService {
@@ -43,6 +56,13 @@ public class AssetOnboardService {
     @Autowired
     VdmsRepository vdmsRepository;
 
+    /**
+     * Builds devices from temporary product data and onboards them asynchronously.
+     *
+     * @param username   the requesting user
+     * @param vdmsid     the VDMS identifier
+     * @param asset_data the onboarding payload, including docker name, location id, and temporary asset ids
+     */
     public void addAssetOnboardedData(String username, String vdmsid, JSONObject asset_data) {
         String docker_name = asset_data.getString("docker_name");
         String location_id = asset_data.getString("location_id");
@@ -89,6 +109,12 @@ public class AssetOnboardService {
         }
     }
 
+    /**
+     * Converts raw specification entries into specification DTOs.
+     *
+     * @param specifications the raw specification array with key/value pairs
+     * @return the parsed list of {@link SpecificationsDTO}
+     */
     public List<SpecificationsDTO> updateDeviceSpecificationDetails(JSONArray specifications) {
         List<SpecificationsDTO> final_specifications = new ArrayList<>();
         try {
@@ -107,15 +133,36 @@ public class AssetOnboardService {
         return final_specifications;
     }
 
+    /**
+     * Inserts or updates an asset record for the given device.
+     *
+     * @param device          the device whose asset is upserted
+     * @param vdmsid          the VDMS identifier
+     * @param assetImportType the asset import type
+     * @param username        the requesting user
+     */
     public void assetUpsert(DeviceDTO device, String vdmsid, String assetImportType, String username) {
         assetRepository.assetUpsert(device.getId(), device.getUser_data_name(), device.getDescription(), device.getType(), null, null, null, null, 7, null, null, "", device.getCustom_fields(), null, false, null, vdmsid, 0, assetImportType);
 //        deviceService.updateVirtualDeviceOnboardStatusByAssetMapper(device,username);
     }
 
+    /**
+     * Deletes all asset records.
+     */
     public void deleteAllRecords() {
         assetRepository.deleteAllRecords();
     }
 
+    /**
+     * Synchronizes Corrigo assets asynchronously.
+     *
+     * @param username              the requesting user
+     * @param vdmsid                the VDMS identifier
+     * @param pageNo                the page number to fetch
+     * @param pageSize              the page size
+     * @param searchKey             the search key used to filter assets
+     * @param corrigo_configuration the Corrigo connection configuration
+     */
     public void updateCorrigoAssets(String username, String vdmsid, Integer pageNo, Integer pageSize, String searchKey, CorrigoConfigurationDTO corrigo_configuration) {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(() -> {
@@ -124,16 +171,42 @@ public class AssetOnboardService {
         executorService.shutdown();
     }
 
+    /**
+     * Inserts or updates onboard assets.
+     *
+     * @param username           the requesting user
+     * @param vdmsid             the VDMS identifier
+     * @param onboard_asset_data the onboard asset payload
+     * @param httpServletRequest the originating HTTP request, used for logging
+     */
     public void upsertOnboardAssets(String username, String vdmsid, JSONObject onboard_asset_data, HttpServletRequest httpServletRequest) {
         log.info("endpoint: {}, upsertOnboardAssets, description: Updating onboard assets, params: onboard_asset_data: {}", httpServletRequest.getRequestURI(), onboard_asset_data);
         deviceService.upsertOnboardAssets(username, vdmsid, onboard_asset_data);
     }
 
+    /**
+     * Updates the onboard status of assets.
+     *
+     * @param username           the requesting user
+     * @param vdmsid             the VDMS identifier
+     * @param onboard_asset_data the onboard status payload
+     * @param httpServletRequest the originating HTTP request, used for logging
+     */
     public void updateAssetOnboardStatus(String username, String vdmsid, JSONObject onboard_asset_data, HttpServletRequest httpServletRequest) {
         log.info("endpoint: {}, updateAssetOnboardStatus, description: Updating onboard status, params: onboard_asset_data: {}", httpServletRequest.getRequestURI(), onboard_asset_data);
         deviceService.updateAssetOnboardStatus(username, vdmsid, onboard_asset_data);
     }
 
+    /**
+     * Updates onboard data for a specific device.
+     *
+     * @param username               the requesting user
+     * @param vdmsid                 the VDMS identifier
+     * @param device_id              the device identifier
+     * @param deviceOnboardStatusDTO the onboard status details to apply
+     * @param onboard_status         the onboard status code
+     * @param httpServletRequest     the originating HTTP request, used for logging
+     */
     public void updateAssetOnboardData(String username, String vdmsid, String device_id, DeviceOnboardStatusDTO deviceOnboardStatusDTO, Integer onboard_status, HttpServletRequest httpServletRequest) {
         log.info("endpoint: {}, updateAssetOnboardData, description: Updating onboard data, params: deviceOnboardStatusDTO: {}", httpServletRequest.getRequestURI(), deviceOnboardStatusDTO);
         deviceService.updateAssetOnboardData(username, vdmsid, device_id, deviceOnboardStatusDTO, onboard_status);
@@ -142,14 +215,37 @@ public class AssetOnboardService {
 //    public Map<String, Integer> getAssetOnboardCount(String username, String vdmsid, String dockername) {
 //        return deviceService.getAssetOnboardCount(username, vdmsid, dockername);
 //    }
+    /**
+     * Returns onboarding counts grouped by status.
+     *
+     * @param username                   the requesting user
+     * @param vdmsid                     the VDMS identifier
+     * @param dockername                 the docker name to scope the counts
+     * @param search_sort_filter_details the search, sort, and filter criteria
+     * @return a map of onboarding status to count
+     */
     public Map<String, Integer> getAssetOnboardCount(String username, String vdmsid, String dockername, JSONObject search_sort_filter_details) {
         return deviceService.getAssetOnboardCount(username, vdmsid, dockername, search_sort_filter_details);
     }
 
+    /**
+     * Returns the set of assignees for onboarded assets.
+     *
+     * @param username the requesting user
+     * @param vdms_id  the VDMS identifier
+     * @return the set of assignee identifiers
+     */
     public Set<String> getAssetOnboardAssignees(String username, String vdms_id) {
         return deviceService.getAssetOnboardAssignees(username, vdms_id);
     }
 
+    /**
+     * Returns VDMS property and sync details.
+     *
+     * @param username the requesting user
+     * @param vdmsId   the VDMS identifier
+     * @return the VDMS property details as a {@link VdmsDTO}
+     */
     public VdmsDTO getPropertyDetails(String username, String vdmsId) {
         return vdmsRepository.getSyncDetailsForADC();
     }

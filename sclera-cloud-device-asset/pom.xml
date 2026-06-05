@@ -478,6 +478,19 @@
                     <includeSystemScope>true</includeSystemScope>
                 </configuration>
             </plugin>
+            <!-- Generates browsable HTML JavaDoc on demand via `mvnw javadoc:javadoc`.
+                 Not bound to the build lifecycle (no executions), so it never runs during
+                 compile/package. doclint is disabled so generation does not fail on the
+                 many classes that are not yet documented, or on minor tag issues. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <doclint>none</doclint>
+                    <failOnError>false</failOnError>
+                    <quiet>true</quiet>
+                </configuration>
+            </plugin>
         </plugins>
         <finalName>sclera</finalName>
     </build>

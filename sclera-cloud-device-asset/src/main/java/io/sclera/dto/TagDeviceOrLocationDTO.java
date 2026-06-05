@@ -3,6 +3,10 @@ package io.sclera.dto;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Request payload for applying a tag/group to devices or locations, holding the
+ * filter and general selection objects together with the target group and select-all flag.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TagDeviceOrLocationDTO {
     private JSONObject filter_object;

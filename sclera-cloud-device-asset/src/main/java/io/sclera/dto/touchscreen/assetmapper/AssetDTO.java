@@ -4,6 +4,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Represents a discovered or catalogued asset in the asset-mapper workflow, including its
+ * identifying attributes, product-match scoring, and any nested subsystems. Used when matching
+ * imported devices against known products and building parent/subsystem hierarchies.
+ */
 public class AssetDTO {
 
     private String id; //72

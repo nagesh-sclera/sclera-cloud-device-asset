@@ -36,6 +36,10 @@ import java.math.BigInteger;
         resultSetMapping = "aicallloghistorymapping"
 )
 
+/**
+ * JPA entity recording a single state-change entry in the lifecycle history of an {@link AiCallLog},
+ * capturing the timestamp, description, state, and acting technician for each update.
+ */
 @Entity
 public class AiCallLogHistory {
 

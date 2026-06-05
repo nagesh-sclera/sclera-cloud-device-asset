@@ -4,6 +4,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
+/**
+ * Represents a service ticket raised against a {@link Device}.
+ */
 @Entity
 public class Ticket {
     @Id

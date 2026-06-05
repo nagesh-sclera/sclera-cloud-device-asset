@@ -4,6 +4,10 @@ package io.sclera.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigInteger;
 
+/**
+ * Represents a device type definition used to categorize devices in the asset inventory,
+ * carrying its identifier, name, and creation/update timestamps.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeviceTypesDTO {
     private String id;

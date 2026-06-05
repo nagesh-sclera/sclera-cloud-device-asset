@@ -4,6 +4,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.List;
 
+/**
+ * Represents a device together with its attached sensors for the touchscreen
+ * view, exposing location, type, status, alert state and identification codes
+ * (QR, NFC, barcode) alongside the device's sensor readings.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeviceSensorsDTO {
 

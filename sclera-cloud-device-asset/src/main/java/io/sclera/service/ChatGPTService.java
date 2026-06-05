@@ -17,6 +17,17 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter
 
 import java.util.*;
 
+/**
+ * Builds asset-aware prompts and streams chatbot answers for an asset Q&amp;A
+ * experience.
+ *
+ * <p>Given a {@link ChatGPTDTO} request, this service resolves the target asset
+ * via {@link DeviceService}, enriches the prompt context with telemetry from
+ * {@link MeasuringInstrumentService} and open work orders from
+ * {@link CorrigoClient}, then delegates the streaming completion to
+ * {@link APICallClient}. Responses are emitted asynchronously through a
+ * {@link ResponseBodyEmitter}.</p>
+ */
 @Service
 public class ChatGPTService {
 
@@ -34,6 +45,13 @@ public class ChatGPTService {
 
     private static final Logger logger = LoggerFactory.getLogger(ChatGPTService.class);
 
+    /**
+     * Builds an asset-contextualized prompt and streams the chatbot response asynchronously.
+     *
+     * @param chatGPTDTO the request describing the user, target asset, organisation, query type and chat history
+     * @return a {@link ResponseEntity} wrapping the {@link ResponseBodyEmitter} that streams the generated message
+     * @throws JSONException if the prompt payload cannot be assembled as JSON
+     */
     public ResponseEntity<ResponseBodyEmitter> generateMessage(ChatGPTDTO chatGPTDTO) throws JSONException {
         ResponseBodyEmitter emitter = new ResponseBodyEmitter(300000L);
 

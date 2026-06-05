@@ -16,9 +16,18 @@ import org.springframework.stereotype.Repository;
 import io.sclera.dto.ConditionsDTO;
 import io.sclera.models.Conditions;
 
+/**
+ * Manages persistence and querying of {@link Conditions} entities.
+ */
 @Repository
 public interface ConditionsRepository extends JpaRepository<Conditions, String> {
 
+    /**
+     * Returns whether a condition with the given identifier exists.
+     *
+     * @param id the condition identifier
+     * @return the count of matching records
+     */
     @Query(value = "SELECT COUNT(*) FROM conditions WHERE id = ?1", nativeQuery = true)
     int conditionById(String id);
 
@@ -51,6 +60,53 @@ public interface ConditionsRepository extends JpaRepository<Conditions, String> 
 //			String my_devices_sensor_attributes_name, String monnit_sensor_id, String pelican_sensor_id, String pelican_sensor_attributes_name,
 //			String knx_group_address, String knx_device_address, String snmp_device_configuration_id, String snmp_object_oid);
 
+    /**
+     * Inserts a new condition with its full set of sensor, alert, and scheduling attributes.
+     *
+     * @param id                              the condition identifier
+     * @param name                            the condition name
+     * @param value                           the threshold value
+     * @param second_value                    the secondary threshold value
+     * @param alert_message                   the alert message
+     * @param start_time                      the schedule start time
+     * @param end_time                        the schedule end time
+     * @param schedule                        the schedule flag
+     * @param schedule_conditions             the schedule conditions
+     * @param max_alert_count                 the maximum alert count
+     * @param alert_count_enabled             the alert-count-enabled flag
+     * @param alert_condition                 the alert condition type
+     * @param alert                           the alert flag
+     * @param show_alert                      the show-alert flag
+     * @param show_alert_message_as_value     the show-alert-message-as-value flag
+     * @param bacnet_device_id                the BACnet device identifier
+     * @param bacnet_object_id                the BACnet object identifier
+     * @param lorawan_sensor_id               the LoRaWAN sensor identifier
+     * @param lorawan_sensor_attributes_name  the LoRaWAN sensor attribute name
+     * @param snmp_device_id                  the SNMP device identifier
+     * @param disruptive_sensor_id            the Disruptive sensor identifier
+     * @param my_devices_sensor_id            the myDevices sensor identifier
+     * @param my_devices_sensor_attributes_name the myDevices sensor attribute name
+     * @param monnit_sensor_id                the Monnit sensor identifier
+     * @param pelican_sensor_id               the Pelican sensor identifier
+     * @param pelican_sensor_attributes_name  the Pelican sensor attribute name
+     * @param knx_group_address               the KNX group address
+     * @param knx_device_address              the KNX device address
+     * @param snmp_device_configuration_id    the SNMP device configuration identifier
+     * @param snmp_object_oid                 the SNMP object OID
+     * @param measuring_instrument_id         the measuring instrument identifier
+     * @param alert_time                      the alert time
+     * @param daintree_device_id             the Daintree device identifier
+     * @param daintree_point_id              the Daintree point identifier
+     * @param alert_profile_id               the alert profile identifier
+     * @param ecobee_sensor_id               the ecobee sensor identifier
+     * @param ecobee_sensor_attributes_name  the ecobee sensor attribute name
+     * @param modbus_register_id             the Modbus register identifier
+     * @param priority                       the alert priority
+     * @param last_alerted                   the last-alerted flag
+     * @param alert_count_time               the alert count time window
+     * @param enable_threshold_line_onchart  the enable-threshold-line-on-chart flag
+     * @param color_of_threshold_line_onchart the color of the threshold line on the chart
+     */
     @Modifying
     @Transactional
     @Query(value = "INSERT INTO conditions (id, name, value,second_value, alert_message, start_time, end_time, schedule, schedule_conditions, max_alert_count, alert_count_enabled, alert_condition, alert, show_alert, show_alert_message_as_value, "
@@ -67,6 +123,53 @@ public interface ConditionsRepository extends JpaRepository<Conditions, String> 
                       Integer alert_time, String daintree_device_id, String daintree_point_id, String alert_profile_id, String ecobee_sensor_id, String ecobee_sensor_attributes_name, String modbus_register_id,
                       String priority, Boolean last_alerted, Integer alert_count_time, Integer enable_threshold_line_onchart, String color_of_threshold_line_onchart);
 
+    /**
+     * Updates an existing condition with its full set of sensor, alert, and scheduling attributes.
+     *
+     * @param id                              the condition identifier
+     * @param name                            the condition name
+     * @param value                           the threshold value
+     * @param second_value                    the secondary threshold value
+     * @param alert_message                   the alert message
+     * @param start_time                      the schedule start time
+     * @param end_time                        the schedule end time
+     * @param schedule                        the schedule flag
+     * @param schedule_conditions             the schedule conditions
+     * @param max_alert_count                 the maximum alert count
+     * @param alert_count_enabled             the alert-count-enabled flag
+     * @param alert_count                     the current alert count
+     * @param alert_condition                 the alert condition type
+     * @param show_alert                      the show-alert flag
+     * @param show_alert_message_as_value     the show-alert-message-as-value flag
+     * @param bacnet_device_id                the BACnet device identifier
+     * @param bacnet_object_id                the BACnet object identifier
+     * @param lorawan_sensor_id               the LoRaWAN sensor identifier
+     * @param lorawan_sensor_attributes_name  the LoRaWAN sensor attribute name
+     * @param snmp_device_id                  the SNMP device identifier
+     * @param disruptive_sensor_id            the Disruptive sensor identifier
+     * @param my_devices_sensor_id            the myDevices sensor identifier
+     * @param my_devices_sensor_attributes_name the myDevices sensor attribute name
+     * @param monnit_sensor_id                the Monnit sensor identifier
+     * @param pelican_sensor_id               the Pelican sensor identifier
+     * @param pelican_sensor_attributes_name  the Pelican sensor attribute name
+     * @param knx_group_address               the KNX group address
+     * @param knx_device_address              the KNX device address
+     * @param snmp_device_configuration_id    the SNMP device configuration identifier
+     * @param snmp_object_oid                 the SNMP object OID
+     * @param measuring_instrument_id         the measuring instrument identifier
+     * @param alert_time                      the alert time
+     * @param daintree_device_id             the Daintree device identifier
+     * @param daintree_point_id              the Daintree point identifier
+     * @param alert_profile_id               the alert profile identifier
+     * @param ecobee_sensor_id               the ecobee sensor identifier
+     * @param ecobee_sensor_attributes_name  the ecobee sensor attribute name
+     * @param modbus_register_id             the Modbus register identifier
+     * @param priority                       the alert priority
+     * @param last_alerted                   the last-alerted flag
+     * @param alert_count_time               the alert count time window
+     * @param enable_threshold_line_onchart  the enable-threshold-line-on-chart flag
+     * @param color_of_threshold_line_onchart the color of the threshold line on the chart
+     */
     @Modifying
     @Transactional
     @Query(value = "UPDATE conditions SET name = ?2, value = ?3, second_value=?4, alert_message = ?5, start_time = ?6, end_time = ?7, schedule = ?8, schedule_conditions =?9, max_alert_count = ?10, alert_count_enabled = ?11, alert_count = ?12, alert_condition = ?13, show_alert = ?14, "
@@ -84,17 +187,69 @@ public interface ConditionsRepository extends JpaRepository<Conditions, String> 
                          Integer alert_time, String daintree_device_id, String daintree_point_id, String alert_profile_id, String ecobee_sensor_id, String ecobee_sensor_attributes_name, String modbus_register_id,
                          String priority, Boolean last_alerted, Integer alert_count_time, Integer enable_threshold_line_onchart, String color_of_threshold_line_onchart);
 
+    /**
+     * Deletes the condition with the given identifier.
+     *
+     * @param conditionId the condition identifier
+     */
     //delete is done by cascade delete, if this query not required can be deleted
     @Modifying
     @Transactional
     @Query(value = "DELETE FROM conditions WHERE id = ?1", nativeQuery = true)
     void deleteConditionById(String conditionId);
 
+    /**
+     * Returns the conditions matching the given sensor and instrument identifiers.
+     *
+     * @param bacnet_object_id             the BACnet object identifier
+     * @param bacnet_device_id             the BACnet device identifier
+     * @param lorawan_sensor_id            the LoRaWAN sensor identifier
+     * @param snmp_device_id               the SNMP device identifier
+     * @param disruptive_sensor_id         the Disruptive sensor identifier
+     * @param my_devices_sensor_id         the myDevices sensor identifier
+     * @param monnit_sensor_id             the Monnit sensor identifier
+     * @param pelican_sensor_id            the Pelican sensor identifier
+     * @param knx_group_address            the KNX group address
+     * @param knx_device_address           the KNX device address
+     * @param snmp_device_configuration_id the SNMP device configuration identifier
+     * @param snmp_object_oid              the SNMP object OID
+     * @param measuring_instrument_id      the measuring instrument identifier
+     * @param daintree_device_id           the Daintree device identifier
+     * @param ecobee_sensor_id             the ecobee sensor identifier
+     * @param modbus_register_id           the Modbus register identifier
+     * @return the matching condition projections
+     */
     @Query(nativeQuery = true)
     Set<ConditionsDTO> getConditions(String bacnet_object_id, String bacnet_device_id, String lorawan_sensor_id, String snmp_device_id,
                                      String disruptive_sensor_id, String my_devices_sensor_id, String monnit_sensor_id, String pelican_sensor_id, String knx_group_address,
                                      String knx_device_address, String snmp_device_configuration_id, String snmp_object_oid, String measuring_instrument_id, String daintree_device_id, String ecobee_sensor_id, String modbus_register_id);
 
+    /**
+     * Returns the conditions matching the given sensor identifiers and attribute names.
+     *
+     * @param bacnet_device_id                the BACnet device identifier
+     * @param bacnet_object_id                the BACnet object identifier
+     * @param lorawan_sensor_id               the LoRaWAN sensor identifier
+     * @param lorawan_sensor_attributes_name  the LoRaWAN sensor attribute name
+     * @param snmp_device_id                  the SNMP device identifier
+     * @param disruptive_sensor_id            the Disruptive sensor identifier
+     * @param my_devices_sensor_id            the myDevices sensor identifier
+     * @param my_devices_sensor_attributes_name the myDevices sensor attribute name
+     * @param monnit_sensor_id                the Monnit sensor identifier
+     * @param pelican_sensor_id               the Pelican sensor identifier
+     * @param pelican_sensor_attributes_name  the Pelican sensor attribute name
+     * @param knx_group_address               the KNX group address
+     * @param knx_device_address              the KNX device address
+     * @param snmp_device_configuration_id    the SNMP device configuration identifier
+     * @param snmp_object_oid                 the SNMP object OID
+     * @param measuring_instrument_id         the measuring instrument identifier
+     * @param daintree_device_id             the Daintree device identifier
+     * @param daintree_point_id              the Daintree point identifier
+     * @param ecobee_sensor_id               the ecobee sensor identifier
+     * @param ecobee_sensor_attributes_name  the ecobee sensor attribute name
+     * @param modbus_register_id             the Modbus register identifier
+     * @return the matching condition projections
+     */
     @Query(nativeQuery = true)
     Set<ConditionsDTO> getConditionsById(String bacnet_device_id, String bacnet_object_id, String lorawan_sensor_id,
                                          String lorawan_sensor_attributes_name, String snmp_device_id, String disruptive_sensor_id, String my_devices_sensor_id,
@@ -107,39 +262,89 @@ public interface ConditionsRepository extends JpaRepository<Conditions, String> 
 //	@Query(value = "UPDATE conditions SET alert = ?2 WHERE id = ?1", nativeQuery = true)
 //	void updateConditionAlert(String id, Boolean alert);
 
+    /**
+     * Updates the alert state, count, and last-alerted details of a condition.
+     *
+     * @param id                     the condition identifier
+     * @param alert                  the alert flag
+     * @param alert_count            the alert count
+     * @param last_alerted_timestamp the last-alerted timestamp
+     * @param last_alerted           the last-alerted flag
+     */
     @Modifying
     @Transactional
     @Query(value = "UPDATE conditions SET alert = ?2, alert_count = ?3, last_alerted_timestamp = ?4, last_alerted = ?5  WHERE id = ?1", nativeQuery = true)
     void updateConditionAlert(String id, Boolean alert, Integer alert_count, BigInteger last_alerted_timestamp, Boolean last_alerted);
 
+    /**
+     * Updates the alert count of a condition.
+     *
+     * @param id          the condition identifier
+     * @param alert_count the alert count to set
+     */
     //update condition alert count
     @Modifying
     @Transactional
     @Query(value = "UPDATE conditions SET alert_count = ?2  WHERE id = ?1", nativeQuery = true)
     void updateConditionAlertCount(String id, Integer alert_count);
 
+    /**
+     * Returns the alert-count details for the given condition.
+     *
+     * @param id the condition identifier
+     * @return the condition projection with alert-count details
+     */
     //get alert count details
     @Query(nativeQuery = true)
     ConditionsDTO getConditionAlertCountDetails(String id);
 
+    /**
+     * Clears the alert profile association from all conditions referencing it.
+     *
+     * @param alert_profile_id the alert profile identifier
+     */
     @Modifying
     @Transactional
     @Query(value = "UPDATE conditions SET alert_profile_id = NULL  WHERE alert_profile_id = ?1", nativeQuery = true)
     void updateAlertProfileId(String alert_profile_id);
 
+    /**
+     * Resets the last-alerted flag of a condition.
+     *
+     * @param id           the condition identifier
+     * @param last_alerted the last-alerted flag to set
+     */
     @Modifying
     @Transactional
     @Query(value = "UPDATE conditions SET last_alerted = ?2  WHERE id = ?1", nativeQuery = true)
     void resetLastAlertById(String id, Boolean last_alerted);
 
+    /**
+     * Returns the condition with the given identifier.
+     *
+     * @param conditionId the condition identifier
+     * @return the matching condition projection
+     */
     @Query(nativeQuery = true)
     ConditionsDTO getConditionByConditionId(String conditionId);
 
+    /**
+     * Clears the last-alerted timestamp of a condition.
+     *
+     * @param id the condition identifier
+     * @return the result of the update operation
+     */
     @Modifying
     @Transactional
     @Query(value = "UPDATE conditions SET last_alerted_timestamp = NULL WHERE id = ?1", nativeQuery = true)
     Object updateLastAlertedTimestamp(String id);
 
+    /**
+     * Returns condition and alert-profile details for a device, used for advanced Excel export.
+     *
+     * @param deviceId the device identifier
+     * @return the matching rows as a list of column-keyed maps
+     */
     @Query( nativeQuery = true,
             value = "SELECT c.id AS condition_id,c.name AS condition_name,c.alert_condition AS alert_condition,c.value AS value_name,c.alert_message AS alert_message,c.priority AS priority,ap.id AS alert_profile_id,ap.name AS alert_profile_name,ap.ioc AS ioc,mi.id AS measuring_instrument_id,c.show_alert AS show_alert,c.show_alert_message_as_value AS show_alert_message_as_value,c.enable_threshold_line_onchart AS enable_threshold_line_onchart,c.color_of_threshold_line_onchart AS color_of_threshold_line_onchart,c.alert AS alert_after,c.alert_time AS alert_time, c.schedule AS schedule_alert, c.start_time AS schedule_start_time, c.end_time AS schedule_end_time,c.schedule_conditions AS schedule_conditions , c.alert_count_enabled AS alert_count_enable  " +
                     "FROM device d " +

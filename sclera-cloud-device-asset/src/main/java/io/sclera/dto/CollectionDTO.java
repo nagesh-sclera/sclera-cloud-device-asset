@@ -9,6 +9,10 @@ import lombok.Setter;
 
 import java.util.List;
 
+/**
+ * Aggregates asset classification, location, and tag (QR/barcode/NFC) details for a device collection entry.
+ * Used to present consolidated collection records in the asset-management API.
+ */
 @Getter
 @Setter
 @AllArgsConstructor

@@ -4,6 +4,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigInteger;
 
+/**
+ * Represents a single historical event or alert record across the various device and sensor
+ * types, capturing the source entity, measured value, alert message, and ticket details.
+ * Used to build device activity timelines and history feeds.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class HistoryDTO {
 
