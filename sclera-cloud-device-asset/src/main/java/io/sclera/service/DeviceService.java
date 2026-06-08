@@ -797,7 +797,7 @@ public class DeviceService {
             System.out.println(image_url_3);
 
             product_detailsService.addProductImages(productdto.getId(), modified_image_url_1, modified_image_url_2,
-                    modified_image_url_3, productdto.getImage_url_1(), productdto.getImage_url_1(), productdto.getImage_url_3());
+                    modified_image_url_3, productdto.getImage_url_1(), productdto.getImage_url_2(), productdto.getImage_url_3());
         }
     }
 
@@ -816,12 +816,12 @@ public class DeviceService {
         }
         if (productdto.getImage_url_2() != null) {
             image_url_2 = addImageByUrl(productdto.getImage_url_2(), image, directory, productdto.getId() + "_2");
-            String extension = getImageExtensionByImageUrl(productdto.getImage_url_1());
+            String extension = getImageExtensionByImageUrl(productdto.getImage_url_2());
             modified_image_url_2 = "http://localhost:8888/images/" + productdto.getId() + "_2." + extension;
         }
         if (productdto.getImage_url_3() != null) {
             image_url_3 = addImageByUrl(productdto.getImage_url_3(), image, directory, productdto.getId() + "_3");
-            String extension = getImageExtensionByImageUrl(productdto.getImage_url_1());
+            String extension = getImageExtensionByImageUrl(productdto.getImage_url_3());
             modified_image_url_3 = "http://localhost:8888/images/" + productdto.getId() + "_3." + extension;
         }
         System.out.println(productdto.getId());
@@ -830,7 +830,7 @@ public class DeviceService {
         System.out.println(image_url_3);
 
         product_detailsService.addProductImages(productdto.getId(), modified_image_url_1, modified_image_url_2,
-                modified_image_url_3, productdto.getImage_url_1(), productdto.getImage_url_1(), productdto.getImage_url_3());
+                modified_image_url_3, productdto.getImage_url_1(), productdto.getImage_url_2(), productdto.getImage_url_3());
     }
 
     public String addImageByUrl(String link, byte[] image, String directory, String id) throws IOException {
