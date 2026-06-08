@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import jakarta.transaction.Transactional;
+import org.springframework.data.repository.query.Param;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
@@ -1246,6 +1247,13 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     @Transactional
     @Query(value = "UPDATE device SET asset_tag_images_url = ?2 where id = ?1", nativeQuery = true)
     void updateAssetTagImages(String id, String jsonString);
+
+    /**
+     * DB-per-service helper: returns (id, product_id) pairs for the given device ids,
+     * used to map device -> product for InventoryClient enrichment of image URLs.
+     */
+    @Query(value = "SELECT id, product_id FROM device WHERE id IN (:ids)", nativeQuery = true)
+    List<Object[]> findDeviceProductIdRows(@Param("ids") Set<String> ids);
 }
 
 

@@ -686,14 +686,13 @@ import java.util.Set;
 @NamedNativeQuery(
         name = "Device.listDevicesTs",
         query = "SELECT d.id, d.display_name, d.user_data_name, l.name as location, f.name as floor, b.name as building, d.status, d.model,"
-                + " d.last_seen_on , p.image_url_1, d.virtual_device_type, d.snmp_status, d.bacnet_status, d.lorawan_status, d.disruptive_status,"
+                + " d.last_seen_on , CAST(NULL AS varchar) AS image_url_1, d.virtual_device_type, d.snmp_status, d.bacnet_status, d.lorawan_status, d.disruptive_status,"
                 + " d.my_devices_status, d.monnit_status, d.pelican_status,d.knx_status, d.snmp_object_status, d.measuring_instrument_status,d.record_checklist_status, d.daintree_status, d.ecobee_status, d.modbus_status, d.type, d.sub_category, d.category "
                 + " From device d"
                 + " Left JOIN location l ON d.location_id = l.id"
                 + " Left JOIN floor f ON l.floor_id = f.id"
                 + " Left JOIN building b ON f.building_id = b.id"
-                // PG-port: product_details join key p.product_id -> p.id (table has only id)
-                + " Left JOIN product_details p ON d.product_id = p.id"
+                // DB-per-service: product_details owned by sclera-inventory; images enriched via InventoryClientStub
                 + " WHERE (?1 = 'null' or d.docker_name = ?1) AND (?2 = 'null' or b.id = ?2) AND (?3 = 'null' or f.id = ?3) AND (?4 = 'null' or l.id = ?4) AND (?5 = 3 or d.status = ?5) AND d.monitor = 1",
         resultSetMapping = "devicelistmapping")
 
@@ -703,14 +702,13 @@ import java.util.Set;
 @NamedNativeQuery(
         name = "Device.listDevicesByPaginationTs",
         query = "SELECT d.id, d.display_name, d.user_data_name, l.name as location, f.name as floor, b.name as building, d.status, d.model,"
-                + " d.last_seen_on , p.image_url_1, d.virtual_device_type, d.snmp_status, d.bacnet_status, d.lorawan_status, d.disruptive_status,"
+                + " d.last_seen_on , CAST(NULL AS varchar) AS image_url_1, d.virtual_device_type, d.snmp_status, d.bacnet_status, d.lorawan_status, d.disruptive_status,"
                 + " d.my_devices_status, d.monnit_status, d.pelican_status,d.knx_status, d.snmp_object_status, d.measuring_instrument_status,d.record_checklist_status, d.daintree_status, d.ecobee_status, d.modbus_status, d.type, d.sub_category, d.category "
                 + " From device d"
                 + " Left JOIN location l ON d.location_id = l.id"
                 + " Left JOIN floor f ON l.floor_id = f.id"
                 + " Left JOIN building b ON f.building_id = b.id"
-                // PG-port: product_details join key p.product_id -> p.id (table has only id)
-                + " Left JOIN product_details p ON d.product_id = p.id"
+                // DB-per-service: product_details owned by sclera-inventory; images enriched via InventoryClientStub
                 + " WHERE (?1 = 'null' or d.docker_name = ?1) AND (?2 = 'null' or b.id = ?2) AND (?3 = 'null' or f.id = ?3) AND (?4 = 'null' or l.id = ?4) AND "
                 + "  (?5 = 3 or d.status = ?5)  AND (?8 IS NULL or CASE WHEN ?8 = 123 THEN (d.virtual_device_type IS NOT NULL AND (d.virtual_device_type!= 0 AND d.virtual_device_type!= 1)) ELSE NULL END) AND d.monitor = 1"
                 + " LIMIT ?6  OFFSET ?7",
@@ -774,15 +772,14 @@ import java.util.Set;
         name = "Device.getDeviceInfoById",
         query = "SELECT d.id, d.alarm, d.display_name, d.product_id, d.ip_address, d.mac_address, d.last_seen_on, d.model, d.status, d.type, d.user_data_model, d.user_data_name, d.user_data_vendor,"
                 + "d.vendor, d.local_vendor_id, d.other_vendor_1_id, d.other_vendor_2_id, d.other_vendor_3_id, d.docker_name, b.name as building,"
-                + " f.name as floor, l.name as location,  p.image_url_1, p.image_url_2, p.image_url_3, d.virtual_device_type,"
+                + " f.name as floor, l.name as location,  CAST(NULL AS varchar) AS image_url_1, CAST(NULL AS varchar) AS image_url_2, CAST(NULL AS varchar) AS image_url_3, d.virtual_device_type,"
                 + " d.snmp_status, d.bacnet_status, d.lorawan_status, d.disruptive_status, d.my_devices_status, d.monnit_status,"
                 + " d.pelican_status,d.knx_status, d.snmp_object_status, d.measuring_instrument_status,d.record_checklist_status, d.daintree_status, d.ecobee_status, d.modbus_status,d.asset_group"
                 + " FROM device d"
                 + " Left JOIN location l ON d.location_id = l.id"
                 + " Left JOIN floor f ON l.floor_id = f.id"
                 + " Left JOIN building b ON f.building_id = b.id"
-                // PG-port: product_details join key p.product_id -> p.id (table has only id)
-                + " Left JOIN product_details p ON d.product_id = p.id"
+                // DB-per-service: product_details owned by sclera-inventory; images enriched via InventoryClientStub
                 + " WHERE d.id = ?1",
         resultSetMapping = "deviceinfomapping")
 
@@ -826,14 +823,13 @@ import java.util.Set;
 @NamedNativeQuery(
         name = "Device.listofflinedeviceByParentTs",
         query = "SELECT d.id, d.display_name, d.user_data_name, d.ip_address, d.mac_address, d.last_seen_on, d.model, d.status, d.user_data_model , d.alarm,"
-                + " d.vendor, d.user_data_vendor, d.docker_name, b.name as building, f.name as floor, l.name as location,  p.image_url_1, ph.account_number, ph.company_name, ph.email,"
+                + " d.vendor, d.user_data_vendor, d.docker_name, b.name as building, f.name as floor, l.name as location,  CAST(NULL AS varchar) AS image_url_1, ph.account_number, ph.company_name, ph.email,"
                 + " ph.phone, ph.phone_type, ph.value, ph.vendor_name"
                 + " FROM device d"
                 + " Left JOIN location l ON d.location_id = l.id"
                 + " Left JOIN floor f ON l.floor_id = f.id"
                 + " Left JOIN building b ON f.building_id = b.id"
-                // PG-port: product_details join key p.product_id -> p.id (table has only id)
-                + " Left JOIN product_details p ON d.product_id = p.id"
+                // DB-per-service: product_details owned by sclera-inventory; images enriched via InventoryClientStub
                 + " Left JOIN phonebook ph ON d.local_vendor_id = ph.id "
                 + "WHERE d.status = 0 AND d.monitor = 1",
         resultSetMapping = "devicelistparentTS")
@@ -842,14 +838,13 @@ import java.util.Set;
 @NamedNativeQuery(
         name = "Device.listofflinedeviceByParentByPaginationTs",
         query = "SELECT d.id, d.display_name, d.user_data_name, d.ip_address, d.mac_address, d.last_seen_on, d.model, d.status, d.user_data_model , d.alarm,"
-                + " d.vendor, d.user_data_vendor, d.docker_name, b.name as building, f.name as floor, l.name as location,  p.image_url_1, ph.account_number, ph.company_name, ph.email,"
+                + " d.vendor, d.user_data_vendor, d.docker_name, b.name as building, f.name as floor, l.name as location,  CAST(NULL AS varchar) AS image_url_1, ph.account_number, ph.company_name, ph.email,"
                 + " ph.phone, ph.phone_type, ph.value, ph.vendor_name"
                 + " FROM device d"
                 + " Left JOIN location l ON d.location_id = l.id"
                 + " Left JOIN floor f ON l.floor_id = f.id"
                 + " Left JOIN building b ON f.building_id = b.id"
-                // PG-port: product_details join key p.product_id -> p.id (table has only id)
-                + " Left JOIN product_details p ON d.product_id = p.id"
+                // DB-per-service: product_details owned by sclera-inventory; images enriched via InventoryClientStub
                 + " Left JOIN phonebook ph ON d.local_vendor_id = ph.id "
                 + "WHERE d.status = 0 AND d.monitor = 1"
                 + " LIMIT ?1  OFFSET ?2",
@@ -859,14 +854,13 @@ import java.util.Set;
 @NamedNativeQuery(
         name = "Device.DeviceInfoById",
         query = "SELECT d.id, d.display_name, d.user_data_name, d.ip_address, d.mac_address, d.last_seen_on, d.model, d.status, d.user_data_model , d.alarm,"
-                + " d.vendor, d.user_data_vendor, d.docker_name, b.name as building, f.name as floor, l.name as location,  p.image_url_1, ph.account_number, ph.company_name, ph.email,"
+                + " d.vendor, d.user_data_vendor, d.docker_name, b.name as building, f.name as floor, l.name as location,  CAST(NULL AS varchar) AS image_url_1, ph.account_number, ph.company_name, ph.email,"
                 + " ph.phone, ph.phone_type, ph.value, ph.vendor_name"
                 + " FROM device d"
                 + " Left JOIN location l ON d.location_id = l.id"
                 + " Left JOIN floor f ON l.floor_id = f.id"
                 + " Left JOIN building b ON f.building_id = b.id"
-                // PG-port: product_details join key p.product_id -> p.id (table has only id)
-                + " Left JOIN product_details p ON d.product_id = p.id"
+                // DB-per-service: product_details owned by sclera-inventory; images enriched via InventoryClientStub
                 + " Left JOIN phonebook ph ON d.local_vendor_id = ph.id "
                 + "WHERE d.monitor = 1 AND d.id = ?1 AND d.popup_notification = 1",
         resultSetMapping = "devicelistparentTS")
@@ -1639,12 +1633,11 @@ import java.util.Set;
         name = "Device.getDeviceAlertInfoById",
         query = "SELECT d.id, d.docker_name, do.system_type as docker_system_type, "
                 + "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as name, "
-                + "b.name as building, f.name as floor, l.name as location, d.monitor as device_monitor, d.product_id, p.global_image_url_1 as image_url, d.type "
+                + "b.name as building, f.name as floor, l.name as location, d.monitor as device_monitor, d.product_id, CAST(NULL AS varchar) AS image_url, d.type "
                 + "FROM device d "
                 + "LEFT JOIN docker do ON d.docker_name = do.name AND d.docker_vdms_id = do.vdms_id "
                 + "LEFT JOIN vdms v ON do.vdms_id = v.id "
-                + "LEFT JOIN produc" +
-                "t_details p ON d.product_id = p.product_id "
+                // DB-per-service: product_details owned by sclera-inventory; images enriched via InventoryClientStub
                 + "LEFT JOIN location l ON d.location_id = l.id "
                 + "LEFT JOIN floor f ON l.floor_id = f.id "
                 + "LEFT JOIN building b ON f.building_id = b.id "
@@ -1954,12 +1947,11 @@ import java.util.Set;
         name = "Device.getDeviceConditionAlertInfoById",
         query = "SELECT d.id, d.docker_name, do.system_type as docker_system_type, "
                 + "CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as name, "
-                + "b.name as building, f.name as floor, l.name as location, d.monitor as device_monitor, d.product_id, p.global_image_url_1 as image_url, d.local_vendor_id, d.type "
+                + "b.name as building, f.name as floor, l.name as location, d.monitor as device_monitor, d.product_id, CAST(NULL AS varchar) AS image_url, d.local_vendor_id, d.type "
                 + "FROM device d "
                 + "LEFT JOIN docker do ON d.docker_name = do.name AND d.docker_vdms_id = do.vdms_id "
                 + "LEFT JOIN vdms v ON do.vdms_id = v.id "
-                // PG-port: product_details join key p.product_id -> p.id (table has only id)
-                + "LEFT JOIN product_details p ON d.product_id = p.id "
+                // DB-per-service: product_details owned by sclera-inventory; images enriched via InventoryClientStub
                 + "LEFT JOIN location l ON d.location_id = l.id "
                 + "LEFT JOIN floor f ON l.floor_id = f.id "
                 + "LEFT JOIN building b ON f.building_id = b.id "
@@ -2316,8 +2308,7 @@ import java.util.Set;
                 + " LEFT JOIN location l ON d.location_id = l.id"
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
-                // PG-port: product_details join key p.product_id -> p.id (table has only id)
-                + " LEFT JOIN product_details p ON d.product_id = p.id"
+                // DB-per-service: product_details owned by sclera-inventory; JOIN removed (no p.* selected here)
                 + " WHERE d.id = ?1",
         resultSetMapping = "devicedetailsfornativeticketmapping"
 )
@@ -3092,9 +3083,7 @@ public class Device {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
     private Set<Notes> notes = new HashSet<>();
 
-    @ManyToOne
-    @JoinColumn(name = "product_id")
-    private Product_Details product_details;
+    // DB-per-service: product_details entity removed; product_id scalar FK kept on device table
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
     private Set<RemoteAccessSession> remote_access_session = new HashSet<>();
@@ -3712,14 +3701,6 @@ public class Device {
 
     public void setDisruptive_status(String disruptive_status) {
         this.disruptive_status = disruptive_status;
-    }
-
-    public Product_Details getProduct_details() {
-        return product_details;
-    }
-
-    public void setProduct_details(Product_Details product_details) {
-        this.product_details = product_details;
     }
 
     public String getDisplay_name() {
@@ -4503,7 +4484,6 @@ public class Device {
                 ", interfaces=" + interfaces +
                 ", service=" + service +
                 ", notes=" + notes +
-                ", product_details=" + product_details +
                 ", remote_access_session=" + remote_access_session +
                 ", location=" + location +
                 ", history=" + history +
