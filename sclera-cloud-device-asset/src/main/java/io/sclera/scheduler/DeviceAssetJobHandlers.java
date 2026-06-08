@@ -1,6 +1,7 @@
 package io.sclera.scheduler;
 
 import io.sclera.service.DeviceService;
+import io.sclera.service.DeviceSpecificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -18,9 +19,12 @@ public class DeviceAssetJobHandlers {
 
     // --- wired services ---
     private final DeviceService deviceService;
+    private final DeviceSpecificationService deviceSpecificationService;
 
-    public DeviceAssetJobHandlers(DeviceService deviceService) {
+    public DeviceAssetJobHandlers(DeviceService deviceService,
+                                  DeviceSpecificationService deviceSpecificationService) {
         this.deviceService = deviceService;
+        this.deviceSpecificationService = deviceSpecificationService;
     }
 
     // -------------------------------------------------------------------------
@@ -91,12 +95,12 @@ public class DeviceAssetJobHandlers {
 
     /**
      * Mirrors the monolith's offline-device-check scheduled logic.
-     * Calls {@link DeviceService#updateAllVirtualDeviceStatus()} which iterates all virtual
-     * devices and refreshes their online/offline status.
+     * Calls {@link DeviceSpecificationService#updateDeviceStatusToOffline()} which marks all
+     * stale online devices (spec not updated within 90 s) as offline.
      */
     public void offlineDeviceCheck() {
-        log.info("[scheduler] offlineDeviceCheck: refreshing virtual device statuses");
-        deviceService.updateAllVirtualDeviceStatus();
+        log.info("[scheduler] offlineDeviceCheck: marking stale online devices offline");
+        deviceSpecificationService.updateDeviceStatusToOffline();
     }
 
     // -------------------------------------------------------------------------

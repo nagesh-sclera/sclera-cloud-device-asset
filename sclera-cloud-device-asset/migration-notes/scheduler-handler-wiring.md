@@ -18,21 +18,21 @@ Task: Wire 10 `DeviceAssetJobHandlers` stubs to real service logic.
 | `syncAssetCountToCloud` | STUBBED | see below |
 | `userActionLog` | STUBBED | see below |
 | `deviceDndEnable` | **WIRED** | `DeviceService.dndCheckAndUpdate()` |
-| `offlineDeviceCheck` | **WIRED** | `DeviceService.updateAllVirtualDeviceStatus()` |
+| `offlineDeviceCheck` | **WIRED** | `DeviceSpecificationService.updateDeviceStatusToOffline()` |
 
 ---
 
 ## WIRED handlers
 
 ### `deviceDndEnable`
-- Monolith ref: `DeviceService` lines 2954-2976 (inline logic, no named scheduler method)
+- Monolith ref: `DeviceService` lines 2811-2835 (inline logic calling `UpdateDeviceDndEnabledAndTimestamp`, no named scheduler method)
 - Wired to: `DeviceService.dndCheckAndUpdate()`
 - What it does: iterates DND-enabled devices; if `dnd_timestamp` is more than 24 hours old, calls `updateDeviceDndAndSystemDndStatus(deviceId, false)` to disable DND.
 
 ### `offlineDeviceCheck`
-- Monolith ref: `DeviceService.updateAllVirtualDeviceStatus()` (line 1901)
-- Wired to: `DeviceService.updateAllVirtualDeviceStatus()`
-- What it does: iterates all virtual devices and refreshes their online/offline status via `updateVirtualDeviceStatusByVirtualDeviceId`.
+- Monolith ref: stale-device sweep (spec-timestamp based)
+- Wired to: `DeviceSpecificationService.updateDeviceStatusToOffline()`
+- What it does: fetches all online devices (status == 1), compares each device's `DeviceSpecification.updatedAt` against now; if inactive for more than 90 seconds, sets status to 0 (offline) and records `last_seen_on`.
 
 ---
 
