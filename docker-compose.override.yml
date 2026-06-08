@@ -1,0 +1,47 @@
+# Demo-only overrides (auto-merged by `docker compose`). NOT committed config.
+# Fixes two live-stack issues found while demoing the full stack:
+#  1) infra/otel/opentelemetry-javaagent.jar is a 1-byte placeholder -> JVM fails to start
+#     (Error opening zip file / Agent_OnLoad: instrument). Blank JAVA_TOOL_OPTIONS for EVERY
+#     Java service so the broken -javaagent is not applied.
+#  2) daprio/scheduler runs as non-root and can't mkdir in the scheduler-data volume.
+#     Run it as root for the demo so it can create its etcd data dir.
+services:
+  app:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-scheduler:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  api-gateway:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  vdms-service:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-audit:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-identity:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-inspection:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-integrations:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-inventory:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-alerts:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-edge:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-workorders:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+
+  dapr-scheduler:
+    user: "0:0"

@@ -5,17 +5,22 @@ import io.sclera.dto.AlertDTO;
 import io.sclera.dto.DeviceDTO;
 import io.sclera.dto.DeviceTopologyDTO;
 import io.sclera.dto.DevicedataDTO;
+import io.sclera.dto.ProductImagesDTO;
+import io.sclera.dto.touchscreen.DeviceListDTO;
+import io.sclera.stubs.InventoryClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -31,6 +36,7 @@ import static org.mockito.Mockito.when;
 class DeviceServiceTest {
 
     @Mock DeviceRepository deviceRepository;
+    @Mock InventoryClient inventoryClient;
 
     @InjectMocks DeviceService service;
 
@@ -172,5 +178,38 @@ class DeviceServiceTest {
     @Test
     void getDeviceObjectbyId_nullList_returnsNull() {
         assertThat(service.getDeviceObjectbyId(null, "d1")).isNull();
+    }
+
+    // ---- image enrichment via InventoryClient ------------------------------
+
+    @Test
+    void listDevicesTs_enrichesDeviceListWithProductImages() {
+        // Setup: one device "dev1" with product "prod1"
+        DeviceListDTO device = new DeviceListDTO();
+        device.setId("dev1");
+        device.setDisplay_name("Device 1");
+
+        // Mock repository.listDevicesTs to return the device
+        when(deviceRepository.listDevicesTs("net1", "b1", "f1", "loc1", 1))
+                .thenReturn(Set.of(device));
+
+        // Mock repository.findDeviceProductIdRows to return device->product mapping
+        List<Object[]> rows = new ArrayList<>();
+        rows.add(new Object[]{"dev1", "prod1"});
+        when(deviceRepository.findDeviceProductIdRows(Set.of("dev1")))
+                .thenReturn(rows);
+
+        // Mock inventoryClient.getProductImages to return image URL for prod1
+        ProductImagesDTO images = new ProductImagesDTO("http://img1.jpg", null, null, null);
+        when(inventoryClient.getProductImages(Set.of("prod1")))
+                .thenReturn(Map.of("prod1", images));
+
+        // Call the public method
+        Set<DeviceListDTO> result = service.listDevicesTs("net1", "b1", "f1", "loc1", 1);
+
+        // Assert the device was enriched with the image URL
+        assertThat(result).hasSize(1);
+        DeviceListDTO enriched = result.iterator().next();
+        assertThat(enriched.getImage_url_1()).isEqualTo("http://img1.jpg");
     }
 }
