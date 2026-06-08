@@ -60,7 +60,7 @@ public class TriggerDispatchSubscriber extends DaprEventSubscriber<SchedulerTrig
             run(data.jobName());
             publish(data, "SUCCESS", t0, null);
         } catch (Exception e) {
-            publish(data, "FAILED", t0, String.valueOf(e.getMessage()));
+            publish(data, "FAILED", t0, e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
         }
     }
 

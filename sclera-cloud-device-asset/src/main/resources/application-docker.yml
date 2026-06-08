@@ -109,7 +109,6 @@ sclera:
 
 scheduler:
   pubsub-name: pubsub
-  trigger-topic: scheduler.trigger
   result-topic: scheduler.result
 
 logging:
