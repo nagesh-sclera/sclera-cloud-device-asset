@@ -500,7 +500,9 @@ services:
   # scheduler control-plane flags/ports below must be verified against the pinned Dapr
   # release on a live stack (see Task 15 manual acceptance) before relying on them.
   sclera-scheduler:
-    build: ./sclera-scheduler
+    build:
+      context: .
+      dockerfile: sclera-scheduler/Dockerfile
     container_name: sclera-scheduler
     depends_on:
       postgres:
