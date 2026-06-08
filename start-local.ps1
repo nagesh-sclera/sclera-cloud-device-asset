@@ -1,5 +1,5 @@
 # start-local.ps1
-# Starts all 3 Sclara services locally with Dapr sidecars using your existing MySQL on localhost:3306
+# Starts all 3 Sclera services locally with Dapr sidecars using your existing MySQL on localhost:3306
 #
 # Prerequisites:
 #   - Java 17 in PATH  (java -version)
@@ -22,7 +22,7 @@ $Dapr = if ($DaprCmd) { "dapr" } elseif (Test-Path "$Root\dapr.exe") { "$Root\da
 
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Cyan
-Write-Host "  Sclara 2.0 — Local Startup with Dapr" -ForegroundColor Cyan
+Write-Host "  Sclera 2.0 — Local Startup with Dapr" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 

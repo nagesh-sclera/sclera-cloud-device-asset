@@ -1,4 +1,4 @@
-# Sclara 2.0 — Architecture
+# Sclera 2.0 — Architecture
 
 ## System Overview
 

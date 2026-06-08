@@ -1,4 +1,4 @@
--- Sclara 2.0 Demo Seed Data
+-- Sclera 2.0 Demo Seed Data
 -- Runs automatically on first MySQL container start
 
 CREATE TABLE IF NOT EXISTS vdms (
@@ -36,7 +36,7 @@ INSERT IGNORE INTO vdms (
     latitude, longitude, activation_timestamp
 ) VALUES (
     'demo-vdms-001',
-    'Sclara HQ — Demo Building',
+    'Sclera HQ — Demo Building',
     'ACTIVE', 1,
     '101 Innovation Drive, Suite 500',
     'San Francisco', 'USA', 'CA', 94105,
