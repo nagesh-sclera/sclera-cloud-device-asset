@@ -97,6 +97,11 @@ sclera:
   secret_url: sclera/prod/edge/sclera-vdms-server/credential/
   translator-base_url: https://api.cognitive.microsofttranslator.com/translate?api-version=3.0
 
+scheduler:
+  pubsub-name: pubsub
+  trigger-topic: scheduler.trigger
+  result-topic: scheduler.result
+
 logging:
   config: classpath:logback/logback.xml
 
