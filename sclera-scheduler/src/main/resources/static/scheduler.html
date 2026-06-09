@@ -102,6 +102,13 @@
   .badge-state{font-size:.6rem;padding:.05rem .35rem;border-radius:4px;margin-left:.4rem;vertical-align:middle}
   .st-PAUSED{background:rgba(245,158,11,.15);color:var(--amber)}
   .st-DISABLED{background:rgba(148,163,184,.15);color:var(--muted)}
+  .st-SNOOZED{background:rgba(245,158,11,.15);color:var(--amber)}
+  .scope-badge{font-size:.58rem;letter-spacing:.3px;padding:.05rem .35rem;border-radius:4px;
+               margin-left:.4rem;background:rgba(59,130,246,.15);color:var(--blue);vertical-align:middle}
+  .inst-summary{color:var(--muted);font-size:.72rem}
+  .inst-summary .att{color:var(--amber)}
+  .jcaret{display:inline-block;width:.9em;color:var(--muted);transition:transform .15s;cursor:pointer}
+  .job.expanded .jcaret{transform:rotate(90deg)}
 
   /* ---- live feed ---- */
   .fhead{display:flex;align-items:center;gap:.5rem;padding:.7rem .9rem;border-bottom:1px solid var(--line)}
@@ -144,6 +151,7 @@
       <span class="lg"><span class="sw ok"></span> Success</span>
       <span class="lg"><span class="sw fail"></span> Failed</span>
       <span class="lg"><span class="sw pend"></span> Pending</span>
+      <span class="lg"><span class="sw" style="background:var(--amber)"></span> Snoozed</span>
       <span class="lg"><span class="sw now"></span> Now</span>
       <span class="sp" id="window-note">last 14h · hover a dot for details</span>
       <button class="btn" id="collapse">Collapse all</button>
@@ -175,6 +183,10 @@ const CLOCKS = [
 ];
 
 const collapsed = new Set();
+const jobExpanded = new Set();   // job names whose instance list is open
+const instCache = {};            // jobName -> JobInstanceView[]  (lazy)
+const instLoading = {};          // jobName -> bool
+const instFilter = {};           // jobName -> {q:'', state:'all'}
 let allCollapsed = false;
 let lastData = {jobs:[], runs:[]};
 
@@ -249,6 +261,27 @@ function render(){
     let rows='';
     for(const job of list){
       const jr = byJob[job.name]||[];
+      const ls = job.lastStatus;
+      const sCls = ls? cls(ls):'none';
+      const stateBadge = job.state!=='ENABLED' ? `<span class="badge-state st-${job.state}">${job.state}</span>` : '';
+
+      if(job.scope==='PER_VDMS'){
+        const open = jobExpanded.has(job.name);
+        const att = job.attentionCount>0 ? `<span class="att">· ${job.attentionCount} need attention</span>` : '';
+        rows += `
+          <div class="job ${open?'expanded':''}" data-pervdms="${esc(job.name)}">
+            <div>
+              <div class="jname"><span class="jcaret">▸</span>${esc(job.name)}<span class="scope-badge">PER-VDMS</span></div>
+              <div class="jsched">${esc(job.schedule)}</div>
+            </div>
+            <div class="inst-summary">${job.instanceCount} instance${job.instanceCount===1?'':'s'} ${att}</div>
+            <div class="jstatus"><div class="s ${sCls}">${ls||'—'}</div></div>
+          </div>
+          <div class="instances" data-instances="${esc(job.name)}">${open?renderInstances(job.name):''}</div>`;
+        continue;
+      }
+
+      // GLOBAL job — unchanged timeline rendering
       let dots='';
       for(const r of jr){
         const x=((new Date(r.firedAt)-start)/SPAN)*100;
@@ -256,9 +289,6 @@ function render(){
         const dur = r.durationMs!=null ? r.durationMs+' ms' : 'pending';
         dots += `<div class="pt ${cls(r.status)}" style="left:${x}%" title="${esc(job.name)} · ${r.status} · ${hhmm(r.firedAt)} · ${dur}${r.error?' · '+esc(r.error):''}"></div>`;
       }
-      const ls = job.lastStatus;
-      const sCls = ls? cls(ls):'none';
-      const stateBadge = job.state!=='ENABLED' ? `<span class="badge-state st-${job.state}">${job.state}</span>` : '';
       const failCount = jr.filter(r=>r.status==='FAILED').length;
       rows += `
         <div class="job">
@@ -309,6 +339,14 @@ function render(){
     </div>`;
   }).join('');
   document.getElementById('flist').innerHTML = feed || `<div class="empty">No runs yet.</div>`;
+}
+
+function renderInstances(jobName){
+  if(instLoading[jobName]) return `<div class="inst-msg">loading instances…</div>`;
+  const data = instCache[jobName];
+  if(!data) return `<div class="inst-msg">loading instances…</div>`;
+  if(!data.length) return `<div class="inst-msg">no instances yet</div>`;
+  return data.map(i=>`<div class="inst-row">${esc(i.vdmsId)} · ${esc(i.state)}</div>`).join('');
 }
 
 // ---------- interactions ----------
