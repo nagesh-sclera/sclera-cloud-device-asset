@@ -23,9 +23,14 @@ public class RunRecorder {
 
     @Transactional
     public void recordFired(String jobName, UUID runId, boolean manual) {
-        runs.save(new JobRunEntity(runId, jobName, RunStatus.FIRED, manual, Instant.now()));
+        recordFired(jobName, runId, manual, null);
+    }
+
+    @Transactional
+    public void recordFired(String jobName, UUID runId, boolean manual, String vdmsId) {
+        runs.save(new JobRunEntity(runId, jobName, RunStatus.FIRED, manual, Instant.now(), vdmsId));
         jobs.findById(jobName).ifPresent(j -> j.setLastRunId(runId));
-        log.info("Run fired job={} runId={} manual={}", jobName, runId, manual);
+        log.info("Run fired job={} runId={} manual={} vdmsId={}", jobName, runId, manual, vdmsId);
     }
 
     @Transactional
