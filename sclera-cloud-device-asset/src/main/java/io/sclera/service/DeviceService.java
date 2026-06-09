@@ -1,6 +1,8 @@
 package io.sclera.service;
 import io.sclera.client.IOCClient;
 import io.sclera.client.APICallClient;
+import io.sclera.dto.ProductImagesDTO;
+import io.sclera.stubs.InventoryClient;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -171,6 +173,9 @@ public class DeviceService {
 
     @Autowired
     Product_DetailsService product_detailsService;
+
+    @Autowired
+    InventoryClient inventoryClient;
 
     @Autowired
     HistoryClient historyClient;
@@ -2522,17 +2527,55 @@ public class DeviceService {
     public Set<DeviceListDTO> listDevicesTs(String networkname, String buildingid, String floorid, String
             locationid,
                                             Integer devicestatus) {
-        return deviceRepository.listDevicesTs(networkname, buildingid, floorid, locationid, devicestatus);
+        Set<DeviceListDTO> rows = deviceRepository.listDevicesTs(networkname, buildingid, floorid, locationid, devicestatus);
+        enrichDeviceListImages(rows);
+        return rows;
     }
 
     // Added Pagination for listDevices
     public Set<DeviceListDTO> listDevicesByPaginationTs(String networkname, String buildingid, String floorid, String locationid, Integer status, Integer pagesize, Integer offset, Integer virtual_device_type) {
-        return deviceRepository.listDevicesByPaginationTs(networkname, buildingid, floorid, locationid, status, pagesize, offset, virtual_device_type);
+        Set<DeviceListDTO> rows = deviceRepository.listDevicesByPaginationTs(networkname, buildingid, floorid, locationid, status, pagesize, offset, virtual_device_type);
+        enrichDeviceListImages(rows);
+        return rows;
     }
 
     public DeviceDetailsDTO getDeviceInfoById(String deviceid) {
-
         return deviceRepository.getDeviceInfoById(deviceid);
+        // DB-per-service note: image_url_1/2/3 enrichment via InventoryClient deferred to
+        // when sclera-inventory exposes the endpoint; currently null (stub returns empty map).
+    }
+
+    /**
+     * DB-per-service helper: enriches image_url_1 on DeviceListDTO rows by fetching
+     * product images from InventoryClientStub (no-op until sclera-inventory is wired).
+     */
+    private void enrichDeviceListImages(Set<DeviceListDTO> rows) {
+        if (rows == null || rows.isEmpty()) return;
+        Set<String> deviceIds = rows.stream()
+                .map(DeviceListDTO::getId)
+                .filter(id -> id != null)
+                .collect(Collectors.toSet());
+        if (deviceIds.isEmpty()) return;
+        // map deviceId -> productId
+        Map<String, String> deviceToProduct = new HashMap<>();
+        for (Object[] row : deviceRepository.findDeviceProductIdRows(deviceIds)) {
+            if (row[0] != null && row[1] != null) {
+                deviceToProduct.put(row[0].toString(), row[1].toString());
+            }
+        }
+        if (deviceToProduct.isEmpty()) return;
+        Map<String, ProductImagesDTO> images = inventoryClient.getProductImages(
+                new HashSet<>(deviceToProduct.values()));
+        if (images.isEmpty()) return;
+        for (DeviceListDTO row : rows) {
+            String productId = deviceToProduct.get(row.getId());
+            if (productId != null) {
+                ProductImagesDTO img = images.get(productId);
+                if (img != null) {
+                    row.setImage_url_1(img.image_url_1());
+                }
+            }
+        }
     }
 
     public Map<String, Integer> onlineOfflineCount() {

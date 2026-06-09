@@ -5,28 +5,27 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 
-import io.sclera.Repository.Product_DetailsRepository;
 import io.sclera.dto.ProductDTO;
 import io.sclera.utils.Utils;
 
 /**
  * Manages product detail records and their associated product images.
  *
- * <p>Persists and removes product metadata through {@link Product_DetailsRepository},
+ * <p>DB-per-service: product_details is owned by sclera-inventory. All write/delete
+ * operations are no-ops in this service; enrichment is done via InventoryClientStub.
  * collaborates with {@link DeviceService} and {@link APICallClient} for device and
  * remote data, and relies on {@link Utils} for server-side image file handling.
  */
 @Service
 public class Product_DetailsService {
 
-
-
-    @Autowired
-    Product_DetailsRepository product_detailsRepository;
+    private static final Logger log = LoggerFactory.getLogger(Product_DetailsService.class);
 
     @Autowired
     DeviceService deviceService;
@@ -36,8 +35,6 @@ public class Product_DetailsService {
 
     @Autowired
     Utils utils;
-
-    String absolutePathProductImages = "/home/sclera/images/";
 
     /**
      * Checks whether a product exists for the given identifier.
@@ -73,18 +70,8 @@ public class Product_DetailsService {
     {
     }
 
- void deleteProductDetailsById(String productId){
-        ProductDTO productImages = product_detailsRepository.getProductsImageUrlById(productId);
-        product_detailsRepository.deleteById(productId);
-        if(productImages.getImage_url_1() != null){
-            utils.removeFileFromServer(absolutePathProductImages, productId+"_1", utils.getFileExtensionByFileUrl(productImages.getImage_url_1()));
-        }
-        if(productImages.getImage_url_2() != null) {
-            utils.removeFileFromServer(absolutePathProductImages, productId + "_2", utils.getFileExtensionByFileUrl(productImages.getImage_url_2()));
-        }
-        if(productImages.getImage_url_3() != null) {
-            utils.removeFileFromServer(absolutePathProductImages, productId + "_3", utils.getFileExtensionByFileUrl(productImages.getImage_url_3()));
-        }
+    void deleteProductDetailsById(String productId) {
+        log.warn("deleteProductDetailsById({}) is a no-op: product_details is owned by sclera-inventory (DB-per-service)", productId);
     }
 
 }
