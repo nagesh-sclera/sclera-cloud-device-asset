@@ -40,7 +40,7 @@ class MyDevicesClientTest {
     void getDeviceIdByMyDevicesSensorId_usesCorrectPathAndVerb() {
         DaprClient dapr = mock(DaprClient.class);
         when(dapr.invokeMethod(
-                eq("sclera-workorders"),
+                eq("sclera-integrations"),
                 eq("myDevices/getDeviceIdByMyDevicesSensorId"),
                 any(),
                 any(HttpExtension.class)))
@@ -51,7 +51,7 @@ class MyDevicesClientTest {
 
         ArgumentCaptor<HttpExtension> extCaptor = ArgumentCaptor.forClass(HttpExtension.class);
         verify(dapr).invokeMethod(
-                eq("sclera-workorders"),
+                eq("sclera-integrations"),
                 eq("myDevices/getDeviceIdByMyDevicesSensorId"),
                 any(),
                 extCaptor.capture());
@@ -63,7 +63,7 @@ class MyDevicesClientTest {
     void getMyDevicesSensorCountByDeviceId_usesCorrectPathAndVerb() {
         DaprClient dapr = mock(DaprClient.class);
         when(dapr.invokeMethod(
-                eq("sclera-workorders"),
+                eq("sclera-integrations"),
                 eq("myDevices/getMyDevicesSensorCountByDeviceId"),
                 any(),
                 any(HttpExtension.class)))
@@ -74,7 +74,7 @@ class MyDevicesClientTest {
 
         ArgumentCaptor<HttpExtension> extCaptor = ArgumentCaptor.forClass(HttpExtension.class);
         verify(dapr).invokeMethod(
-                eq("sclera-workorders"),
+                eq("sclera-integrations"),
                 eq("myDevices/getMyDevicesSensorCountByDeviceId"),
                 any(),
                 extCaptor.capture());
@@ -86,7 +86,7 @@ class MyDevicesClientTest {
     void getMyDevicesSensorAlertStatusByDeviceId_usesCorrectPathAndVerb() {
         DaprClient dapr = mock(DaprClient.class);
         when(dapr.invokeMethod(
-                eq("sclera-workorders"),
+                eq("sclera-integrations"),
                 eq("myDevices/getMyDevicesSensorAlertStatusByDeviceId"),
                 any(),
                 any(HttpExtension.class)))
@@ -97,7 +97,7 @@ class MyDevicesClientTest {
 
         ArgumentCaptor<HttpExtension> extCaptor = ArgumentCaptor.forClass(HttpExtension.class);
         verify(dapr).invokeMethod(
-                eq("sclera-workorders"),
+                eq("sclera-integrations"),
                 eq("myDevices/getMyDevicesSensorAlertStatusByDeviceId"),
                 any(),
                 extCaptor.capture());
@@ -109,7 +109,7 @@ class MyDevicesClientTest {
     void startMyDevicesService_usesCorrectPathAndVerb() {
         DaprClient dapr = mock(DaprClient.class);
         when(dapr.invokeMethod(
-                eq("sclera-workorders"),
+                eq("sclera-integrations"),
                 eq("myDevices/startMyDevicesService"),
                 any(),
                 any(HttpExtension.class)))
@@ -120,7 +120,7 @@ class MyDevicesClientTest {
 
         ArgumentCaptor<HttpExtension> extCaptor = ArgumentCaptor.forClass(HttpExtension.class);
         verify(dapr).invokeMethod(
-                eq("sclera-workorders"),
+                eq("sclera-integrations"),
                 eq("myDevices/startMyDevicesService"),
                 any(),
                 extCaptor.capture());
