@@ -310,7 +310,8 @@ function render(){
         const x=((new Date(r.firedAt)-start)/SPAN)*100;
         if(x<0||x>100) continue;
         const dur = r.durationMs!=null ? r.durationMs+' ms' : 'pending';
-        dots += `<div class="pt ${cls(r.status)}" style="left:${x}%" title="${esc(job.name)} · ${r.status} · ${hhmm(r.firedAt)} · ${dur}${r.error?' · '+esc(r.error):''}"></div>`;
+        const vd = r.vdmsId ? ' · '+esc(r.vdmsId) : '';
+        dots += `<div class="pt ${cls(r.status)}" style="left:${x}%" title="${esc(job.name)} · ${r.status} · ${hhmm(r.firedAt)} · ${dur}${r.error?' · '+esc(r.error):''}${vd}"></div>`;
       }
       const failCount = jr.filter(r=>r.status==='FAILED').length;
       rows += `
@@ -358,7 +359,7 @@ function render(){
         <span class="who">${esc(r.jobName.length>22?r.jobName.slice(0,21)+'…':r.jobName)}</span>
         <span class="fbadge ${cls(r.status)}">${r.status}</span>
       </div>
-      <div class="meta">${hhmm(fin)} · ${dur}${r.manual?' · manual':''} · ${ago(fin)}</div>
+      <div class="meta">${hhmm(fin)} · ${dur}${r.manual?' · manual':''}${r.vdmsId?' · '+esc(r.vdmsId):''} · ${ago(fin)}</div>
     </div>`;
   }).join('');
   document.getElementById('flist').innerHTML = feed || `<div class="empty">No runs yet.</div>`;
