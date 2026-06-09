@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import io.sclera.Repository.UserRepository;
 import io.sclera.Repository.VdmsRepository;
 import io.sclera.dto.touchscreen.settings.UserDTO;
+import io.sclera.interfaces.UserServiceInterface;
 
 /**
  * Manages user records and their organisation associations.
@@ -20,7 +21,7 @@ import io.sclera.dto.touchscreen.settings.UserDTO;
  * and fetches remote user data through {@link APICallClient}.
  */
 @Service
-public class UserService {
+public class UserService implements UserServiceInterface {
 
     @Autowired
     UserRepository userRepository;

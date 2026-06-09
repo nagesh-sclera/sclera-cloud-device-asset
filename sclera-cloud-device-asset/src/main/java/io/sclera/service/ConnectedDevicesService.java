@@ -1,9 +1,9 @@
 
 package io.sclera.service;
 import io.sclera.client.APICallClient;
+import io.sclera.interfaces.ConnectedDevicesServiceInterface;
 
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import io.sclera.client.ConnectedDevicesClient;
 import io.sclera.dto.*;
@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * data, and {@link APICallClient} for outbound API calls.
  */
 @Service
-public class ConnectedDevicesService {
+public class ConnectedDevicesService implements ConnectedDevicesServiceInterface {
 
     @Autowired
     ConnectedDevicesClient connectedDevicesRepository;

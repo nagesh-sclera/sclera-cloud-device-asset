@@ -1,5 +1,6 @@
 package io.sclera.service.touchscreen;
 
+import io.sclera.interfaces.DeviceMonitorServiceInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -9,7 +10,7 @@ import java.util.List;
 
 /** STUB: edge-only touchscreen device monitor */
 @Service
-public class DeviceMonitorService {
+public class DeviceMonitorService implements DeviceMonitorServiceInterface {
     private static final Logger log = LoggerFactory.getLogger(DeviceMonitorService.class);
 
     /**

@@ -1,5 +1,6 @@
 package io.sclera.service;
 import io.sclera.client.APICallClient;
+import io.sclera.interfaces.LocationServiceInterface;
 
 import java.math.BigInteger;
 import java.sql.Connection;
@@ -13,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.itextpdf.text.pdf.Barcode;
 import io.sclera.Repository.VdmsRepository;
 import io.sclera.client.PmsClient;
 import io.sclera.client.PropertyQrcodeClient;
@@ -41,7 +41,7 @@ import javax.sql.DataSource;
  * enrichment of locations with their tagged QR code, NFC and barcode details.
  */
 @Service
-public class LocationService {
+public class LocationService implements LocationServiceInterface {
     private static final Logger log = LoggerFactory.getLogger(LocationService.class);
 
     @Autowired

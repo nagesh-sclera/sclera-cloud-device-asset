@@ -1,13 +1,14 @@
 package io.sclera.service;
 
 import io.sclera.dto.InterfaceDTO;
+import io.sclera.interfaces.InterfaceServiceInterface;
 import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.List;
 
 /** STUB: replace with remote call to AP-C3 */
 @Service
-public class InterfaceService {
+public class InterfaceService implements InterfaceServiceInterface {
     /**
      * Returns the number of interfaces for the given device. Stub returns zero.
      */

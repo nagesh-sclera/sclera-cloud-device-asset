@@ -7,6 +7,7 @@ import io.sclera.dto.DeviceConditionsDTO;
 import io.sclera.dto.DeviceDTO;
 import io.sclera.dto.ScheduledJobDTO;
 import io.sclera.dto.ShareConditionsDTO;
+import io.sclera.interfaces.DeviceConditionsServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ import java.util.Set;
  * </ul>
  */
 @Service
-public class DeviceConditionsService {
+public class DeviceConditionsService implements DeviceConditionsServiceInterface {
     private static final Logger log = LoggerFactory.getLogger(DeviceConditionsService.class);
 
     @Autowired
@@ -59,7 +60,7 @@ public class DeviceConditionsService {
 
             DeviceDTO device = deviceService.getDeviceDetails(device_condition.getDevice_id());
 
-            if (deviceConditionsRepository.deviceConditionById(device_condition.getId()) != 0) {
+            if (deviceConditionsRepository.existsById(device_condition.getId())) {
                 Boolean isScheduleConditionsChanged = false;
                 DeviceConditionsDTO deviceConditionDetails = deviceConditionsRepository.getDeviceConditionsById(device_condition.getId());
 

@@ -11,6 +11,7 @@ import io.sclera.Repository.NotesRepository;
 import io.sclera.dto.Product_NotesDTO;
 import io.sclera.models.Device;
 import io.sclera.models.compositeclass.NoteIds;
+import io.sclera.interfaces.NotesServiceInterface;
 
 /**
  * Manages notes attached to devices, covering both per-device notes and global
@@ -21,7 +22,7 @@ import io.sclera.models.compositeclass.NoteIds;
  * count in sync via {@link DeviceService}.
  */
 @Service
-public class NotesService {
+public class NotesService implements NotesServiceInterface {
 
 	@Autowired
 	NotesRepository notesRepository;

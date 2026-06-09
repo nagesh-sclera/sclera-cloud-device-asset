@@ -12,6 +12,7 @@ import com.fasterxml.uuid.Generators;
 
 import io.sclera.Repository.MediaRepository;
 import io.sclera.dto.DocumentMediaDTO;
+import io.sclera.interfaces.MediaServiceInterface;
 import io.sclera.utils.FileUtils;
 
 /**
@@ -26,7 +27,7 @@ import io.sclera.utils.FileUtils;
  * for file-related utilities.
  */
 @Service
-public class MediaService {
+public class MediaService implements MediaServiceInterface {
 
 	@Autowired
 	FileUtils fileUtils;

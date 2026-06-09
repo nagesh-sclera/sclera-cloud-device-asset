@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONArray;
 import io.sclera.Repository.ClientBarCodeRepository;
 import io.sclera.dto.ClientBarCodeDTO;
 import io.sclera.queryrepository.ClientBarCodeQueryRepository;
+import io.sclera.interfaces.ClientBarCodeServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import javax.sql.DataSource;
@@ -28,7 +29,7 @@ import java.util.Set;
  * </ul>
  */
 @Service
-public class ClientBarCodeService {
+public class ClientBarCodeService implements ClientBarCodeServiceInterface {
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ClientBarCodeService.class);

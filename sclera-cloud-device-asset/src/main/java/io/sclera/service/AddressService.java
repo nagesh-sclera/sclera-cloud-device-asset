@@ -1,5 +1,6 @@
 package io.sclera.service;
 
+import io.sclera.interfaces.AddressServiceInterface;
 import org.springframework.stereotype.Service;
 
 /**
@@ -9,6 +10,6 @@ import org.springframework.stereotype.Service;
  * added as address functionality is implemented.
  */
 @Service
-public class AddressService {
+public class AddressService implements AddressServiceInterface {
 
 }

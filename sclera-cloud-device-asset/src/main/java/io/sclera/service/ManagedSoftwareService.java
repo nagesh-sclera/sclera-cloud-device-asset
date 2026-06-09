@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import io.sclera.interfaces.ManagedSoftwareServiceInterface;
 
 /**
  * Manages software subscription records and their compliance state, including listing with
@@ -34,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * risk-and-compliance reporting, and syncing application data from the inventory service.
  */
 @Service
-public class ManagedSoftwareService {
+public class ManagedSoftwareService implements ManagedSoftwareServiceInterface {
     private static final Logger log = LoggerFactory.getLogger(ManagedSoftwareService.class);
 
     ManagedSoftwareRepository managedSoftwareRepository;

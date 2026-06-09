@@ -3,6 +3,7 @@ package io.sclera.service;
 import com.alibaba.fastjson.JSONArray;
 import io.sclera.auth.dto.TenantDTO;
 import io.sclera.dto.FloorDTO;
+import io.sclera.interfaces.WebClientServiceInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,7 @@ import java.util.Set;
 
 /** STUB: replace with remote call to edge-D */
 @Service
-public class WebClientService {
+public class WebClientService implements WebClientServiceInterface {
 
     private static final Logger log = LoggerFactory.getLogger(WebClientService.class);
 

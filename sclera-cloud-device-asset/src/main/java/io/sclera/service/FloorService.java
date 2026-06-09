@@ -37,6 +37,7 @@ import com.fasterxml.uuid.Generators;
 
 import io.sclera.Repository.FloorRepository;
 import io.sclera.dto.FloorDTO;
+import io.sclera.interfaces.FloorServiceInterface;
 import io.sclera.utils.Utils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,7 +50,7 @@ import jakarta.servlet.http.HttpServletRequest;
  */
 @Service
 @ConfigurationProperties(prefix = "sclera")
-public class FloorService {
+public class FloorService implements FloorServiceInterface {
     private static final Logger log = LoggerFactory.getLogger(FloorService.class);
 
     @Autowired

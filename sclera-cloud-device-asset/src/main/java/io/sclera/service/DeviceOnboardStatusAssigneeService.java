@@ -4,6 +4,7 @@ import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.DeviceOnboardStatusAssigneeRepository;
 import io.sclera.dto.DeviceOnboardStatusAssigneeDTO;
 import io.sclera.dto.DeviceOnboardStatusDTO;
+import io.sclera.interfaces.DeviceOnboardStatusAssigneeServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +18,7 @@ import java.util.Set;
  * onboard status is updated.
  */
 @Service
-public class DeviceOnboardStatusAssigneeService {
+public class DeviceOnboardStatusAssigneeService implements DeviceOnboardStatusAssigneeServiceInterface {
 
     @Autowired
     DeviceOnboardStatusAssigneeRepository deviceOnboardStatusAssigneeRepository;

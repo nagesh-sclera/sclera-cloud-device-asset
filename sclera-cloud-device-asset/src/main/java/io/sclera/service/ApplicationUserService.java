@@ -7,6 +7,7 @@ import io.sclera.Repository.DeviceSpecificationRepository;
 import io.sclera.Repository.ManagedSoftwareRepository;
 import io.sclera.dto.InventoryApplicationUserDTO;
 import io.sclera.models.DeviceSpecification;
+import io.sclera.interfaces.ApplicationUserServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -24,7 +25,7 @@ import java.util.*;
  * to load the device specifications whose user email is matched against the inventory user.
  */
 @Service
-public class ApplicationUserService {
+public class ApplicationUserService implements ApplicationUserServiceInterface {
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ApplicationUserService.class);

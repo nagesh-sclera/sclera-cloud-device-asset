@@ -173,8 +173,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @return the instrument count
      */
     //get measuring device count
-    @Query(value = "SELECT COUNT(*) FROM measuring_instrument WHERE device_id = ?1", nativeQuery = true)
-    Integer getInstrumentCountByDeviceId(String device_id);
+    long countByDevice_Id(String device_id);
 
     /**
      * Synchronizes the full set of mutable fields of an instrument matched by type and identifier.
@@ -328,8 +327,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @return the matching instrument count
      */
     // get measuring instrument count by device id based on alert status
-    @Query(value = "SELECT COUNT(*) FROM measuring_instrument WHERE device_id = ?1 AND alert = ?2", nativeQuery = true)
-    Integer getMeasuringInstrumentAlertCountDeviceId(String device_id, boolean alert);
+    long countByDevice_IdAndAlert(String device_id, boolean alert);
 
     /**
      * Returns the current value of the instrument with the given identifier.

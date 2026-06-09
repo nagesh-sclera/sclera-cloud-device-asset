@@ -3,9 +3,9 @@ package io.sclera.service;
 import io.sclera.Repository.DeviceInstalledAppsRepository;
 import io.sclera.dto.DeviceInstalledAppsDTO;
 import io.sclera.models.DeviceInstalledApps;
+import io.sclera.interfaces.DeviceInstalledAppsServiceInterface;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  * {@link DeviceInstalledAppsDTO} views.
  */
 @Service
-public class DeviceInstalledAppsService {
+public class DeviceInstalledAppsService implements DeviceInstalledAppsServiceInterface {
 
     private final DeviceInstalledAppsRepository deviceInstalledAppsRepository;
 

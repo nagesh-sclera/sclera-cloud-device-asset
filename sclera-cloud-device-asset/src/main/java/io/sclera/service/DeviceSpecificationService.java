@@ -7,11 +7,9 @@ import com.alibaba.fastjson.JSONObject;
 import io.sclera.Repository.*;
 import io.sclera.dto.DeviceDTO;
 import io.sclera.dto.DeviceSpecificationDTO;
-import io.sclera.dto.RemoteAgentServerDetailsDTO;
 import io.sclera.models.*;
+import io.sclera.interfaces.DeviceSpecificationServiceInterface;
 import io.sclera.utils.Utils;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
@@ -25,7 +23,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Persists and serves device hardware, software and network specifications collected by agents.
@@ -43,7 +40,7 @@ import java.util.stream.Collectors;
  * {@link DeviceService}, {@link ManagedSoftwareService}, {@link APICallClient} and {@link Utils}.
  */
 @Service
-public class DeviceSpecificationService {
+public class DeviceSpecificationService implements DeviceSpecificationServiceInterface {
     private static final Logger log = LoggerFactory.getLogger(DeviceSpecificationService.class);
 
     private final DeviceSpecificationRepository deviceSpecificationRepository;

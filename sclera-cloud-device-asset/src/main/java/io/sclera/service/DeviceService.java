@@ -1,4 +1,5 @@
 package io.sclera.service;
+import io.sclera.interfaces.DeviceServiceInterface;
 import io.sclera.client.IOCClient;
 import io.sclera.client.APICallClient;
 import io.sclera.dto.ProductImagesDTO;
@@ -9,7 +10,6 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import tools.jackson.core.JacksonException;
-import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import com.fasterxml.uuid.Generators;
 import com.itextpdf.text.Document;
@@ -87,7 +87,6 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -132,7 +131,7 @@ import static org.apache.poi.ss.util.CellUtil.createCell;
  */
 @Service
 @ConfigurationProperties(prefix = "sclera")
-public class DeviceService {
+public class DeviceService implements DeviceServiceInterface {
 
     private static final Logger log = LoggerFactory.getLogger(DeviceService.class);
 

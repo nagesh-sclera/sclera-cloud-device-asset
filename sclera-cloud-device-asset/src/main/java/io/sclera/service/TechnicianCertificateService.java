@@ -2,8 +2,8 @@ package io.sclera.service;
 
 import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.TechnicianCertificateRepository;
-import io.sclera.dto.TechnicianAvailabilityDTO;
 import io.sclera.dto.TechnicianCertificateDTO;
+import io.sclera.interfaces.TechnicianCertificateServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * exchanges data using {@link TechnicianCertificateDTO}.
  */
 @Service
-public class TechnicianCertificateService {
+public class TechnicianCertificateService implements TechnicianCertificateServiceInterface {
     private static final Logger log = LoggerFactory.getLogger(TechnicianCertificateService.class);
 
     private final TechnicianCertificateRepository technicianCertificateRepository;

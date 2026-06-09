@@ -56,7 +56,7 @@ class MeasuringInstrumentServiceTest {
 
     @Test
     void getInstrumentCountByDeviceId_delegates() {
-        when(measuingInstrumentRepository.getInstrumentCountByDeviceId("d1")).thenReturn(4);
+        when(measuingInstrumentRepository.countByDevice_Id("d1")).thenReturn(4L);
         assertThat(service.getInstrumentCountByDeviceId("d1")).isEqualTo(4);
     }
 
@@ -195,13 +195,13 @@ class MeasuringInstrumentServiceTest {
 
     @Test
     void getMeasuringInstrumentAlertStatusByDeviceId_trueWhenCountPositive() {
-        when(measuingInstrumentRepository.getMeasuringInstrumentAlertCountDeviceId("d1", true)).thenReturn(2);
+        when(measuingInstrumentRepository.countByDevice_IdAndAlert("d1", true)).thenReturn(2L);
         assertThat(service.getMeasuringInstrumentAlertStatusByDeviceId("d1")).isTrue();
     }
 
     @Test
     void getMeasuringInstrumentAlertStatusByDeviceId_falseWhenCountZero() {
-        when(measuingInstrumentRepository.getMeasuringInstrumentAlertCountDeviceId("d1", true)).thenReturn(0);
+        when(measuingInstrumentRepository.countByDevice_IdAndAlert("d1", true)).thenReturn(0L);
         assertThat(service.getMeasuringInstrumentAlertStatusByDeviceId("d1")).isFalse();
     }
 
