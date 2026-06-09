@@ -33,6 +33,10 @@ The scheduler registers one Dapr job per job *name* (global). Three capabilities
 
 ---
 
+## Execution engine
+
+Every actual scheduled fire goes through **the same Dapr Scheduler control plane** the existing scheduler already uses — no second scheduling engine is introduced. `SchedulerClient` registers jobs via the Dapr Jobs API (`POST /v1.0-alpha1/jobs/{name}`); the control plane persists them (etcd) and calls back `POST /job/{name}` on fire. All additions stay inside that API: per-VDMS jobs are ordinary named jobs (`{jobName}::{vdmsId}`), timezone uses the native `CRON_TZ=` cron prefix, and one-shot runs use native `dueTime`+`repeats=1`. The **only** non-Dapr timer is the snooze re-arm reconciler — an in-process Spring `@Scheduled` (like `HousekeepingService`) that holds snooze state in the DB and, on expiry, *re-registers the real job through the Dapr control plane*. It never fires jobs itself.
+
 ## Architecture
 
 ```
