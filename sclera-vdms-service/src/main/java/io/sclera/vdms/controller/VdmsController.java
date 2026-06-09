@@ -86,6 +86,17 @@ public class VdmsController {
         return ResponseEntity.ok(dto);
     }
 
+    /** GET /vdms/active → [{ "vdmsId": ..., "timezone": ... }] for all active VDMS.
+     *  Consumed by the scheduler's startup-sync (Dapr service-invocation). */
+    @GetMapping("/vdms/active")
+    public List<Map<String, String>> getActive() {
+        return repo.findAllActive().stream()
+            .map(v -> Map.of(
+                "vdmsId", v.getId() != null ? v.getId() : "",
+                "timezone", v.getTimezone() != null ? v.getTimezone() : ""))
+            .toList();
+    }
+
     /**
      * GET /vdms/audit-log?vdmsId={vdmsId}&page=0&size=20
      *
