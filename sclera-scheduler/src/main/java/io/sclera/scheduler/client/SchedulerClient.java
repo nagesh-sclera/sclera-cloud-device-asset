@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.time.Instant;
 import java.util.Map;
 
 /**
@@ -34,10 +35,8 @@ public class SchedulerClient {
 
     /** Register or replace a job. Idempotent: re-posting the same name replaces it. */
     public void schedule(JobSchedule job) {
-        // Jobs API body: { "schedule": "<cron|@every>", "data": { "jobName": "<name>" } }
-        // data is echoed back to POST /job/{name}; we key everything on the path name.
         Map<String, Object> body = Map.of(
-            "schedule", job.schedule(),
+            "schedule", effectiveSchedule(job.schedule(), job.timezone()),
             "data", Map.of("jobName", job.name())
         );
         http.post()
@@ -46,7 +45,31 @@ public class SchedulerClient {
             .body(body)
             .retrieve()
             .toBodilessEntity();
-        log.info("Scheduled job name={} schedule={}", job.name(), job.schedule());
+        log.info("Scheduled job name={} schedule={} tz={}", job.name(), job.schedule(), job.timezone());
+    }
+
+    /** Register a one-shot job that fires once at dueTime, then Dapr auto-removes it. */
+    public void scheduleOnce(String name, Instant dueTime) {
+        Map<String, Object> body = Map.of(
+            "dueTime", dueTime.toString(),
+            "repeats", 1,
+            "data", Map.of("jobName", name)
+        );
+        http.post()
+            .uri("/v1.0-alpha1/jobs/{name}", name)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(body)
+            .retrieve()
+            .toBodilessEntity();
+        log.info("Scheduled one-shot job name={} dueTime={}", name, dueTime);
+    }
+
+    // CRON_TZ applies only to cron expressions; "@every <dur>" interval schedules ignore tz.
+    private static String effectiveSchedule(String schedule, String timezone) {
+        if (timezone == null || timezone.isBlank() || schedule.startsWith("@")) {
+            return schedule;
+        }
+        return "CRON_TZ=" + timezone + " " + schedule;
     }
 
     /** Remove a job from the Scheduler. Safe to call if it does not exist (404 is ignored). */
