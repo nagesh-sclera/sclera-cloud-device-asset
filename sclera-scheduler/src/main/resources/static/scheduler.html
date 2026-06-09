@@ -118,6 +118,19 @@
   .inst-vdms{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .inst-when{color:var(--muted2);font-size:.7rem}
   .inst-actions{display:flex;gap:.25rem;justify-content:flex-end}
+  .inst-controls{display:flex;align-items:center;gap:.5rem;padding:.4rem 0 .5rem;flex-wrap:wrap}
+  .inst-search{background:var(--panel);border:1px solid var(--line);border-radius:6px;color:var(--txt);
+               padding:.25rem .5rem;font-size:.74rem;min-width:150px}
+  .chip{font-size:.66rem;padding:.12rem .5rem;border-radius:999px;cursor:pointer;
+        border:1px solid var(--line);color:var(--muted);background:var(--panel)}
+  .chip.active{color:var(--txt);border-color:#2b3a5e;background:#16203a}
+  .popover{position:absolute;z-index:50;background:var(--panel2);border:1px solid #2b3a5e;border-radius:9px;
+           padding:.6rem;box-shadow:0 8px 24px rgba(0,0,0,.5);width:230px}
+  .popover h5{margin:0 0 .4rem;font-size:.72rem;color:var(--muted)}
+  .popover .preset{display:block;width:100%;text-align:left;margin-bottom:.25rem}
+  .popover .row2{display:flex;gap:.35rem;margin-top:.4rem}
+  .popover input[type=datetime-local]{flex:1;background:var(--panel);border:1px solid var(--line);
+        border-radius:6px;color:var(--txt);font-size:.72rem;padding:.2rem .35rem}
 
   /* ---- live feed ---- */
   .fhead{display:flex;align-items:center;gap:.5rem;padding:.7rem .9rem;border-bottom:1px solid var(--line)}
@@ -365,7 +378,13 @@ function instActions(state){
     default:         return [];
   }
 }
-function instControls(jobName, f){ return ''; } // real version added in the next task
+function instControls(jobName, f){
+  const chip = (val,lbl)=>`<span class="chip ${f.state===val?'active':''}" data-chip="${val}" data-job="${esc(jobName)}">${lbl}</span>`;
+  return `<div class="inst-controls">
+    <input class="inst-search" data-isearch="${esc(jobName)}" placeholder="search vdms…" value="${esc(f.q)}"/>
+    ${chip('all','All')}${chip('ENABLED','Enabled')}${chip('SNOOZED','Snoozed')}${chip('PAUSED','Paused')}${chip('DISABLED','Disabled')}
+  </div>`;
+}
 function renderInstances(jobName){
   if(instLoading[jobName] || !instCache[jobName]) return `<div class="inst-msg">loading instances…</div>`;
   let data = instCache[jobName];
@@ -402,12 +421,61 @@ async function loadInstances(jobName){
 function refreshOpenInstances(){
   return Promise.all([...jobExpanded].map(loadInstances));
 }
-function openDelayPopover(kind, job, vdms, anchor){ /* implemented in the next task */ }
+function fmtLocal(d){ // -> value for datetime-local (local time, no seconds)
+  const p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function tomorrowAt(h,m){ const d=new Date(); d.setDate(d.getDate()+1); d.setHours(h,m,0,0); return d; }
+function todayAt(h,m){ const d=new Date(); d.setHours(h,m,0,0); if(d<=new Date()) d.setDate(d.getDate()+1); return d; }
+function closePopover(){ const p=document.getElementById('delay-pop'); if(p) p.remove(); }
+function openDelayPopover(kind, job, vdms, anchor){
+  closePopover();
+  const isSnooze = kind==='snooze';
+  const presets = isSnooze
+    ? [['+1 hour', new Date(Date.now()+3600e3)], ['+4 hours', new Date(Date.now()+4*3600e3)], ['Tomorrow 09:00', tomorrowAt(9,0)]]
+    : [['In 1 hour', new Date(Date.now()+3600e3)], ['Tonight 20:00', todayAt(20,0)]];
+  const pop = document.createElement('div');
+  pop.className='popover'; pop.id='delay-pop';
+  pop.innerHTML = `<h5>${isSnooze?'Snooze until':'Run at'} — ${esc(vdms)}</h5>
+    ${presets.map(p=>`<button class="ab preset" data-iso="${p[1].toISOString()}">${p[0]}</button>`).join('')}
+    <div class="row2"><input type="datetime-local" min="${fmtLocal(new Date())}" value="${fmtLocal(new Date(Date.now()+3600e3))}"/>
+      <button class="ab run" data-custom="1">Set</button></div>`;
+  document.body.appendChild(pop);
+  const r = anchor.getBoundingClientRect();
+  pop.style.top = (window.scrollY + r.bottom + 4)+'px';
+  pop.style.left = (window.scrollX + Math.max(8, r.right - 230))+'px';
+
+  async function send(iso){
+    closePopover();
+    const url = `/api/jobs/${encodeURIComponent(job)}/instances/${encodeURIComponent(vdms)}/${isSnooze?'snooze?until=':'run-at?at='}${encodeURIComponent(iso)}`;
+    try{ await fetch(url,{method:'POST'}); }catch(_){}
+    await loadInstances(job); render();
+  }
+  pop.querySelectorAll('[data-iso]').forEach(b=> b.addEventListener('click', ()=> send(b.dataset.iso)));
+  pop.querySelector('[data-custom]').addEventListener('click', ()=>{
+    const v = pop.querySelector('input[type=datetime-local]').value;
+    if(!v) return;
+    const d = new Date(v);
+    if(d.getTime() <= Date.now()){ pop.querySelector('h5').textContent='Pick a future time'; return; }
+    send(d.toISOString());
+  });
+}
+document.addEventListener('click', e=>{
+  const p=document.getElementById('delay-pop');
+  if(p && !p.contains(e.target) && !e.target.closest('[data-iact]')) closePopover();
+});
 
 // ---------- interactions ----------
 document.getElementById('groups').addEventListener('click', async e=>{
   const head = e.target.closest('[data-toggle]');
   if(head){ const o=head.dataset.toggle; collapsed.has(o)?collapsed.delete(o):collapsed.add(o); render(); return; }
+
+  const chip = e.target.closest('[data-chip]');
+  if(chip){
+    const name = chip.dataset.job;
+    instFilter[name] = {...(instFilter[name]||{q:'',state:'all'}), state: chip.dataset.chip};
+    render(); return;
+  }
 
   // expand/collapse a PER_VDMS job's instance list (ignore clicks on instance action buttons)
   const pv = e.target.closest('[data-pervdms]');
@@ -442,6 +510,17 @@ document.getElementById('groups').addEventListener('click', async e=>{
   }
 });
 document.getElementById('search').addEventListener('input', render);
+document.getElementById('groups').addEventListener('input', e=>{
+  const s = e.target.closest('[data-isearch]');
+  if(s){
+    const name = s.dataset.isearch;
+    instFilter[name] = {...(instFilter[name]||{q:'',state:'all'}), q: s.value};
+    // re-render only this job's instance block to preserve input focus
+    const block = document.querySelector(`[data-instances="${CSS.escape(name)}"]`);
+    if(block){ block.innerHTML = renderInstances(name);
+      const inp = block.querySelector('[data-isearch]'); if(inp){ inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); } }
+  }
+});
 document.getElementById('refresh').addEventListener('click', fetchData);
 document.getElementById('collapse').addEventListener('click', ()=>{
   allCollapsed=!allCollapsed;
