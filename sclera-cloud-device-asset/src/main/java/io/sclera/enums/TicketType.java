@@ -1,5 +1,10 @@
 package io.sclera.enums;
 
+/**
+ * Classifies the kind of change applied to a support ticket (for example, creation,
+ * status updates, message updates, assignment changes, and closure). Each constant
+ * pairs a numeric value with a human-readable description.
+ */
 public enum TicketType {
 
     NO_CHANGES(0, "No changes in updated ticket"),
@@ -29,6 +34,10 @@ public enum TicketType {
         this.description = description;
     }
 
+    /**
+     * Returns the {@code TicketType} matching the given value, throwing
+     * {@link IllegalArgumentException} if none matches.
+     */
     // Optional: Method to get enum by value
     public static TicketType fromValue(int value) {
         for (TicketType type : TicketType.values()) {

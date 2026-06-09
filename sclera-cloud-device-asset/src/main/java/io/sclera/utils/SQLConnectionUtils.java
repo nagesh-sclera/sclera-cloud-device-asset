@@ -8,12 +8,19 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 
+/**
+ * Utility for managing manual JDBC transactions (begin, commit and rollback) over the configured
+ * data source.
+ */
 @Service
 public class SQLConnectionUtils {
 
     @Autowired
     DataSource dataSource;
 
+    /**
+     * Opens a new connection with auto-commit disabled to begin a manual transaction.
+     */
     public Connection beginTransaction() throws SQLException {
         Connection connection = dataSource.getConnection();
         if (connection != null) {
@@ -23,6 +30,10 @@ public class SQLConnectionUtils {
         return connection;
     }
 
+    /**
+     * Commits the transaction, rolling back on failure, and always restores auto-commit and closes
+     * the connection.
+     */
     public void commitTransaction(Connection conn) throws SQLException {
         try {
             if (conn != null) {
@@ -39,6 +50,9 @@ public class SQLConnectionUtils {
         }
     }
 
+    /**
+     * Rolls back the transaction and restores auto-commit on the connection.
+     */
     public void rollbackTransaction(Connection conn) throws SQLException {
         try {
             if (conn != null) {

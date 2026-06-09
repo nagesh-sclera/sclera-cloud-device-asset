@@ -10,6 +10,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Utility for IBM Maximo integration that holds session/token state and builds OSLC query parameters
+ * and the supported site list for work-order requests.
+ */
 @Component
 public class MaximoUtils {
 
@@ -50,6 +54,10 @@ public class MaximoUtils {
         this.siteId = siteId;
     }
 
+    /**
+     * Builds the OSLC query parameter map (select fields, where clause from the supplied filters,
+     * paging and ordering) for a Maximo work-order request.
+     */
     public Map<String, String> buildParams(String workOrderId, MaximoDTO maximoDTO, Integer pageno, Integer pagesize) {
         Map<String, String> params = new HashMap<>();
         String oslcSelectValue = String.join(",",
@@ -166,6 +174,9 @@ public class MaximoUtils {
         return params;
     }
 
+    /**
+     * Returns the hard-coded list of supported Maximo sites (site id and description) as a JSON array.
+     */
     public JSONArray getSites(){
         List<Map<String, String>> siteMap = new ArrayList<>();
 
@@ -364,6 +375,9 @@ public class MaximoUtils {
         return siteMap;
     }
 
+    /**
+     * Converts a list of string maps into a JSON array of JSON objects.
+     */
     public static JSONArray convertListOfMapToJsonArray(List<Map<String, String>> list) {
         JSONArray jsonArray = new JSONArray();
         for (Map<String, String> site : list) {

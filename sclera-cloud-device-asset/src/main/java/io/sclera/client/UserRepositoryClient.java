@@ -43,6 +43,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         this.dapr = dapr;
     }
 
+    /** Retrieves the organisation id for the user with the given email. Returns null on sidecar failure. */
     @Override
     public String getOrganisationIdByUserEmail(String email) {
         Map<String, String> payload = new HashMap<>();
@@ -55,6 +56,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         return null;
     }
 
+    /** Checks whether a user exists for the given email and organisation. Returns 0 on sidecar failure. */
     @Override
     public int checkUser(String email, String organisation_id) {
         Map<String, String> payload = new HashMap<>();
@@ -68,6 +70,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         return 0;
     }
 
+    /** Inserts a new user via sclera-identity. Swallows exceptions with a WARN log. */
     @Override
     public void insertUser(String email, String company_name, String created_by, BigInteger creation_timestamp,
                            String name, String phone, String phone_type, String value, String website,
@@ -86,6 +89,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         }
     }
 
+    /** Updates an existing user via sclera-identity. Swallows exceptions with a WARN log. */
     @Override
     public void updateUser(String company_name, String created_by, String name, String phone,
                            String phone_type, String value, String website, String organisation_id, String email) {
@@ -99,6 +103,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         }
     }
 
+    /** Deletes all users belonging to the given organisation via sclera-identity. Swallows exceptions with a WARN log. */
     @Override
     public void deleteUsersByOrganisationId(String customer_org_id) {
         Map<String, String> payload = new HashMap<>();
@@ -110,6 +115,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         }
     }
 
+    /** Retrieves a paginated, optionally filtered list of all users. Returns an empty set on sidecar failure. */
     @Override
     public Set<UserDTO> getAllUsers(Integer pagesize, Integer offset, String searchkey) {
         Map<String, Object> payload = new HashMap<>();
@@ -124,6 +130,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         return Collections.emptySet();
     }
 
+    /** Deletes the user identified by the given email via sclera-identity. Swallows exceptions with a WARN log. */
     @Override
     public void deleteById(String email) {
         Map<String, String> payload = new HashMap<>();
@@ -135,6 +142,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         }
     }
 
+    /** Edits user profile fields via sclera-identity. Swallows exceptions with a WARN log. */
     @Override
     public void editUsers(String company_name, String name, String phone, String phone_type,
                           String value, String website, String email, String language) {
@@ -147,6 +155,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         }
     }
 
+    /** Retrieves a paginated list of users within a specific organisation. Returns an empty set on sidecar failure. */
     @Override
     public Set<UserDTO> getAllOrganisationUsersByPagination(Integer pagesize, Integer offset, String searchkey, String customer_org_id) {
         Map<String, Object> payload = new HashMap<>();
@@ -162,6 +171,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         return Collections.emptySet();
     }
 
+    /** Retrieves a paginated list of users outside the caller's organisation. Returns an empty set on sidecar failure. */
     @Override
     public Set<UserDTO> getAllOtherUsersByPagination(Integer pagesize, Integer offset, String searchkey) {
         Map<String, Object> payload = new HashMap<>();
@@ -176,6 +186,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         return Collections.emptySet();
     }
 
+    /** Retrieves the user with the given email. Returns null on sidecar failure. */
     @Override
     public UserDTO getUserByEmail(String email) {
         Map<String, String> payload = new HashMap<>();
@@ -188,6 +199,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         return null;
     }
 
+    /** Retrieves the email addresses of all users. Returns an empty set on sidecar failure. */
     @Override
     public Set<String> getAllUsersEmail() {
         try {
@@ -198,6 +210,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         return Collections.emptySet();
     }
 
+    /** Performs a full update of all user fields via sclera-identity. Swallows exceptions with a WARN log. */
     @Override
     public void updateAllUser(String company_name, String created_by, String name, String phone,
                               String phone_type, String value, String website, String organisation_id,
@@ -212,6 +225,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         }
     }
 
+    /** Retrieves all users belonging to the given organisation. Returns an empty list on sidecar failure. */
     @Override
     public List<UserDTO> getAllUsersByOrganisationId(String customer_org_id) {
         Map<String, String> payload = new HashMap<>();
@@ -224,6 +238,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         return Collections.emptyList();
     }
 
+    /** Reassigns users from one customer organisation id to another. Swallows exceptions with a WARN log. */
     @Override
     public void updateCustomerOrgIdForUsers(String existing_customer_org_id, String new_customer_org_id) {
         Map<String, String> payload = new HashMap<>();
@@ -236,6 +251,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         }
     }
 
+    /** Retrieves all users. Returns an empty set on sidecar failure. */
     @Override
     public Set<UserDTO> getUsers() {
         try {
@@ -246,6 +262,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         return Collections.emptySet();
     }
 
+    /** Retrieves the display name of the user with the given email. Returns null on sidecar failure. */
     @Override
     public String getUserNameByEmail(String email) {
         Map<String, String> payload = new HashMap<>();
@@ -258,6 +275,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         return null;
     }
 
+    /** Retrieves the roles assigned to the user with the given email. Returns null on sidecar failure. */
     @Override
     public String getAllUserRoles(String email) {
         Map<String, String> payload = new HashMap<>();
@@ -270,6 +288,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         return null;
     }
 
+    /** Checks whether a user exists with the given email. Returns 0 on sidecar failure. */
     @Override
     public int checkUserByEmail(String email) {
         Map<String, String> payload = new HashMap<>();
@@ -282,6 +301,7 @@ public class UserRepositoryClient implements io.sclera.Repository.UserRepository
         return 0;
     }
 
+    /** Retrieves the master user's email address. Returns null on sidecar failure. */
     @Override
     public String getMasterUserEmail() {
         try {

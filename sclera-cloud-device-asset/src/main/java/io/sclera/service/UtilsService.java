@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 /** STUB: replace with remote call to edge-D */
 @Service
 public class UtilsService {
+    /**
+     * Inserts or updates a phonebook address entry. Stub returns a placeholder value.
+     */
     public String upsertPhoneAddressById(String username, String vdmsid, String dockername, PhonebookAddressDto phonebookaddressdto) {
         return "TEST";
     }

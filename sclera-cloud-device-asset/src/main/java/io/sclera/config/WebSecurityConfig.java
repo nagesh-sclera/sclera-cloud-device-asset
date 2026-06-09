@@ -107,6 +107,11 @@ import java.util.Enumeration;
 import java.util.List;
 
 
+/**
+ * Configures stateless OAuth2 resource-server security (active outside the {@code docker} profile),
+ * validating multi-tenant JWTs and permitting requests from local or bridge-subnet clients while
+ * applying security response headers.
+ */
 @Configuration
 @EnableWebSecurity
 @org.springframework.context.annotation.Profile("!docker")
@@ -119,6 +124,14 @@ public class WebSecurityConfig {
     @Autowired
     JwtRequestFilter jwtRequestFilter;
 
+    /**
+     * Provides a JWT decoder backed by the given processor, combining the default validators with
+     * the tenant issuer validator.
+     *
+     * @param jwtProcessor the Nimbus JWT processor
+     * @param jwtValidator the additional tenant token validator
+     * @return the configured JWT decoder
+     */
     @Bean
     public JwtDecoder jwtDecoder(JWTProcessor<SecurityContext> jwtProcessor, OAuth2TokenValidator<Jwt> jwtValidator) {
         NimbusJwtDecoder decoder = new NimbusJwtDecoder(jwtProcessor);
@@ -129,11 +142,21 @@ public class WebSecurityConfig {
     }
 
 
+    /**
+     * Provides the tenant-aware JWS key selector used to resolve signing keys per tenant.
+     *
+     * @return the tenant JWS key selector
+     */
     @Bean
     public TenantJWSKeySelector tenantJWSKeySelector() {
         return new TenantJWSKeySelector();
     }
 
+    /**
+     * Provides a JWT processor configured with the tenant-aware JWS key selector.
+     *
+     * @return the configured JWT processor
+     */
     @Bean
     public JWTProcessor<SecurityContext> jwtProcessor() {
         ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
@@ -142,6 +165,11 @@ public class WebSecurityConfig {
     }
 
 
+    /**
+     * Provides the validator that checks a JWT's issuer against the expected tenant issuer.
+     *
+     * @return the tenant JWT issuer validator
+     */
     @Bean
     public TenantJwtIssuerValidator tenantJwtIssuerValidator() {
         return new TenantJwtIssuerValidator();
@@ -212,6 +240,12 @@ public class WebSecurityConfig {
 
     }
 
+    /**
+     * Collects the host addresses of all active, non-virtual network interfaces, excluding
+     * link-local addresses.
+     *
+     * @return the list of local IP addresses
+     */
     public static List<String> getLocalIPAddresses() {
         List<String> ipAddresses = new ArrayList<>();
         try {

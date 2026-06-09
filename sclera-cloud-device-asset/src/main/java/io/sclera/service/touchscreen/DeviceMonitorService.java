@@ -12,6 +12,9 @@ import java.util.List;
 public class DeviceMonitorService {
     private static final Logger log = LoggerFactory.getLogger(DeviceMonitorService.class);
 
+    /**
+     * Stub for retrieving the unique emails of users assigned within a VDMS network; always returns an empty list.
+     */
     public List<String> getUniqueAssignedUserEmail(String vdmsId, String networkName) {
         log.warn("STUB: getUniqueAssignedUserEmail called");
         return Collections.emptyList();

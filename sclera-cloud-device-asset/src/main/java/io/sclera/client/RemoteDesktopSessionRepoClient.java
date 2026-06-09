@@ -29,6 +29,10 @@ public class RemoteDesktopSessionRepoClient implements RemoteDesktopSessionRepos
         this.dapr = dapr;
     }
 
+    /**
+     * Deletes the remote desktop session associated with the given device via sclera-edge.
+     * Swallows exceptions with a WARN log.
+     */
     @Override
     public void deleteByDeviceId(String deviceId) {
         try {

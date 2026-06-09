@@ -17,6 +17,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+/**
+ * Manages device specifications (key/value/unit entries) and the power-source tagging and load
+ * calculations derived from them, including connected-device wiring and power capacity computations.
+ */
 @Service
 public class SpecificationsService {
 
@@ -28,6 +32,9 @@ public class SpecificationsService {
     ConnectedDevicesService connectedDevicesService;
 
 
+    /**
+     * Updates the value, unit and name of each supplied device specification.
+     */
     public void editDeviceSpecifications(String username, String vdmsid, List<SpecificationsDTO> specifications) {
 
         for (SpecificationsDTO specificationsDTO : specifications) {
@@ -37,15 +44,25 @@ public class SpecificationsService {
 
     }
 
+    /**
+     * Returns the count of specifications matching the given device id and key name (zero when none
+     * exist).
+     */
     public int checkSpecificationByDeviceId(String virtual_device_id, String key_name) {
         return specificationsRepository.checkSpecificationByDeviceId(virtual_device_id, key_name);
     }
 
+    /**
+     * Returns all specifications for the given device id.
+     */
     public List<SpecificationsDTO> getDeviceSpecificationsByDeviceId(String username, String vdmsid, String device_id) {
         List<SpecificationsDTO> specifications = specificationsRepository.getDeviceSpecificationsBasedOnDeviceId(device_id);
         return specifications;
     }
 
+    /**
+     * Inserts or updates a single device specification, generating an id when one is absent.
+     */
     public void upsertDeviceSpecification(SpecificationsDTO specificationsDTO) {
         if (specificationsDTO.getId() == null) {
             String id = Generators.timeBasedGenerator().generate().toString();
@@ -56,6 +73,10 @@ public class SpecificationsService {
     }
 
 
+    /**
+     * Returns the devices connected to the given specification, paginated; returns null when no
+     * specification is supplied.
+     */
     public List<DeviceDTO> getTaggedDevices(String username, String vdmsid, SpecificationsDTO specificationsDTO, Integer pageno, Integer pagesize) {
 
         if(specificationsDTO!= null)
@@ -67,6 +88,9 @@ public class SpecificationsService {
 
     }
 
+    /**
+     * Returns the power sources tagged to the given device.
+     */
     public List<DeviceDTO> getTaggedPowerSourcesByDeviceId(String username, String vdmsid, String device_id) {
 
         return connectedDevicesService.getTaggedPowerSourcesByDeviceId(username, vdmsid, device_id);
@@ -74,6 +98,9 @@ public class SpecificationsService {
     }
 
 
+    /**
+     * Removes the power-source connection for each supplied specification.
+     */
     public void untagPowerSource(String username, String vdmsid, List<SpecificationsDTO> specifications) {
 
         for (SpecificationsDTO specificationsDTO : specifications) {
@@ -84,6 +111,9 @@ public class SpecificationsService {
 
     }
 
+    /**
+     * Removes the connected-device link for each supplied specification.
+     */
     public void untagDevice(String username, String vdmsid, List<SpecificationsDTO> specifications) {
 
         for (SpecificationsDTO specificationsDTO : specifications) {
@@ -94,6 +124,10 @@ public class SpecificationsService {
 
     }
 
+    /**
+     * Inserts or updates the supplied specifications, then returns the full specification list for
+     * the affected device (or null when none were applied).
+     */
     public List<SpecificationsDTO> upsertDeviceSpecifications(String username, String vdmsid, List<SpecificationsDTO> specifications) {
 
         String device_id = null;
@@ -121,6 +155,9 @@ public class SpecificationsService {
         return null;
     }
 
+    /**
+     * Deletes each supplied specification along with its connected-device entries.
+     */
     public void deleteSpecifications(String username, String vdmsid, List<SpecificationsDTO> specifications) {
         for (SpecificationsDTO specificationsDTO : specifications) {
             connectedDevicesService.deleteConnectedDevicesBySpecificationId(specificationsDTO.getId());
@@ -130,6 +167,10 @@ public class SpecificationsService {
     }
 
     // store the output specification and its connected entry
+    /**
+     * Tags power sources: upserts each supplied specification, then links the input specifications
+     * (key name starting with "I") to the output specification as connected devices.
+     */
     public void tagPowerSources(String username, String vdmsid, List<SpecificationsDTO> specifications) {
 
         List<String> specification_ids = new ArrayList<>();
@@ -159,15 +200,25 @@ public class SpecificationsService {
 
     }
 
+    /**
+     * Returns the specification matching the given device id and key name.
+     */
     public SpecificationsDTO getDeviceSpecificationsBasedOnDeviceIdAndKeyName(String device_id, String key_name) {
         return specificationsRepository.getDeviceSpecificationsBasedOnDeviceIdAndKeyName(device_id, key_name);
     }
 
+    /**
+     * Returns the count of specifications already present for the given key name and device.
+     */
     public int checkSpecificationsAdded(String key_name, String device_id) {
         return specificationsRepository.checkSpecificationByDeviceId(device_id, key_name);
     }
 
 
+    /**
+     * Creates a connected-device link between an output specification and its connected
+     * specification.
+     */
     public void addConnectedDevices(SpecificationsDTO specificationsDTO) {
         String id = Generators.timeBasedGenerator().generate().toString();
         ConnectedDevicesDTO connectedDevicesDTO = new ConnectedDevicesDTO(id, specificationsDTO.getConnected_specifications_id(), specificationsDTO.getId());
@@ -177,6 +228,9 @@ public class SpecificationsService {
 
     /************************ Calculate 20 cent head room from total capacity *************************/
 
+    /**
+     * Returns the usable power capacity after reserving a 20 percent head room from the total power.
+     */
     public Double getTotalPowerWithHeadRoom(Double total_power) {
 
         Double reduced_power = total_power * 0.2;
@@ -184,6 +238,9 @@ public class SpecificationsService {
 
     }
 
+    /**
+     * Returns the total power consumed by all devices connected to the given specification.
+     */
     public Double getAllConnectedDevices(String specification_id) {
 
         Double total_consumed_power = 0.00;
@@ -202,6 +259,10 @@ public class SpecificationsService {
 
     }
 
+    /**
+     * Returns the power consumed for a given key name on a device by looking up and parsing its
+     * power specification.
+     */
     public Double calculateConsumedPower(String key_name, String device_id) {
 
         SpecificationsDTO specificationsDTOS = this.getPowerDetails(device_id, key_name);
@@ -209,6 +270,10 @@ public class SpecificationsService {
 
     }
 
+    /**
+     * Returns the "Power" specification for a device, derived from the port pattern of the given key
+     * name.
+     */
     public SpecificationsDTO getPowerDetails(String device_id, String key_name) {
 
         String port_prefix = connectedDevicesService.getPortPattern(key_name);
@@ -216,6 +281,10 @@ public class SpecificationsService {
     }
 
 
+    /**
+     * Parses the power value from a specification and returns it rounded to two decimals, or zero
+     * when not a valid power entry.
+     */
     public Double calculatePower(SpecificationsDTO specificationsDTO) {
         Double power = 0.00;
 
@@ -232,6 +301,10 @@ public class SpecificationsService {
         return power;
     }
 
+    /**
+     * Builds per-specification load calculations, computing power rating, usage, remaining capacity
+     * (with head room) and unit for each specification whose total power is positive.
+     */
     public List<LoadCalculationDTO> getPowerBasedLoadCalculation(String username, String vdmsid, List<SpecificationsDTO> specifications) {
 
         DecimalFormat decimal_format = new DecimalFormat("#.##");

@@ -33,6 +33,10 @@ public class RabbitmqClient {
         this.publisher = publisher;
     }
 
+    /**
+     * Publishes a device event to the {@code device.event-recorded} topic via Dapr pub/sub.
+     * Logs an error if the publish fails; does not throw.
+     */
     public void rabbitmqDeviceEvent(String eventType, DeviceHistoryDTO dto) {
         Map<String, Object> evt = new HashMap<>();
         evt.put("eventType", eventType);
@@ -44,6 +48,10 @@ public class RabbitmqClient {
         }
     }
 
+    /**
+     * Publishes a measuring-instrument sensor reading to the {@code device.sensor-reading}
+     * topic via Dapr pub/sub. Logs an error if the publish fails; does not throw.
+     */
     public void rabbitmqMeasuringInstrumentData(String deviceId, String sensorType,
                                                 BigInteger sensorValue, String unit) {
         Map<String, Object> evt = new HashMap<>();

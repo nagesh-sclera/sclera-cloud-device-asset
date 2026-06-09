@@ -9,8 +9,15 @@ import com.itextpdf.text.pdf.PdfWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 
+/**
+ * iText page event handler that draws a logo image and a centered page number on each page of a
+ * generated PDF document.
+ */
 public class HeaderFooterPageEvent extends PdfPageEventHelper {
 
+    /**
+     * Invoked at the end of each PDF page to render the logo image and the page number.
+     */
     public void onEndPage(PdfWriter writer, Document document) {
         String img = String.valueOf(getClass().getClassLoader().getResource("images/JLL_logo.png"));
         Image image;

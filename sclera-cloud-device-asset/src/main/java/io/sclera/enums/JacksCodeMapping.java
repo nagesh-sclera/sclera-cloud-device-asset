@@ -1,5 +1,10 @@
 package io.sclera.enums;
 
+/**
+ * Enumerates JACS asset classification codes and maps each numeric code to its
+ * human-readable category label (for example, HVAC, plumbing, and electrical
+ * equipment classes).
+ */
 public enum JacksCodeMapping {
 
     JACS_1011("1011", "visual_display_units"),
@@ -282,6 +287,10 @@ public enum JacksCodeMapping {
         this.label = label;
     }
 
+    /**
+     * Returns the category label for the given JACS code, or {@code null} if no
+     * matching code is defined.
+     */
     public static String getLabelByCode(String code) {
         for (JacksCodeMapping mapping : values()) {
             if (mapping.code.equals(code)) {

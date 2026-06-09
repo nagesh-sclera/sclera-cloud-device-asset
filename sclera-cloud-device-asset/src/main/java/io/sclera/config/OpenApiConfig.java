@@ -13,6 +13,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
+    /**
+     * Provides the OpenAPI bean populated with the service's title, version, and description.
+     *
+     * @return the OpenAPI document metadata
+     */
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI().info(new Info()

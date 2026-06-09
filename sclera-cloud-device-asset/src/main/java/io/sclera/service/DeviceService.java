@@ -124,6 +124,12 @@ import static org.apache.poi.ss.util.CellUtil.createCell;
  	11					ip expired
 */
 
+/**
+ * Core service for managing devices and their assets across the platform. Handles device
+ * onboarding, status and alarm tracking, asset matching, specifications, sensor/integration
+ * status roll-ups, search/filter support, and synchronization with related services such as
+ * locations, conditions, and onboarding workflows.
+ */
 @Service
 @ConfigurationProperties(prefix = "sclera")
 public class DeviceService {
@@ -442,6 +448,9 @@ public class DeviceService {
         this.server_asset_ocr_images_url = server_asset_ocr_images_url;
     }
 
+    /**
+     * Returns all devices for a VDMS and docker, each enriched with its IP addresses.
+     */
     public Set<DeviceDTO> listAllDevicebyVdmsidAndDockerName(String username, String vdmsid, String dockername) {
 
         Set<DeviceDTO> devices = deviceRepository.listAllDevicebyVdmsidAndDockerName(vdmsid, dockername);
@@ -458,6 +467,11 @@ public class DeviceService {
     }
 
 
+    /**
+     * Returns a paginated set of devices for a VDMS and docker filtered by a status condition
+     * (online, offline, matched, archived, assigned, etc.) and optional search key, each enriched
+     * with IP addresses.
+     */
     public Set<DeviceDTO> getfilterdevices(String username, String vdmsid, String dockername, String condition,
                                            String searchKey, Integer pageNo, Integer pageSize) {
 
@@ -517,6 +531,10 @@ public class DeviceService {
 
     }
 
+    /**
+     * Inserts or updates each device in the list for the given VDMS and docker, logging user
+     * actions and refreshing device-count sockets afterwards.
+     */
     public void upsertDeviceListByVdmsIdAndDockerName(List<DeviceDTO> deviceList, String username, String vdmsid,
                                                       String dockername, String assignee) {
         try {
@@ -596,6 +614,11 @@ public class DeviceService {
         return deviceOnboardStatusDTO;
     }
 
+    /**
+     * Edits a device's editable fields, reconciling product, location/geolocation, asset-match and
+     * onboarding status, recording lifecycle history on assignment or operational-status changes,
+     * refreshing dependent counts and port status, and returning the updated device.
+     */
     public DeviceDTO editDeviceByDeviceID(String username, String vdmsid, String dockername, String device_id, DeviceDTO devicedto, HttpServletRequest httpServletRequest, String assignee) throws JSONException, IOException {
         log.info("editDeviceByDeviceID, Params: devicedto: {}, endpoint : {}", devicedto, httpServletRequest.getRequestURI());
         DeviceDTO existingDevice = this.getDeviceByDeviceId(username, vdmsid, dockername, device_id);
@@ -773,6 +796,10 @@ public class DeviceService {
     }
 
 
+    /**
+     * Downloads and stores a product's images and records them, only when the product is not yet
+     * registered.
+     */
     public void tagProductImages(ProductDTO productdto) throws IOException {
         Integer count = product_detailsService.checkProductId(productdto.getId());
         if (count == 0) {
@@ -808,6 +835,9 @@ public class DeviceService {
 
 //	94b55ef5-9d0a-11eb-a3a7-19d1a4fc06a3
 
+    /**
+     * Downloads and stores a product's images and re-records them regardless of prior registration.
+     */
     public void retagProductImages(ProductDTO productdto) throws IOException {
         String image_url_1 = null, image_url_2 = null, image_url_3 = null;
         String modified_image_url_1 = null, modified_image_url_2 = null, modified_image_url_3 = null;
@@ -838,6 +868,11 @@ public class DeviceService {
                 modified_image_url_3, productdto.getImage_url_1(), productdto.getImage_url_2(), productdto.getImage_url_3());
     }
 
+    /**
+     * Downloads the image at the given URL and stores it on the server under the given id and directory.
+     *
+     * @return the stored file URL, or null when no image bytes are available
+     */
     public String addImageByUrl(String link, byte[] image, String directory, String id) throws IOException {
         image = webClientService.getImageBytesByUrl(link);
         String extension = getImageExtensionByImageUrl(link);
@@ -845,11 +880,18 @@ public class DeviceService {
     }
 
 
+    /**
+     * Returns the file extension parsed from the end of an image URL.
+     */
     public String getImageExtensionByImageUrl(String image_url) {
         return image_url.substring(image_url.lastIndexOf(".") + 1, image_url.length());
 
     }
 
+    /**
+     * Writes the given bytes to a file in the directory and returns its file URL, or null when there
+     * are no bytes.
+     */
     public String addFileToServer(byte[] image, String directory, String file_name, String file_extension)
             throws IOException {
         // final String dir = "http://dbapi.sclera.com:/vendor_products/";
@@ -865,6 +907,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Deletes the file at the given path if it exists.
+     */
     public void removeFileFromServer(String absolute_path, String file_name, String file_extension) {
         File file = new File(absolute_path + file_name + "." + file_extension);
         if (file.exists()) {
@@ -876,6 +921,12 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Upserts a phonebook address and links it as the given vendor type to the device, logging the
+     * user action.
+     *
+     * @return the linked phonebook address id
+     */
     public String linkVendorByVendorIdAndDeviceId(String username, String vdmsid, String dockername, String
             device_id, PhonebookAddressDto phonebookaddressdto, String vendor_type, HttpServletRequest httpServletRequest) {
         log.info("linkVendorByVendorIdAndDeviceId, Params: phonebookaddressdto: {}, device_id: {}, vendor_type: {}, endpoint : {}", phonebookaddressdto, device_id, vendor_type, httpServletRequest.getRequestURI());
@@ -904,6 +955,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Unlinks the given vendor (by type and phonebook id) from a device, logging the user action.
+     */
     public void unlinkVendorByVendorIdAndDeviceId(String username, String dockername, String phoneaccount,
                                                   String device_id, String vendor_type, HttpServletRequest httpServletRequest) {
         log.info("unlinkVendorByVendorIdAndDeviceId, Params: phoneaccount: {}, device_id: {}, vendor_type: {}, endpoint : {}", phoneaccount, device_id, vendor_type, httpServletRequest.getRequestURI());
@@ -917,6 +971,11 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Applies edits to multiple devices, reconciling product, location/geolocation, asset-match and
+     * onboarding fields per device, then refreshing dependent counts, port status, and device-count
+     * sockets.
+     */
     public void multiDeviceUpdate(String username, String vdmsid, String dockername,
                                   Set<MultiDeviceDTO> multidevicedtos, HttpServletRequest httpServletRequest, String assignee) throws JSONException, IOException {
         log.info("multiDeviceUpdate, Params: multidevicedtos: {}, endpoint : {}", multidevicedtos, httpServletRequest.getRequestURI());
@@ -1053,6 +1112,12 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Resolves the target devices, either by select-all filter criteria or by explicit ids, then
+     * applies a common set of field updates to them.
+     *
+     * @return the set of devices that were updated
+     */
     public Set<DeviceDTO> quickUpdate(String username, String vdmsid, String dockername, TagDeviceOrLocationDTO tagDeviceOrLocationDTO, HttpServletRequest httpServletRequest, String assignee) throws IOException {
         log.info("quickUpdate, Params: tagDeviceOrLocationDTO: {}, endpoint : {}", tagDeviceOrLocationDTO, httpServletRequest.getRequestURI());
         Integer select_all_status = tagDeviceOrLocationDTO.getSelect_all_status();
@@ -1276,6 +1341,10 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Returns the subsystem-parent devices for a docker filtered by status condition, each enriched
+     * with IP addresses, onboarding data, and QR-code counts.
+     */
     public Set<DeviceDTO> getAllSubsystemDevices(String username, String vdmsid, String dockername, String device_id, String condition) {
         Set<DeviceDTO> devices;
         Integer virtual_device_type = null;
@@ -1347,6 +1416,9 @@ public class DeviceService {
         return devices;
     }
 
+    /**
+     * Returns the full device details for each of the given device ids.
+     */
     public Set<DeviceDTO> updateDeviceDetailsByIds(String username, String vdmsid, String dockername, Set<String> deviceIds) {
         Set<DeviceDTO> devices = new HashSet<>();
         DeviceDTO updateDevice;
@@ -1359,10 +1431,18 @@ public class DeviceService {
     }
 
 
+    /**
+     * Returns the names of all devices for a VDMS and docker.
+     */
     public Set<DeviceDTO> getDeviceNamesByVdmsIdAndDockerName(String username, String vdmsid, String dockername) {
         return deviceRepository.getDeviceNamesByVdmsIdAndDockerName(vdmsid, dockername);
     }
 
+    /**
+     * Creates one or more virtual devices from the JSON payload, computing IP-device status,
+     * persisting specifications and status history, attaching uploaded asset images, and recording
+     * lifecycle history and user actions.
+     */
     public void addVirtualDeviceByVdmsIdAndDockerName(String username, String vdmsid, String dockername, String
             virtualDevicesDTO, List<MultipartFile> asset_images, HttpServletRequest httpServletRequest, String assignee) {
         /* (virtual_device_type: 1 - IP Device, 2 - Other Device
@@ -1485,6 +1565,10 @@ public class DeviceService {
     }
 
     // Get Virtual Device Status
+    /**
+     * Probes a virtual IP device's reachability via the docker container and returns 1 when online,
+     * otherwise 0.
+     */
     public Integer getVirtualDeviceStatus(String dockername, String ip_address) {
         Integer device_status = null;
 
@@ -1501,6 +1585,10 @@ public class DeviceService {
         return device_status;
     }
 
+    /**
+     * Edits the given virtual devices, reconciling location/geolocation, asset-match and product
+     * details, recording lifecycle history on assignment or operational-status changes.
+     */
     public void editVirtualDeviceByVirtualDeviceId(String username, String vdmsid, String dockername,
                                                    Set<DeviceDTO> virtualDevices, HttpServletRequest httpServletRequest) throws IOException {
 
@@ -1703,6 +1791,10 @@ public class DeviceService {
 
     }
 
+    /**
+     * Deletes a virtual device, untagging its power sources, removing its asset and OCR images,
+     * logging the user action, and refreshing device-count sockets.
+     */
     public void deleteVirtualDeviceByVirtualDeviceId(String username, String vdmsid, String dockername,
                                                      String virtual_device_id, String assignee) {
 
@@ -1738,6 +1830,10 @@ public class DeviceService {
     }
 
     // device is not soft deleted, bcz it had lot all changes, only inspections are soft deleted.
+    /**
+     * Removes the given devices and their related records (soft-deleting associated inspection
+     * record checklists), logging user actions for each deletion.
+     */
     @Transactional
     public void softDeleteDevicesById(String username, String vdmsid, String dockername, Set<String> deviceIds, HttpServletRequest httpServletRequest, String assignee) {
         log.info("deleteDevicesById, Params: deviceIds: {}, endpoint : {}", deviceIds, httpServletRequest.getRequestURI());
@@ -1867,6 +1963,10 @@ public class DeviceService {
     }
 
 
+    /**
+     * Deletes each of the given devices along with their related records, logging a user action per
+     * device.
+     */
     public void deleteDevicesById(String username, String vdmsid, String dockername, Set<String> deviceIds, HttpServletRequest httpServletRequest, String assignee) {
         log.info("deleteDevicesById, Params: deviceIds: {}, endpoint : {}", deviceIds, httpServletRequest.getRequestURI());
         for (String deviceId : deviceIds) {
@@ -1937,6 +2037,12 @@ public class DeviceService {
 
 
     // Update Virtual device status and timestamp
+    /**
+     * Probes and updates a virtual device's online status and last-seen time, recording status
+     * history when the status changes.
+     *
+     * @return the device DTO updated with the new status and last-seen timestamp
+     */
     public DeviceDTO updateVirtualDeviceStatusByVirtualDeviceId(String username, String vdmsid, String dockername,
                                                                 String virtual_device_id, DeviceDTO virtualdevicedto) {
 
@@ -1969,6 +2075,9 @@ public class DeviceService {
     }
 
     // Sync all Virtual device status
+    /**
+     * Refreshes the online status of every virtual device.
+     */
     public void updateAllVirtualDeviceStatus() {
 
         // get all virtual device
@@ -1982,6 +2091,9 @@ public class DeviceService {
     }
 
     // update snmp count
+    /**
+     * Recomputes and stores the device's SNMP sensor count.
+     */
     public void updateDeviceSnmpCount(String device_id) {
         try {
             Integer snmp_count = snmpService.getSnmpDeviceCountByDeviceAndSnmpConfiguration(device_id);
@@ -1992,6 +2104,9 @@ public class DeviceService {
     }
 
     // update snmp status
+    /**
+     * Resolves the device for an SNMP device id and refreshes its SNMP alert status.
+     */
     public void updateDeviceSnmpStatus(String snmp_device_id) {
         try {
             String device_id = snmpService.getDeviceIdBySnmpDeviceId(snmp_device_id);
@@ -2003,6 +2118,9 @@ public class DeviceService {
     }
 
     // update snmp status by device id
+    /**
+     * Sets the device's SNMP status to "alert" or "no-alert" based on its sensors' alert state.
+     */
     public void updateDeviceSnmpStatusByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2019,6 +2137,9 @@ public class DeviceService {
     }
 
     // update interface count
+    /**
+     * Recomputes and stores the device's network interface count.
+     */
     public void updateDeviceInterfaceCount(String device_id) {
         try {
             Integer interface_count = interfaceService.getInterfaceCountByDevice(device_id);
@@ -2030,6 +2151,9 @@ public class DeviceService {
     }
 
     // update notes count
+    /**
+     * Recomputes and stores the device's notes count.
+     */
     public void updateDeviceNotesCount(String device_id) {
         try {
             Integer notes_count = notesService.getNotesCountByDeviceId(device_id);
@@ -2040,6 +2164,9 @@ public class DeviceService {
     }
 
     // update ticket count
+    /**
+     * Recomputes and stores the device's ticket count.
+     */
     public void updateDeviceTicketCount(String device_id) {
         try {
             Integer ticket_count = ticketService.getTicketCountByDeviceId(device_id);
@@ -2051,6 +2178,9 @@ public class DeviceService {
     }
 
     // update ticket status
+    /**
+     * Sets the device's ticket status to "open" or "closed" based on whether it has open tickets.
+     */
     public void updateDeviceTicketStatus(String device_id) {
         try {
             Boolean status = ticketService.getOpenTicketStatus(device_id);
@@ -2065,6 +2195,9 @@ public class DeviceService {
     }
 
     // update bacnet object count
+    /**
+     * Resolves the device for a BACnet object and refreshes its BACnet object count.
+     */
     public void updateDeviceBacnetCount(String bacnet_device_id, String bacnet_object_id) {
         try {
             String device_id = bacnetService.getDeviceIdByBacnetObjectId(bacnet_device_id, bacnet_object_id);
@@ -2075,6 +2208,9 @@ public class DeviceService {
     }
 
     // update bacnet object count by device id
+    /**
+     * Recomputes and stores the device's BACnet object count.
+     */
     public void updateDeviceBacnetCountByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2087,6 +2223,9 @@ public class DeviceService {
     }
 
     // update bacnet object status
+    /**
+     * Resolves the device for a BACnet object and refreshes its BACnet alert status.
+     */
     public void updateDeviceBacnetStatus(String bacnet_device_id, String bacnet_object_id) {
         try {
             String device_id = bacnetService.getDeviceIdByBacnetObjectId(bacnet_device_id, bacnet_object_id);
@@ -2099,6 +2238,9 @@ public class DeviceService {
     }
 
     // update bacnet object status by device id
+    /**
+     * Sets the device's BACnet status to "alert" or "no-alert" based on its objects' alert state.
+     */
     public void updateDeviceBacnetStatusByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2115,6 +2257,9 @@ public class DeviceService {
     }
 
     // update lorawan sensor count
+    /**
+     * Resolves the device for a LoRaWAN sensor and refreshes its LoRaWAN sensor count.
+     */
     public void updateDeviceLorawanCount(String lorawan_sensor_id) {
         try {
             String device_id = lorawanService.getDeviceIdByLorawanSensorId(lorawan_sensor_id);
@@ -2125,6 +2270,9 @@ public class DeviceService {
     }
 
     // update lorawan sensor count by device id
+    /**
+     * Recomputes and stores the device's LoRaWAN sensor count.
+     */
     public void updateDeviceLorawanCountByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2137,6 +2285,9 @@ public class DeviceService {
     }
 
     // update lorawan sensor status
+    /**
+     * Resolves the device for a LoRaWAN sensor and refreshes its LoRaWAN alert status.
+     */
     public void updateDeviceLorawanStatus(String lorawan_sensor_id) {
         try {
             String device_id = lorawanService.getDeviceIdByLorawanSensorId(lorawan_sensor_id);
@@ -2149,6 +2300,9 @@ public class DeviceService {
     }
 
     // update lorawan sensor status by device id
+    /**
+     * Sets the device's LoRaWAN status to "alert" or "no-alert" based on its sensors' alert state.
+     */
     public void updateDeviceLorawanStatusByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2165,6 +2319,9 @@ public class DeviceService {
     }
 
     // update disruptive sensor count
+    /**
+     * Resolves the device for a Disruptive sensor and refreshes its Disruptive sensor count.
+     */
     public void updateDeviceDisruptiveCount(String disruptive_sensor_id) {
         try {
             String device_id = disruptiveService.getDeviceIdByDisruptiveSensorId(disruptive_sensor_id);
@@ -2175,6 +2332,9 @@ public class DeviceService {
     }
 
     // update disruptive sensor count by device id
+    /**
+     * Recomputes and stores the device's Disruptive sensor count.
+     */
     public void updateDeviceDisruptiveCountByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2187,6 +2347,9 @@ public class DeviceService {
     }
 
     // update disruptive sensor status
+    /**
+     * Resolves the device for a Disruptive sensor and refreshes its Disruptive alert status.
+     */
     public void updateDeviceDisruptiveStatus(String disruptive_sensor_id) {
         try {
             String device_id = disruptiveService.getDeviceIdByDisruptiveSensorId(disruptive_sensor_id);
@@ -2198,6 +2361,9 @@ public class DeviceService {
     }
 
     // update disruptive sensor status by device id
+    /**
+     * Sets the device's Disruptive status to "alert" or "no-alert" based on its sensors' alert state.
+     */
     public void updateDeviceDisruptiveStatusByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2214,6 +2380,9 @@ public class DeviceService {
     }
 
     // update my devices sensor count
+    /**
+     * Resolves the device for a MyDevices sensor and refreshes its MyDevices sensor count.
+     */
     public void updateDeviceMyDevicesCount(String my_devices_sensor_id) {
         try {
             String device_id = myDevicesService.getDeviceIdByMyDevicesSensorId(my_devices_sensor_id);
@@ -2224,6 +2393,9 @@ public class DeviceService {
     }
 
     // update my devices sensor count by device id
+    /**
+     * Recomputes and stores the device's MyDevices sensor count.
+     */
     public void updateDeviceMyDevicesCountByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2236,6 +2408,9 @@ public class DeviceService {
     }
 
     // update my devices sensor status
+    /**
+     * Resolves the device for a MyDevices sensor and refreshes its MyDevices alert status.
+     */
     public void updateDeviceMyDevicesStatus(String my_devices_sensor_id) {
         try {
             String device_id = myDevicesService.getDeviceIdByMyDevicesSensorId(my_devices_sensor_id);
@@ -2248,6 +2423,9 @@ public class DeviceService {
     }
 
     // update my devices sensor status by device id
+    /**
+     * Sets the device's MyDevices status to "alert" or "no-alert" based on its sensors' alert state.
+     */
     public void updateDeviceMyDevicesStatusByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2264,6 +2442,9 @@ public class DeviceService {
     }
 
     // update monnit sensor count
+    /**
+     * Resolves the device for a Monnit sensor and refreshes its sensor count.
+     */
     public void updateDeviceMonnitCount(String monnit_sensor_id) {
         try {
             String device_id = monnitService.getDeviceIdByMonnitSensorId(monnit_sensor_id);
@@ -2274,6 +2455,9 @@ public class DeviceService {
     }
 
     // update monnit count by device id
+    /**
+     * Recomputes and stores the device's Monnit sensor count.
+     */
     public void updateDeviceMonnitCountByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2286,6 +2470,9 @@ public class DeviceService {
     }
 
     // update monnit status
+    /**
+     * Resolves the device for a Monnit sensor and refreshes its Monnit alert status.
+     */
     public void updateDeviceMonnitStatus(String monnit_sensor_id) {
         try {
             String device_id = monnitService.getDeviceIdByMonnitSensorId(monnit_sensor_id);
@@ -2298,6 +2485,9 @@ public class DeviceService {
     }
 
     // update monnit status by device id
+    /**
+     * Sets the device's Monnit status to "alert" or "no-alert" based on its sensors' alert state.
+     */
     public void updateDeviceMonnitStatusByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2314,6 +2504,9 @@ public class DeviceService {
     }
 
     // update pelican sensor count
+    /**
+     * Resolves the device for a Pelican sensor and refreshes its Pelican sensor count.
+     */
     public void updateDevicePelicanCount(String pelican_sensor_id) {
         try {
             String device_id = pelicanService.getDeviceIdByPelicanSensorId(pelican_sensor_id);
@@ -2324,6 +2517,9 @@ public class DeviceService {
     }
 
     // update pelican sensor count by device id
+    /**
+     * Recomputes and stores the device's Pelican sensor count.
+     */
     public void updateDevicePelicanCountByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2336,6 +2532,9 @@ public class DeviceService {
     }
 
     // update pelican sensor status
+    /**
+     * Resolves the device for a Pelican sensor and refreshes its Pelican alert status.
+     */
     public void updateDevicePelicanStatus(String pelican_sensor_id) {
         try {
             String device_id = pelicanService.getDeviceIdByPelicanSensorId(pelican_sensor_id);
@@ -2346,6 +2545,9 @@ public class DeviceService {
     }
 
     // update pelican sensor status by device id
+    /**
+     * Sets the device's Pelican status to "alert" or "no-alert" based on its sensors' alert state.
+     */
     public void updateDevicePelicanStatusByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2362,6 +2564,9 @@ public class DeviceService {
     }
 
     // update knx group count
+    /**
+     * Resolves the device for a KNX group address and refreshes its KNX group count.
+     */
     public void updateDeviceKNXCount(String knx_device_address, String knx_group_address) {
         try {
             String device_id = knxService.getDeviceIdByKNXGroupAddress(knx_device_address, knx_group_address);
@@ -2372,6 +2577,9 @@ public class DeviceService {
     }
 
     // update knx group count by device id
+    /**
+     * Recomputes and stores the device's KNX group count.
+     */
     public void updateDeviceKNXCountByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2384,6 +2592,9 @@ public class DeviceService {
     }
 
     // update knx group status
+    /**
+     * Resolves the device for a KNX group address and refreshes its KNX alert status.
+     */
     public void updateDeviceKNXStatus(String knx_device_address, String knx_group_address) {
         try {
             String device_id = knxService.getDeviceIdByKNXGroupAddress(knx_device_address, knx_group_address);
@@ -2395,6 +2606,9 @@ public class DeviceService {
     }
 
     // update knx group status by device id
+    /**
+     * Sets the device's KNX status to "alert" or "no-alert" based on its groups' alert state.
+     */
     public void updateDeviceKNXStatusByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2411,6 +2625,9 @@ public class DeviceService {
     }
 
     // update measure count by device id
+    /**
+     * Recomputes and stores the device's measuring-instrument count.
+     */
     public void updateDeviceMeasureCountByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2423,6 +2640,9 @@ public class DeviceService {
     }
 
     // update documents count by device id
+    /**
+     * Recomputes and stores the device's document count.
+     */
     public void updateDeviceDocumentsCountByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2435,6 +2655,9 @@ public class DeviceService {
     }
 
     // update media count by device id
+    /**
+     * Recomputes and stores the device's media count.
+     */
     public void updateDeviceMediaCountByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2447,6 +2670,9 @@ public class DeviceService {
     }
 
     // update checklists count by device id
+    /**
+     * Recomputes and stores the device's checklist-template count.
+     */
     public void updateDeviceCheckListsCountByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2459,6 +2685,9 @@ public class DeviceService {
     }
 
     //update snmp object count by device id
+    /**
+     * Recomputes and stores the device's SNMP object count.
+     */
     public void updateDeviceSnmpObjectCountByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2471,6 +2700,9 @@ public class DeviceService {
     }
 
     //update snmp object status by oid and configuration id
+    /**
+     * Resolves the device for an SNMP object and refreshes its SNMP object alert status.
+     */
     public void updateDeviceSnmpObjectStatus(String snmp_device_configuration_id, String snmp_object_oid) {
         try {
             String device_id = snmpService.getDeviceIdBySnmpObjectId(snmp_device_configuration_id, snmp_object_oid);
@@ -2483,6 +2715,9 @@ public class DeviceService {
     }
 
     //update snmp object status by device id
+    /**
+     * Sets the device's SNMP object status to "alert" or "no-alert" based on its objects' alert state.
+     */
     public void updateDeviceSnmpObjectStatusByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -2499,6 +2734,11 @@ public class DeviceService {
     }
 
 
+    /**
+     * Aggregates all sensors and integration devices (LoRaWAN, BACnet, Disruptive, MyDevices,
+     * Monnit, Pelican, KNX, SNMP, Daintree, Ecobee, Modbus, PolyLens, MQTT, etc.) attached to a
+     * device into a single response.
+     */
     public AllSensorsDTO getDeviceSensors(String username, String vdmsid, String dockername, String device_id) {
         AllSensorsDTO sensors = new AllSensorsDTO();
 
@@ -2524,6 +2764,9 @@ public class DeviceService {
     // ****************************************************************************************************************************
     //
     //To be removed after new pagination api works
+    /**
+     * Lists touchscreen devices filtered by network, building, floor, location, and status.
+     */
     public Set<DeviceListDTO> listDevicesTs(String networkname, String buildingid, String floorid, String
             locationid,
                                             Integer devicestatus) {
@@ -2533,12 +2776,19 @@ public class DeviceService {
     }
 
     // Added Pagination for listDevices
+    /**
+     * Lists a page of touchscreen devices filtered by network, building, floor, location, status,
+     * and virtual device type.
+     */
     public Set<DeviceListDTO> listDevicesByPaginationTs(String networkname, String buildingid, String floorid, String locationid, Integer status, Integer pagesize, Integer offset, Integer virtual_device_type) {
         Set<DeviceListDTO> rows = deviceRepository.listDevicesByPaginationTs(networkname, buildingid, floorid, locationid, status, pagesize, offset, virtual_device_type);
         enrichDeviceListImages(rows);
         return rows;
     }
 
+    /**
+     * Returns the device detail record for the given device id.
+     */
     public DeviceDetailsDTO getDeviceInfoById(String deviceid) {
         return deviceRepository.getDeviceInfoById(deviceid);
         // DB-per-service note: image_url_1/2/3 enrichment via InventoryClient deferred to
@@ -2578,6 +2828,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Returns a map of device counts: online, offline, other, and all monitored devices.
+     */
     public Map<String, Integer> onlineOfflineCount() {
 
         Map<String, Integer> deviceStatuscount = new HashMap<>();
@@ -2657,6 +2910,11 @@ public class DeviceService {
     // }
 
     // Device Upsert by monitor code newly updated
+    /**
+     * Processes monitor updates for a batch of devices: reconciles online/offline status and IP
+     * addresses, inserts newly discovered devices (resolving vendor/hostname and onboarding), and
+     * emits device status and count socket events.
+     */
     public void deviceUpsertbyId(String dockername, List<DeviceMonitorDTO> deviceMonitors, String assignee) {
 
         System.out.println("Device**UPSET " + deviceMonitors.toString());
@@ -2770,6 +3028,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Asynchronously resolves and updates a device's vendor from its MAC address.
+     */
     public void updateVendorByMacAddress(String device_id, String mac_address) {
         try {
             asyncService.updateVendorByMacAddress(device_id, mac_address);
@@ -2779,6 +3040,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Resolves a device's hostname via the docker container and stores it as the device's display name.
+     */
     public void getDeviceHostNameByIP(String dockername, String device_id, String ip_address) {
         try {
             String internal_ip_address = dockerService.getDockerInternalIp(dockername);
@@ -2794,11 +3058,17 @@ public class DeviceService {
 
     }
 
+    /**
+     * Returns the IP addresses recorded for a device.
+     */
     public List<DeviceIPAddressDTO> getDeviceIPAddressByDeviceId(String device_id) {
         return deviceIPAddressRepository.getIPAddressByDeviceId(device_id);
     }
 
     // Insert devices history, newly added api after monitor code changes
+    /**
+     * Records device status-change history entries and emits a RabbitMQ event for each.
+     */
     public void insertDevicesHistory(String dockername, List<DeviceHistoryDTO> devicesHistory) {
         for (DeviceHistoryDTO deviceHistory : devicesHistory) {
             try {
@@ -2815,6 +3085,10 @@ public class DeviceService {
 
     }
 
+    /**
+     * Handles a device coming online: emits the online socket event, refreshes condition status,
+     * and clears any active AI-call for the device.
+     */
     public void updateOnlineStatus(DeviceMonitorDTO device) {
         if (device.getStatus().equals(1)) {
             Integer deviceStatus = this.getDeviceStatus(device.getId());
@@ -2841,6 +3115,10 @@ public class DeviceService {
 
     }
 
+    /**
+     * Handles a device going offline when its parent is online: emits the offline socket event,
+     * refreshes condition status, and, when AI-call is enabled and not in DND, starts an AI call.
+     */
     public void updateofflineStatus(DeviceMonitorDTO device) {
 
         if (device.getStatus().equals(0)) {
@@ -2948,32 +3226,50 @@ public class DeviceService {
     }
 
 
+    /**
+     * Returns the current online/offline status code for a device.
+     */
     public Integer getDeviceStatus(String DeviceId) {
 
         return deviceRepository.getDeviceStatus(DeviceId);
     }
 
+    /**
+     * Returns the monitor-view device list for a docker.
+     */
     public List<DeviceMonitorDTO> getDeviceListMonitor(String dockername) {
 
         return deviceRepository.getDeviceListMonitor(dockername);
     }
 
+    /**
+     * Returns the monitor-view device list with IP details for a docker.
+     */
     public List<DeviceMonitorDTO> getDeviceListMonitorIp(String dockername) {
 
         return deviceRepository.getDeviceListMonitorIp(dockername);
     }
 
+    /**
+     * Returns the SNMP-value device list for a docker.
+     */
     public List<SnmpValuesDTO> getDeviceListSnmp(String dockername) {
         // TODO Auto-generated method stub
         return deviceRepository.getDeviceListSnmp(dockername);
     }
 
     // Get Single Device Info By Device Id for Snmp
+    /**
+     * Returns the SNMP values for a single device.
+     */
     public SnmpValuesDTO getDeviceSnmpByDeviceId(String dockername, String device_id) {
         // TODO Auto-generated method stub
         return deviceRepository.getDeviceSnmpByDeviceId(dockername, device_id);
     }
 
+    /**
+     * Updates a device's SNMP parent and device type.
+     */
     public void updateSnmpParent(String dockername, SnmpValuesDTO device) {
         try {
             deviceRepository.updateSnmpParent(dockername, device.getId(), device.getSnmp_parent(), device.getDevice_type());
@@ -2982,6 +3278,10 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Updates the parent and connection type of each device to persist a topology change, logging
+     * the user action.
+     */
     public void updateTopology(String username, String vdmsid, String
             dockername, List<DeviceTopologyDTO> devices, HttpServletRequest httpServletRequest) {
         log.info("updateTopology, Params: devices: {}, endpoint : {}", devices, httpServletRequest.getRequestURI());
@@ -2999,6 +3299,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Resolves the gateway device id for a docker via its gateway IP.
+     */
     public String getGatewayId(String dockername) {
         String gatewayIp = dockerService.getGatewayIp(dockername);
 
@@ -3006,48 +3309,79 @@ public class DeviceService {
     }
 
     //To be removed after pagination api works
+    /**
+     * Lists offline devices grouped by parent for the touchscreen.
+     */
     public Set<DeviceListDTO> listofflinedeviceByParentTs() {
         // TODO Auto-generated method stub
         return deviceRepository.listofflinedeviceByParentTs();
     }
 
     //Added pagination for listofflinedeviceByParentTs
+    /**
+     * Lists a page of offline devices grouped by parent for the touchscreen.
+     */
     public Set<DeviceListDTO> listofflinedeviceByParentByPaginationTs(Integer pagesize, Integer offset) {
         // TODO Auto-generated method stub
         return deviceRepository.listofflinedeviceByParentByPaginationTs(pagesize, offset);
     }
 
+    /**
+     * Returns the touchscreen device list record for the given device id.
+     */
     public DeviceListDTO DeviceInfoById(String deviceId) {
 
         return deviceRepository.DeviceInfoById(deviceId);
     }
 
+    /**
+     * Unlinks a vendor (by phonebook id) from all devices in a VDMS.
+     */
     public void unLinkVendorByVendorIdAndVdmsId(String phoneaccountid, String vdmsid) {
         deviceRepository.unLinkVendorByVendorIdAndVdmsId(phoneaccountid, vdmsid);
     }
 
+    /**
+     * Returns all devices.
+     */
     public List<DeviceDTO> listAlldevices() {
         return deviceRepository.listAlldevices();
     }
 
+    /**
+     * Updates a device's display name.
+     */
     public void updateDevicesDisplayNameById(String id, String display_name) {
         deviceRepository.updateDevicesDisplayNameById(id, display_name);
     }
 
+    /**
+     * Updates a device's vendor.
+     */
     public void updateDeviceVendorById(String id, String vendor) {
 
         deviceRepository.updateDeviceVendorById(id, vendor);
     }
 
     // to get device info for device alert
+    /**
+     * Returns the alert information for a device.
+     */
     public AlertDTO getDeviceAlertInfoByDeviceId(String device_id) {
         return deviceRepository.getDeviceAlertInfoByDeviceId(device_id);
     }
 
+    /**
+     * Returns the total device count for a docker, for IOC reporting.
+     */
     public Integer getDeviceCountForIOC(String username, String vdmsid, String dockername) {
         return deviceRepository.getAllDeviceCountByDocker(dockername);
     }
 
+    /**
+     * Returns a map of device counts by category for a docker and assignee, including online,
+     * offline, unmonitored, other, archived, onboarded, monitored, and assigned counts.
+     */
     public Map<String, Integer> getDeviceCount(String username, String vdmsid, String dockername,String assignee) {
 
         Map<String, Integer> deviceStatuscountAll = new HashMap<>();
@@ -3091,6 +3425,9 @@ public class DeviceService {
         return deviceStatuscountAll;
     }
 
+    /**
+     * Returns the topology device with the given id from the supplied list, or null if absent.
+     */
     public DeviceTopologyDTO getDeviceObjectbyId(List<DeviceTopologyDTO> devices, String id) {
         if (devices != null && devices.size() > 0) {
             for (DeviceTopologyDTO device : devices) {
@@ -3102,6 +3439,12 @@ public class DeviceService {
         return null;
     }
 
+    /**
+     * Formats topology devices across all networks, merging entries that share a MAC address into a
+     * single node and consolidating their parent/SNMP-parent relationships.
+     *
+     * @return the deduplicated, merged list of topology devices
+     */
     public List<DeviceTopologyDTO> listFormatedDevicesForAllNetwork(List<DeviceTopologyDTO> devices) {
         Map<String, String> map_id_to_distinct_id = new HashMap<String, String>();
 
@@ -3220,6 +3563,12 @@ public class DeviceService {
     }
 
 
+    /**
+     * Builds the device topology for a docker (or all networks), resolving SNMP/parent
+     * relationships and attaching any missing parent devices.
+     *
+     * @return the assembled list of topology devices
+     */
     public List<DeviceTopologyDTO> listTopologyDevicesByDockerName(String username, String vdmsid, String
             dockername) {
         try {
@@ -3425,6 +3774,10 @@ public class DeviceService {
     }
 
     //reset topology
+    /**
+     * Clears the parent relationships for all devices in a docker, detaching any cross-network
+     * parent links first, and logs the user action.
+     */
     public void resetTopologyByDockername(String username, String vdmsid, String dockername, HttpServletRequest httpServletRequest) {
         log.info("resetTopologyByDockername, Params: dockername: {}, endpoint : {}", dockername, httpServletRequest.getRequestURI());
         List<DeviceDTO> devices = deviceRepository.listTopologyDevicesByDockerName(dockername, null);
@@ -3472,31 +3825,52 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Returns all devices as lightweight device-data records.
+     */
     public Set<DevicedataDTO> getAllDevices() {
         return deviceRepository.getAllDevices();
     }
 
     //get device types
+    /**
+     * Returns the distinct device types within a network and floor.
+     */
     public List<String> getUniqueDeviceTypes(String network_name, String floor_id) {
         return deviceRepository.getUniqueDeviceTypes(network_name, floor_id);
     }
 
+    /**
+     * Returns the distinct asset groups within a network.
+     */
     public List<String> getUniqueAssetGroups(String network_name) {
         return deviceRepository.getUniqueAssetGroups(network_name);
     }
 
+    /**
+     * Returns the distinct categories within a network.
+     */
     public List<String> getUniqueCategory(String network_name) {
         return deviceRepository.getUniqueCategory(network_name);
     }
 
+    /**
+     * Returns the distinct assigned-user emails within a VDMS and network.
+     */
     public List<String> getUniqueAssignedUserEmail(String vdms_id,String network_name) {
         return deviceRepository.getUniqueAssignedUserEmail(vdms_id,network_name);
     }
 
+    /**
+     * Returns the distinct sub-categories within a network for a given category.
+     */
     public List<String> getUniqueSubCategory(String network_name, String category) {
         return deviceRepository.getUniqueSubCategory(network_name, category);
     }
 
+    /**
+     * Returns the count of devices of the given types within a network and floor.
+     */
     public String getDevicesByTypeCount(String network_name, String floor_id, Set<String> types) {
         String deviceSensors = deviceRepository.getDevicesByTypeCount(network_name, floor_id, types);
         return deviceSensors;
@@ -3554,6 +3928,10 @@ public class DeviceService {
 //			return sensors;
 //		}
 
+    /**
+     * Clears the location and coordinates of all devices tagged to a location and resets their
+     * geolocation onboarding status.
+     */
     public void updateDeviceLocation(String location_id, String username) {
         Set<DeviceDTO> deviceDTOS = deviceRepository.getDevicesByLocationId(location_id);
         deviceRepository.updateDeviceLocation(location_id, null, null, null);
@@ -3568,6 +3946,10 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Updates each device's position, location and coordinates, sets asset-match status, and marks
+     * geolocation onboarding as complete, logging the user action.
+     */
     public void updateDevicePosition(List<DeviceDTO> devicePositions, String vdmsid, String username, HttpServletRequest httpServletRequest) {
         log.info("updateDevicePosition, Params: devicePositions: {}, endpoint : {}", devicePositions, httpServletRequest.getRequestURI());
         if (devicePositions.size() > 0) {
@@ -3626,6 +4008,9 @@ public class DeviceService {
 
 
     // Device list for integration
+    /**
+     * Returns the devices of a docker for integration consumers.
+     */
     public List<DeviceDTO> listDevicebyDockerIntegration(String dockername) {
         return deviceRepository.listDevicebyDockerIntegration(dockername);
 
@@ -3647,6 +4032,10 @@ public class DeviceService {
 //			}
 //		}
 
+    /**
+     * Returns a page of candidate parent devices filtered by dockers, types, virtual device types,
+     * and search key.
+     */
     public Set<DeviceDTO> getParentDeviceByPagination(String username, String vdmsid, String searchKey, Integer
             pageno,
                                                       Integer pagesize, Set<String> dockernames, Set<String> types, Set<String> virtual_device_types) {
@@ -3656,6 +4045,11 @@ public class DeviceService {
     }
 
     //Get parent device by id
+    /**
+     * Enriches the given devices with their parent, subsystem-parent, and SNMP-parent names.
+     *
+     * @return the same devices with parent names populated
+     */
     public Set<DeviceDTO> getParentDeviceById(String username, String vdmsid, String dockername,
                                               Set<DeviceDTO> parent_devices, HttpServletRequest httpServletRequest) {
         log.info("getParentDeviceById, Params: parent devices: {},endpoint : {}", parent_devices, httpServletRequest.getRequestURI());
@@ -3675,12 +4069,18 @@ public class DeviceService {
 
 
     //new get method with subsystem parent device get initial
+    /**
+     * Returns a page of subsystem-parent devices for a docker filtered by status condition.
+     */
     public Set<DeviceDTO> getSubsystemParentDevicesByPagination(String username, String vdmsid, String dockername,
                                                                 String condition, Integer pageno, Integer pagesize, String assignee) {
         return this.getAllSubsystemDevicesByPagination(username, vdmsid, dockername, null, condition, pageno, pagesize, assignee);
     }
 
     //new get method with subsystem devices get
+    /**
+     * Returns a page of subsystem devices under the given parent device, filtered by status condition.
+     */
     public Set<DeviceDTO> getSubsystemDevicesByPagination(String username, String vdmsid, String dockername, String
             device_id,
                                                           String condition, Integer pageno, Integer pagesize, String assignee) {
@@ -3688,6 +4088,10 @@ public class DeviceService {
     }
 
     //new get method with subsystem devices get all based on device_id
+    /**
+     * Returns a page of subsystem or subsystem-parent devices filtered by status condition,
+     * enriching each with IP addresses, onboarding data, QR-code counts, and agent/ITAM details.
+     */
     public Set<DeviceDTO> getAllSubsystemDevicesByPagination(String username, String vdmsid, String dockername,
                                                              String device_id, String condition, Integer pageno, Integer pagesize, String assignee) {
         Set<DeviceDTO> devices;
@@ -3790,6 +4194,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Recomputes and stores the subsystem count for a parent device.
+     */
     public void updateParentSubsystemCount(String device_id) {
         if (device_id != null) {
             Integer subsystem_count = deviceRepository.getSubsystemCount(device_id);
@@ -3798,6 +4205,9 @@ public class DeviceService {
     }
 
 
+    /**
+     * Returns the parent device populated with the single subsystem device as its child.
+     */
     public DeviceDTO getSubsystemParentDeviceInfo(String username, String vdmsid, String dockername, String
             device_id, String parent_id) {
         DeviceDTO device = this.getDeviceByDeviceId(username, vdmsid, dockername, parent_id);
@@ -3808,6 +4218,10 @@ public class DeviceService {
         return device;
     }
 
+    /**
+     * Archives or unarchives the given devices by updating their asset-match status, recording
+     * history and user actions, and refreshing device-count sockets.
+     */
     public void archiveDevices(String username, String vdmsid, String dockername, Integer archive, Set<String> deviceIds, HttpServletRequest httpServletRequest, String assignee) {
         log.info("archiveDevices, Params: archive: {}, deviceIds: {}, endpoint : {}", archive, deviceIds, httpServletRequest.getRequestURI());
         int assetMatchStatus = 3;
@@ -3876,6 +4290,10 @@ public class DeviceService {
 
     /*****************************************Asset Mapper Methods*********************************************************/
 
+    /**
+     * Inserts or updates a virtual device created by the asset mapper (type 2, monitored) and
+     * refreshes its onboard status.
+     */
     public void upsertVirtualDeviceByAssetMapper(DeviceDTO virtual_device, String username) {
         /*
          * virtual_device_type is always 2 for asset mapper device
@@ -3901,6 +4319,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Reconciles a virtual device's product details when its product changes.
+     */
     public void upsertProductDetailsForVirtualDevice(String username, String vdmsid, String dockername, DeviceDTO
             virtual_device) {
         try {
@@ -3915,31 +4336,53 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Returns a page of devices that have not been tagged to a product.
+     */
     public List<AssetDTO> getUntaggedProductDevicesByPagination(Integer pageNo, Integer pageSize) {
         Integer offset = pageSize * (pageNo - 1);
         return deviceRepository.getUntaggedProductDevicesByPagination(pageSize, offset);
     }
 
+    /**
+     * Returns the count of devices not yet tagged to a product.
+     */
     public Integer getUntaggedProductDevicesCount() {
         return deviceRepository.getUntaggedProductDevicesCount();
     }
 
+    /**
+     * Stores the set of matched product ids suggested for a device.
+     */
     public void updateDeviceMatchedProductIds(String device_id, String matched_product_ids) {
         deviceRepository.updateDeviceMatchedProductIds(device_id, matched_product_ids);
     }
 
+    /**
+     * Returns the asset-mapper view for the given device ids.
+     */
     public List<AssetDTO> getAssetMapperDevicesByIdList(List<String> device_ids) {
         return deviceRepository.getAssetMapperDevicesByIdList(device_ids);
     }
 
+    /**
+     * Returns the asset-mapper view for a single device.
+     */
     public AssetDTO getAssetMapperDevicesById(String device_id) {
         return deviceRepository.getAssetMapperDeviceById(device_id);
     }
 
+    /**
+     * Returns the asset-mapper view of a device's subsystem devices.
+     */
     public List<AssetDTO> getAssetMapperSubSystemDevicesById(String device_id) {
         return deviceRepository.getAssetMapperSubSystemDevicesById(device_id);
     }
 
+    /**
+     * Applies the matched product to a device, updating its product details and clearing matched
+     * product suggestions, with user-action logging.
+     */
     public void updateMatchedDeviceProduct(String username, String vdmsid, String dockername, DeviceDTO device, HttpServletRequest httpServletRequest) {
         log.info("updateMatchedDeviceProduct, Params: device: {}, endpoint : {}", device, httpServletRequest.getRequestURI());
         String device_name = device.getUser_data_name() == null || device.getUser_data_name().equals("") ? device.getDisplay_name() : device.getUser_data_name();
@@ -3955,6 +4398,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Updates a device's product-derived fields (product id, model, name, vendor, type, network layer).
+     */
     public void updateDeviceProductDetails(DeviceDTO device) {
         deviceRepository.updateDeviceProductDetails(device.getId(), device.getProduct_id(), device.getUser_data_model(), device.getUser_data_name(),
                 device.getUser_data_vendor(), device.getType(), device.getNetwork_layer());
@@ -3963,6 +4409,9 @@ public class DeviceService {
     /*****************************************Asset Mapper Methods*********************************************************/
 
     //list devices for snmp discovery
+    /**
+     * Returns a page of devices for a VDMS and docker, each enriched with its IP addresses.
+     */
     public List<DeviceDTO> getAllDeviceByVdmsIdAndDockerName(String username, String vdmsid, String
             dockername, Integer pagesize, Integer offset) {
 
@@ -3979,6 +4428,10 @@ public class DeviceService {
     }
 
     //get device status count
+    /**
+     * Returns online, offline, other, and all monitored device counts scoped by network, building,
+     * floor, and location, for the touchscreen.
+     */
     public Map<String, Integer> getDeviceStatusCountTS(String networkname, String buildingid, String
             floorid, String locationid) {
 
@@ -3993,6 +4446,9 @@ public class DeviceService {
     }
 
     //update device product port status in new thread
+    /**
+     * Asynchronously refreshes the product port status of the given devices.
+     */
     public void updateDeviceProductPortStatus(String vdms_id, Set<String> device_ids) {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(() -> {
@@ -4009,6 +4465,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Asynchronously probes and updates the status of every product port across the given devices.
+     */
     public void updateMultipleDevicesProductPortStatus(String vdms_id, Set<DeviceDTO> devices) {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(() -> {
@@ -4035,19 +4494,31 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Returns the device entity for the given id, if present.
+     */
     public Optional<Device> findById(String id) {
         return deviceRepository.findById(id);
     }
 
+    /**
+     * Returns the ids of devices whose subsystem parent is the given device.
+     */
     public List<String> getDevicesBySubSystemParentId(String device_id) {
         return deviceRepository.getDevicesBySubSystemParentId(device_id);
     }
 
+    /**
+     * Sets a device's subsystem parent.
+     */
     public void updateSubsystemParentDevice(String device_id, String subsystem_parent_id) {
         deviceRepository.updateSubsystemParentDevice(device_id, subsystem_parent_id);
     }
 
     // update measuring instrument status
+    /**
+     * Resolves the device for a measuring-instrument sensor and refreshes its alert status.
+     */
     public void updateDeviceMeasuringInstrumentStatus(String measuring_instrument_id) {
         try {
             String device_id = measuringInstrumentService.getDeviceIdByMeasuringInstrumentSensorId(measuring_instrument_id);
@@ -4060,6 +4531,10 @@ public class DeviceService {
     }
 
     // update measuring instrument status by device id
+    /**
+     * Sets the device's measuring-instrument status to "alert" or "no-alert" based on its sensors'
+     * alert state.
+     */
     public void updateDeviceMeasuringInstrumentStatusByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -4106,6 +4581,12 @@ public class DeviceService {
 
     /**********************************************  New methods for edit device optimisation *********************************************/
 
+    /**
+     * Carries forward the device's existing vendor ids onto the update DTO when the product changes
+     * and the vendors are not explicitly provided.
+     *
+     * @return the update DTO with vendor ids populated
+     */
     public MultiDeviceDTO setProductVendorsForDevices(MultiDeviceDTO multidevicedto, String previous_product_id) {
         System.out.println("---------- Entered setVendorsForDevices -------------");
 
@@ -4138,6 +4619,10 @@ public class DeviceService {
     }
 
 
+    /**
+     * Reconciles a device's product association: removes prior global product details when the
+     * product is cleared or changed, and copies the new product's details onto the device.
+     */
     public void getProductDetails(String username, String vdmsid, String dockername, String device_id,
                                   String product_id, String previous_product_id) {
         System.out.println("~~~~~~~~~~~~~~ Entered getProductDetails ~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -4158,6 +4643,9 @@ public class DeviceService {
 
     }
 
+    /**
+     * Removes the global product-derived SNMP, port, and notes records from a device.
+     */
     public void deleteDeviceGlobalProductDetails(String device_id) {
         System.out.println("~~~~~~~~~~~~~~~~~ Entered deleteGlobalDetails ~~~~~~~~~~~~~~~~~~~~~~`");
 
@@ -4166,6 +4654,10 @@ public class DeviceService {
         notesService.deleteGlobalNotesByDeviceId(device_id);
     }
 
+    /**
+     * Fetches a product from the cloud and applies its SNMP, ports, notes, vendors, and images to
+     * the device, persisting the product details.
+     */
     public void getProductDetailsByProductId(String username, String vdmsid, String dockername, String
             product_id, String device_id) {
         try {
@@ -4204,6 +4696,12 @@ public class DeviceService {
     }
 
 
+    /**
+     * Upserts each provided vendor phonebook entry (global, local, and other vendors) and sets the
+     * corresponding vendor ids on the device DTO.
+     *
+     * @return the DTO with vendor ids populated
+     */
     public MultiDeviceDTO updateVendorPhoneBookDetails(String username, String vdmsid, String
             dockername, MultiDeviceDTO multiDeviceDTO) {
         System.out.println(" ~~~~~~~~~~~~~~ Entered updateVendorPhoneBookDetails ~~~~~~~~~~~~~~~~~~~");
@@ -4231,12 +4729,18 @@ public class DeviceService {
         return multiDeviceDTO;
     }
 
+    /**
+     * Upserts a vendor phonebook address record.
+     */
     public void addPhoneBookAddressDetailsById(String username, String vdmsid, String
             dockername, PhonebookAddressDto phonebook) {
         System.out.println("~~~~~~~~~~~~~~~~~~~ addPhoneBookAddressDetailsById ~~~~~~~~~~~~~~~~~~~~~");
         utilsService.upsertPhoneAddressById(username, vdmsid, dockername, phonebook);
     }
 
+    /**
+     * Copies the vendor objects from a device DTO into a new multi-device DTO.
+     */
     public MultiDeviceDTO mapProductVendorsToMultideviceDTO(DevicesDTO devicesDTO) {
         System.out.println("~~~~~~~~~~~~~ mappingDTO ~~~~~~~~~~~~~~~");
 
@@ -4253,11 +4757,17 @@ public class DeviceService {
     /**********************************************  New methods for edit device optimisation *********************************************/
 
 
+    /**
+     * Returns the device associated with the given checklist id.
+     */
     public DeviceDTO getDeviceDetails(String checklist_id) {
         return deviceRepository.getDeviceDetails(checklist_id);
     }
 
 
+    /**
+     * Sets a device's record-checklist status to "completed" or "todo" for the given record type.
+     */
     public void updateDeviceRecordChecklistStatusByDeviceId(String device_id, String record_type) {
         try {
             if (device_id != null) {
@@ -4273,6 +4783,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Recomputes and stores the device's record-checklist count for the given record type.
+     */
     public void updateDeviceRecordChecklistCount(String device_id, String record_type) {
         Integer record_checklist_count = recordChecklistService.getChecklistStatusCountDeviceId(device_id, "inspection", record_type);
         System.out.println("count--------------------" + record_checklist_count);
@@ -4280,6 +4793,9 @@ public class DeviceService {
     }
 
 
+    /**
+     * Refreshes both the record-checklist status and count for a device.
+     */
     public void updateDeviceRecordChecklistStatusById(String device_id, String record_type) {
         if (device_id != null) {
             this.updateDeviceRecordChecklistStatusByDeviceId(device_id, record_type);
@@ -4289,6 +4805,9 @@ public class DeviceService {
 
 
     // update DainTree sensor count by device id
+    /**
+     * Recomputes and stores the device's Daintree device count.
+     */
     public void updateDeviceDaintreeCountByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -4300,6 +4819,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Recomputes and stores the device's QR-code count.
+     */
     public void updateDeviceQrcodeCountByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -4313,6 +4835,12 @@ public class DeviceService {
 
 
     //alert message filters
+    /**
+     * Collects active sensor alert messages across all protocols for devices in alert state within a
+     * docker, deduplicated by message with the affected device ids attached.
+     *
+     * @return the distinct alert messages with their device ids, or null when none exist
+     */
     public List<ConditionsDTO> getDeviceAlertMessages(String username, String vdmsid, String dockername) {
         List<String> ids = deviceRepository.listDevicesByAlertStatus(dockername);
         List<ConditionsDTO> conditions = new ArrayList<>();
@@ -4360,6 +4888,9 @@ public class DeviceService {
         return null;
     }
 
+    /**
+     * Resolves the device for a Daintree device and refreshes its Daintree alert status.
+     */
     public void updateDeviceDainTreeStatus(String daintree_device_id) {
         try {
 
@@ -4371,6 +4902,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Sets the device's Daintree status to "alert" or "no-alert" based on its sensors' alert state.
+     */
     public void updateDeviceDaintreeStatusByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -4387,22 +4921,38 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Clears the auto-detected model for all devices in a docker.
+     */
     public void modelResetbyDockerName(String docker_name) {
         deviceRepository.modelResetbyDockerName(docker_name);
     }
 
+    /**
+     * Returns the alert details for a device.
+     */
     public DeviceAlertDTO getDeviceAlertInfoById(String device_id) {
         return deviceRepository.getDeviceAlertInfoById(device_id);
     }
 
+    /**
+     * Returns the room status for a device.
+     */
     public RoomStatusDTO getRoomStatusByDeviceId(String deviceid) {
         return deviceRepository.getRoomStatusByDeviceId(deviceid);
     }
 
+    /**
+     * Returns the room/space monitor statuses for a location.
+     */
     public List<DeviceMonitorSpaceDTO> getRoomStatusByLocationId(String deviceid) {
         return deviceRepository.getRoomStatusByLocationId(deviceid);
     }
 
+    /**
+     * Uploads and attaches asset images to each given device, replacing existing images for
+     * single-device updates, and logs the user action.
+     */
     public void upsertAssetImages(String username, String vdms_id, List<String> device_ids, List<MultipartFile> asset_images, HttpServletRequest httpServletRequest) {
         log.info("upsertAssetImages, Params: device ids: {}, asset images: {}, endpoint : {}", device_ids, asset_images, httpServletRequest.getRequestURI());
         for (String device_id : device_ids) {
@@ -4466,6 +5016,11 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Removes the specified asset images from each device, deleting the files from the server,
+     * updating the stored image list, resetting onboarding image status when none remain, and
+     * logging user actions.
+     */
     public void deleteAssetImages(String username, String vdms_id, List<DeviceDTO> deviceDTOS, HttpServletRequest httpServletRequest) {
         log.info("deleteAssetImages, Params: deviceDTOs: {}, endpoint : {}", deviceDTOS, httpServletRequest.getRequestURI());
         for (DeviceDTO device : deviceDTOS) {
@@ -4508,6 +5063,11 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Removes the specified category of images (asset, nameplate, or labelId) from each device,
+     * deleting non-ADC files from the server, updating the stored image list, resetting onboarding
+     * image status when no asset images remain, and logging user actions.
+     */
     public void deleteDeviceImages(String username, String vdms_id, List<DeviceDTO> deviceDTOS, String category, HttpServletRequest httpServletRequest) {
 
         String endpoint = httpServletRequest != null ? httpServletRequest.getRequestURI() : "unknown";
@@ -4689,10 +5249,17 @@ public class DeviceService {
     }
 
 
+    /**
+     * Returns the device's asset image URLs as a JSON string.
+     */
     public String getAssetImageUrls(String username, String vdms_id, String device_id) {
         return deviceRepository.getAssetImageUrls(device_id);
     }
 
+    /**
+     * Returns the device's images grouped by category (asset, nameplate, labelId) as a JSON array
+     * of url/category objects.
+     */
     public String getAssetImageUrlsCategory(String username, String vdms_id, String device_id) {
         DeviceDTO deviceDTO = deviceRepository.getAllDeviceImages(device_id);
 
@@ -4733,6 +5300,10 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Returns a paginated set of parent devices filtered by group (all, tagged, inspection, etc.),
+     * dockers, types, virtual device types, search key, and QR/NFC/barcode tagging criteria.
+     */
     public Set<DeviceDTO> getAllDevicesPagination(String username, String vdmsid, String group, String
             searchkey, Integer pageno, Integer pagesize, JSONObject filterObject) {
 
@@ -4855,6 +5426,11 @@ public class DeviceService {
         return deviceRepository.getAllNetworkParentDeviceByPagination(dockernames, types, searchkey, pagesize, offset, virtual_device_types, isTaggedToQrCode, deviceIdsTaggedToQrCode, isTaggedToNfc, deviceIdsTaggedToNfc,isTaggedToBarCode,deviceIdsTaggedToClientBarCode);
     }
 
+    /**
+     * Evaluates a device's online/offline alert conditions against its current status, scheduling,
+     * replacing, or deleting deferred alert jobs, applying alert-count/schedule rules, persisting
+     * last-alerted state, and dispatching email/IOC alerts when triggered.
+     */
     public void getDeviceConditionStatus(String deviceId, Integer status) {
 
         Set<DeviceConditionsDTO> deviceConditions = deviceConditionsService.getDeviceConditions(null, null, null, deviceId);
@@ -5002,6 +5578,9 @@ public class DeviceService {
     }
 
 
+    /**
+     * Creates a deferred ("trigger time") alert job for a device condition and records the scheduled job.
+     */
     public void scheduleDeviceAlertJob(String job_type, DeviceConditionsDTO deviceCondition) {
         ScheduledJobDTO jobSchedulerDTO = new ScheduledJobDTO();
         jobSchedulerDTO.setJob_type(job_type);
@@ -5019,6 +5598,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Replaces an existing deferred alert job for a device condition with a newly scheduled one.
+     */
     public void replaceDeviceAlertJob(String job_type, DeviceConditionsDTO deviceCondition, String job_key) {
         ScheduledJobDTO jobSchedulerDTO = new ScheduledJobDTO();
         jobSchedulerDTO.setJob_type(job_type);
@@ -5039,6 +5621,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Cancels and removes the deferred alert job associated with a device condition.
+     */
     public void deleteDeviceAlertJob(String conditionId) {
         try {
             ScheduledJobDTO scheduledJobDTO = jobSchedulerService.getScheduledJobByConditionId(conditionId);
@@ -5060,6 +5645,10 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Sends a device condition alert via the alert profile (and IOC when configured) unless the
+     * device is currently within an alert downtime window.
+     */
     public void sendDeviceEmailAlerts(DeviceConditionsDTO deviceConditionsDTO, DeviceAlertDTO
             deviceAlert, AlertProfileDTO alertProfile, BigInteger current_timestamp, Integer status) {
         log.info("Checking AlertDownTimeState for DeviceId: {} and AlertProfileId: {}",deviceConditionsDTO.getDevice_id(), alertProfile.getId());
@@ -5081,16 +5670,25 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Returns the alert info used to build a device condition alert.
+     */
     public DeviceAlertDTO getDeviceConditionAlertInfoById(String device_id) {
         return deviceRepository.getDeviceConditionAlertInfoById(device_id);
     }
 
+    /**
+     * Returns all devices for a VDMS.
+     */
     public Set<DeviceDTO> listAllDeviceByVdmsId(String vdms_id) {
         return deviceRepository.listAllDeviceByVdmsId(vdms_id);
     }
 
 
     // update ecobee sensor count by device id
+    /**
+     * Recomputes and stores the device's Ecobee sensor count.
+     */
     public void updateDeviceEcobeeCountByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -5103,6 +5701,9 @@ public class DeviceService {
     }
 
 
+    /**
+     * Sets the device's Ecobee status to "alert" or "no-alert" based on its sensors' alert state.
+     */
     public void updateDeviceEcobeeStatusByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -5119,6 +5720,9 @@ public class DeviceService {
     }
 
     // update ecobee sensor status
+    /**
+     * Resolves the device for an Ecobee sensor and refreshes its Ecobee alert status.
+     */
     public void updateDeviceEcobeeStatus(String ecobee_sensor_id) {
         try {
             String device_id = ecobeeService.getDeviceIdByEcobeeSensorId(ecobee_sensor_id);
@@ -5128,6 +5732,11 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Enriches device-sensor records with their tagged QR-code, NFC, and bar-code ids.
+     *
+     * @return the enriched device-sensor list, or null on error
+     */
     public List<DeviceSensorsDTO> getDeviceSensorsWithQrCodeDetails(String vdms_id, List<DeviceSensorsDTO> deviceSensors) {
 
         try {
@@ -5172,6 +5781,10 @@ public class DeviceService {
 
 
     //get devices by types
+    /**
+     * Returns devices of the given types within a network and floor, each populated with its sensors,
+     * a sensor-alert flag, and QR/NFC/barcode tagging details.
+     */
     public List<DeviceSensorsDTO> getDevicesByType(String vdms_id, String network_name, String
             floor_id, Set<String> types) {
 
@@ -5195,6 +5808,10 @@ public class DeviceService {
         return deviceSensors;
     }
 
+    /**
+     * Returns a page of devices of the given types within a network and floor, each populated with
+     * its sensors and a sensor-alert flag.
+     */
     public List<DeviceSensorsDTO> getDevicesByTypePagination(String vdms_id, String network_name, String
             floor_id, Set<String> types, Integer pagesize,
                                                              Integer pageno) {
@@ -5220,6 +5837,11 @@ public class DeviceService {
         return deviceSensors;
     }
 
+    /**
+     * Populates each device with its QR-code, NFC, and bar-code counts.
+     *
+     * @return the devices with tagging counts set, or null on error
+     */
     public Set<DeviceDTO> getDevicesWithQrCodeCount(String vdms_id, Set<DeviceDTO> devices) {
         try {
             for (DeviceDTO device : devices) {
@@ -5236,6 +5858,10 @@ public class DeviceService {
 
 
     // Get Single device information
+    /**
+     * Returns a single device with its IP addresses, onboarding data, agent/ITAM details, and
+     * QR/NFC/barcode counts populated.
+     */
     public DeviceDTO getDeviceByDeviceId(String username, String vdmsid, String dockername, String device_id) {
 
         DeviceDTO device = deviceRepository.getDeviceByDeviceId(device_id);
@@ -5277,6 +5903,10 @@ public class DeviceService {
     }
 
     // get devices by ids
+    /**
+     * Returns the given devices, each with IP addresses, onboarding data, agent/ITAM details, and
+     * QR/NFC/barcode counts populated.
+     */
     public Set<DeviceDTO> getDevicesByIdList(String vdms_id, Set<String> device_ids) {
         Set<DeviceDTO> devices = deviceRepository.getDevicesByIdList(device_ids.toArray(new String[0]));
         for (DeviceDTO device : devices) {
@@ -5313,6 +5943,10 @@ public class DeviceService {
         return devices;
     }
 
+    /**
+     * Returns a page of virtual devices filtered by dockers, types, virtual device types, and search
+     * key, each populated with its connected input/output specifications.
+     */
     public Set<DeviceDTO> getFilterVirtualDevicesByPagination(String username, String vdmsid, String
             searchKey, Integer pageNo, Integer
                                                                       pageSize, Set<String> dockernames, Set<String> types, Set<String> virtual_device_types) {
@@ -5348,11 +5982,20 @@ public class DeviceService {
     }
 
 
+    /**
+     * Returns the device detail records for the given device ids.
+     */
     public List<DeviceDTO> getDeviceDetailsByDeviceIdList(Set<String> device_ids) {
         return deviceRepository.getDeviceDetailsByDeviceIdList(device_ids);
 
     }
 
+    /**
+     * Merges the supplied custom fields into a device's existing custom fields, updating values for
+     * existing keys and appending new ones.
+     *
+     * @return the device DTO carrying the merged custom fields, or null when no fields are supplied
+     */
     public DeviceDTO updateCustomFields(String device_id, JSONArray newCustomFields) {
         if (newCustomFields != null) {
             DeviceDTO existingDeviceDetails = deviceRepository.getDeviceByDeviceId(device_id);
@@ -5398,11 +6041,17 @@ public class DeviceService {
         return null;
     }
 
+    /**
+     * Returns the total number of power-source topology connections.
+     */
     public Integer getPowerSourceTopologyConnectionsCount(String username, String vdmsid) {
 
         return connectedDevicesService.getPowerSourceTopologyConnectionsCount();
     }
 
+    /**
+     * Returns a page of the power-source topology.
+     */
     public PowerSourceTopologyDTO getPowerSourceTopologyByPagination(String username, String vdmsid, Integer
             pageno, Integer pagesize) {
 
@@ -5410,11 +6059,19 @@ public class DeviceService {
     }
 
 
+    /**
+     * Returns the given devices, excluding archived ones and those without a type.
+     */
     public Set<DeviceDTO> getDevicesByIds(Set<String> device_ids) {
         Set<DeviceDTO> devices = deviceRepository.getDevicesByIdList(device_ids.toArray(new String[0]));
         return devices.stream().filter(device -> (device.getAsset_match_status() != 3 && (device.getType() != null && device.getType() != ""))).collect(Collectors.toSet());
     }
 
+    /**
+     * Returns counts of devices tagged to QR codes, NFC tags, and either, resolved from the cloud.
+     *
+     * @return a JSON object with qr_device_count, nfc_device_count, and qr_nfc_device_count, or null on error
+     */
     public JSONObject getDeviceQrNfcCountFromCloud(String vdms_id) {
         try {
             int qrDeviceCount;
@@ -5460,6 +6117,9 @@ public class DeviceService {
         return null;
     }
 
+    /**
+     * Resolves the device for a Modbus register and refreshes its Modbus alert status.
+     */
     public void updateDeviceModbusStatus(String modbus_register_id) {
         try {
             String device_id = modbusService.getDeviceIdByModbusRegisterId(modbus_register_id);
@@ -5469,6 +6129,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Sets the device's Modbus status to "alert" or "no-alert" based on its registers' alert state.
+     */
     public void updateDeviceModbusStatusByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -5485,6 +6148,9 @@ public class DeviceService {
     }
 
     // update modbus  count
+    /**
+     * Resolves the device for a Modbus register and refreshes its Modbus register count.
+     */
     public void updateDeviceModbusCount(String modbus_register_id) {
         try {
             String device_id = modbusService.getDeviceIdByModbusRegisterId(modbus_register_id);
@@ -5495,6 +6161,9 @@ public class DeviceService {
     }
 
     // update modbus register count by device id
+    /**
+     * Recomputes and stores the device's Modbus register count.
+     */
     public void updateDeviceModbusCountByDeviceId(String device_id) {
         try {
             if (device_id != null) {
@@ -5506,10 +6175,16 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Returns the raw device record for the given device id without additional enrichment.
+     */
     public DeviceDTO getDeviceDetailsByDeviceId(String device_id) {
         return deviceRepository.getDeviceByDeviceId(device_id);
     }
 
+    /**
+     * Returns a page of assets tagged to a location, each enriched with IP addresses and onboarding data.
+     */
     public Set<DeviceDTO> getAssetsByLocationId(String username, String vdmsid, String location_id, Integer
             pageno, Integer pagesize) {
         Set<DeviceDTO> devices;
@@ -5534,6 +6209,9 @@ public class DeviceService {
         return devices;
     }
 
+    /**
+     * Returns a device's reboot status, clearing it when it is no longer in progress.
+     */
     public String getDeviceRebootStatus(String username, String vdmsid, String deviceid) {
         String reboot_status = deviceRepository.getDeviceRebootStatus(deviceid);
         if (reboot_status != null && (!reboot_status.contains("in-progress"))) {
@@ -5542,10 +6220,17 @@ public class DeviceService {
         return reboot_status;
     }
 
+    /**
+     * Sets a device's reboot status.
+     */
     public void updateDeviceRebootStatus(String device_id, String status) {
         deviceRepository.updateDeviceRebootStatus(device_id, status);
     }
 
+    /**
+     * Returns devices for a group (all, tagged, inspection, qrcode) filtered by dockers, types,
+     * virtual device types, search key, and QR/NFC/barcode tagging criteria.
+     */
     public Set<DeviceDTO> getAllDevicesByGroup(String username, String vdmsid, JSONObject filterObject, String
             global_checklist_id, String global_inspection_record_id, String group) {
         JSONArray dockernames = filterObject.getJSONArray("docker_names");
@@ -5638,6 +6323,10 @@ public class DeviceService {
         return deviceRepository.getAllNetworkParentDevices(dockernames, types, searchkey, virtual_device_types, isTaggedToQrCode, deviceIdsTaggedToQrCode, isTaggedToNfc, deviceIdsTaggedToNfc);
     }
 
+    /**
+     * Returns the ids of devices matching the given dockers, types, search key, virtual device
+     * types, location ids, and QR/NFC tagging criteria.
+     */
     public List<String> getDeviceIdsByFilter(List<String> dockerNames, List<String> types, String searchKey,
                                              List<String> virtual_device_types, Boolean isTaggedToQrCode,
                                              Boolean isTaggedToNfc, List<String> locationIds) {
@@ -5667,6 +6356,10 @@ public class DeviceService {
                 isTaggedToNfc, deviceIdsTaggedToNfc, locationIds);
     }
 
+    /**
+     * Returns devices matching the given dockers, types, search key, virtual device types, location
+     * ids, explicit device ids, and QR/NFC tagging criteria.
+     */
     public List<DeviceDTO> getDevicesByFilter(List<String> dockerNames, List<String> types, String
             searchKey, List<String> virtual_device_types,
                                               Boolean isTaggedToQrCode, Boolean isTaggedToNfc, List<String> locationIds, List<String> deviceIds) {
@@ -5696,6 +6389,10 @@ public class DeviceService {
                 isTaggedToNfc, deviceIdsTaggedToNfc, locationIds, deviceIds);
     }
 
+    /**
+     * Creates onboarded asset devices with generated ids, setting asset-match status, persisting
+     * specifications and asset images, logging user actions, and syncing each device's onboard status.
+     */
     public void addAssetOnboardedDevices(String username, String vdmsid, List<DeviceDTO> deviceDTOS) {
         for (DeviceDTO deviceDTO : deviceDTOS) {
             String device_id = vdmsid + "_" + deviceDTO.getDocker_name() + "_" + deviceDTO.getUser_data_name() + "_" + System.nanoTime();
@@ -5739,6 +6436,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Adds or updates the asset image URLs for an onboarded device and logs the user action.
+     */
     public void upsertOnboardedAssetImages(String username, String vdms_id, String
             device_id, List<String> asset_image_urls) {
         JSONArray array = new JSONArray();
@@ -5792,6 +6492,10 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Applies the onboard status payload to each device in the request, supporting automatic and
+     * manual onboard types.
+     */
     public void upsertOnboardAssets(String username, String vdmsid, JSONObject onboard_asset_data) {
         try {
             Set<String> device_ids = utils.getJSONArrayFromJSONStringForSet(onboard_asset_data.getJSONArray("device_ids").toJSONString(), String.class);
@@ -5942,6 +6646,10 @@ public class DeviceService {
     }
 
 
+    /**
+     * Updates the onboard status of the requested devices and records a "verified" onboard history
+     * entry for each.
+     */
     public void updateAssetOnboardStatus(String username, String vdmsid, JSONObject onboard_asset_data) {
         Set<String> device_ids = utils.getJSONArrayFromJSONStringForSet(onboard_asset_data.getJSONArray("device_ids").toJSONString(), String.class);
         this.updateOnboardAssetStatus(device_ids, onboard_asset_data.getInteger("onboard_status"));
@@ -6113,6 +6821,10 @@ public class DeviceService {
 //        return deviceStatuscountAll;
 //    }
 
+    /**
+     * Returns the counts of pending ("todo") and completed onboarded assets matching the search and
+     * filter criteria.
+     */
     public Map<String, Integer> getAssetOnboardCount(String username, String vdmsid, String dockername, JSONObject search_sort_filter_details) {
         Map<String, Integer> deviceStatuscountAll = new HashMap<>();
 
@@ -6125,6 +6837,10 @@ public class DeviceService {
         return deviceStatuscountAll;
     }
 
+    /**
+     * Uploads and attaches OCR (nameplate) images to each device, replacing existing OCR images,
+     * and logs the user action.
+     */
     public void upsertAssetOcrImages(String username, String vdms_id, List<String> device_ids, List<MultipartFile> asset_ocr_images, HttpServletRequest httpServletRequest) {
         log.info("upsertAssetOcrImages, Params: device ids: {}, asset ocr images: {}, endpoint : {}", device_ids, asset_ocr_images, httpServletRequest.getRequestURI());
         for (String device_id : device_ids) {
@@ -6184,6 +6900,10 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Removes the specified OCR (nameplate) images from each device, deleting the files from the
+     * server, updating the stored image list, and logging the user action.
+     */
     public void deleteAssetOcrImages(String username, String vdms_id, List<DeviceDTO> deviceDTOS, HttpServletRequest httpServletRequest) {
         log.info("deleteAssetOcrImages, Params: deviceDTOs: {}, endpoint : {}", deviceDTOS, httpServletRequest.getRequestURI());
         for (DeviceDTO device : deviceDTOS) {
@@ -6217,6 +6937,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Returns the device's OCR (nameplate) image URLs as a JSON string.
+     */
     public String getAssetOcrImageUrls(String username, String vdms_id, String device_id) {
         return deviceRepository.getAssetOcrImageUrls(device_id);
     }
@@ -6230,6 +6953,9 @@ public class DeviceService {
         }
     }
 
+    /**
+     * Returns the sorted, distinct set of primary and secondary asset-onboard assignee emails.
+     */
     public Set<String> getAssetOnboardAssignees(String username, String vdms_id) {
         Set<String> assignees = new HashSet<>();
         Set<String> primary_assignees = deviceOnboardStatusRepository.getAssetOnboardAssignees();
@@ -6241,6 +6967,10 @@ public class DeviceService {
         return new LinkedHashSet<>(sortedAssigneesList);
     }
 
+    /**
+     * Adds a new monitored asset device (virtual type 2) with a generated id, creates its onboard
+     * status record, logs the user action, and returns the created device.
+     */
     public DeviceDTO addDevice(String username, String vdmsid, String dockername, DeviceDTO deviceDto, HttpServletRequest httpServletRequest) {
         log.info("addDevice, Params: deviceDto: {}, endpoint : {}", deviceDto, httpServletRequest.getRequestURI());
         if (deviceDto.getId() == null) {
@@ -6298,6 +7028,10 @@ public class DeviceService {
 //
 //    }
 
+    /**
+     * Exports the filtered devices as a simple or measuring-instrument report (Excel/PDF), either
+     * streamed in the response or sent by email, optionally including asset images.
+     */
     public void exportFilteredDevices(HttpServletResponse response, String username, String vdmsid, String
                                               dockername, String condition, JSONObject searchSortFilterDetails, Integer onboardStatus, String template_name,
                                       String email, HttpServletRequest httpServletRequest, String file_type) {
@@ -6359,6 +7093,9 @@ public class DeviceService {
 
     }
 
+    /**
+     * Emails an asset export report as an Excel attachment with a download link.
+     */
     public void sendAssetExportEmail(String email, String reportName, String filename, byte[] bytes, String vdmsid) {
         JSONObject body = new JSONObject();
         body.put("template_type", "download_email");
@@ -6371,6 +7108,12 @@ public class DeviceService {
     }
 
 
+    /**
+     * Builds the simple asset export Excel workbook for the given devices, optionally embedding asset
+     * images.
+     *
+     * @return the generated Excel file bytes
+     */
     public byte[] generateSimpleAssetExportReportExcel(Set<DeviceDTO> devices, Boolean includeImages, HttpServletResponse response, String email, String modified_filename, String currentDateTime) throws IOException {
         VdmsDTO vdmsDetails = vdmsService.getVDMSDetails();
         String timeZoneId = vdmsDetails.getTimezone();
@@ -6551,6 +7294,11 @@ public class DeviceService {
 
     }
 
+    /**
+     * Builds the simple asset export Excel workbook from pre-extracted row data and header mappings.
+     *
+     * @return the generated Excel file bytes
+     */
     public byte[] generateSimpleAssetExportReportExcelData(List<Map<String, String>> excelData, Map<String, Integer> headerMap, String timeZoneId, String
             propertyName, Map<String, String> modifiedHeaderNames, HttpServletResponse response, String email, String modified_filename, String currentDateTime) throws IOException {
         // Create a new workbook and sheet
@@ -6668,6 +7416,12 @@ public class DeviceService {
 
     }
 
+    /**
+     * Builds the advanced measuring-instrument export Excel workbook for the given devices, intended
+     * for email delivery.
+     *
+     * @return the generated Excel file bytes
+     */
     public byte[] generateExcelForMeasuringInstrumentsEmail(String username, String vdmsid, Set<DeviceDTO> devices) {
         String deviceId = "";
         try {
@@ -7755,6 +8509,9 @@ public String daysCleaned(String input){
 //
 //    }
 
+    /**
+     * Returns the input string with all underscores removed.
+     */
     public String removeUnderscores(String input) {
         // Use the replaceAll method to replace underscores with an empty string
         return input.replaceAll("_", "");
@@ -7832,6 +8589,9 @@ public String daysCleaned(String input){
 //
 //    }
 
+    /**
+     * Returns a device populated with its onboard status data.
+     */
     public DeviceDTO getDeviceAndOnboardStatusByDeviceId(String device_id) {
         DeviceDTO deviceDTO = deviceRepository.getDeviceByDeviceId(device_id);
         deviceDTO.setOnboard_data(new DeviceOnboardStatusDTO(deviceDTO.getAssignee_email(), deviceDTO.getImage_status(),
@@ -7842,6 +8602,9 @@ public String daysCleaned(String input){
     }
 
 
+    /**
+     * Recomputes the onboard status of every device in a VDMS.
+     */
     public void syncDeviceOnboardStatus(String vdmsid) {
         Set<DeviceDTO> deviceDTOS = deviceRepository.listAllDeviceByVdmsId(vdmsid);
         System.out.println("Total device size: " + deviceDTOS.size());
@@ -7850,6 +8613,9 @@ public String daysCleaned(String input){
         }
     }
 
+    /**
+     * Recomputes the QR-sync-aware onboard status of every device in a VDMS.
+     */
     public void syncAllDeviceOnboardStatusForQrSync(String vdmsid) {
         Set<DeviceDTO> deviceDTOS = deviceRepository.listAllDeviceByVdmsId(vdmsid);
         log.info("Total device size: {}", deviceDTOS.size());
@@ -7858,6 +8624,10 @@ public String daysCleaned(String input){
         }
     }
 
+    /**
+     * Recomputes a single device's onboard image, field, geolocation, and tag statuses from its
+     * current data.
+     */
     public void syncSingleDeviceOnboardStatus(String vdmsid, String device_id) {
         if (vdmsid != null && device_id != null) {
             DeviceDTO deviceDTO = this.getDeviceByDeviceIdNew(null, vdmsid, null, device_id);
@@ -7916,6 +8686,10 @@ public String daysCleaned(String input){
         }
     }
 
+    /**
+     * Recomputes a single device's onboard tag status from its current QR-code count and tagging
+     * recency, then upserts the onboard data and rolls the overall onboard status up or down.
+     */
     public void syncSingleDeviceOnboardStatusForQrSync(String vdmsid, String device_id) {
         if (vdmsid != null && device_id != null) {
             DeviceDTO deviceDTO = this.getDeviceByDeviceIdNew(null, vdmsid, null, device_id);
@@ -7998,6 +8772,10 @@ public String daysCleaned(String input){
         }
     }
 
+    /**
+     * Returns a device with QR/NFC/barcode counts populated, using the lighter onboarding-focused
+     * query.
+     */
     public DeviceDTO getDeviceByDeviceIdNew(String username, String vdmsid, String dockername, String device_id) {
         System.out.println(device_id);
 
@@ -8015,6 +8793,10 @@ public String daysCleaned(String input){
         return device;
     }
 
+    /**
+     * Computes and persists the onboard status (image, geolocation, tag, field) of the given virtual
+     * devices and rolls up their overall onboard status.
+     */
     public void updateVirtualDeviceOnboardStatus(Set<DeviceDTO> virtual_devices, String username) {
         List<DeviceOnboardStatusDTO> deviceOnboardStatusDTOList = new ArrayList<>();
         for (DeviceDTO deviceDTO : virtual_devices) {
@@ -8151,6 +8933,10 @@ public String daysCleaned(String input){
         return deviceOnboardStatusDTO;
     }
 
+    /**
+     * Computes and upserts the onboard status of a single asset-mapper virtual device and rolls up
+     * its overall onboard status.
+     */
     public void updateVirtualDeviceOnboardStatusByAssetMapper(DeviceDTO deviceDTO, String username) {
 
         log.info("deviceDTO : {} ", deviceDTO);
@@ -8283,6 +9069,13 @@ public String daysCleaned(String input){
     }
 
 
+    /**
+     * Merges matched/duplicate devices into a primary device: reassigns procedures, position, asset
+     * images, sensors, integrations, media, documents, Siemens and history references, applies the
+     * primary device edits, deletes the merged devices, and re-syncs onboard status.
+     *
+     * @return the updated primary device
+     */
     public DeviceDTO updateAssetMatchDetails(String username, String vdmsid, String dockername, JSONObject deviceObject, HttpServletRequest httpServletRequest,String assignee) {
         log.info("updateAssetMatchDetails, Params: deviceObject: {}, endpoint : {}", deviceObject, httpServletRequest.getRequestURI());
         JSONArray featuresArray = deviceObject.getJSONArray("features");
@@ -8369,6 +9162,9 @@ public String daysCleaned(String input){
     }
 
 
+    /**
+     * Reassigns a device's Siemens records from one device to the primary device.
+     */
     public void updateSiemensDeviceId(String primaryDeviceId, String existingDeviceId) {
         siemensService.updateSiemensDeviceId(primaryDeviceId, existingDeviceId);
     }
@@ -8377,12 +9173,20 @@ public String daysCleaned(String input){
         deviceRepository.updateDeviceCoordinatesAndLocationId(device_id, latitude, longitude, position, location_id);
     }
 
+    /**
+     * Reassigns a device's procedure-related records (global inspections, checklists, record
+     * checklists) from one device to the primary device.
+     */
     public void updateProcedureDeviceId(String primaryDeviceId, String existingDeviceId, Set<String> retainDevices) {
         globalInspectionRecordService.updateGlobalInspectionByDeviceId(primaryDeviceId, existingDeviceId);
         globalChecklistService.updateDeviceGlobalChecklistDeviceId(primaryDeviceId, existingDeviceId);
         recordChecklistService.updateRecordChecklistByDeviceId(primaryDeviceId, existingDeviceId, retainDevices);
     }
 
+    /**
+     * Reassigns a device's integration sensor records (BACnet, Daintree, Disruptive, Ecobee, KNX,
+     * LoRaWAN, Monnit, MyDevices, Pelican, SNMP, PolyLens) from one device to the primary device.
+     */
     public void updateIntegrationsDeviceId(String primaryDeviceId, String existingDeviceId, Set<String> retainDevices) {
         bacnetService.updateBacnetObjectDeviceId(primaryDeviceId, existingDeviceId, retainDevices);
         daintreeService.updateDaintreeDeviceByDeviceId(primaryDeviceId, existingDeviceId, retainDevices);
@@ -8399,6 +9203,9 @@ public String daysCleaned(String input){
 
     }
 
+    /**
+     * Reassigns a device's measuring-instrument records from one device to the primary device.
+     */
     public void updateSensorsDeviceId(String primaryDeviceId, String existingDeviceId, Set<String> retainDevices) {
         measuringInstrumentService.updateMeasuringInstrumentDeviceId(primaryDeviceId, existingDeviceId, retainDevices);
     }
@@ -8411,6 +9218,10 @@ public String daysCleaned(String input){
         }
     }
 
+    /**
+     * Downloads asset images from the given URLs, stores them, attaches them to each device, marks
+     * onboarding image status complete, and logs the user action.
+     */
     public void upsertAssetImagesFromUrl(String username, String
             vdms_id, List<String> device_ids, List<String> asset_images) {
 
@@ -8472,10 +9283,16 @@ public String daysCleaned(String input){
         }
     }
 
+    /**
+     * Reassigns a device's media records from one device to the primary device.
+     */
     public void updateMediaDeviceId(String primaryDeviceId, String existingDeviceId, Set<String> retainDevices) {
         mediaService.updateMediaDeviceId(primaryDeviceId, existingDeviceId, retainDevices);
     }
 
+    /**
+     * Reassigns a device's document records from one device to the primary device.
+     */
     public void updateDocumentsDeviceId(String primaryDeviceId, String existingDeviceId, Set<String> retainDevices) {
         documentService.updateDocumentDeviceId(primaryDeviceId, existingDeviceId, retainDevices);
     }
@@ -8486,11 +9303,18 @@ public String daysCleaned(String input){
         }
     }
 
+    /**
+     * Returns all devices for a VDMS and docker without pagination.
+     */
     public List<DeviceDTO> getAllDeviceByVdmsIdAndDockerNameWithoutPagination(String username, String vdmsid, String dockername) {
         System.out.println(vdmsid + " " + dockername);
         return deviceRepository.getAllDeviceByVdmsIdAndDockerNameWithoutPagination(vdmsid, dockername);
     }
 
+    /**
+     * Creates or updates digital-twin records for the selected devices, attaching their measuring
+     * instruments and removing deleted ones, with user-action logging.
+     */
     public void upsertDigitalTwin(String username, String vdmsid, TagDeviceOrLocationDTO filterObject, HttpServletRequest httpServletRequest) {
         log.info("upsertDigitalTwin, Params: filterObject: {}, endpoint : {}", filterObject, httpServletRequest.getRequestURI());
 
@@ -8597,6 +9421,9 @@ public String daysCleaned(String input){
 
     }
 
+    /**
+     * Updates the digital-twin image URL for each of the given devices.
+     */
     public void updateDigitalTwinImageUrlByIds(Set<DeviceDTO> deviceDTOS) {
         for (DeviceDTO device : deviceDTOS) {
             this.updateDigitalTwinImageUrlById(device.getDigital_twin_image_url(), device.getId());
@@ -8607,6 +9434,10 @@ public String daysCleaned(String input){
         deviceRepository.updateDigitalTwinImageUrlById(digital_twin_image_url, device_id);
     }
 
+    /**
+     * Deletes a device's digital twin: removes its instrument positions and image URL locally and in
+     * the cloud, and pushes the change to IOC.
+     */
     public void deleteDigitalTwin(String username, String vdmsid, String device_id, HttpServletRequest httpServletRequest) {
         log.info("deleteDigitalTwin, Params: device id: {}, endpoint : {}", device_id, httpServletRequest.getRequestURI());
         String imageUrl = deviceRepository.getDigitalTwinImageUrl(device_id);
@@ -8619,6 +9450,10 @@ public String daysCleaned(String input){
         iocService.sendDigitalTwinData(new HashSet<>(Collections.singleton(device_id)));
     }
 
+    /**
+     * Applies bulk digital-twin edits across multiple devices using the supplied data and optional
+     * uploaded image.
+     */
     public void multiEditDigitalTwin(String username, String vdmsid, String data, String image_url, MultipartFile multipartFile, HttpServletRequest httpServletRequest) {
 
         log.info("multiEditDigitalTwin, Params: data: {}, image url: {}, multipartFile: {}, endpoint : {}", data, image_url, multipartFile, httpServletRequest.getRequestURI());
@@ -8762,6 +9597,9 @@ public String daysCleaned(String input){
     }
 
 
+    /**
+     * Exports the filtered devices' measuring instruments as an Excel report streamed in the response.
+     */
     public void exportFilteredMeasuringInstrument(HttpServletResponse response, String username, String vdmsid, String dockername, String condition,
                                                   Integer pageno, Integer pagesize,
                                                   JSONObject search_sort_filter_details, Integer onboard_status) {
@@ -8774,6 +9612,9 @@ public String daysCleaned(String input){
 
     }
 
+    /**
+     * Builds the measuring-instrument Excel report for the given devices and writes it to the response.
+     */
     public void generateExcelForMeasuringInstruments(String username, String vdmsid, Set<DeviceDTO> devices, HttpServletResponse response) throws IOException {
 
         VdmsDTO vdmsDetails = vdmsService.getVDMSDetails();
@@ -8968,6 +9809,9 @@ public String daysCleaned(String input){
         outputStream.close();
     }
 
+    /**
+     * Recomputes and stores the device's PolyLens device count.
+     */
     public void updateDevicePolyLensCountByDeviceId(String deviceId) {
         try {
             if (deviceId != null) {
@@ -8994,6 +9838,9 @@ public String daysCleaned(String input){
         cell.setCellStyle(style);
     }
 
+    /**
+     * Recomputes and stores the device's MQTT device count.
+     */
     public void updateDeviceMqttDeviceCountByDeviceId(String deviceId) {
         try {
             if (deviceId != null) {
@@ -9005,6 +9852,10 @@ public String daysCleaned(String input){
         }
     }
 
+    /**
+     * Generates the simple asset export report in the requested format (Excel or PDF), streaming it
+     * in the response when no email is given, or generating and emailing it asynchronously otherwise.
+     */
     public void simpleAssetExportReport(HttpServletResponse response, String file_type, Set<DeviceDTO> devices, Boolean includeImages, String email, String modified_filename, String currentDateTime, String vdmsid) throws IOException {
         if (email.isEmpty()) {
 
@@ -9037,6 +9888,11 @@ public String daysCleaned(String input){
     }
 
 
+    /**
+     * Builds the simple asset export PDF for the given devices, optionally embedding asset images.
+     *
+     * @return the generated PDF file bytes
+     */
     public byte[] generateSimpleAssetExportReportPDF(Set<DeviceDTO> devices, Boolean includeImages, HttpServletResponse response, String email, String modified_filename, String currentDateTime) throws IOException {
 
         VdmsDTO vdmsDetails = vdmsService.getVDMSDetails();
@@ -9182,6 +10038,12 @@ public String daysCleaned(String input){
         return this.generateSimpleAssetExportReportPDFData(mainList, propertyName, includeImages, vdmsId, response, email, modified_filename, currentDateTime);
     }
 
+    /**
+     * Builds the simple asset export PDF from pre-extracted per-device row data, optionally embedding
+     * asset images.
+     *
+     * @return the generated PDF file bytes
+     */
     public byte[] generateSimpleAssetExportReportPDFData(List<List<HashMap<String, String>>> mainList, String propertyName, Boolean includeImages, String vdmsId, HttpServletResponse response, String email, String modified_filename, String currentDateTime) throws IOException {
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -9383,10 +10245,16 @@ public String daysCleaned(String input){
         return bytes;
     }
 
+    /**
+     * Returns the value, or " - " when it is null or empty.
+     */
     public String getValueOrDefault(String value) {
         return (value == null || value.isEmpty()) ? " - " : value;
     }
 
+    /**
+     * Builds a center-aligned PDF table cell containing the given text and font.
+     */
     public PdfPCell createCenteredCell(String text, com.itextpdf.text.Font font) {
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
         cell.setHorizontalAlignment(Element.ALIGN_CENTER); // Center horizontally
@@ -9394,6 +10262,9 @@ public String daysCleaned(String input){
         return cell;
     }
 
+    /**
+     * Returns the input with underscores replaced by spaces, or null when the input is null.
+     */
     public String convertUnderscoresToSpaces(String input) {
         if (input == null) {
             return null; // Handle null input
@@ -9401,6 +10272,9 @@ public String daysCleaned(String input){
         return input.replace("_", " "); // Replace underscores with spaces
     }
 
+    /**
+     * Emails an asset export report as a PDF attachment with a download link.
+     */
     public void sendAssetPDFExportEmail(String email, String reportName, String filename, byte[] bytes, String vdmsid) {
         JSONObject body = new JSONObject();
         body.put("template_type", "download_email");
@@ -9412,6 +10286,9 @@ public String daysCleaned(String input){
         alertClient.sendDownloadEmail(body, file, "pdf", vdmsid);
     }
 
+    /**
+     * Updates the record-checklist status and count for many devices in JDBC batches of up to 200.
+     */
     public void updateAllRecordChecklistStatusInBatchForDevice(List<DeviceDTO> updatedDeviceStatus) {
         log.info("updateAllRecordChecklistStatusInBatchForDevice");
         try (Connection connection = dataSource.getConnection()) {
@@ -9451,10 +10328,18 @@ public String daysCleaned(String input){
 
     }
 
+    /**
+     * Returns the device detail records for the given device ids.
+     */
     public Set<DeviceDTO> getDeviceDetailsByIdList(Set<String> device_ids) {
         return deviceRepository.getDeviceDetailsByIdList(device_ids);
     }
 
+    /**
+     * Reconciles device onboard tag status following QR/client-QR code changes: untags affected old
+     * devices, tags the new devices, records onboard history, rolls up onboard status, and pushes
+     * device updates over the socket.
+     */
     public void syncDeviceOnboardStatusForQrSync(String vdmsId, Set<QrCodeDTO> existingQrCodes, Set<QrCodeDTO> updatedQrCodes,
                                                  Set<QrCodeDTO> existingClientQrCodes, Set<QrCodeDTO> updatedClientQrCodes) {
 
@@ -9671,6 +10556,9 @@ public String daysCleaned(String input){
         }
     }
 
+    /**
+     * Returns a device populated with its onboard status data, for onboarding workflows.
+     */
     public DeviceDTO getDeviceDetailsForOnboard(String deviceId) {
         DeviceDTO device = deviceRepository.getDeviceByDeviceIdNew(deviceId);
         if (device != null) {
@@ -9695,6 +10583,9 @@ public String daysCleaned(String input){
 
     }
 
+    /**
+     * Returns the total device/asset count, defaulting to 0 when none exist.
+     */
     public Integer getAssetCount() {
         Integer assetCount = deviceRepository.getAllDeviceCount();
         if (assetCount == null) {
@@ -9705,6 +10596,12 @@ public String daysCleaned(String input){
     }
 
 
+    /**
+     * Synchronizes device types from the source and normalizes every device's type, stripping
+     * numeric prefixes and defaulting blank types to generic.
+     *
+     * @return a response describing the outcome of the operation
+     */
     public ResponseDTO updateDeviceTypeForAll(String vdmsId) {
 
         log.info("updateDeviceTypeForAll started for vdmsId: {}", vdmsId);
@@ -9764,6 +10661,10 @@ public String daysCleaned(String input){
         return null;
     }
 
+    /**
+     * Normalizes a device type by mapping a leading 4-digit code to its label and setting it on the
+     * device DTO when a mapping exists.
+     */
     public void updateDeviceType(String type, DeviceDTO deviceDTO) {
         Pattern pattern = Pattern.compile("^(\\d{4})\\d*[-. ]?(.+)$");
         Matcher matcher = pattern.matcher(type);
@@ -9777,10 +10678,16 @@ public String daysCleaned(String input){
         }
     }
 
+    /**
+     * Returns the device associated with the given measuring instrument id.
+     */
     public DeviceDTO getDeviceByMeasuringInstrumentId(String measuringInstrumentId) {
         return deviceRepository.getDeviceByMeasuringInstrumentId(measuringInstrumentId);
     }
 
+    /**
+     * Returns a page of AI-call-flow-eligible devices for a docker matching the sanitized search key.
+     */
     public List<DeviceDTO> browseAiCallFlowDevicesWithSearch(String username, String vdmsid, String dockername, Integer pageno, Integer pagesize, String searchkey) {
         Integer offset = pagesize * (pageno - 1);
         String sanitizedSearchKey = searchkey.replaceAll("[ -.!\t_+#~`@$%^&*()=;:<>?,/{}|\\\\]", "").toLowerCase();
@@ -9788,23 +10695,40 @@ public String daysCleaned(String input){
     }
 
 
+    /**
+     * Enables or disables the do-not-disturb (DND) flag for a device.
+     */
     public void toggleDndStatus(String device_id, Boolean is_dnd_enabled, HttpServletRequest httpServletRequest) {
         deviceRepository.toggleDndStatus(device_id, is_dnd_enabled);
     }
 
+    /**
+     * Returns a device's name by id.
+     */
     public String getDeviceNameById(String device_id) {
         return deviceRepository.getDeviceNameById(device_id);
     }
 
+    /**
+     * Returns the device record for the given id.
+     */
     public DeviceDTO getDeviceById(String deviceId) {
         return deviceRepository.getDeviceById(deviceId);
     }
 
 
+    /**
+     * Returns device information for the given id, used by the AI-call flow.
+     */
     public DeviceDTO getDeviceInfoFromDb(String deviceId) {
         return deviceRepository.getDeviceInfoFromDb(deviceId);
     }
 
+    /**
+     * Inserts or updates inventory-sourced virtual devices: creates new devices (linking serial-based
+     * specifications and child devices) or updates existing ones, records lifecycle history and user
+     * actions, and returns the devices paired with their inventory tracking ids.
+     */
     public Set<DeviceDTO> upsertInventoryDevices(Set<DeviceDTO> deviceDTOS, String vdmsId, String email) {
 
         Set<DeviceDTO> inventoryDeviceDTOS = new HashSet<>();
@@ -9886,6 +10810,10 @@ public String daysCleaned(String input){
         return inventoryDeviceDTOS;
     }
 
+    /**
+     * Archives or unarchives the given inventory devices by updating their asset-match status and
+     * logging the user action.
+     */
     public void archiveDevicesForInventoryDevice(String username, String vdmsid, Integer archive, Set<String> deviceIds) {
         log.info("archiveDevicesForInventoryDevice, Params: archive: {}, deviceIds: {}, ", archive, deviceIds);
         int assetMatchStatus = 3;
@@ -9933,17 +10861,27 @@ public String daysCleaned(String input){
         }
     }
 
+    /**
+     * Returns the AI-call-enabled docker names for a VDMS matching the sanitized search key.
+     */
     public Set<String> listAiEnabledDockers(String  email, String vdmsid, String searchkey) {
         String sanitizedSearchKey = searchkey.replaceAll("[ -.!\t_+#~`@$%^&*()=;:<>?,/{}|\\\\]", "").toLowerCase();
         return deviceRepository.listAiEnabledDockers(vdmsid, sanitizedSearchKey);
     }
 
+    /**
+     * Enables the device and system DND flags for a device and records the DND timestamp.
+     */
     public void UpdateDeviceDndEnabledAndTimestamp(String id,BigInteger dndTimestamp) {
         deviceRepository.updateDeviceDndEnabledStatus(id);
         deviceRepository.updateDeviceDndTimestamp(id, dndTimestamp);
         deviceRepository.updateSystemDndEnabled(id);
     }
 
+    /**
+     * Schedules a deferred AI-call alert job for an offline device when an AI-call offline condition
+     * with a trigger time is configured and no job already exists.
+     */
     public void getAiCallDeviceOfflineConditionStatus(String deviceId, Integer status) {
         System.out.println("Came inside getDeviceOfflineConditionStatus" + deviceId + " status: " + status);
         Set<DeviceConditionsDTO> deviceConditions = deviceConditionsService.getDeviceConditionsForAiCall(null, null, null, deviceId);
@@ -9989,11 +10927,17 @@ public String daysCleaned(String input){
 
     }
 
+    /**
+     * Returns the AI-call and device status records for a device.
+     */
     public List<DeviceDTO> getAiCallAndDeviceStatus(String deviceId)
     {
         return deviceRepository.getAiCallAndDeviceStatus(deviceId);
     }
 
+    /**
+     * Disables device and system DND for any device whose DND has been enabled for more than 24 hours.
+     */
     public void dndCheckAndUpdate() {
         BigInteger currentTimestamp = BigInteger.valueOf(System.currentTimeMillis());
         BigInteger twentyFourHoursInMillis = BigInteger.valueOf(24L * 60 * 60 * 1000);
@@ -10018,12 +10962,18 @@ public String daysCleaned(String input){
         }
     }
 
+    /**
+     * Sets the device and system DND status for a device.
+     */
     public void updateDeviceDndAndSystemDndStatus(String deviceId, Boolean isDndEnabled) {
         deviceRepository.updateDndStatus(deviceId, isDndEnabled);
         deviceRepository.updateSystemDndDisabled(deviceId, isDndEnabled);
         log.info("Updated DND and system DND status for device {}", deviceId);
     }
 
+    /**
+     * Reads a device's DND and system DND flags and clears them when both are enabled.
+     */
     public void getDeviceDndAndSystemDndStatus(String deviceId, Boolean isDndEnabled) {
         System.out.println("*****************getDeviceDndAndSystemDndStatus*****"+ deviceId + " isDndEnabled: " + isDndEnabled);
         DeviceDTO deviceDTO=deviceRepository.getDeviceDndAndSystemDndStatus(deviceId, isDndEnabled);
@@ -10037,6 +10987,9 @@ public String daysCleaned(String input){
     }
 
 
+    /**
+     * Placeholder for streaming all device details to the response; currently a no-op.
+     */
     public void getAllDeviceDetails(HttpServletResponse response, String username, String vdmsid, Integer pageno, Integer pagesize, String searchKey, JSONObject filterObject) {
 
 
@@ -10051,6 +11004,10 @@ public String daysCleaned(String input){
 //        )
     }
 
+    /**
+     * Returns devices for a docker excluding those already covered by the given syslog profile,
+     * optionally paginated.
+     */
     public List<DeviceDTO> getAllDeviceCustomDetails(String username, String vdmsid, String docker_name, Integer page_no, Integer page_size, String search_key, String profile_type) {
 
         log.info("getAllDeviceCustomDetails() started for username: {}, vdmsid: {}, docker_name: {}", username, vdmsid, docker_name);
@@ -10104,6 +11061,9 @@ public String daysCleaned(String input){
     }
 
 
+    /**
+     * Returns custom device details for the given device ids in a docker, optionally paginated.
+     */
     public List<DeviceDTO> getDeviceCustomDetails(String docker_name, Integer page_no, Integer page_size, String search_key, List<String> device_ids) {
 
         List<DeviceDTO> deviceDTOS = new ArrayList<>();
@@ -10116,6 +11076,10 @@ public String daysCleaned(String input){
         return deviceDTOS;
     }
 
+    /**
+     * Returns custom device details filtered by device ids, models, and asset categories from the
+     * request body, optionally paginated.
+     */
     public List<DeviceDTO> getDeviceCustomDetailsByIds(
             String username,
             String vdms_id,
@@ -10157,6 +11121,10 @@ public String daysCleaned(String input){
         return deviceDTOS;
     }
 
+    /**
+     * Extracts the string list at the given key from the JSON object, returning ["null"] when the
+     * key is missing, null, or empty.
+     */
     public List<String> getList(JSONObject obj, String key) {
         if (obj == null || !obj.containsKey(key) || obj.get(key) == null) {
             log.info("Key '{}' missing or null in requestBody. Returning empty list.", key);
@@ -10179,6 +11147,10 @@ public String daysCleaned(String input){
     }
 
 
+    /**
+     * Returns device ids for a docker, honoring the select-all flag and search key, with or without
+     * pagination.
+     */
     public List<String> getAllDeviceIds(String docker_name, Integer page_no, Integer page_size, String search_key, String is_select_all) {
         Integer offset = page_size * (page_no - 1);
         List<String> deviceIds;

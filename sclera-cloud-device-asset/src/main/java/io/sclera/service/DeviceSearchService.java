@@ -22,6 +22,10 @@ import org.springframework.stereotype.Service;
 import io.sclera.dto.DeviceDTO;
 import me.xdrop.fuzzywuzzy.FuzzySearch;
 
+/**
+ * Builds and executes dynamic SQL for searching, sorting, and filtering devices, including custom
+ * field queries and fuzzy matching, and returns the resulting devices via the device service.
+ */
 @Service
 public class DeviceSearchService {
 
@@ -220,6 +224,12 @@ public class DeviceSearchService {
     //	}
 
     //search method without sort
+    /**
+     * Searches devices within a VDMS and docker scope filtered by a status condition and the given
+     * search details, then ranks the matches by fuzzy score. Returns null on error.
+     *
+     * @return the matched devices ordered by descending fuzzy match score
+     */
     public Set<DeviceDTO> searchDevices(String username, String vdmsid, String dockername, String condition, Integer pageNo, Integer pageSize, Map<String, Object> search_details) {
         try {
 
@@ -505,6 +515,10 @@ public class DeviceSearchService {
     /**************************************************Search Parent Devices Method************************************************************/
 
     /**************************************************Sort Devices Method***********************************************************/
+    /**
+     * Returns devices within a VDMS and docker scope filtered by a status condition and sorted by
+     * the requested column (standard or custom field). Returns null on error.
+     */
     public Set<DeviceDTO> sortDevices(String username, String vdmsid, String dockername, String condition, Integer pageno,
                                       Integer pagesize, Map<String, Object> sort_details) {
         try {
@@ -616,6 +630,10 @@ public class DeviceSearchService {
 
     /**************************************************Sort Devices Method***********************************************************/
     /**************************************************Filter Devices Method***********************************************************/
+    /**
+     * Returns devices within a VDMS and docker scope filtered by a status condition and by the
+     * presence of the supplied columns (standard or custom fields). Returns null on error.
+     */
     public Set<DeviceDTO> filterDevices(String username, String vdmsid, String dockername, String condition, Integer pageno,
                                         Integer pagesize, List<Map<String, Object>> filter_details) {
         try {
@@ -684,6 +702,12 @@ public class DeviceSearchService {
         return null;
     }
 
+    /**
+     * Builds the SQL fragment that requires each supplied filter column (standard or custom field)
+     * to be non-null and non-empty, joined with AND.
+     *
+     * @return the generated SQL condition fragment
+     */
     public String generateMultiConditionStmt(List<Map<String, Object>> filter_details, String vdms_id, String dockername) {
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -712,6 +736,12 @@ public class DeviceSearchService {
 
     /**************************************************Filter Devices Method***********************************************************/
 
+    /**
+     * Maps a logical device search column name to its qualified SQL column expression, defaulting
+     * to the display name expression for unknown columns.
+     *
+     * @return the SQL column expression for the given logical column
+     */
     public String updateDeviceSearchColumnName(String searchColumn) {
         String updateSearchColumn;
         switch (searchColumn) {
@@ -826,6 +856,10 @@ public class DeviceSearchService {
 
     /********************************************Fuzzy Search*****************************************************************************/
 
+    /**
+     * Computes the best fuzzy match between the search string and the device's standard and custom
+     * fields, then sets the device's matched score, matched column, and matched info accordingly.
+     */
     public void getFuzzyValueByDeviceAndSearchString(DeviceDTO device, String search_string) {
         String result = "";
         int fuzzy_value = 0;
@@ -914,6 +948,10 @@ public class DeviceSearchService {
     }
 
 
+    /**
+     * Returns the case-insensitive fuzzy match ratio between the base value and search string, or 0
+     * when the base value is null or matching fails.
+     */
     public Integer getFuzzyValueByBaseStringAndSearchString(Object base_string, String search_string) {
         try {
             if (base_string != null) {
@@ -925,6 +963,11 @@ public class DeviceSearchService {
         return 0;
     }
 
+    /**
+     * Sorts the given devices in descending order of their matched fuzzy score.
+     *
+     * @return the devices sorted by descending matched score
+     */
     public List<DeviceDTO> sortFilteredDevicesByMatchedScore(List<DeviceDTO> devices) {
         try {
             if (devices.size() > 0) {
@@ -938,6 +981,12 @@ public class DeviceSearchService {
         return devices;
     }
 
+    /**
+     * Updates the fuzzy match score on each device based on the search details, handling all-column,
+     * custom-field, and specific-column searches.
+     *
+     * @return the same devices with their match scores populated
+     */
     public Set<DeviceDTO> updateFuzzyMatchScore(Set<DeviceDTO> filteredDevices, Map<String, Object> search_details) {
         for (DeviceDTO filteredDevice : filteredDevices) {
             try {
@@ -1029,6 +1078,12 @@ public class DeviceSearchService {
 
     /***********************************************Get Device Info By Custom Fields*******************************************************/
 
+    /**
+     * Finds a single device within the VDMS and docker scope whose custom field matches the given
+     * key/value pair and returns its full device details.
+     *
+     * @return a list containing the matched device's details, or empty when none match
+     */
     public List<DeviceDTO> getDeviceInfoByCustomFields(String username, String vdmsid, String dockername, com.alibaba.fastjson.JSONObject custom_fields) {
 
         String query = "SELECT id FROM device "
@@ -1059,6 +1114,11 @@ public class DeviceSearchService {
 
     /****************************************************Multiple Keyword Search Sort Filter Merged*********************************************************/
 
+    /**
+     * Performs a combined, paginated search, sort, and filter over devices using the supplied
+     * details and onboarding/status condition, applying fuzzy ranking when searching without an
+     * explicit sort. Returns null on error.
+     */
     public Set<DeviceDTO> multipleKeywordSearchSortFilterDevices(String username, String vdmsid, String dockername, String condition,
                                                                  Integer pageno, Integer pagesize,
                                                                  com.alibaba.fastjson.JSONObject search_sort_filter_details, Integer onboard_status) {
@@ -1208,6 +1268,11 @@ public class DeviceSearchService {
         return searchAndFilterCustomQuery.toString();
     }
 
+    /**
+     * Builds the SQL filter fragment from the column and feature filter details.
+     *
+     * @return the generated SQL filter fragment
+     */
     public String generateFilterCustomQuery(com.alibaba.fastjson.JSONObject filter_details, String vdms_id) {
         StringBuilder stringBuilder = new StringBuilder();
         if (filter_details.getJSONArray("column_details") != null) {
@@ -1225,6 +1290,13 @@ public class DeviceSearchService {
         return stringBuilder.toString();
     }
 
+    /**
+     * Builds the SQL fragment that filters devices by presence or absence of the given columns,
+     * handling custom fields and special columns such as assignee email, type, asset group,
+     * category/sub-category, and OS type.
+     *
+     * @return the generated SQL column filter fragment
+     */
     public String generateColumnFilterQuery(com.alibaba.fastjson.JSONArray column_details) {
         StringBuilder stringBuilder = new StringBuilder();
         if (column_details.size() > 0) {
@@ -1434,6 +1506,13 @@ public class DeviceSearchService {
         return stringBuilder.toString();
     }
 
+    /**
+     * Builds the SQL search fragment for a single keyword, matching across all columns or a specific
+     * standard or custom field and applying the requested condition (contains, equals, starts with,
+     * etc.).
+     *
+     * @return the generated SQL search fragment
+     */
     public String generateSearchQuery(com.alibaba.fastjson.JSONObject search_details, com.alibaba.fastjson.JSONObject searhSortFilterDetails) {
         StringBuilder stringBuilder = new StringBuilder();
         String searchColumn = String.valueOf(search_details.get("column")).replaceAll("\\s", "");
@@ -1620,6 +1699,12 @@ public class DeviceSearchService {
         return stringBuilder.toString();
     }
 
+    /**
+     * Builds the SQL ORDER BY fragment from the sort details, supporting standard columns, custom
+     * fields, numeric IP ordering, and a default order by updated timestamp.
+     *
+     * @return the generated SQL ORDER BY fragment
+     */
     public String generateSortQuery(com.alibaba.fastjson.JSONObject sort_details) {
         StringBuilder stringBuilder = new StringBuilder();
         if (sort_details.containsKey("sort_details") && sort_details.getJSONObject("sort_details") != null) {
@@ -1662,6 +1747,10 @@ public class DeviceSearchService {
         return stringBuilder.toString();
     }
 
+    /**
+     * Like the paginated combined search/sort/filter but without pagination, intended for asset
+     * export. Applies fuzzy ranking when searching without an explicit sort. Returns null on error.
+     */
     public Set<DeviceDTO> multipleKeywordSearchSortFilterDevicesForAssetExport(String username, String vdmsid, String dockername, String condition,
                                                                                com.alibaba.fastjson.JSONObject search_sort_filter_details, Integer onboard_status) {
         try {
@@ -1768,6 +1857,12 @@ public class DeviceSearchService {
         return null;
     }
 
+    /**
+     * Returns the total count of devices matching the combined search and filter criteria and the
+     * onboarding/status condition. Returns null on error.
+     *
+     * @return the matching device count as a string, or null on error
+     */
     public String multipleKeywordSearchSortFilterDevicesCount(String username, String vdmsid, String dockername, String condition,
                                                               com.alibaba.fastjson.JSONObject search_sort_filter_details, Integer onboard_status) {
         try {

@@ -32,6 +32,10 @@ public class DockerRepoClient implements DockerRepository {
         this.dapr = dapr;
     }
 
+    /**
+     * Invokes GET sclera-edge/dockerrepo/getAllNetworksByNetworkOrigin for the given network origin.
+     * Returns an empty list on sidecar failure (documented stub default).
+     */
     @Override
     public List<DockerDTO> getAllNetworksByNetworkOrigin(Integer networkOrigin) {
         try {

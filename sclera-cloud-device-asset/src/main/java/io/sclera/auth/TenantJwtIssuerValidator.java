@@ -11,6 +11,11 @@ import org.springframework.security.oauth2.jwt.JwtIssuerValidator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Multi-tenant OAuth2 token validator that checks a JWT's issuer against the known
+ * tenants. It resolves the tenant for the token's issuer and delegates to a per-issuer
+ * {@link JwtIssuerValidator}, caching validators by issuer.
+ */
 public class TenantJwtIssuerValidator implements OAuth2TokenValidator<Jwt> {
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
@@ -21,6 +26,10 @@ public class TenantJwtIssuerValidator implements OAuth2TokenValidator<Jwt> {
     // Map to cache JwtIssuerValidators for different issuers. It Contains key issuer url and value for validating JWT tokens based on their issuer.
     private final Map<String, JwtIssuerValidator> validators = new ConcurrentHashMap<>();
 
+    /**
+     * Validates the token's issuer by resolving (and caching) the issuer-specific
+     * validator for the token's issuer and delegating validation to it.
+     */
     // Method required by OAuth2TokenValidator interface
     @Override
     public OAuth2TokenValidatorResult validate(Jwt token) {

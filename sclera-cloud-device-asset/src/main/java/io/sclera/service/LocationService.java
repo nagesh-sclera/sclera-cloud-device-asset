@@ -35,6 +35,11 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 
+/**
+ * Manages locations within floors, including add/update/soft-delete operations, ADC server
+ * synchronization, record-checklist status and counts, paginated and filtered location queries, and
+ * enrichment of locations with their tagged QR code, NFC and barcode details.
+ */
 @Service
 public class LocationService {
     private static final Logger log = LoggerFactory.getLogger(LocationService.class);
@@ -109,6 +114,10 @@ public class LocationService {
     VdmsRepository vdmsRepository;
 
 
+    /**
+     * Inserts or updates the given locations under a floor, choosing add or update per location
+     * based on whether its id already exists for that floor.
+     */
     public void upsertLocationByFloorId(Set<LocationDTO> locations, String floor_id) {
         if (locations != null && locations.size() > 0) {
             Set<String> location_ids = locationRepository.getLocationIdsByFloorId(floor_id);
@@ -129,6 +138,11 @@ public class LocationService {
     }
 
 
+    /**
+     * Adds a new location to a floor, generating an id when absent and syncing it to the ADC server.
+     *
+     * @return the location id of the added location
+     */
     public String addLocationByFloorId(LocationDTO locationdto, String floor_id) {
         if (locationdto.getLocation_id() == null) {
             String id = Generators.timeBasedGenerator().generate().toString();
@@ -142,6 +156,9 @@ public class LocationService {
         return locationdto.getLocation_id();
     }
 
+    /**
+     * Pushes the given locations to the ADC server using the stored ADC sync configuration.
+     */
     public void syncLocationToADCServer(List<LocationDTO> locationdto, String floor_id) {
         try {
             VdmsDTO vdmsDetails = vdmsRepository.getSyncDetailsForADC();
@@ -157,6 +174,9 @@ public class LocationService {
         }
     }
 
+    /**
+     * Updates a location's details by its id and syncs the change to the ADC server.
+     */
     public void updateLocationByLocationId(LocationDTO locationdto) {
         BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
         int rowsAffected = locationRepository.updateLocationByLocationId(locationdto.getName(), locationdto.getPosition(), locationdto.getLocation_id(), locationdto.getArea(), locationdto.getType(),timestamp);
@@ -165,6 +185,9 @@ public class LocationService {
     }
 
 
+    /**
+     * Returns true when the given location id is present in the supplied set of ids.
+     */
     public boolean compareIds(Set<String> location_ids, String location_id) {
         return location_ids.stream()
                 .anyMatch(l -> l.equals(location_id));
@@ -172,6 +195,9 @@ public class LocationService {
 
 
     //delete locations not tagged to device
+    /**
+     * Deletes every location that is not tagged to a device.
+     */
     public void deleteUnlinkedLocations() {
         Set<String> unlikedLocationIds = locationRepository.getUnlinkedLocationIds();
 
@@ -181,6 +207,9 @@ public class LocationService {
     }
 
 
+    /**
+     * Returns true when a location with the given id exists.
+     */
     public Boolean checkLocationById(String location_id) {
         if (locationRepository.checkLocationById(location_id) > 0) {
             return true;
@@ -197,6 +226,10 @@ public class LocationService {
         return locationRepository.getLocationDetails(location_id);
     }
 
+    /**
+     * Recomputes and stores a location's record-checklist status (todo or completed) for the given
+     * record type.
+     */
     public void updateLocationRecordChecklistStatus(String location_id, String record_type) {
         try {
             if (location_id != null) {
@@ -212,12 +245,18 @@ public class LocationService {
         }
     }
 
+    /**
+     * Recomputes and stores a location's record-checklist count for the given record type.
+     */
     public void updateLocationRecordChecklistCount(String location_id, String record_type) {
         Integer record_checklist_count = recordChecklistService.getChecklistStatusCountLocationId(location_id, "inspection", record_type);
         locationRepository.updateLocationRecordChecklistCount(location_id, record_checklist_count);
 
     }
 
+    /**
+     * Refreshes both the record-checklist status and count for a location.
+     */
     public void updateLocationRecordChecklistStatusById(String location_id, String record_type) {
         if (location_id != null) {
             this.updateLocationRecordChecklistStatus(location_id, record_type);
@@ -228,6 +267,12 @@ public class LocationService {
     /********************************************* new location changes *******************************/
 
 
+    /**
+     * Inserts or updates the supplied locations for a floor, assigning ids and ADD/UPDATE actions as
+     * needed and logging each user action.
+     *
+     * @return the locations with their ids populated
+     */
     public Set<LocationDTO> upsertLocationsByFloorId(String username, String vdms_id, String floor_id, Set<LocationDTO> locations, HttpServletRequest httpServletRequest) {
         String action;
         for (LocationDTO location : locations) {
@@ -241,6 +286,10 @@ public class LocationService {
         return locations;
     }
 
+    /**
+     * Upserts a single location for a floor, syncing to the ADC server and logging a success or
+     * failure user action for the given ADD or UPDATE action.
+     */
     public void upsertLocationByFloorId(String floor_id, LocationDTO location, String username, String action, HttpServletRequest httpServletRequest) {
         try {
             BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
@@ -267,6 +316,9 @@ public class LocationService {
         }
     }
 
+    /**
+     * Soft-deletes each location in the given set of ids.
+     */
     @Transactional
     public void deleteLocationsByIds(String email, String vdms_id, Set<String> location_ids, Boolean isSocketCall) {
         for (String location_id : location_ids) {
@@ -412,6 +464,10 @@ public class LocationService {
         });
     }
 
+    /**
+     * Notifies the ADC server that the given location has been deleted, using the stored ADC sync
+     * configuration. Errors are logged and swallowed.
+     */
     public void syncDeleteLocationToADC(String locationId, String buildingId, String floorId) {
 
         try {
@@ -456,6 +512,9 @@ public class LocationService {
         return locationRepository.getLocationByVdmsId(vdms_id);
     }
 
+    /**
+     * Soft-deletes all locations belonging to the given floor.
+     */
     public void deleteLocationsByFloorId(String floor_id, String username, Boolean isSocketCall) {
         Set<String> location_ids = locationRepository.getLocationIdsByFloorId(floor_id);
         for (String location_id : location_ids) {
@@ -473,6 +532,10 @@ public class LocationService {
 
 
     //to be deleted after backend sync
+    /**
+     * Backend-sync upsert of a single location for a floor, syncing to the ADC server when a row is
+     * affected.
+     */
     public void upsertLocationByFloorIdBackendSync(String floor_id, LocationDTO location) {
         BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
         int rowsAffected = locationRepository.upsertLocationByFloorIdBackendSync(location.getLocation_id(), location.getName(), location.getPosition(), location.getArea(), floor_id, location.getType(), timestamp);
@@ -480,6 +543,10 @@ public class LocationService {
             syncLocationToADCServer(List.of(location), floor_id);
     }
 
+    /**
+     * Updates the details of each supplied location that has an id, logging a success or failure
+     * user action per location.
+     */
     public void updateLocationsDetailsByLocationId(String username, String vdms_id, String floor_id, String location_id, Set<LocationDTO> locations, HttpServletRequest httpServletRequest) {
         for (LocationDTO location : locations) {
             if (location.getLocation_id() != null) {
@@ -496,6 +563,10 @@ public class LocationService {
         }
     }
 
+    /**
+     * Updates a single location's details (name, position, area, z-index, type, code) and syncs the
+     * change to the ADC server.
+     */
     public void updateLocationDetailsByLocationId(String location_id, LocationDTO location) {
         BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
         int rowsAffected = locationRepository.updateLocationDetailsByLocationId(location_id, location.getName(), location.getPosition(), location.getArea(), location.getZ_index(), location.getType(), location.getCode(), timestamp);
@@ -508,6 +579,9 @@ public class LocationService {
         return locationRepository.getLocationsCountByFloorId(floor_id, searchkey);
     }
 
+    /**
+     * Sets the area and z-index for all locations of the given floor, logging the user action.
+     */
     public void updateArea(String username, String floor_id, String area, Integer z_index, HttpServletRequest httpServletRequest) {
         try {
             locationRepository.updateArea(floor_id, area, z_index);
@@ -520,6 +594,9 @@ public class LocationService {
         }
     }
 
+    /**
+     * Returns a location's details with its tagged global QR code id and NFC id populated, if any.
+     */
     public LocationDTO getLocationDetailsByLocationId(String username, String vdms_id, String location_id) {
         LocationDTO location = locationRepository.getLocationDetailsByLocationId(location_id);
         try {
@@ -548,6 +625,11 @@ public class LocationService {
         return locationRepository.getLocationAlertDetails(location_id);
     }
 
+    /**
+     * Returns a paginated set of locations for the requested group (all, measuring instrument,
+     * tagged, inspection, record checklist, qrcode or reactive service), applying the search key and
+     * QR/NFC/barcode tagging filters, and enriching the results with QR code details.
+     */
     public Set<LocationDTO> getAllLocationsPagination(String username, String vdmsid, String group, String searchkey, Integer pageno, Integer pagesize,
                                                       JSONObject filterObject) {
         JSONArray global_checklist_ids = filterObject.getJSONArray("global_checklist_ids");
@@ -663,6 +745,10 @@ public class LocationService {
                 isTaggedToNfc, locationIdsTaggedToNfc, types, building_id);
     }
 
+    /**
+     * Enriches each location with the id of its tagged QR code, NFC and barcode, returning the
+     * enriched set or null on error.
+     */
     public Set<LocationDTO> getLocationsWithQrCodeDetails(String vdms_id, Set<LocationDTO> locations) {
         try {
             Set<String> locationIds = new HashSet<>();
@@ -703,6 +789,9 @@ public class LocationService {
         return null;
     }
 
+    /**
+     * Returns the locations of a floor enriched with their QR code, NFC and barcode details.
+     */
     public Set<LocationDTO> getLocationsByFloorId(String floor_id, String vdms_id) {
         Set<LocationDTO> locations = locationRepository.getLocationsByFloorId(floor_id);
 
@@ -713,6 +802,10 @@ public class LocationService {
         return locations;
     }
 
+    /**
+     * Returns a paginated set of locations for a floor filtered by QR/NFC/barcode presence, record
+     * checklist and status, enriched with room-status counts and QR code details.
+     */
     public Set<LocationDTO> getLocationsByFloorByPagination(String username, String vdms_id, String floor_id, Integer pageno, Integer pagesize,
                                                             String searchKey, JSONObject filterObject, String field, String field_id) {
         Integer offset = pagesize * (pageno - 1);
@@ -781,6 +874,9 @@ public class LocationService {
     }
 
 
+    /**
+     * Returns the number of locations tagged to a QR code for the given VDMS.
+     */
     public Integer getQrCodeLocationCountByVdmsId(String vdms_id) {
         JSONArray locationIdsTaggedToQrCode = apicallService.getQrCodeIdsByVdmsIdAndType(vdms_id, "location");
         log.info("locationIdsqrCode" + locationIdsTaggedToQrCode);
@@ -798,6 +894,9 @@ public class LocationService {
     }
 
 
+    /**
+     * Returns the number of locations tagged to an NFC tag for the given VDMS.
+     */
     public Integer getNfcLocationCountByVdmsId(String vdms_id) {
         JSONArray locationIdsTaggedToNfc = apicallService.getNfcIdsByVdmsAndType(vdms_id, "location");
         Set<String> locations = new HashSet<>();
@@ -883,6 +982,10 @@ public class LocationService {
         }
     }
 
+    /**
+     * Returns the count of locations matching the search key and QR/NFC/barcode, record checklist,
+     * status, type, building and floor filters.
+     */
     public int searchSortFilterLocationsCount(String username, String vdms_id, String searchKey, JSONObject filterObject) {
         String qrCodeCondition = filterObject.getString("qrcode");
         String barCodeCondition = filterObject.getString("barcode");
@@ -944,6 +1047,10 @@ public class LocationService {
                 locationIdsTaggedToNfc, recordChecklistCondition, status, types, building_ids,barCodeCondition,locationIdsTaggedToBarCode);
     }
 
+    /**
+     * Returns the (non-paginated) locations for the requested group (tagged, inspection or qrcode),
+     * applying the search key and QR/NFC tagging filters.
+     */
     public Set<LocationDTO> getAllLocationsByGroup(String username, String vdmsid, JSONObject filter_object, String global_checklist_id, String global_inspection_record_id, String group) {
 
         String building_id = filter_object.getString("building_id");
@@ -1022,12 +1129,19 @@ public class LocationService {
         return locationRepository.getAllMeasuringInstrumentLocationsPagination(searchkey, pagesize, offset, floor_id, measuring_instrument_ids, isTaggedToQrCode, locationIdsTaggedToQrCode, isTaggedToNfc, locationIdsTaggedToNfc, types, building_id);
     }
 
+    /**
+     * Returns the locations tagged to the given measuring instrument.
+     */
     public Set<LocationDTO> getTaggedMeasuringInstrumentLocations(String username, String vdmsid, String measuring_instrument_id) {
 
         return locationRepository.getLocationDetailsByMeasuringInstrumentId(measuring_instrument_id);
 
     }
 
+    /**
+     * Returns the ids of locations matching the search key, QR/NFC tagging filters and building,
+     * floor and type filters.
+     */
     public List<String> getLocationIdsByFilter(String searchKey, Boolean isTaggedToQrCode, Boolean isTaggedToNfc, List<String> buildingIds, List<String> floorIds, List<String> types) {
         List<String> locationIdsTaggedToQrCode = new ArrayList<>();
         List<String> locationIdsTaggedToClientQrCode = new ArrayList<>();
@@ -1057,6 +1171,10 @@ public class LocationService {
     }
 
 
+    /**
+     * Returns location alert details matching the search key, QR/NFC tagging filters and building,
+     * floor, location and type filters.
+     */
     public List<LocationAlertDTO> getLocationsByFilter(String searchKey, Boolean isTaggedToQrCode, Boolean isTaggedToNfc,
                                                        List<String> buildingIds, List<String> floorIds, List<String> locationIds, List<String> types) {
         List<String> locationIdsTaggedToQrCode = new ArrayList<>();
@@ -1101,6 +1219,11 @@ public class LocationService {
         return locationRepository.getAllLocationsByIds(locationIds);
     }
 
+    /**
+     * Updates common fields of multiple locations at once, resolving the target ids either from the
+     * filter (when select-all is set) or from the supplied id list, syncing to the ADC server and
+     * logging a user action per location.
+     */
     public void multiUpdateLocations(String username, String vdms_id, String floor_id, TagDeviceOrLocationDTO tagDeviceOrLocationDTO, HttpServletRequest httpServletRequest) {
 
         try {
@@ -1194,6 +1317,9 @@ public class LocationService {
         return locationRepository.getLocationStatusCountTs(status);
     }
 
+    /**
+     * Returns a page of location alert details having the given status.
+     */
     public List<LocationAlertDTO> getLocationsByStatus(String status, Integer pageno, Integer pagesize) {
         Integer offset = pagesize * (pageno - 1);
         return locationRepository.getLocationsByStatus(status, offset, pagesize);
@@ -1203,6 +1329,12 @@ public class LocationService {
         return locationRepository.getLocationsByStatusCountTs(status);
     }
 
+    /**
+     * Inserts or updates the supplied location details for a floor, assigning ids and ADD/UPDATE
+     * actions as needed.
+     *
+     * @return the locations with their ids populated
+     */
     public Set<LocationDTO> upsertlocationsdetails(String username, String vdms_id, String floor_id, Set<LocationDTO> locations, HttpServletRequest httpServletRequest) {
         String action;
         for (LocationDTO location : locations) {
@@ -1216,6 +1348,10 @@ public class LocationService {
         return locations;
     }
 
+    /**
+     * Upserts a single location's details for a floor, syncing to the ADC server and logging a
+     * success or failure user action for the given ADD or UPDATE action.
+     */
     public void upsertlocationdetails(String floor_id, LocationDTO location, String username, String action, HttpServletRequest httpServletRequest) {
         try {
             BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
@@ -1242,6 +1378,11 @@ public class LocationService {
         }
     }
 
+    /**
+     * Returns the (non-paginated) locations matching the search key and QR/NFC/barcode, record
+     * checklist, status, type, building and floor filters, enriched with room-status counts and QR
+     * code details.
+     */
     public Set<LocationDTO> getLocationsByFilter(String username, String vdms_id, String searchKey,
                                                  JSONObject filterObject, String field, String field_id) { //log.info("getLocationsByFloorByPagination, Params: username: {}, vdms_id: {}, pagemo: {}, pagesize: {}, searchKey: {}, filterObject: {}, field: {}, field_id: {}", username, vdms_id, pageno, pagesize, searchKey, filterObject, field, field_id);
         String qrCodeCondition = filterObject.getString("qrcode");
@@ -1314,11 +1455,20 @@ public class LocationService {
 
     /******************************** Integration **************************************************/
 
+    /**
+     * Returns the integrations for a location. Currently returns an empty list pending delegation to
+     * the integration service.
+     */
     public List<LocationIntegrationDTO> getIntegrationByLocationId(String locationId) {
         // TODO: delegate to integration service via Dapr when available
         return java.util.Collections.emptyList();
     }
 
+    /**
+     * Returns a paginated set of locations matching the search key and QR/NFC/barcode, record
+     * checklist, status, type, building and floor filters, enriched with room-status counts and QR
+     * code details.
+     */
     public Set<LocationDTO> getAllLocationsByFilterByPagination(String username, String vdms_id, Integer pageno, Integer pagesize,
                                                                 String searchKey, JSONObject filterObject, String field, String field_id) {
         //log.info("getLocationsByFloorByPagination, Params: username: {}, vdms_id: {}, pagemo: {}, pagesize: {}, searchKey: {}, filterObject: {}, field: {}, field_id: {}", username, vdms_id, pageno, pagesize, searchKey, filterObject, field, field_id);
@@ -1390,6 +1540,10 @@ public class LocationService {
         return locations;
     }
 
+    /**
+     * Batch-updates the record-checklist status and count for the given locations using a single
+     * prepared statement flushed in batches of 200.
+     */
     public void updateAllRecordChecklistStatusInBatchForLocation(List<LocationDTO> updatedLocationStatus) {
         log.info("updateAllRecordChecklistStatusInBatchForDevice");
         try (Connection connection = dataSource.getConnection()) {

@@ -25,6 +25,10 @@ public class RemoteDesktopSessionClient {
         this.dapr = dapr;
     }
 
+    /**
+     * Updates the remote-connect flag on sclera-edge. Returns a 200 OK response;
+     * logs a WARN and still returns OK on sidecar failure.
+     */
     public ResponseEntity<?> updateRemoteConnectFlag(JSONObject json) {
         try {
             dapr.invokeMethod(APP_ID, "remotedesktopsession/updateRemoteConnectFlag", null, HttpExtension.GET).block();
@@ -34,6 +38,10 @@ public class RemoteDesktopSessionClient {
         return ResponseEntity.ok(null);
     }
 
+    /**
+     * Retrieves remote-connect info for a device and user from sclera-edge.
+     * Returns a 200 OK response; logs a WARN and still returns OK on sidecar failure.
+     */
     public ResponseEntity<?> getRemoteConnectInfo(String deviceId, String username) {
         try {
             java.util.Map<String, String> p = new java.util.HashMap<>();
@@ -46,6 +54,10 @@ public class RemoteDesktopSessionClient {
         return ResponseEntity.ok(null);
     }
 
+    /**
+     * Retrieves remote agent server details for the given session id from sclera-edge.
+     * Returns null on sidecar failure.
+     */
     public RemoteAgentServerDetailsDTO getRemoteSessionDetails(String id) {
         try {
             java.util.Map<String, String> p = new java.util.HashMap<>();
@@ -57,6 +69,10 @@ public class RemoteDesktopSessionClient {
         return null;
     }
 
+    /**
+     * Sends a remote-session acknowledgement update to sclera-edge.
+     * Swallows exceptions with a WARN log.
+     */
     public void updateAcknowledge(JSONObject json) {
         try {
             dapr.invokeMethod(APP_ID, "remotedesktopsession/updateAcknowledge", null, HttpExtension.GET).block();

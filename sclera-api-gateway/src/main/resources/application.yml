@@ -57,6 +57,42 @@ spring:
                 - Path=/inspection/**
               filters:
                 - StripPrefix=1
+            - id: alerts-route
+              uri: http://sclera-alerts:8092
+              predicates:
+                - Path=/alerts/**
+              filters:
+                - StripPrefix=1
+            - id: identity-route
+              uri: http://sclera-identity:8091
+              predicates:
+                - Path=/identity/**
+              filters:
+                - StripPrefix=1
+            - id: inventory-route
+              uri: http://sclera-inventory:8093
+              predicates:
+                - Path=/inventory/**
+              filters:
+                - StripPrefix=1
+            - id: workorders-route
+              uri: http://sclera-workorders:8094
+              predicates:
+                - Path=/workorders/**
+              filters:
+                - StripPrefix=1
+            - id: edge-route
+              uri: http://sclera-edge:8097
+              predicates:
+                - Path=/edge/**
+              filters:
+                - StripPrefix=1
+            - id: scheduler-route
+              uri: http://sclera-scheduler:8098
+              predicates:
+                - Path=/scheduler/**
+              filters:
+                - StripPrefix=1
             - id: dapr-route
               uri: http://sclera-cloud-device-asset:3500
               predicates:

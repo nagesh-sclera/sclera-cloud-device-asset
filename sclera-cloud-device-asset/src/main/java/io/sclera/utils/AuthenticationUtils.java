@@ -3,6 +3,10 @@ package io.sclera.utils;
 
 import org.springframework.stereotype.Component;
 
+/**
+ * Holds in-memory authentication state such as the VDMS id, access and refresh tokens, device uid
+ * and public key for the current session.
+ */
 @Component
 public class AuthenticationUtils {
 

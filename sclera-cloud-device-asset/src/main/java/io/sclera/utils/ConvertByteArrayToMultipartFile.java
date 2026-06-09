@@ -4,6 +4,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 
+/**
+ * A {@link MultipartFile} implementation backed by an in-memory byte array, allowing raw bytes to be
+ * treated as an uploaded file.
+ */
 public class ConvertByteArrayToMultipartFile implements MultipartFile {
 
     private final byte[] bytes;
@@ -53,6 +57,9 @@ public class ConvertByteArrayToMultipartFile implements MultipartFile {
         return new ByteArrayInputStream(bytes);
     }
 
+    /**
+     * Writes the backing byte array to the given destination file.
+     */
     @Override
     public void transferTo(File dest) throws IOException, IllegalStateException {
         try (FileOutputStream outputStream = new FileOutputStream(dest)) {

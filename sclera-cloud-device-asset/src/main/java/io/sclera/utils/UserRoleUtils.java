@@ -6,6 +6,9 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * In-memory cache mapping user email addresses to their assigned role.
+ */
 @Component
 public class UserRoleUtils {
 

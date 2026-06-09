@@ -26,6 +26,10 @@ public class RemoteAccessSessionClient {
         this.dapr = dapr;
     }
 
+    /**
+     * Retrieves all remote-access sessions from sclera-edge.
+     * Returns an empty list on sidecar failure.
+     */
     public List<RemoteAccessSessionDTO> getAllRemoteAccessSessions() {
         try {
             dapr.invokeMethod(APP_ID, "remoteaccesssession/getAllRemoteAccessSessions", null, HttpExtension.GET).block();
@@ -35,6 +39,10 @@ public class RemoteAccessSessionClient {
         return Collections.emptyList();
     }
 
+    /**
+     * Requests sclera-edge to stop the given remote-access session.
+     * Swallows exceptions with a WARN log.
+     */
     public void stopRemoteAccess(String email, String vdmsId, String networkName,
                                  RemoteAccessSessionDTO dto, String ipAddress) {
         try {

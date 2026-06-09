@@ -2,6 +2,11 @@ package io.sclera.enums;
 
 import java.util.Arrays;
 
+/**
+ * Synchronization action for a data record, indicating whether it should be left
+ * unchanged, upserted, or deleted. Each constant carries a numeric code and a
+ * descriptive message.
+ */
 public enum SyncType {
 
     NO_CHANGES(0, "No modifications are required for this data."),
@@ -24,6 +29,10 @@ public enum SyncType {
         return message;
     }
 
+    /**
+     * Returns the {@code SyncType} matching the given code, throwing
+     * {@link IllegalArgumentException} if none matches.
+     */
     public static SyncType fromCode(int code) {
         return Arrays.stream(SyncType.values())
                 .filter(type -> type.code == code)

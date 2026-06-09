@@ -7,5 +7,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface VdmsconfigurationRepository {
 
+    /**
+     * Returns the VDMS configuration.
+     *
+     * @return the VDMS configuration
+     */
     VdmsConfigurationDTO getConfiguration();
 }

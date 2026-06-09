@@ -42,6 +42,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+/**
+ * Manages floors within buildings, including their map images and zoom tiles, location
+ * associations, and synchronization to the ADC server. Handles add, update, delete and
+ * batch-fetch operations along with floor image storage on the local server.
+ */
 @Service
 @ConfigurationProperties(prefix = "sclera")
 public class FloorService {
@@ -97,6 +102,10 @@ public class FloorService {
         this.server_floor_images_absolute_path = server_floor_images_absolute_path;
     }
 
+    /**
+     * Inserts or updates the given floors under a building, choosing add or update per floor
+     * based on whether its id already exists for that building.
+     */
     public void upsertFloorsByBuildingId(Set<FloorDTO> floors, String building_id) {
         if (floors != null) {
             Set<String> floor_ids = floorRepository.getFloorIdsByBuildingId(building_id);
@@ -183,6 +192,10 @@ public class FloorService {
 //	}
 
 
+    /**
+     * Updates a floor, downloading and storing a new map image only when its hash differs from
+     * the stored one, then syncs the change to the ADC server and upserts its locations.
+     */
     public void updateFloorByFloorId(FloorDTO floordto, String building_id) {
 
 
@@ -281,6 +294,12 @@ public class FloorService {
 //	}
 
 
+    /**
+     * Adds a new floor to a building, generating an id when absent, storing any map image,
+     * syncing to the ADC server and upserting its locations.
+     *
+     * @return the floor id of the added floor
+     */
     public String addFloorByBuildingId(FloorDTO floordto, String building_id) {
         final String absolute_path = "/home/sclera/images/";
 //		final String absolute_path = "/home/rajath/Desktop/ts_images/";
@@ -316,6 +335,10 @@ public class FloorService {
         return floordto.getFloor_id();
     }
 
+    /**
+     * Pushes a floor to the ADC server using the stored ADC sync configuration. Errors are logged
+     * and swallowed.
+     */
     public void syncFloorToADCServer(String building_id, FloorDTO floordto){
        try {
            VdmsDTO vdmsDetails = vdmsRepository.getSyncDetailsForADC();
@@ -335,10 +358,17 @@ public class FloorService {
 
 
 
+    /**
+     * Returns true when the given floor id is present in the supplied set of ids.
+     */
     public boolean compareIds(Set<String> floor_ids, String floor_id) {
         return floor_ids.stream().anyMatch(b -> b.equals(floor_id));
     }
 
+    /**
+     * Computes the MD5 hash (hex) of the image fetched from the given URL, used to detect whether
+     * a floor image has changed.
+     */
     public String getHashOfImage(String imageurl, String extension) throws IOException, NoSuchAlgorithmException {
 
 
@@ -351,6 +381,10 @@ public class FloorService {
         return new BigInteger(1, digest).toString(16);
     }
 
+    /**
+     * Fetches the bytes of an image from the given URL, following a single HTTP redirect if the
+     * response carries a Location header.
+     */
     public byte[] getBytesArrayByImageUrl(String image_url) throws IOException {
 //		URL url = new URL(image_url);
 //		InputStream inputstream = url.openStream();
@@ -368,10 +402,17 @@ public class FloorService {
 
     }
 
+    /**
+     * Extracts the file extension (text after the last dot) from a URL.
+     */
     public String getExtensionByUrl(String url) {
         return url.substring(url.lastIndexOf(".") + 1, url.length());
     }
 
+    /**
+     * Writes the given image bytes to the target directory as file_name.file_extension and returns
+     * the resulting path, or null when no image is supplied.
+     */
     public String addFileToServer(byte[] image, String directory, String file_name, String file_extension)
             throws IOException {
 
@@ -389,6 +430,9 @@ public class FloorService {
 
     }
 
+    /**
+     * Deletes the file named file_name.file_extension from the given directory if it exists.
+     */
     public void removeFileFromServer(String absolute_path, String file_name, String file_extension) {
         File file = new File(absolute_path + file_name + "." + file_extension);
         if (file.exists()) {
@@ -402,6 +446,9 @@ public class FloorService {
 
 
     //delete floor not tagged to a location
+    /**
+     * Deletes every floor that is not linked to any location.
+     */
     public void deleteUnlikedFloors() {
         Set<String> unlikedFloorIds = floorRepository.getUnlinkedFloorIds();
         for (String floorId : unlikedFloorIds) {
@@ -418,6 +465,12 @@ public class FloorService {
 
     /******************************************************************* new floor changes *************************************************************************/
 
+    /**
+     * Inserts or updates the supplied floors for a building, assigning ids and ADD/UPDATE actions
+     * as needed, logging the user action, and upserting each floor's locations.
+     *
+     * @return the floors with their ids and refreshed locations populated
+     */
     public Set<FloorDTO> upsertFloorsByBuildingId(String username, String vdms_id, String building_id, Set<FloorDTO> floors, HttpServletRequest httpServletRequest) {
         String action;
         for (FloorDTO floor : floors) {
@@ -463,6 +516,11 @@ public class FloorService {
     }
 
 
+    /**
+     * Deletes a floor's map image and tiles (cloud and local), clears its local image url, resets
+     * its zoom levels, and optionally clears the floor path and associated area when clear_path is
+     * "yes".
+     */
     public void deleteFloorImageByFloorId(String username, String vdms_id, String floor_id, String clear_path, HttpServletRequest httpServletRequest) {
         FloorDTO floorDTO = this.getFloorById(floor_id);
         List<FloorDTO> floors = new ArrayList<>();
@@ -511,6 +569,10 @@ public class FloorService {
         this.addFloorImageUrlById(floorDTO.getImage_url(), floorDTO.getInitial_position(), floorDTO.getAngle(), floorDTO.getFloor_id());
     }
 
+    /**
+     * Backend-sync upsert of a floor (including image url and path) for a building, syncing to the
+     * ADC server when a row is affected.
+     */
     public void upsertFloorByBuildingIdsFromBackend(String building_id, FloorDTO floor) {
         BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
         int rowseffected = floorRepository.upsertFloorByBuildingIdsFromBackend(floor.getFloor_id(), floor.getName(), floor.getInitial_position(), floor.getAngle(), building_id, floor.getImage_url(), floor.getPath(), timestamp);
@@ -524,6 +586,10 @@ public class FloorService {
         return floorRepository.getFloorById(floor_id);
     }
 
+    /**
+     * Updates a floor's path, logs the user action, and returns the stored path; returns null on
+     * failure.
+     */
     public String updatePathByFloorId(String username,String floor_id, String path, HttpServletRequest httpServletRequest) {
         try {
             floorRepository.updatePathByFloorId(path, floor_id);
@@ -548,6 +614,14 @@ public class FloorService {
         removeFileFromServer(server_floor_images_absolute_path, file_name);
     }
 
+    /**
+     * Adds or replaces a floor's map image and tiles, updating the local image store and zoom
+     * levels, and optionally applies the orientation to all floors of the building on a background
+     * thread. Uses a flag to prevent concurrent runs.
+     *
+     * @return the current processing flag (2 while an all-floors update is in progress, 1 when an
+     *         all-floors update was triggered, otherwise 0)
+     */
     public Integer addFloorImageByFloorId(String username, String vdms_id, MultipartFile floor_image, String floor_dto, HttpServletRequest httpServletRequest) {
         log.info("Entered here flag before: {}", flag);
         if (flag != null && flag == 2) {
@@ -678,6 +752,10 @@ public class FloorService {
         return flag;
     }
 
+    /**
+     * Writes the image bytes to the directory using a timestamped file name and returns its public
+     * URL, or null when no image is supplied.
+     */
     public String addFloorImagesToServer(byte[] image, String directory, String file_name, String file_extension)
             throws IOException {
         if (image != null) {
@@ -713,6 +791,11 @@ public class FloorService {
     }
 
 
+    /**
+     * Returns the floors of a building and, when a field filter is supplied, attaches per-floor
+     * counts (tagged procedures, inspections, scheduled and reactive services) derived from the
+     * record checklists.
+     */
     public Set<FloorDTO> getFloorsByBuildingId(String username, String vdms_id, String building_id, String field, String field_id) {
         Set<FloorDTO> floors = floorRepository.getFloorsByBuildingId(building_id);
         List<String> floor_ids = floors.stream()
@@ -777,6 +860,9 @@ public class FloorService {
 
     }
 
+    /**
+     * Returns the floor for the given id with its locations populated.
+     */
     public FloorDTO getFloorByFloorId(String username, String vdms_id, String floor_id) {
         FloorDTO floor = floorRepository.getFloorById(floor_id);
         Set<LocationDTO> locations = locationservice.getLocationsByFloorId(floor.getFloor_id(), vdms_id);
@@ -795,6 +881,9 @@ public class FloorService {
     }
 
 
+    /**
+     * Returns the floor containing the given location, with that single location populated on it.
+     */
     public FloorDTO getFloorByLocationId(String location_id) {
         FloorDTO floor = floorRepository.getFloorByLocationId(location_id);
         if (floor != null) {
@@ -812,6 +901,9 @@ public class FloorService {
         return floorRepository.getFloorsDetailsByBuildingId(building_id);
     }
 
+    /**
+     * Deletes all floors of a building, each along with its locations and local image.
+     */
     public void deleteFloorsByBuildingId(String vdmsid, String building_id, String username, HttpServletRequest httpServletRequest) {
         // change to list
         Set<FloorDTO> floors = this.getFloorsDetailsByBuildingId(building_id);
@@ -821,6 +913,10 @@ public class FloorService {
         }
     }
 
+    /**
+     * Deletes a single floor: removes its locations and local image, deletes the floor row, syncs
+     * the deletion to the ADC server, and logs the user action.
+     */
     public void deleteFloorByFloorId(String floor_id, String local_image_url, String username, HttpServletRequest httpServletRequest) {
         String endpoint = httpServletRequest != null ? httpServletRequest.getRequestURI() : "SOCKET CALL";
         locationservice.deleteLocationsByFloorId(floor_id, username, false);
@@ -841,6 +937,10 @@ public class FloorService {
 
         }
     }
+    /**
+     * Notifies the ADC server that the given floor has been deleted, using the stored ADC sync
+     * configuration. Errors are logged and swallowed.
+     */
     public void syncDeleteFloorToADC(String floorId, String buildingId) {
 
         try {
@@ -860,6 +960,9 @@ public class FloorService {
         }
     }
 
+    /**
+     * Deletes the floors with the given ids after their map tiles have been removed from the cloud.
+     */
     public void deleteFloorsByIds(String username, String vdms_id, Set<String> floor_ids, HttpServletRequest httpServletRequest) {
         try {
             String data = this.deleteFloorMapsForFloors(vdms_id, floor_ids);
@@ -875,6 +978,10 @@ public class FloorService {
 
     }
 
+    /**
+     * Requests deletion of the cloud map images for the given floor ids and returns the cloud
+     * response.
+     */
     public String deleteFloorMapsForFloors(String vdms_id, Set<String> floor_ids) {
         List<FloorDTO> floors = new ArrayList<>();
         for (String floor_id : floor_ids) {
@@ -890,6 +997,9 @@ public class FloorService {
     }
 
 
+    /**
+     * Deletes the named file from the given directory if it exists.
+     */
     public void removeFileFromServer(String absolute_path, String file_name) {
         File file = new File(absolute_path + file_name);
         if (file.exists()) {
@@ -903,6 +1013,10 @@ public class FloorService {
 
 
     //  upsertFloorImageByBuildingFromBackend to be deleted after sync
+    /**
+     * Backend-sync helper that replaces a floor's stored image with the one at its image URL and
+     * returns the new local image URL.
+     */
     public String upsertFloorImageByBuildingFromBackend(FloorDTO floor) {
 
         String updated_image_url = null;
@@ -936,10 +1050,16 @@ public class FloorService {
     }
 
 
+    /**
+     * Stores the min and max map zoom levels for a floor.
+     */
     public void addFloorMapZoomLevels(String floor_id, String min_zoom, String max_zoom) {
         floorRepository.updateFloorMapZoomLevels(min_zoom, max_zoom, floor_id);
     }
 
+    /**
+     * Stores the map zoom levels for each floor in the list.
+     */
     public void updateZoomLevels(List<FloorDTO> floors) {
         for (FloorDTO floor : floors) {
             this.addFloorMapZoomLevels(floor.getFloor_id(), floor.getMin_zoom(), floor.getMax_zoom());
@@ -951,6 +1071,10 @@ public class FloorService {
         return fileName.substring(0, fileName.lastIndexOf("_"));
     }
 
+    /**
+     * Parses the initial-position JSON (top-left and bottom-right lat/long pairs) into a FloorDTO
+     * carrying those corner coordinates and the floor id.
+     */
     public FloorDTO mapInitialPositionToCoordinates(String initial_position, String floor_id) {
 
         FloorDTO floor = new FloorDTO();
@@ -973,6 +1097,10 @@ public class FloorService {
     }
 
     // method to add image to vdms box
+    /**
+     * Writes the image bytes to the local VDMS image directory and returns its public URL, or null
+     * when no image is supplied.
+     */
     public String addLocalFloorImagesToServer(byte[] image, String directory, String file_name)
             throws IOException {
         if (image != null) {
@@ -985,6 +1113,10 @@ public class FloorService {
     }
 
     //  syncLocationsFromBackend to be deleted after sync
+    /**
+     * Syncs floor map images, persisting returned image URLs and returning the floors that still
+     * lack a usable image.
+     */
     public List<FloorDTO> updateFloorImages(String vdms_id, List<FloorDTO> floorImages) {
 
 
@@ -1006,6 +1138,9 @@ public class FloorService {
 
     }
 
+    /**
+     * Uploads each floor's image one at a time and returns the aggregated upload responses.
+     */
     public List<FloorDTO> updateAllFloors(String vdms_id, List<FloorDTO> floorsList) {
         List<FloorDTO> floors_response = new ArrayList<>();
         for (FloorDTO floorDTO : floorsList) {
@@ -1018,6 +1153,10 @@ public class FloorService {
 
 
     //  syncFloorMapsTiles to be deleted after sync
+    /**
+     * Syncs floor map tile folders, updating stored zoom levels for floors that have images and
+     * returning the floors that still lack an image.
+     */
     public List<FloorDTO> syncFloorMapsTiles(String vdms_id, List<FloorDTO> floors_response) {
         List<FloorDTO> floorMaps = new ArrayList<>();
         List<FloorDTO> floors = webClientService.syncFloorMapTilesFolder(vdms_id, floors_response);
@@ -1041,6 +1180,9 @@ public class FloorService {
     }
 
 
+    /**
+     * Fetches the floors for the given ids in pages of 500 and returns them all.
+     */
     public List<FloorDTO> getBatchFloorsByPagination(Set<String> floorIds) {
 
         List<FloorDTO> floors = new ArrayList<>();
@@ -1067,6 +1209,9 @@ public class FloorService {
         return floors;
     }
 
+    /**
+     * Sync-driven deletion of floors by id: fetches them in batches and processes their deletion.
+     */
     public void deleteFloorsByIdsOnSync(String username, String vdmsId, Set<String> floorIds) {
         log.info("Entered deleteFloorsByIdsOnSync with floorIds: {}", floorIds);
         // Fetch floors only once
@@ -1080,6 +1225,10 @@ public class FloorService {
 
     }
 
+    /**
+     * Deletes the given floors: removes their cloud and local images, then deletes each floor and
+     * its locations, logging a success or failure user action per floor.
+     */
     public void processFloorDeletions(String username, String vdmsId, List<FloorDTO> floors) {
         log.info("Processing deletion for floors");
         List<FloorDTO> cloudFloors = floors.stream()
@@ -1140,6 +1289,9 @@ public class FloorService {
         }
     }
 
+    /**
+     * Fetches the floors belonging to the given building ids in pages of 500 and returns them all.
+     */
     public List<FloorDTO> getFloorsByBuildingIds(Set<String> buildingIds) {
         List<FloorDTO> floors = new ArrayList<>();
 

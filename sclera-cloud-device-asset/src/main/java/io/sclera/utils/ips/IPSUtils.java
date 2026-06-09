@@ -2,8 +2,15 @@ package io.sclera.utils.ips;
 
 import org.springframework.stereotype.Component;
 
+/**
+ * Indoor positioning utility providing geometric helpers (centroid, circle intersection,
+ * trilateration) and signal-strength based distance estimation for WiFi and Bluetooth.
+ */
 @Component
 public class IPSUtils {
+    /**
+     * Returns the centroid (average X and Y) of three points.
+     */
     public Coordinate centroid(double x1, double y1, double x2, double y2, double x3, double y3) {
 
         Coordinate coordinate = new Coordinate();
@@ -12,12 +19,20 @@ public class IPSUtils {
         return coordinate;
     }
 
+    /**
+     * Evaluates the circle equation for point (x, y) against the circle centered at (x0, y0) with
+     * radius r0; a negative result means the point lies inside the circle.
+     */
     public double inCircle(double x0, double y0, double r0, double x, double y) {
         double res  = Math.pow((x - x0), 2) + Math.pow((y - y0), 2) - r0*r0;
         return res;
     }
 
 
+    /**
+     * Returns whichever of the two candidate points lies closest to the circumference of the circle
+     * centered at (x0, y0) with radius r0.
+     */
     public Coordinate nearestPoint(double x0, double y0, double r0, double x1, double y1, double x2, double y2) {
 
         double dx1, dx2, dy1, dy2, d1, d2, rd1, rd2;
@@ -52,6 +67,10 @@ public class IPSUtils {
         return coordinate;
     }
 
+    /**
+     * Estimates a position from three circles (centers and radii) by intersecting each pair, selecting
+     * the best intersection points and returning their centroid.
+     */
     public Coordinate triangulation(double x1, double y1, double r1, double x2, double y2, double r2, double x3, double y3, double r3) {
         Coordinate coordinate = new Coordinate();
         Coordinate out1[], out2[], out3[], finalOut1 = null, finalOut2= null, finalOut3 = null;
@@ -119,6 +138,10 @@ public class IPSUtils {
         return coordinate;
     }
 
+    /**
+     * Computes the two intersection points of two circles, applying fallback approximations when the
+     * circles do not intersect or one contains the other.
+     */
     public Coordinate[] calculateTwoCircleIntersection(double x0, double y0, double r0,
                                                        double x1, double y1, double r1)
     {
@@ -226,6 +249,10 @@ public class IPSUtils {
         return coordinate;
     }
 
+    /**
+     * Computes the intersection points of a circle (center (x0, y0), radius r0) with the line through
+     * (x1, y1) and (x2, y2), or null when there is no intersection.
+     */
     public Coordinate [] getCircleLineIntersectionPoint(double x0, double y0, double r0, double x1, double y1, double x2, double y2) {
 
         double baX = x2 - x1;
@@ -265,6 +292,10 @@ public class IPSUtils {
 
 
 
+    /**
+     * Estimates the distance in meters to a WiFi device from its signal level (dBm) and frequency (MHz)
+     * using a log-distance path-loss model.
+     */
     public double calculateWifiDeviceDistanceBySignalLevelAndFrequency(double signalLevelInDb, double freqInMHz) {
         /*
         -27.55 - fixed rssi dbm value for 1 meter
@@ -275,6 +306,10 @@ public class IPSUtils {
         return Math.pow(10.0, exp);
     }
 
+    /**
+     * Estimates the distance in meters to a Bluetooth device from its signal level (dBm) using a
+     * log-distance path-loss model.
+     */
     public double calculateBluetoothDeviceDistanceBySignalLevel(Double signalLevelInDb) {
         /*
         -69 - fixed rssi dbm value for 1 meter

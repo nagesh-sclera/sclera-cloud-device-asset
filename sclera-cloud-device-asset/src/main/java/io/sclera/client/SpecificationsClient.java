@@ -38,6 +38,7 @@ public class SpecificationsClient implements io.sclera.Repository.Specifications
         this.dapr = dapr;
     }
 
+    /** Edits a device specification entry via sclera-inventory. Swallows exceptions with a WARN log. */
     @Override
     public void editDeviceSpecifications(String id, String keyValue, String keyUnit, String keyName) {
         Map<String, String> payload = new HashMap<>();
@@ -52,6 +53,7 @@ public class SpecificationsClient implements io.sclera.Repository.Specifications
         }
     }
 
+    /** Checks whether a specification exists for the given device and key. Returns 0 on sidecar failure. */
     @Override
     public Integer checkSpecificationByDeviceId(String deviceId, String keyName) {
         Map<String, String> payload = new HashMap<>();
@@ -65,6 +67,7 @@ public class SpecificationsClient implements io.sclera.Repository.Specifications
         return 0;
     }
 
+    /** Retrieves all specifications for the given device. Returns an empty list on sidecar failure. */
     @Override
     public List<SpecificationsDTO> getDeviceSpecificationsBasedOnDeviceId(String deviceId) {
         Map<String, String> payload = new HashMap<>();
@@ -77,6 +80,7 @@ public class SpecificationsClient implements io.sclera.Repository.Specifications
         return Collections.emptyList();
     }
 
+    /** Inserts or updates a device specification entry via sclera-inventory. Swallows exceptions with a WARN log. */
     @Override
     public void upsertDeviceSpecification(String id, String keyName, String keyValue, String keyUnit, String deviceId) {
         Map<String, String> payload = new HashMap<>();
@@ -92,6 +96,7 @@ public class SpecificationsClient implements io.sclera.Repository.Specifications
         }
     }
 
+    /** Deletes a specification entry by id via sclera-inventory. Swallows exceptions with a WARN log. */
     @Override
     public void deleteById(String id) {
         Map<String, String> payload = new HashMap<>();
@@ -103,6 +108,7 @@ public class SpecificationsClient implements io.sclera.Repository.Specifications
         }
     }
 
+    /** Retrieves a single specification for the given device and key name. Returns null on sidecar failure. */
     @Override
     public SpecificationsDTO getDeviceSpecificationsBasedOnDeviceIdAndKeyName(String deviceId, String keyName) {
         Map<String, String> payload = new HashMap<>();
@@ -116,6 +122,7 @@ public class SpecificationsClient implements io.sclera.Repository.Specifications
         return null;
     }
 
+    /** Retrieves the power specification for the given device and key name. Returns null on sidecar failure. */
     @Override
     public SpecificationsDTO getPower(String deviceId, String keyName) {
         Map<String, String> payload = new HashMap<>();

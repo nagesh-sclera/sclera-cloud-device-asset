@@ -8,6 +8,9 @@ import org.springframework.stereotype.Service;
 public class AsyncService {
     // Methods added on demand by compile loop.
 
+    /**
+     * Stub for updating a device vendor by its MAC address; currently a no-op.
+     */
     public void updateVendorByMacAddress(String mac, String vendor) {}
 
 }

@@ -10,6 +10,10 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+/**
+ * Parses the output of running tcptunnel processes to identify live remote-access
+ * port forwards and reconcile them against persisted remote-access sessions.
+ */
 public class RemoteAccessProcessParser {
 
     @Autowired
@@ -21,6 +25,10 @@ public class RemoteAccessProcessParser {
     List<String> hostProcess = new ArrayList<>();
     List<ProcessData> finalProcessList = new ArrayList<>();
 
+    /**
+     * Splits the accumulated command output into docker and host process lines and
+     * parses each group.
+     */
     public void formatData() {
         String[] splitData = this.data.toString().split("\n");
         System.out.println(Arrays.toString(splitData));
@@ -35,10 +43,17 @@ public class RemoteAccessProcessParser {
         this.parseProcess(this.hostProcess);
     }
 
+    /**
+     * Appends raw command output to the internal data buffer.
+     */
     public void fillData(String cmdOutput) {
         this.data.append(cmdOutput);
     }
 
+    /**
+     * Parses each process line into a ProcessData entry keyed by local port,
+     * marking entries alive and adding them to the final process list.
+     */
     public void parseProcess(List<String> processList) {
         Map<Integer, ProcessData> processMap = new HashMap<>();
         for (String s : processList) {
@@ -74,6 +89,9 @@ public class RemoteAccessProcessParser {
         System.out.println("FINAL PROCESS!!!!" + (finalProcessList));
     }
 
+    /**
+     * Returns the parsed processes that are marked alive.
+     */
     public List<ProcessData> getFinalProcessList() {
         return this.finalProcessList
                 .stream()
@@ -81,6 +99,10 @@ public class RemoteAccessProcessParser {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Discovers live tcptunnel processes and stops any persisted remote-access
+     * sessions whose public port has no matching live process.
+     */
     public void performRemoteAccessCleanup(String vdms_id, RemoteAccessSessionClient remoteAccessSessionService) {
         StringBuilder cmd = new StringBuilder("ps -e -o command | less | grep tcptunnel | grep -v \"127.0.0.1\" | grep -v \"grep\" | grep -v \"docker\"");
         System.out.println(cmd.toString());
@@ -129,6 +151,10 @@ public class RemoteAccessProcessParser {
     }
 
 
+    /**
+     * Runs the given command and returns a map containing its stdout under "result",
+     * or "success" false on failure.
+     */
     public ConcurrentHashMap<String, Object> execCmd(String[] cmd) {
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         ConcurrentHashMap<String, Object> concurrentHashMap = new ConcurrentHashMap<>();
@@ -145,6 +171,9 @@ public class RemoteAccessProcessParser {
         }
     }
 
+    /**
+     * Resolves and returns the IP address of the Sclera VDMS network gateway bridge.
+     */
     public String getScleraBridgeIp() {
         System.out.println("getScleraBridgeIp start");
         String cmd = "getent hosts scleravdmsnetworkgateway | awk {'print $1'}";

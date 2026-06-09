@@ -18,6 +18,10 @@ import java.util.Calendar;
 import java.util.Date;
 import org.json.JSONObject;
 
+/**
+ * Utility for the Corrigo integration providing date/time formatting, work-order description and
+ * address building, and OAuth token storage.
+ */
 @Component
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CorrigoUtils {
@@ -35,6 +39,9 @@ public class CorrigoUtils {
         this.oauth_token = oauth_token;
     }
 
+    /**
+     * Extracts the date portion of an ISO-style date-time string and returns it formatted as MM/dd/yyyy.
+     */
     public String getDatefromDateTime(String start_date) {
         try {
             DateFormat f = new SimpleDateFormat("yyyy'-'MM'-'dd'T'HH':'mm':'ss");
@@ -48,6 +55,10 @@ public class CorrigoUtils {
         return null;
     }
 
+    /**
+     * Extracts the time portion of an ISO-style date-time string and returns it formatted as an
+     * uppercase 12-hour time (hh:mm a).
+     */
     public String getTimefromDateTime(String date) {
         try {
             DateFormat f = new SimpleDateFormat("yyyy'-'MM'-'dd'T'HH':'mm':'ss");
@@ -61,6 +72,9 @@ public class CorrigoUtils {
         return null;
     }
 
+    /**
+     * Formats a duration in minutes as an hours:minutes string, zero-padding minutes below ten.
+     */
     public String formatHoursMins(Double total_duration) {
         try {
             if (total_duration != null) {
@@ -88,6 +102,10 @@ public class CorrigoUtils {
         return null;
     }
 
+    /**
+     * Adds the given duration in minutes to a start time and returns the resulting time formatted as
+     * hh:mm a.
+     */
     public String getEndTime(String start_time, String duration) {
         try {
             SimpleDateFormat df = new SimpleDateFormat("hh:mm a");
@@ -103,6 +121,10 @@ public class CorrigoUtils {
         return null;
     }
 
+    /**
+     * Builds a work-order description string from either a device alert (asset and location) or a
+     * location alert.
+     */
     public String getWorkOrderDescription(DeviceAlertDTO deviceAlert, LocationAlertDTO locationAlert) {
         String workorder_description = null;
         if (deviceAlert != null && deviceAlert.getName() != null) {
@@ -116,6 +138,10 @@ public class CorrigoUtils {
         return workorder_description;
     }
 
+    /**
+     * Appends the work-order template's comment (looked up by template id) to the description when both
+     * are present.
+     */
     public String getFormattedWorkorderComment(String workorder_description, String workorder_template_id) {
         if (!workorder_description.equals("")) {
             String workorder_template_comment = workorderTemplateService.getWorkOrderTemplateComment(workorder_template_id);
@@ -126,6 +152,10 @@ public class CorrigoUtils {
         return workorder_description;
     }
 
+    /**
+     * Returns the comment prefix describing whether a device went offline or came online based on the
+     * alert type.
+     */
     public String deviceOnlineOfflineComment(String alert_type) {
         String alert = null;
         if (alert_type.equals("device_offline")) {
@@ -138,6 +168,9 @@ public class CorrigoUtils {
 
     }
 
+    /**
+     * Reformats a date string from MM/dd/yyyy to dd/mm/yyyy.
+     */
     public String formatDateField(String dateValue) {
         try {
             SimpleDateFormat inputDateFormate = new SimpleDateFormat("mm/dd/yyyy");
@@ -150,6 +183,10 @@ public class CorrigoUtils {
         return null;
     }
 
+    /**
+     * Builds a single-line address string from the street, city, state and zip fields of a Corrigo
+     * work-order JSON payload.
+     */
     public String formatAddressBuilder(JSONObject corrigoWorkorderFormat) throws JSONException {
         try {
             StringBuilder fullAddress = new StringBuilder();
@@ -178,6 +215,9 @@ public class CorrigoUtils {
         return null;
 
     }
+    /**
+     * Returns tomorrow's date formatted as yyyy-MM-dd.
+     */
     public String getCurrentDate() {
         try {
             LocalDate tomorrow = LocalDate.now().plusDays(1);
@@ -189,6 +229,9 @@ public class CorrigoUtils {
         return null;
     }
 
+    /**
+     * Returns the date that is the given number of days before the supplied yyyy-MM-dd date.
+     */
     public String getDuplicateDateLimit(String dateStr, int days) {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");

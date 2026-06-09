@@ -32,7 +32,9 @@ services:
       retries: 10
 
   app:
-    build: ./sclera-cloud-device-asset
+    build:
+      context: .
+      dockerfile: sclera-cloud-device-asset/Dockerfile
     container_name: sclera-cloud-device-asset
     depends_on:
       redis:
@@ -92,7 +94,9 @@ services:
       - redis
 
   vdms-service:
-    build: ./sclera-vdms-service
+    build:
+      context: .
+      dockerfile: sclera-vdms-service/Dockerfile
     container_name: vdms-service
     depends_on:
       redis:
@@ -148,7 +152,9 @@ services:
       - redis
 
   sclera-audit:
-    build: ./sclera-audit
+    build:
+      context: .
+      dockerfile: sclera-audit/Dockerfile
     container_name: sclera-audit
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -184,7 +190,9 @@ services:
     depends_on: [sclera-audit, redis]
 
   sclera-identity:
-    build: ./sclera-identity
+    build:
+      context: .
+      dockerfile: sclera-identity/Dockerfile
     container_name: sclera-identity
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -220,7 +228,9 @@ services:
     depends_on: [sclera-identity, redis]
 
   sclera-alerts:
-    build: ./sclera-alerts
+    build:
+      context: .
+      dockerfile: sclera-alerts/Dockerfile
     container_name: sclera-alerts
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -256,7 +266,9 @@ services:
     depends_on: [sclera-alerts, redis]
 
   sclera-inventory:
-    build: ./sclera-inventory
+    build:
+      context: .
+      dockerfile: sclera-inventory/Dockerfile
     container_name: sclera-inventory
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -292,7 +304,9 @@ services:
     depends_on: [sclera-inventory, redis]
 
   sclera-workorders:
-    build: ./sclera-workorders
+    build:
+      context: .
+      dockerfile: sclera-workorders/Dockerfile
     container_name: sclera-workorders
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -328,7 +342,9 @@ services:
     depends_on: [sclera-workorders, redis]
 
   sclera-inspection:
-    build: ./sclera-inspection
+    build:
+      context: .
+      dockerfile: sclera-inspection/Dockerfile
     container_name: sclera-inspection
     depends_on:
       postgres:
@@ -372,7 +388,9 @@ services:
     depends_on: [sclera-inspection, redis]
 
   sclera-integrations:
-    build: ./sclera-integrations
+    build:
+      context: .
+      dockerfile: sclera-integrations/Dockerfile
     container_name: sclera-integrations
     depends_on:
       postgres:
@@ -416,7 +434,9 @@ services:
     depends_on: [sclera-integrations, redis]
 
   sclera-edge:
-    build: ./sclera-edge
+    build:
+      context: .
+      dockerfile: sclera-edge/Dockerfile
     container_name: sclera-edge
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -452,7 +472,9 @@ services:
     depends_on: [sclera-edge, redis]
 
   api-gateway:
-    build: ./sclera-api-gateway
+    build:
+      context: .
+      dockerfile: sclera-api-gateway/Dockerfile
     container_name: sclera-api-gateway
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -551,6 +573,10 @@ services:
   dapr-scheduler:
     image: daprio/scheduler:1.15.5
     container_name: dapr-scheduler
+    # Run as root so the scheduler can create its etcd data subdir inside the
+    # named volume (the distroless image's default nonroot user gets EPERM on the
+    # root-owned volume mount point).
+    user: "0:0"
     command: ["./scheduler",
       "--port", "50006",
       "--etcd-data-dir", "/var/run/dapr/scheduler",

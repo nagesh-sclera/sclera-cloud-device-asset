@@ -8,9 +8,18 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+/**
+ * Configures global CORS handling, allowing credentialed requests from any origin pattern
+ * with all methods and headers permitted across every path.
+ */
 @Configuration
 public class CorsConfig {
 
+    /**
+     * Provides a CORS configuration source that applies the permissive CORS policy to all paths.
+     *
+     * @return the URL-based CORS configuration source
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

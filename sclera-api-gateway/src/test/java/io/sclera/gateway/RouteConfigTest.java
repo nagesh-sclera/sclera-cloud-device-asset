@@ -39,4 +39,26 @@ class RouteConfigTest {
                 .as("Routes loaded from application.yml — namespace must be spring.cloud.gateway.server.webflux.*")
                 .contains("asset-route", "vdms-route");
     }
+
+    /**
+     * Every backend service must be reachable through the gateway so all
+     * north-south traffic is governed by the gateway. The six
+     * skeleton/scheduler services previously had no gateway route, letting clients
+     * bypass the gateway by hitting their published host ports directly.
+     */
+    @Test
+    void allBackendServiceRoutesLoad() {
+        List<String> routeIds = routeLocator.getRoutes()
+                .map(route -> route.getId())
+                .collectList()
+                .block();
+
+        assertThat(routeIds)
+                .as("Every backend service must have a gateway route")
+                .contains(
+                        "asset-route", "vdms-route", "audit-route",
+                        "integrations-route", "inspection-route", "dapr-route",
+                        "alerts-route", "identity-route", "inventory-route",
+                        "workorders-route", "edge-route", "scheduler-route");
+    }
 }

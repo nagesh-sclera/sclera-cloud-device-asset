@@ -29,6 +29,7 @@ public class VdmsRepoClient implements VdmsRepository {
         this.dapr = dapr;
     }
 
+    /** Retrieves the VDMS id from vdms-service. Returns null on sidecar failure. */
     @Override
     public String getVDMSId() {
         try {
@@ -39,6 +40,7 @@ public class VdmsRepoClient implements VdmsRepository {
         return null;
     }
 
+    /** Retrieves the VDMS details from vdms-service. Returns null on sidecar failure. */
     @Override
     public VdmsDTO getVdmsDetails() {
         try {
@@ -49,6 +51,7 @@ public class VdmsRepoClient implements VdmsRepository {
         return null;
     }
 
+    /** Updates the customer organisation id for the given VDMS id via vdms-service. Swallows exceptions with a WARN log. */
     @Override
     public void updateCustomerOrgIdByVdmsId(String vdmsId, String customerOrgId) {
         try {
@@ -61,6 +64,7 @@ public class VdmsRepoClient implements VdmsRepository {
         }
     }
 
+    /** Retrieves the VDMS password from vdms-service. Returns an empty string on sidecar failure. */
     @Override
     public String getVDMSPassword() {
         try {
@@ -71,6 +75,7 @@ public class VdmsRepoClient implements VdmsRepository {
         return "";
     }
 
+    /** Retrieves the master flag for this VDMS from vdms-service. Returns 0 on sidecar failure. */
     @Override
     public Integer getIsMaster() {
         try {
@@ -81,6 +86,7 @@ public class VdmsRepoClient implements VdmsRepository {
         return 0;
     }
 
+    /** Retrieves the customer organisation id for the given VDMS id from vdms-service. Returns null on sidecar failure. */
     @Override
     public String getCustomerOrgIdByVdmsId(String vdms_id) {
         try {
@@ -93,6 +99,7 @@ public class VdmsRepoClient implements VdmsRepository {
         return null;
     }
 
+    /** Retrieves ADC sync details from vdms-service. Returns null on sidecar failure. */
     @Override
     public VdmsDTO getSyncDetailsForADC() {
         try {

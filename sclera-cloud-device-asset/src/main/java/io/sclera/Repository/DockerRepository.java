@@ -9,5 +9,11 @@ import java.util.List;
 @Repository
 public interface DockerRepository {
 
+    /**
+     * Returns the networks matching the given network origin.
+     *
+     * @param networkOrigin the network origin to filter by
+     * @return the matching network projections
+     */
     List<DockerDTO> getAllNetworksByNetworkOrigin(Integer networkOrigin);
 }

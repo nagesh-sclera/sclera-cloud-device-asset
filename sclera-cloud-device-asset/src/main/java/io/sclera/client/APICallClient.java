@@ -37,6 +37,10 @@ public class APICallClient {
         this.bindings = bindings;
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getUsersByOrgId for the given organisation and VDMS.
+     * Returns an empty list on sidecar failure (documented stub default).
+     */
     public List<UserDTO> getUsersByOrgId(String organisation_id, String vdms_id) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -49,6 +53,10 @@ public class APICallClient {
         return Collections.emptyList();
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getAllUserInfoByOrganisationIdAndVdmsId.
+     * Returns an empty list on sidecar failure (documented stub default).
+     */
     public List<UserDTO> getAllUserInfoByOrganisationIdAndVdmsId(String org_id, String vdms_id) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -61,12 +69,19 @@ public class APICallClient {
         return Collections.emptyList();
     }
 
+    /**
+     * Stub for streaming a description; currently returns an empty Flux (no remote call).
+     */
     public Flux<org.json.JSONObject> sendDescription(org.json.JSONObject requestBody, String vdmsId,
             String technicianId, String technicianName, String contactNumber,
             String formattedDateTime, String aiCallLogId) {
         return Flux.empty();
     }
 
+    /**
+     * Extracts to/subject/body from the payload (with defaults) and dispatches an email via the
+     * output binding client. Returns an empty 200 OK response.
+     */
     public ResponseEntity<String> sendCallFlowMail(JSONObject payload) {
         String to      = payload != null && payload.containsKey("to")      ? String.valueOf(payload.get("to"))      : "noreply@sclera.local";
         String subject = payload != null && payload.containsKey("subject") ? String.valueOf(payload.get("subject")) : "Call Flow Notification";
@@ -75,6 +90,10 @@ public class APICallClient {
         return ResponseEntity.ok("");
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/sendCallFlowMessage. Returns an empty 200 OK response,
+     * swallowing any sidecar failure.
+     */
     public ResponseEntity<String> sendCallFlowMessage(JSONObject payload) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/sendCallFlowMessage", null, HttpExtension.POST).block();
@@ -84,6 +103,10 @@ public class APICallClient {
         return ResponseEntity.ok("");
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getDeviceHostNameByIP and returns the resolved host name,
+     * or null on sidecar failure.
+     */
     public String getDeviceHostNameByIP(String a, String b) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -96,6 +119,10 @@ public class APICallClient {
         return null;
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getProductDetailsByModelAndMBV and returns the matching
+     * product, or null on sidecar failure.
+     */
     public ProductDTO getProductDetailsByModelAndMBV(String model, String mbv) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -108,6 +135,10 @@ public class APICallClient {
         return null;
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getProductDetailsByProductId and returns the matching
+     * product, or null on sidecar failure.
+     */
     public ProductDTO getProductDetailsByProductId(String productId) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -119,6 +150,9 @@ public class APICallClient {
         return null;
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getNfcIdsByVdmsAndType. Returns an empty array on sidecar failure.
+     */
     public JSONArray getNfcIdsByVdmsAndType(String vdmsId, String type) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -131,6 +165,9 @@ public class APICallClient {
         return new JSONArray();
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getQrCodeIdsByVdmsIdAndType. Returns an empty array on sidecar failure.
+     */
     public JSONArray getQrCodeIdsByVdmsIdAndType(String vdmsId, String type) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -143,6 +180,9 @@ public class APICallClient {
         return new JSONArray();
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/deleteDigitalTwinImageUrl, swallowing any sidecar failure.
+     */
     public void deleteDigitalTwinImageUrl(Set<String> imageUrls, String username, String vdmsId) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/deleteDigitalTwinImageUrl", null, HttpExtension.POST).block();
@@ -151,6 +191,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getTemporaryProductByIds. Returns an empty array on sidecar failure.
+     */
     public JSONArray getTemporaryProductByIds(Object ids) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getTemporaryProductByIds", null, HttpExtension.GET).block();
@@ -160,6 +203,9 @@ public class APICallClient {
         return new JSONArray();
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/deleteTemporaryProductByIds, swallowing any sidecar failure.
+     */
     public void deleteTemporaryProductByIds(Object ids) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/deleteTemporaryProductByIds", null, HttpExtension.POST).block();
@@ -168,10 +214,17 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Delegates to the output binding client to push the building object to Corrigo (ADC).
+     */
     public Boolean syncBuildingToADC(Object dto, String orgId, String configId) {
         return bindings.pushToCorrigo(dto, orgId, configId);
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/addSingleBuildingObject and returns the created building,
+     * or null on sidecar failure.
+     */
     public BuildingDTO addSingleBuildingObject(String locationId, String vdmsId) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -184,6 +237,9 @@ public class APICallClient {
         return null;
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/deleteBuildingFromADC. Returns Boolean.FALSE on sidecar failure.
+     */
     public Boolean deleteBuildingFromADC(String orgId, String configId, List<String> propertyIds) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/deleteBuildingFromADC", null, HttpExtension.POST).block();
@@ -193,6 +249,9 @@ public class APICallClient {
         return Boolean.FALSE;
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getAllLocations. Returns an empty list on sidecar failure.
+     */
     public List<BuildingDTO> getAllLocations(String vdmsId) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -204,6 +263,10 @@ public class APICallClient {
         return Collections.emptyList();
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getFloorPathByFloorId and returns the floor path,
+     * or null on sidecar failure.
+     */
     public String getFloorPathByFloorId(Object a, String vdmsId, String buildingId, String floorId) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getFloorPathByFloorId", null, HttpExtension.GET).block();
@@ -213,6 +276,9 @@ public class APICallClient {
         return null;
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/generateChatbotMessage, swallowing any sidecar failure.
+     */
     public void generateChatbotMessage(Object query, Object emitter) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/generateChatbotMessage", null, HttpExtension.GET).block();
@@ -221,6 +287,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/updateChatbotDeviceData, swallowing any sidecar failure.
+     */
     public void updateChatbotDeviceData(JSONArray bodyArray) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/updateChatbotDeviceData", null, HttpExtension.POST).block();
@@ -229,6 +298,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getAllClientBarCodeByVdmsId. Returns an empty set on sidecar failure.
+     */
     public Set<ClientBarCodeDTO> getAllClientBarCodeByVdmsId(String vdmsId, int page, int size) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getAllClientBarCodeByVdmsId", null, HttpExtension.GET).block();
@@ -238,6 +310,9 @@ public class APICallClient {
         return Collections.emptySet();
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getSyncedClientBarCodeByVdmsId. Returns an empty set on sidecar failure.
+     */
     public Set<ClientBarCodeDTO> getSyncedClientBarCodeByVdmsId(String vdmsId, int page, int size) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getSyncedClientBarCodeByVdmsId", null, HttpExtension.GET).block();
@@ -247,6 +322,9 @@ public class APICallClient {
         return Collections.emptySet();
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/sendAgentDataToInventory, swallowing any sidecar failure.
+     */
     public void sendAgentDataToInventory(Object obj) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/sendAgentDataToInventory", null, HttpExtension.POST).block();
@@ -255,6 +333,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getUpdatedAssetTypes. Returns an empty set on sidecar failure.
+     */
     public Set<DeviceTypesDTO> getUpdatedAssetTypes(Object ts, int page, int size, String search, String vdmsId) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getUpdatedAssetTypes", null, HttpExtension.GET).block();
@@ -264,6 +345,10 @@ public class APICallClient {
         return Collections.emptySet();
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/updatePropertyDetails and returns the updated property
+     * address, or null on sidecar failure.
+     */
     public PropertyAddressDTO updatePropertyDetails(String vdmsId) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -275,6 +360,9 @@ public class APICallClient {
         return null;
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/updateVdmsDetailCloud, swallowing any sidecar failure.
+     */
     public void updateVdmsDetailCloud(String vdmsId, VdmsSyncDTO dto) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/updateVdmsDetailCloud", null, HttpExtension.POST).block();
@@ -283,6 +371,10 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getVendorByMacAddress and returns the vendor name,
+     * or null on sidecar failure.
+     */
     public String getVendorByMacAddress(String mac) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -294,6 +386,9 @@ public class APICallClient {
         return null;
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/syncAllAttribute for the given IP, swallowing any sidecar failure.
+     */
     public void syncAllAttribute(String ip) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -304,6 +399,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/syncBacnet for the given IP, swallowing any sidecar failure.
+     */
     public void syncBacnet(String ip) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -314,6 +412,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/syncSnmpWalk for the given IP, swallowing any sidecar failure.
+     */
     public void syncSnmpWalk(String ip) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -324,6 +425,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/snmpInterface for the given IP, swallowing any sidecar failure.
+     */
     public void snmpInterface(String ip) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -334,6 +438,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/snmpTopology for the given IP, swallowing any sidecar failure.
+     */
     public void snmpTopology(String ip) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -344,6 +451,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/internetConnectivity for the given IP, swallowing any sidecar failure.
+     */
     public void internetConnectivity(String ip) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -354,6 +464,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getAllVendorsByOrganisationId. Returns an empty list on sidecar failure.
+     */
     public List<VendorDTO> getAllVendorsByOrganisationId(String orgId, String vdmsId, String dockerName) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getAllVendorsByOrganisationId", null, HttpExtension.GET).block();
@@ -363,6 +476,9 @@ public class APICallClient {
         return Collections.emptyList();
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getTransferVendor. Returns a new empty VendorTransferDTO on sidecar failure.
+     */
     public VendorTransferDTO getTransferVendor(String vdmsId, String dockerName) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getTransferVendor", null, HttpExtension.GET).block();
@@ -372,6 +488,10 @@ public class APICallClient {
         return new VendorTransferDTO();
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getCustomerOrgIdByVdmsId and returns the customer org id,
+     * or null on sidecar failure.
+     */
     public String getCustomerOrgIdByVdmsId(String vdmsId) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -383,6 +503,9 @@ public class APICallClient {
         return null;
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/updateVdmsTranfer, swallowing any sidecar failure.
+     */
     public void updateVdmsTranfer(String vdmsId) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -393,6 +516,10 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/updateVdmsStatus and returns the updated VDMS sync state,
+     * or null on sidecar failure.
+     */
     public VdmsSyncDTO updateVdmsStatus(String vdmsId) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -404,6 +531,9 @@ public class APICallClient {
         return null;
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/updateQrCodeSyncByVdmsId, swallowing any sidecar failure.
+     */
     public void updateQrCodeSyncByVdmsId(String vdmsId) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -414,6 +544,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/updateNfcSyncByVdmsId, swallowing any sidecar failure.
+     */
     public void updateNfcSyncByVdmsId(String vdmsId) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -424,10 +557,16 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Stub deserializer; currently returns an empty list regardless of input.
+     */
     public <T> java.util.List<T> getJSONArrayFromJSONString(String json, Class<T> clazz) {
         return Collections.emptyList();
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/syncSnmpInterfacebyDeviceId, swallowing any sidecar failure.
+     */
     public void syncSnmpInterfacebyDeviceId(String deviceId, SnmpValuesDTO dto) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/syncSnmpInterfacebyDeviceId", null, HttpExtension.POST).block();
@@ -436,6 +575,10 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/fetchMeasuringInstruments and returns the result,
+     * or null on sidecar failure.
+     */
     public Object fetchMeasuringInstruments() {
         try {
             return dapr.invokeMethod(APP_ID, "apicall/fetchMeasuringInstruments", null, HttpExtension.GET, Object.class).block();
@@ -445,6 +588,9 @@ public class APICallClient {
         return null;
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/syncLocationToADC. Returns true on sidecar failure (documented default).
+     */
     public Boolean syncLocationToADC(List<LocationDTO> locations, String orgId, String configId, String vdmsId) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/syncLocationToADC", null, HttpExtension.POST).block();
@@ -454,6 +600,9 @@ public class APICallClient {
         return true;
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/deleteLocationFromADC. Returns true on sidecar failure (documented default).
+     */
     public Boolean deleteLocationFromADC(String orgId, String configId, String vdmsId, String buildingId,
             java.util.List<String> locationIds) {
         try {
@@ -464,6 +613,9 @@ public class APICallClient {
         return true;
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/syncFloorToADC. Returns false on sidecar failure (documented default).
+     */
     public Boolean syncFloorToADC(String orgId, java.util.List<FloorDTO> floors, String configId, String vdmsId) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/syncFloorToADC", null, HttpExtension.POST).block();
@@ -473,6 +625,9 @@ public class APICallClient {
         return false;
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/deleteFloorFromADC. Returns false on sidecar failure (documented default).
+     */
     public Boolean deleteFloorFromADC(String orgId, String configId, String buildingId,
             java.util.List<String> floorIds) {
         try {
@@ -483,6 +638,9 @@ public class APICallClient {
         return false;
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getApplicationUsersFromInventory. Returns an empty array on sidecar failure.
+     */
     public JSONArray getApplicationUsersFromInventory(String vdmsId, String applicationId) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getApplicationUsersFromInventory", null, HttpExtension.GET).block();
@@ -492,6 +650,10 @@ public class APICallClient {
         return new JSONArray();
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getLicenseDetailsFromInventory and returns the license details,
+     * or null on sidecar failure.
+     */
     public JSONObject getLicenseDetailsFromInventory(String vdmsId, String applicationId) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getLicenseDetailsFromInventory", null, HttpExtension.GET).block();
@@ -501,6 +663,9 @@ public class APICallClient {
         return null;
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getAllInventoryApplications. Returns an empty array on sidecar failure.
+     */
     public JSONArray getAllInventoryApplications(String vdmsId) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getAllInventoryApplications", null, HttpExtension.GET).block();
@@ -510,6 +675,9 @@ public class APICallClient {
         return new JSONArray();
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/updateBarCodeSyncByVdmsId, swallowing any sidecar failure.
+     */
     public void updateBarCodeSyncByVdmsId(String vdmsId) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -520,6 +688,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getAllTechnicians. Returns an empty list on sidecar failure.
+     */
     public java.util.List<TechnicianDTO> getAllTechnicians(String vdmsId) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getAllTechnicians", null, HttpExtension.GET).block();
@@ -529,6 +700,9 @@ public class APICallClient {
         return Collections.emptyList();
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/resetSyncStatusByTechnicianIds, swallowing any sidecar failure.
+     */
     public void resetSyncStatusByTechnicianIds(java.util.Set<String> ids) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/resetSyncStatusByTechnicianIds", null, HttpExtension.GET).block();
@@ -537,6 +711,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getAllTechnicianSkills. Returns an empty list on sidecar failure.
+     */
     public java.util.List<TechnicianSkillDTO> getAllTechnicianSkills(String vdmsId) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getAllTechnicianSkills", null, HttpExtension.GET).block();
@@ -546,6 +723,9 @@ public class APICallClient {
         return Collections.emptyList();
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/resetSyncByTechnicianSkillIds, swallowing any sidecar failure.
+     */
     public void resetSyncByTechnicianSkillIds(java.util.Set<String> ids) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/resetSyncByTechnicianSkillIds", null, HttpExtension.GET).block();
@@ -554,6 +734,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getAllTechniciansAvailability. Returns an empty list on sidecar failure.
+     */
     public java.util.List<TechnicianAvailabilityDTO> getAllTechniciansAvailability(String vdmsId) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getAllTechniciansAvailability", null, HttpExtension.GET).block();
@@ -563,6 +746,9 @@ public class APICallClient {
         return Collections.emptyList();
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/resetSyncByTechnicianAvailabilityIds, swallowing any sidecar failure.
+     */
     public void resetSyncByTechnicianAvailabilityIds(java.util.Set<String> ids) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/resetSyncByTechnicianAvailabilityIds", null, HttpExtension.GET).block();
@@ -571,6 +757,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getAllTechniciansCertificates. Returns an empty list on sidecar failure.
+     */
     public java.util.List<TechnicianCertificateDTO> getAllTechniciansCertificates(String vdmsId) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getAllTechniciansCertificates", null, HttpExtension.GET).block();
@@ -580,6 +769,9 @@ public class APICallClient {
         return Collections.emptyList();
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/resetSyncByTechnicianCertificateIds, swallowing any sidecar failure.
+     */
     public void resetSyncByTechnicianCertificateIds(java.util.Set<String> ids) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/resetSyncByTechnicianCertificateIds", null, HttpExtension.GET).block();
@@ -588,6 +780,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getAllDeviceTechnicianAISuggestions. Returns an empty list on sidecar failure.
+     */
     public java.util.List<DeviceTechnicianAISuggestionDTO> getAllDeviceTechnicianAISuggestions(String vdmsId) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getAllDeviceTechnicianAISuggestions", null, HttpExtension.GET).block();
@@ -597,6 +792,9 @@ public class APICallClient {
         return Collections.emptyList();
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/resetSyncByDeviceTechnicianAiSuggestionIds, swallowing any sidecar failure.
+     */
     public void resetSyncByDeviceTechnicianAiSuggestionIds(java.util.Set<String> ids) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/resetSyncByDeviceTechnicianAiSuggestionIds", null, HttpExtension.GET).block();
@@ -605,6 +803,10 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getInventoryItemsByStockOutId and returns the items,
+     * or null on sidecar failure.
+     */
     public JSONObject getInventoryItemsByStockOutId(InventoryDeviceSyncDTO dto) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getInventoryItemsByStockOutId", null, HttpExtension.GET).block();
@@ -614,6 +816,9 @@ public class APICallClient {
         return null;
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/updateTaggedInventoryItems, swallowing any sidecar failure.
+     */
     public void updateTaggedInventoryItems(java.util.Set<DeviceDTO> devices) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/updateTaggedInventoryItems", null, HttpExtension.POST).block();
@@ -622,6 +827,10 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getAgentPermissionsByVdmsId and returns the agent permissions,
+     * or null on sidecar failure.
+     */
     public String getAgentPermissionsByVdmsId(String vdmsId) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -633,6 +842,9 @@ public class APICallClient {
         return null;
     }
 
+    /**
+     * Invokes GET sclera-edge/apicall/getAllApplicationUsersFromInventory. Returns an empty array on sidecar failure.
+     */
     public JSONArray getAllApplicationUsersFromInventory(String vdmsId) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/getAllApplicationUsersFromInventory", null, HttpExtension.GET).block();
@@ -642,6 +854,9 @@ public class APICallClient {
         return new JSONArray();
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/syncApplicationUsers, swallowing any sidecar failure.
+     */
     public void syncApplicationUsers(java.util.Set<String> ids, String status) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/syncApplicationUsers", null, HttpExtension.POST).block();
@@ -650,6 +865,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * Invokes POST sclera-edge/apicall/syncApplication, swallowing any sidecar failure.
+     */
     public void syncApplication(java.util.Set<String> ids, String status) {
         try {
             dapr.invokeMethod(APP_ID, "apicall/syncApplication", null, HttpExtension.POST).block();
@@ -658,6 +876,9 @@ public class APICallClient {
         }
     }
 
+    /**
+     * No-op stub; does not perform any remote call.
+     */
     public void getVdmsAccessToken(String vdmsId, String password) {
         // no-op
     }

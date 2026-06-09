@@ -1422,8 +1422,8 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
             <div class="step-n red">!</div>
             <div class="step-body">
               <div class="title">Rebuild caveat</div>
-              <div class="desc">If you rebuild the service container (<code>docker-compose up --build</code>), the old container is destroyed. The sidecar's <code>network_mode</code> now points to a dead container — <b style="color:var(--text)">you must recreate the sidecar too</b>:<br>
-              <code>docker-compose stop vdms-dapr &amp;&amp; docker-compose rm -f vdms-dapr &amp;&amp; docker-compose up -d vdms-dapr</code></div>
+              <div class="desc">If you rebuild the service container (<code>docker compose up --build</code> — which now compiles the JAR inside the image), the old container is destroyed. The sidecar's <code>network_mode</code> now points to a dead container — <b style="color:var(--text)">you must recreate the sidecar too</b>:<br>
+              <code>docker compose up -d --force-recreate vdms-dapr</code></div>
             </div>
           </div>
         </div>
@@ -1520,16 +1520,14 @@ vdmsClient.<span class="m">publishEvent</span>(<span class="s">"device.audit"</s
 
       <div class="box" style="margin-bottom:16px">
         <h3>Rebuild checklist</h3>
-        <div class="code"><span class="c"># 1. Build the JAR first</span>
-mvn -B clean package -DskipTests
+        <div class="code"><span class="c"># 1. Rebuild &amp; restart the service. The JAR is now</span>
+<span class="c">#    compiled INSIDE the image (multi-stage Dockerfile,</span>
+<span class="c">#    build context = repo root). No local JDK/Maven needed.</span>
+docker compose up --build -d vdms-service
 
-<span class="c"># 2. Rebuild &amp; restart the service</span>
-docker-compose up --build -d vdms-service
-
-<span class="c"># 3. Recreate the Dapr sidecar (CRITICAL)</span>
-docker-compose stop vdms-dapr
-docker-compose rm -f vdms-dapr
-docker-compose up -d vdms-dapr</div>
+<span class="c"># 2. Recreate the Dapr sidecar (CRITICAL — it shares the</span>
+<span class="c">#    service's network namespace, see caveat at left)</span>
+docker compose up -d --force-recreate vdms-dapr</div>
       </div>
 
       <div class="box">

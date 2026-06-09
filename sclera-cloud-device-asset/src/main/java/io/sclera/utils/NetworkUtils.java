@@ -4,11 +4,18 @@ import org.springframework.stereotype.Service;
 
 import java.util.Stack;
 
+/**
+ * Utility for IP address arithmetic, including binary/decimal conversions and deriving subnet and
+ * broadcast addresses from an IP and CIDR.
+ */
 @Service
 public class NetworkUtils {
 
 
-	public int[] bina(String[] str) 
+	/**
+	 * Converts a dotted IP address (split into its four octets) into a 32-element binary digit array.
+	 */
+	public int[] bina(String[] str)
 	{ 
 		int re[] = new int[32]; 
 		int a, b, c, d, i, rem; 
@@ -76,8 +83,11 @@ public class NetworkUtils {
 		return (re); 
 	} 
 
-	// from binary to decimal form 
-	public int[] deci(int[] bi) 
+	/**
+	 * Converts a 32-element binary digit array back into the four decimal octets of an IP address.
+	 */
+	// from binary to decimal form
+	public int[] deci(int[] bi)
 	{ 
 
 		int[] arr = new int[4]; 
@@ -119,6 +129,10 @@ public class NetworkUtils {
 		return arr; 
 	}
 
+	/**
+	 * Computes the network address for the given IP and CIDR and returns it in dotted-decimal form
+	 * suffixed with the CIDR (for example {@code 192.168.1.0/24}).
+	 */
 	public String generateSubnetFromIpAndCidr(String ip, int cidr) {
 		int i;
 		String[] str = new String[4];
@@ -161,6 +175,9 @@ public class NetworkUtils {
 		return network_address;
 	}
 
+	/**
+	 * Computes the broadcast address for the given IP and CIDR and returns it in dotted-decimal form.
+	 */
 	public String generateBroadcastFromIpAndCidr(String ip, int cidr){
 		int i;
 		String[] str = new String[4];

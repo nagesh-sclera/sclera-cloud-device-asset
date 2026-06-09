@@ -10,6 +10,10 @@ import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Map;
 
+/**
+ * Configuration-properties holder for ChirpStack LoRaWAN integration settings along with helper
+ * methods for Base64/hex conversions and timestamp parsing.
+ */
 @Component
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ConfigurationProperties(prefix = "sclera.chirpstackutils")
@@ -208,8 +212,11 @@ public class ChirpStackUtils {
 		this.configuration_id = configuration_id;
 	}
 
+	/**
+	 * Decodes a Base64 string into a byte array, returning null if decoding fails.
+	 */
 	//Convert Base 64 String to Bytes
-	public byte[] base64StringToByteArray(String str){    
+	public byte[] base64StringToByteArray(String str){
 		   byte[] bt = null;    
 		   try {    
 		       Decoder decoder = Base64.getDecoder(); 
@@ -220,6 +227,9 @@ public class ChirpStackUtils {
 		   return bt;    
 		   }   
 	
+	/**
+	 * Converts a byte array into its lowercase hexadecimal string representation.
+	 */
 	//Convert Bytes to Hexa string
 	public String byteArrayToHexString(byte[] arr){
 		StringBuilder sbd = new StringBuilder();
@@ -232,6 +242,9 @@ public class ChirpStackUtils {
 		return sbd.toString();
 	}
 	
+	/**
+	 * Converts a Base64 string directly into its hexadecimal string representation.
+	 */
 	public String base64StringToHexString(String base64String)
 	{
 		byte[] byteArray = this.base64StringToByteArray(base64String);
@@ -239,6 +252,10 @@ public class ChirpStackUtils {
 		return hexString;
 	}
 	
+	/**
+	 * Parses an ISO-8601 date-time string into a UTC epoch-millisecond timestamp, returning null on
+	 * null input or parse failure.
+	 */
 	public BigInteger stringDateTimeToUTCTimestamp(String stringDateTime)
 	{
         try{

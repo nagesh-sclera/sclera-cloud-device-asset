@@ -89,6 +89,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Tracks active peer-to-peer port mappings and reconciles them with running processes, killing stale
+ * tunnels via system commands.
+ */
 @Component
 public class P2PActivePorts {
 
@@ -97,14 +101,24 @@ public class P2PActivePorts {
 
     private final ConcurrentHashMap<Integer, Integer> activePorts = new ConcurrentHashMap<Integer, Integer>();
 
+    /**
+     * Registers a mapping from the local port to its destination port.
+     */
     public void addPort(int destination_port, int port) {
         activePorts.put(port, destination_port);
     }
 
+    /**
+     * Removes the mapping for the given local port.
+     */
     public void removePort(int port) {
         activePorts.remove(port);
     }
 
+    /**
+     * Checks whether the process for the mapped destination port is still running and, if not, kills
+     * the associated processes and removes the mapping. Always returns null.
+     */
     public Integer getPort(int port) {
         var currentPort = activePorts.get(port);
         var isProcessRunning = utils.execPipedCmd(new String[]{"bash", "-c", "lsof -t -i:" + currentPort});

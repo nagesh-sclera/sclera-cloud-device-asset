@@ -1,5 +1,9 @@
 package io.sclera.utils.ips;
 
+/**
+ * Simple value object holding a two-dimensional (X, Y) coordinate used by indoor positioning
+ * calculations.
+ */
 public class Coordinate {
     private double X;
     private double Y;

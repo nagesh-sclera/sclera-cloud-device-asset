@@ -28,6 +28,11 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Manages software subscription records and their compliance state, including listing with
+ * computed active/expired status, tagging and un-tagging inventory application details, license and
+ * risk-and-compliance reporting, and syncing application data from the inventory service.
+ */
 @Service
 public class ManagedSoftwareService {
     private static final Logger log = LoggerFactory.getLogger(ManagedSoftwareService.class);
@@ -56,6 +61,10 @@ public class ManagedSoftwareService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    /**
+     * Returns a page of managed software matching the condition and search key, refreshing each
+     * record's status to active or expired based on the current time against its subscription dates.
+     */
     @Transactional
     public List<ManagedSoftwareDTO> getAllManagedSoftwares(String username, String vdmsid, String dockername, String condition, String searchKey, Integer pageNo, Integer pageSize) {
         // Calculate offset
@@ -130,6 +139,10 @@ public class ManagedSoftwareService {
 //
 //    }
 
+    /**
+     * Returns the id of the managed software with the given name, creating a new minimal record
+     * with a generated id when none exists.
+     */
     public String insertManagedSoftware(String name, String vendor) {
 
         Optional<String> id = managedSoftwareRepository.getManagedSoftwareIdByName(name);
@@ -160,6 +173,9 @@ public class ManagedSoftwareService {
         }
     }
 
+    /**
+     * Persists the given managed software details and returns the refreshed record.
+     */
     public ManagedSoftwareDTO updateManagedSoftware(String username, String vdmsid, ManagedSoftwareDTO managedSoftwareDTO) {
                 managedSoftwareRepository.upsertManagedSoftware(
                 managedSoftwareDTO.getId(),
@@ -181,6 +197,11 @@ public class ManagedSoftwareService {
     }
 
     // Tag application details from inventory
+    /**
+     * Tags an inventory application to this managed software: fetches and stores its application
+     * users, classifies linked device specifications as compliant or risky by matching user emails,
+     * updates their risk status, and persists the tagged details.
+     */
     @Transactional
     public ManagedSoftwareDTO tagInventoryDetails(String username, String vdmsid, ManagedSoftwareDTO managedSoftwareDTO) {
         String managedSoftwareId = managedSoftwareDTO.getId();
@@ -291,6 +312,11 @@ public class ManagedSoftwareService {
     }
 
     // Un-tag inventory application details from managed software
+    /**
+     * Un-tags an inventory application from this managed software: clears the risk status of linked
+     * devices, deletes the associated application users, and resets the managed software's
+     * subscription and application fields.
+     */
     @Transactional
     public ManagedSoftwareDTO unTagInventoryDetails(String username, String vdmsid, ManagedSoftwareDTO managedSoftwareDTO) {
         String managedSoftwareId = managedSoftwareDTO.getId();
@@ -365,6 +391,10 @@ public class ManagedSoftwareService {
         return managedSoftwareRepository.getManagedSoftwareUsers(managedsoftwareId);
     }
 
+    /**
+     * Returns license figures for a managed software, combining purchased and used license counts
+     * from the inventory service with the locally computed compliant license count.
+     */
     public Map<String, Integer> getManagedSoftwareLicense(String username, String vdmsid, String dockername, String managedsoftwareId, String applicationId) {
         JSONObject licenseJson = apiCallService.getLicenseDetailsFromInventory(vdmsid, applicationId);
 
@@ -384,6 +414,10 @@ public class ManagedSoftwareService {
         return licenseDetails;
     }
 
+    /**
+     * Returns counts of managed software grouped by status (all, active, expired, others) and by
+     * monthly and yearly subscription type.
+     */
     public Map<String, Integer> getManagedSoftwareCount(String username, String vdmsid, String dockername) {
         Map<String, Integer> managedSoftwareCounts = new HashMap<>();
 
@@ -405,6 +439,10 @@ public class ManagedSoftwareService {
         return managedSoftwareCounts;
     }
 
+    /**
+     * Returns the risk-and-compliance records (one per risky device specification) for a managed
+     * software, each describing the user, device and a high-severity comment.
+     */
     public List<Map<String, String>> getAllRiskAndCompliances(String username, String vdmsId, String dockerName, String managedSoftwareId) {
         Set<String> riskyDeviceSpecIds = deviceInstalledAppsRepository.getRiskyDeviceSpecIdsByManagedSoftwareId(managedSoftwareId); // risk_status = 1 (risky)
 
@@ -434,6 +472,10 @@ public class ManagedSoftwareService {
         return riskAndComplianceList;
     }
 
+    /**
+     * Overrides the risk status of a device specification (marking it risk-overridden) for the given
+     * managed software, throwing when no record is updated.
+     */
     public void riskAndComplianceAction(String username, String vdmsId, String dockerName, String managedSoftwareId, JSONObject data) {
         Set<String> deviceSpecIds = new HashSet<>();
         deviceSpecIds.add(data.getString("deviceSpecificationId"));
@@ -448,6 +490,10 @@ public class ManagedSoftwareService {
         }
     }
 
+    /**
+     * Reads and returns the managed software field definitions from the bundled
+     * managed_software_fields.json resource as a JSON string, or null on error.
+     */
     public String getManagedSoftwareFieldsList(String username, String vdmsId) {
         try {
             // Read from file
@@ -471,14 +517,24 @@ public class ManagedSoftwareService {
         }
     }
 
+    /**
+     * Returns the distinct user emails available across device specifications.
+     */
     public List<String> getManagedSoftwareUsersList(String username, String vdmsId) {
         return deviceSpecificationRepository.findDistinctEmail();
     }
 
+    /**
+     * Returns the distinct OS types available across device specifications.
+     */
     public List<String> getManagedSoftwareOSTypesList(String username, String vdmsId) {
         return deviceSpecificationRepository.findDistinctOsType();
     }
 
+    /**
+     * Deletes a managed software record, first clearing its links and risk status on device
+     * installed apps and removing its associated application users from the inventory data.
+     */
     @Transactional
     public void deleteManagedSoftware(String username, String vdmsId, String dockerName, String managedSoftwareId) {
         try {
@@ -522,6 +578,10 @@ public class ManagedSoftwareService {
     }
 
     // Filter inventory applications that do not exist in managed software and which has transaction
+    /**
+     * Returns inventory applications that are not yet tracked as managed software and that have at
+     * least one license, or an empty list on error or no data.
+     */
     public List<InventoryApplicationDTO> getInventoryApplications(String username, String vdmsId, String dockerName) {
         try {
             com.alibaba.fastjson.JSONArray applicationsJson = apiCallService.getAllInventoryApplications(vdmsId);
@@ -560,6 +620,10 @@ public class ManagedSoftwareService {
     /*********************************************************** SYNC METHODS FOR INVENTORY INTEGRATION ***********************************************************/
 
     // Update managed software details for inventory application upsert sync call
+    /**
+     * Applies inventory application upserts to managed software records, each in its own
+     * transaction, and returns the set of application ids that failed to update.
+     */
     public Set<String> updateManagedSoftwareDetailsSync(List<InventoryApplicationDTO> applicationDetails) {
         if (applicationDetails == null || applicationDetails.isEmpty()) {
             log.info("No application details provided for update.");
@@ -596,6 +660,10 @@ public class ManagedSoftwareService {
     }
 
     // Clear managed software details for inventory application delete sync call
+    /**
+     * Clears managed software details for deleted inventory applications, each in its own
+     * transaction, and returns the set of application ids that failed to clear.
+     */
     public Set<String> clearManagedSoftwareDetailsSync(List<InventoryApplicationDTO> applicationDetails) {
         if (applicationDetails == null || applicationDetails.isEmpty()) {
             log.info("No application details provided for delete...");
@@ -634,6 +702,10 @@ public class ManagedSoftwareService {
     // Helper methods for Applications SYNC
 
     // Starts a brand-new, independent transaction for each application
+    /**
+     * Updates the managed software record matching the application's id with the supplied inventory
+     * details, in a new independent transaction. Returns false when no matching record exists.
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public boolean updateSingleManagedSoftwareTransaction(InventoryApplicationDTO applicationDTO) {
         // Fetch existing managed_software records by applicationId
@@ -670,6 +742,11 @@ public class ManagedSoftwareService {
     }
 
     // Starts a brand-new, independent transaction for each application
+    /**
+     * Clears the managed software record matching the application's id and removes its risk status
+     * and application users, in a new independent transaction. Returns false when no matching record
+     * exists.
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public boolean clearSingleManagedSoftwareTransaction(InventoryApplicationDTO applicationDTO) {
         // Fetch existing managed_software records by applicationId

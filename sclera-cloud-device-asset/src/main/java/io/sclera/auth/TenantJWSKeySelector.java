@@ -22,6 +22,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import static com.nimbusds.jose.proc.JWSAlgorithmFamilyJWSKeySelector.fromJWKSource;
 
+/**
+ * Multi-tenant JWS key selector that resolves verification keys per token issuer.
+ * It looks up the tenant by the JWT's issuer claim, fetches the issuer's JWKS URI,
+ * and caches the resulting per-issuer key selector for reuse.
+ */
 public class TenantJWSKeySelector implements JWTClaimsSetAwareJWSKeySelector<SecurityContext> {
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
@@ -32,6 +37,10 @@ public class TenantJWSKeySelector implements JWTClaimsSetAwareJWSKeySelector<Sec
     // Map to cache JWSKeySelectors for different issuers. It Contains key issuer url and Value is Public key information.
     private final Map<String, JWSKeySelector<SecurityContext>> selectors = new ConcurrentHashMap<>();
 
+    /**
+     * Selects the verification keys for a token by resolving the issuer-specific key
+     * selector (cached per issuer) and delegating key selection to it.
+     */
     // Method required by JWTClaimsSetAwareJWSKeySelector interface
     @Override
     public List<? extends Key> selectKeys(JWSHeader jwsHeader, JWTClaimsSet jwtClaimsSet, SecurityContext securityContext) throws KeySourceException {
@@ -68,6 +77,10 @@ public class TenantJWSKeySelector implements JWTClaimsSetAwareJWSKeySelector<Sec
         }
     }
 
+    /**
+     * Builds a key selector backed by a remote JWKS endpoint, configuring HTTP
+     * timeouts and a time-based key-set cache.
+     */
     // Method to fetch JWSKeySelector for JWKS URL
     public static <C extends SecurityContext> JWSAlgorithmFamilyJWSKeySelector<C> getJwksPublicKey(URL jwkSetURL) throws KeySourceException, MalformedURLException {
         // Construct JWKSource from the provided JWKS URL

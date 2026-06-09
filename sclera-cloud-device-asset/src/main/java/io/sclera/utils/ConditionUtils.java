@@ -10,9 +10,17 @@ import java.time.LocalTime;
 import java.time.format.TextStyle;
 import java.util.Locale;
 
+/**
+ * Utility for evaluating schedule conditions, such as whether the current system time and day fall
+ * within a configured scheduled window.
+ */
 @Component
 public class ConditionUtils {
 
+    /**
+     * Determines whether the current system time falls within the scheduled start and end time,
+     * handling windows that span across midnight; returns false on any parsing error.
+     */
     public Boolean verifyCurrentSystemTimeWithinScheduledTime(String startTimeString, String endTimeString) {
         try {
             System.out.println("Start Time String " + startTimeString + "   endTimeString " + endTimeString);
@@ -114,6 +122,10 @@ public class ConditionUtils {
     }
 
 
+    /**
+     * Returns true if today's day of week matches one of the days listed in the given schedule's
+     * day_of_week array.
+     */
     public Boolean verifyDayOfWeek(JSONObject scheduleDays) {
         LocalDate today = LocalDate.now();
         DayOfWeek dayOfWeek = today.getDayOfWeek();

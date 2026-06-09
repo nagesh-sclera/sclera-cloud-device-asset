@@ -6,7 +6,13 @@ import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPCellEvent;
 import com.itextpdf.text.pdf.PdfPTable;
 
+/**
+ * iText cell event that draws a rounded rectangle border around a PDF table cell.
+ */
 public class RoundedCell implements PdfPCellEvent {
+    /**
+     * Draws a rounded rectangle stroke within the cell's position when the cell is laid out.
+     */
     public void cellLayout(PdfPCell cell, Rectangle position,
                            PdfContentByte[] canvases) {
         PdfContentByte canvas = canvases[PdfPTable.LINECANVAS];

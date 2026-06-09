@@ -22,6 +22,10 @@ import java.util.List;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 
+/**
+ * Servlet filter (active outside the {@code docker} profile) that runs after the request is processed
+ * and inspects the bearer token to record VDMS access activity for non-restricted users.
+ */
 @Component
 @org.springframework.context.annotation.Profile("!docker")
 public class JwtRequestFilter extends OncePerRequestFilter {
@@ -46,6 +50,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         this.checkForTokenEmailForVDMSAccess(request);
     }
 
+    /**
+     * Determines whether the given role is permitted, returning {@code false} for roles
+     * configured as restricted.
+     *
+     * @param role the user role to check
+     * @return {@code true} if the role is not restricted, {@code false} otherwise
+     */
     public Boolean checkRoleOfUser(String role) {
         List<String> roles = utils.getRestrictedRoles();
 
@@ -56,6 +67,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     }
 
 
+    /**
+     * Records VDMS login/access activity for the given user, swallowing any error that occurs.
+     *
+     * @param email_id the email identifying the user
+     */
     public void updateLogForVDMSActivity(String email_id) {
         try {
 //            userActionLogService.updateLoginActivity(email_id, "access");
@@ -64,6 +80,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
     }
 
+    /**
+     * Extracts the email from the request's bearer token, resolves and caches the user's roles, and
+     * records VDMS access activity when the user's role is not restricted.
+     *
+     * @param httpServletRequest the incoming HTTP request carrying the Authorization header
+     */
     public void checkForTokenEmailForVDMSAccess(HttpServletRequest httpServletRequest) {
         String authorizationHeader = httpServletRequest.getHeader(AUTHORIZATION);
         try {
@@ -92,6 +114,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
     }
 
+    /**
+     * Decodes the given JWT and returns the value of its {@code email} claim.
+     *
+     * @param token the encoded JWT
+     * @return the email claim value, or {@code null} if the claim is absent
+     */
     public String extractEmailFromToken(String token) {
         DecodedJWT jwt = JWT.decode(token);
         if (jwt.getClaim("email").isNull()) {

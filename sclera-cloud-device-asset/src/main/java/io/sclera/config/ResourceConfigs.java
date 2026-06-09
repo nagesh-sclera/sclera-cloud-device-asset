@@ -7,6 +7,10 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 
+/**
+ * Registers a static resource handler that serves files under {@code /images/**} from the local
+ * image directory with private, no-cache headers.
+ */
 @Configuration
 @EnableWebMvc
 public class ResourceConfigs implements WebMvcConfigurer {
@@ -17,6 +21,12 @@ public class ResourceConfigs implements WebMvcConfigurer {
 	    };
 
 	 
+	    /**
+	     * Maps the {@code /images/**} URL pattern to the configured filesystem image location,
+	     * applying no-cache private cache control and a path resource resolver.
+	     *
+	     * @param registry the resource handler registry to configure
+	     */
 	    @Override
 	    public void addResourceHandlers(ResourceHandlerRegistry registry) {
 	        registry.addResourceHandler("/images/**")

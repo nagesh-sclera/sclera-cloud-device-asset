@@ -30,6 +30,10 @@ public class IOCClient {
         this.dapr = dapr;
     }
 
+    /**
+     * Sends device alert data to the IOC endpoint on sclera-edge.
+     * Swallows any failure with a WARN log.
+     */
     public void sendDeviceAlertDataIOC(DeviceConditionsDTO deviceConditionsDTO, DeviceAlertDTO deviceAlert,
                                        Integer status, AlertProfileDTO alertProfile, BigInteger timestamp) {
         try {
@@ -39,6 +43,10 @@ public class IOCClient {
         }
     }
 
+    /**
+     * Sends digital twin data for the given device IDs to the IOC endpoint on sclera-edge.
+     * Swallows any failure with a WARN log.
+     */
     public void sendDigitalTwinData(Set<String> deviceIds) {
         try {
             dapr.invokeMethod(APP_ID, "ioc/sendDigitalTwinData", null, HttpExtension.GET).block();
@@ -47,6 +55,10 @@ public class IOCClient {
         }
     }
 
+    /**
+     * Sends a sensor value reading for the given device to the IOC endpoint on sclera-edge.
+     * Swallows any failure with a WARN log.
+     */
     public void sendSensorValueDataToIOC(String deviceId, BigInteger sensorValue) {
         try {
             Map<String, String> p = new HashMap<>();

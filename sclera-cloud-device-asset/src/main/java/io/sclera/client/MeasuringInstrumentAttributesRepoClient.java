@@ -31,6 +31,10 @@ public class MeasuringInstrumentAttributesRepoClient implements MeasuringInstrum
         this.dapr = dapr;
     }
 
+    /**
+     * Upserts a measuring instrument attribute via sclera-edge.
+     * Swallows any failure with a WARN log.
+     */
     @Override
     public void upsertMeasuringInstrumentAttribute(String id, String name, String type, String unit,
             String value, String protocol, String category, String primaryId, String secondaryId,
@@ -42,6 +46,10 @@ public class MeasuringInstrumentAttributesRepoClient implements MeasuringInstrum
         }
     }
 
+    /**
+     * Fetches a measuring instrument attribute by its id via sclera-edge.
+     * Returns null on failure.
+     */
     @Override
     public MeasuringInstrumentAttributesDTO getMeasuringInstrumentAttributeById(String id) {
         try {
@@ -54,6 +62,10 @@ public class MeasuringInstrumentAttributesRepoClient implements MeasuringInstrum
         return null;
     }
 
+    /**
+     * Fetches all measuring instrument attributes via sclera-edge.
+     * Returns an empty list on failure.
+     */
     @Override
     public List<MeasuringInstrumentAttributesDTO> getAllMeasuringInstrumentAttributes() {
         try {
@@ -64,6 +76,10 @@ public class MeasuringInstrumentAttributesRepoClient implements MeasuringInstrum
         return Collections.emptyList();
     }
 
+    /**
+     * Fetches measuring instrument attributes for the given measuring instrument id via sclera-edge.
+     * Returns an empty list on failure.
+     */
     @Override
     public List<MeasuringInstrumentAttributesDTO> getMeasuringInstrumentAttributesByMeasuringInstrumentId(String measuringInstrumentId) {
         try {

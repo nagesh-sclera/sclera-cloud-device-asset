@@ -20,6 +20,10 @@ import io.sclera.Repository.BuildingRepository;
 import io.sclera.dto.BuildingDTO;
 import jakarta.servlet.http.HttpServletRequest;
 
+/**
+ * Manages buildings within a VDMS, including create/update/delete operations, cascading
+ * floor and location synchronization, and keeping the ADC server in sync with building changes.
+ */
 @Service
 public class BuildingService {
     @java.lang.SuppressWarnings("all")
@@ -46,6 +50,10 @@ public class BuildingService {
     @Autowired
     APICallClient apicallService;
 
+    /**
+     * Inserts or updates a building under a VDMS, choosing update when the building id already
+     * exists for that VDMS and otherwise adding it as a new building.
+     */
     public void upsertBuildingByVdmsId(BuildingDTO buildingdto, String vdms_id) {
         Set<String> building_ids = buildingRepository.getBuildingIdsByVdmsId(vdms_id);
         if (building_ids != null && building_ids.size() > 0) {
@@ -65,6 +73,9 @@ public class BuildingService {
         }
     }
 
+    /**
+     * Updates a building's name, syncs the change to ADC when persisted, and upserts its floors.
+     */
     public void updateBuildingByBuildingId(BuildingDTO buildingdto) {
         BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
         int rowsAffected = buildingRepository.updateBuildingByBuildingId(buildingdto.getName(), buildingdto.getBuilding_id(), timestamp);
@@ -74,6 +85,9 @@ public class BuildingService {
         floorservice.upsertFloorsByBuildingId(buildingdto.getFloors(), buildingdto.getBuilding_id());
     }
 
+    /**
+     * Pushes a building to the ADC server using the configured customer org and ADC configuration.
+     */
     public void syncBuildingToADCServer(BuildingDTO buildingDTO) {
         try {
             VdmsDTO vdmsDetails = vdmsRepository.getSyncDetailsForADC();
@@ -85,6 +99,12 @@ public class BuildingService {
         }
     }
 
+    /**
+     * Adds a new building to a VDMS, generating an id when absent, syncing to ADC when persisted,
+     * and upserting its floors.
+     *
+     * @return the building id of the added building
+     */
     public String addBuildingByVdmsId(BuildingDTO buildingdto, String vdms_id) {
         if (buildingdto.getBuilding_id() == null) {
             String id = Generators.timeBasedGenerator().generate().toString();
@@ -99,11 +119,17 @@ public class BuildingService {
         return buildingdto.getBuilding_id();
     }
 
+    /**
+     * Returns true when the given id is present in the supplied set of ids.
+     */
     public boolean compareIds(Set<String> building_ids, String building_id) {
         return building_ids.stream().anyMatch(b -> b.equals(building_id));
     }
 
     //delete building not tagged to a floor
+    /**
+     * Deletes all buildings that are not linked to any floor.
+     */
     public void deleteUnlinkedBuildings() {
         Set<String> unlinkedBuildingIds = buildingRepository.getUnlinkedBuildingIds();
         for (String buildingId : unlinkedBuildingIds) {
@@ -111,6 +137,9 @@ public class BuildingService {
         }
     }
 
+    /**
+     * Fetches a single building for a location from the remote API and upserts it under the VDMS.
+     */
     public void synclocationbyId(String location_id, String vdms_id) {
         BuildingDTO Building = null;
         try {
@@ -169,6 +198,11 @@ public class BuildingService {
         }
     }
 
+    /**
+     * Returns the building that contains the given location, populated with that location's floor.
+     *
+     * @return the matching building, or null when no floor is found for the location
+     */
     public BuildingDTO getBuildingByLocationId(String username, String vdms_id, String location_id) {
         FloorDTO floor = floorservice.getFloorByLocationId(location_id);
         if (floor != null) {
@@ -183,6 +217,11 @@ public class BuildingService {
         return null;
     }
 
+    /**
+     * Returns all buildings for a VDMS. When a field is supplied, each building is enriched with
+     * task counts (tagged, inspection, scheduled services, reactive services) derived from record
+     * checklists.
+     */
     public Set<BuildingDTO> getBuildingsByVdmsId(String vdms_id, String field, String field_id) {
         Set<BuildingDTO> buildings = buildingRepository.getBuildingsByVdmsId(vdms_id);
         List<String> building_ids = buildings.stream().map(BuildingDTO::getBuilding_id).collect(Collectors.toList());
@@ -238,6 +277,9 @@ public class BuildingService {
         return buildings;
     }
 
+    /**
+     * Deletes the given buildings together with their floors, processing floor deletions first.
+     */
     public void deleteBuildingsByIdsSync(String username, String vdmsid, Set<String> buildingIds) {
         log.info("deleteBuildingsByIds method called with buildingIds: {}", buildingIds);
         List<BuildingDTO> buildings = getBatchBuildingsByPagination(buildingIds);
@@ -251,6 +293,9 @@ public class BuildingService {
         buildingRepository.deleteAllById(buildingIds);
     }
 
+    /**
+     * Retrieves the given buildings in pages of 500 and returns the combined list.
+     */
     public List<BuildingDTO> getBatchBuildingsByPagination(Set<String> buildingIds) {
         List<BuildingDTO> buildings = new ArrayList<>();
         int pageNo = 1;
@@ -270,6 +315,9 @@ public class BuildingService {
         return buildings;
     }
 
+    /**
+     * Deletes each of the supplied buildings individually, cascading to floors, maps, and ADC sync.
+     */
     public void deleteBuildingsByIds(String username, String vdmsid, Set<String> building_ids, HttpServletRequest httpServletRequest) {
         for (String id : building_ids) {
             deleteBuildingById(username, vdmsid, id, httpServletRequest);
@@ -297,6 +345,9 @@ public class BuildingService {
         }
     }
 
+    /**
+     * Notifies the ADC server that the given building has been deleted.
+     */
     public void syncDeleteBuildingToADC(String buildingId) {
         try {
             VdmsDTO vdmsDetails = vdmsRepository.getSyncDetailsForADC();
@@ -310,6 +361,13 @@ public class BuildingService {
     }
 
     //  syncLocationsFromBackend to be deleted after sync
+    /**
+     * One-time migration helper that pulls all buildings, floors, and locations from the cloud and
+     * upserts them locally, then returns the buildings/floors/locations present locally but missing
+     * from the cloud so they can be removed.
+     *
+     * @return a map of mismatched buildings, floors, and locations, or null when none exist locally
+     */
     public Map<String, Object> syncLocationsFromBackend(HttpServletRequest httpServletRequest) {
         System.out.println("********************SYNC LOCATIONS FROM CLOUD************************************");
         //getting vdmsid of the sclera box
@@ -412,6 +470,12 @@ public class BuildingService {
     }
 
     //  syncLocationsFromBackend to be deleted after sync
+    /**
+     * Migration helper that collects floors with image URLs across a VDMS's buildings, defaulting
+     * the local image URL to the remote one when absent.
+     *
+     * @return the set of floors carrying image and local image URLs
+     */
     public Set<FloorDTO> syncFloorMaps(String vdms_id) {
         Set<BuildingDTO> buildings = this.getBuildingsByVdmsId(vdms_id, null, null);
         Set<FloorDTO> floors_response = new HashSet<>();
@@ -435,11 +499,21 @@ public class BuildingService {
     }
 
     //  syncLocationsFromBackend to be deleted after sync
+    /**
+     * Migration helper that updates floor map images for the given floors.
+     *
+     * @return the floors with their updated images
+     */
     public List<FloorDTO> updateFloorMaps(String vdms_id, List<FloorDTO> floorDTOS) {
         return floorservice.updateFloorImages(vdms_id, floorDTOS);
     }
 
     //  syncFloorMapsTiles to be deleted after sync
+    /**
+     * Migration helper that generates and syncs floor map tiles for all floors with images.
+     *
+     * @return the list of floors whose tile sync failed
+     */
     public List<FloorDTO> syncFloorMapsTiles() {
         String vdmsIdScleraBox = "VDMS400";
         Set<BuildingDTO> buildings = this.getBuildingsByVdmsId(vdmsIdScleraBox, null, null);

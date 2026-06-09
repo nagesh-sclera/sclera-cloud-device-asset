@@ -2,6 +2,10 @@ package io.sclera.utils;
 
 import tools.jackson.databind.annotation.JsonSerialize;
 
+/**
+ * Holds the connection details for a single remote-access port-forwarding process,
+ * including session, local/remote ports, host, and liveness flags.
+ */
 @JsonSerialize
 public class ProcessData {
     String sessionId;
@@ -64,6 +68,9 @@ public class ProcessData {
         isProcessAlive = processAlive;
     }
 
+    /**
+     * Returns true if any of the local port, remote port, or remote host is unset.
+     */
     public boolean ifEmpty() {
         return !(this.localPort != null && this.remotePort != null && this.remoteHost != null);
     }

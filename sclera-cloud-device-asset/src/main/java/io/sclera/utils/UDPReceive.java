@@ -14,6 +14,10 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.util.List;
 
+/**
+ * Listens on a UDP socket for device monitor and history payloads and upserts the
+ * parsed data through the monitor service.
+ */
 @Component
 public class UDPReceive {
 
@@ -23,6 +27,9 @@ public class UDPReceive {
 	@Autowired
 	APICallClient apiCallService;
 
+	/**
+	 * Opens the UDP socket and starts the background receiver thread.
+	 */
 	public void monitorInit() {
 
 		try {
@@ -36,6 +43,10 @@ public class UDPReceive {
 		}
 	}
 
+	/**
+	 * Runnable that continuously receives UDP datagrams and dispatches device monitor
+	 * and history updates parsed from each JSON payload.
+	 */
 	public class UDPreceive implements Runnable {
 
 		Thread thread;
@@ -52,6 +63,10 @@ public class UDPReceive {
 			datagramSocket = ds;
 		}
 
+		/**
+		 * Continuously receives datagrams, parses each JSON payload, and upserts the
+		 * contained device monitors and history records.
+		 */
 		public void run() {
 			//			int i = 0;
 			while (true) {

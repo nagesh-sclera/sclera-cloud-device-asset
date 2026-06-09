@@ -29,6 +29,10 @@ public class ScheduledJobRepoClient implements ScheduledJobRepository {
         this.dapr = dapr;
     }
 
+    /**
+     * Deletes the scheduled job associated with the given condition id via sclera-edge.
+     * Swallows exceptions with a WARN log.
+     */
     @Override
     public void deleteByConditionId(String conditionId) {
         try {

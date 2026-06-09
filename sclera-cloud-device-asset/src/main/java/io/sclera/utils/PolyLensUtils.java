@@ -9,6 +9,10 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Utility for the Poly Lens integration that builds device attribute DTOs and GraphQL device-search
+ * queries and holds the access token.
+ */
 @Component
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PolyLensUtils {
@@ -17,6 +21,10 @@ public class PolyLensUtils {
 
     private List<JSONObject> attributes = new ArrayList<>();
 
+    /**
+     * Builds the list of Poly Lens device attribute DTOs (network status, firmware, audio, camera,
+     * etc.) from the supplied attribute values for the given device.
+     */
     public List<PolyLensDeviceAttributesDTO> generatePolyLensAttributes(String networkStatusValue, String firmwareValue, String audioValue, String ipNetworkValue, String cameraValue, String microphoneValue, String wifiValue, String callStatusValue, String activeApplication, String softwareVersion, String polyLensDeviceId) {
         List<PolyLensDeviceAttributesDTO> attributes = new ArrayList<>();
         attributes.add(createPolyLensAttribute("connected", "Network Status", networkStatusValue, "", "", polyLensDeviceId));
@@ -33,6 +41,9 @@ public class PolyLensUtils {
     }
 
 
+    /**
+     * Creates a single Poly Lens device attribute DTO stamped with the current time.
+     */
     public PolyLensDeviceAttributesDTO createPolyLensAttribute(String name, String displayName, String value, String unit, String userDataValue, String polyLensDeviceId) {
         return new PolyLensDeviceAttributesDTO(name, displayName, value, unit, userDataValue, BigInteger.valueOf(System.currentTimeMillis()), polyLensDeviceId);
     }
@@ -47,6 +58,10 @@ public class PolyLensUtils {
     }
 
 
+    /**
+     * Builds the Poly Lens GraphQL device-search query JSON, varying the pagination token handling
+     * based on whether nextToken is null.
+     */
     public String generateDeviceQuery(String nextToken) {
         if (nextToken == null) {
             return "{\n" +
@@ -71,6 +86,9 @@ public class PolyLensUtils {
         }
     }
 
+    /**
+     * Returns true when the value has changed: false if both are null or both equal, true otherwise.
+     */
     public Boolean checkForValue(String value, String updatedValue) {
         if (value == null && updatedValue == null) {
             return false;

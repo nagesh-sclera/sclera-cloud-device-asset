@@ -34,6 +34,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * Manages AI-driven device support calls, including creating call logs, escalating calls
+ * to available technicians, recording call history, and executing configurable call-flow
+ * rules such as re-routing, email, and SMS actions.
+ */
 @Service
 public class AiCallService {
     @java.lang.SuppressWarnings("all")
@@ -62,6 +67,13 @@ public class AiCallService {
     @Autowired
     DeviceConditionsService deviceConditionsService;
 
+    /**
+     * Creates a new AI call log for an offline device and initiates technician assignment.
+     * If no assignee is found, schedules an auto-completion that marks the call as no-response
+     * after 30 seconds and clears the device DND status.
+     *
+     * @return a message containing the created call log id and assignment result
+     */
     public String createCallLog(String deviceId, String issueType) {
         //TODO if deviceID is called multiple times
         BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
@@ -85,6 +97,12 @@ public class AiCallService {
         return "Call log created with ID: " + id + ". " + assigneeResult;
     }
 
+    /**
+     * Retrieves a paginated list of call logs filtered by completion state and search key,
+     * enriching each entry with its call history and current call status.
+     *
+     * @return the list of call log DTOs for the requested page
+     */
     public List<AiCallLogDTO> getallcallstatus(String username, String vdmsid, Integer pageNo, Integer pageSize, String searchKey, Boolean isCompleted) {
         Integer offset = (Integer) (pageSize * (pageNo - 1));
         log.info("Inside getallcallstatus with pageNo: {}, pageSize: {}, searchKey: {}", pageNo, pageSize, searchKey);
@@ -106,6 +124,11 @@ public class AiCallService {
         return callLogsDTOS;
     }
 
+    /**
+     * Returns the counts of completed and ongoing AI calls.
+     *
+     * @return a map with keys "completed" and "ongoing" mapped to their respective counts
+     */
     public Map<String, Integer> getCallStatusCount(String username, String vdmsid) {
         Integer countCompleted = aiCallLogRepository.getCallStatusCount(Boolean.TRUE);
         Integer countOngoing = aiCallLogRepository.getCallStatusCount(Boolean.FALSE);
@@ -113,6 +136,9 @@ public class AiCallService {
         return callStatusCountMap;
     }
 
+    /**
+     * Retrieves device information from the database for the given device id.
+     */
     public DeviceDTO getDeviceInfoFromDb(String deviceId) {
         DeviceDTO deviceDTO = deviceService.getDeviceInfoFromDb(deviceId);
         System.out.println("Device info is " + deviceDTO);
@@ -153,6 +179,12 @@ public class AiCallService {
         return requestBody;
     }
 
+    /**
+     * Finds available technicians for a device and sequentially places escalation calls to them.
+     * Returns null when no technicians are available.
+     *
+     * @return a summary of how many technicians were assigned, or null if none are available
+     */
     public String getAssignee(String deviceId) {
         WebClient webClient = WebClient.create();
         List<TechnicianDTO> technicians = technicianService.getAvailableTechnicianCountryCodePhoneByDeviceId(deviceId);
@@ -343,6 +375,13 @@ public class AiCallService {
     }
 
     //Socket insert method
+    /**
+     * Persists call response events from the supplied JSON into call-log history, deduplicating by
+     * id and status, updates call status (mapping carrier statuses to rejected/busy/no-answer),
+     * clears device conditions on acceptance, and pushes socket updates for newly inserted records.
+     *
+     * @return a confirmation message
+     */
     @Transactional
     public String insertCallResponse(org.json.JSONObject json) {
         try {
@@ -456,6 +495,11 @@ public class AiCallService {
         return "Call response inserted successfully";
     }
 
+    /**
+     * Retrieves a call-log history record by id and populates it with the technician's name.
+     *
+     * @return the history DTO, or null if none is found
+     */
     public AiCallLogHistoryDTO getAiCallLogHistoryById(String aiCallLogHistoryId) {
         AiCallLogHistoryDTO aiCallLogHistoryDTO = aiCallLogHistoryRepository.getAiCallLogHistoryById(aiCallLogHistoryId);
         String technicianName = technicianService.getTechnicianNameById(aiCallLogHistoryDTO.getTechnicianId());
@@ -501,6 +545,11 @@ public class AiCallService {
         return deviceConditions;
     }
 
+    /**
+     * Updates the device's online status and reconciles the associated AI call. When a device
+     * condition id is present it terminates the scheduler-driven call, records history, clears DND,
+     * and deletes device conditions; otherwise it marks the device online and records history.
+     */
     public void updateDeviceOnlineStatus(String id, Integer status, String deviceConditionId) {
         System.out.println("*************Updating device online status for device ID: " + id + " with status: " + status);
         String aiCallLogId = aiCallLogRepository.getAiCallLogIdByDeviceId(id);
@@ -536,6 +585,11 @@ public class AiCallService {
         }
     }
 
+    /**
+     * Retrieves a call-log history record by id without enriching it with the technician name.
+     *
+     * @return the history DTO, or null if none is found
+     */
     public AiCallLogHistoryDTO fetchAiCallLogHistoryById(String aiCallLogHistoryId) {
         AiCallLogHistoryDTO aiCallLogHistoryDTO = aiCallLogHistoryRepository.getAiCallLogHistoryById(aiCallLogHistoryId);
         if (aiCallLogHistoryDTO != null) {
@@ -609,12 +663,21 @@ public class AiCallService {
         return callFlowRuleDTOS;
     }
 
+    /**
+     * Deletes the call-flow rules identified by the supplied ids.
+     */
     public void deleteCallFlowById(String username, String vdmsid, Set<String> callFlowRuleIds) {
         for (String callFlowRuleId : callFlowRuleIds) {
             callFlowRuleRepository.deleteById(callFlowRuleId);
         }
     }
 
+    /**
+     * Creates or updates a call-flow rule together with its conditions, rejecting requests that
+     * contain duplicate condition criteria and removing conditions no longer present in the request.
+     *
+     * @return a response entity describing success or the validation/conflict error
+     */
     public ResponseEntity<ResponseDTO> upsertCallFlow(CallFlowRuleDTO callFlowRuleDTO, String username, String vdmsid) {
         BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
         log.info("Processing DTO: {}", callFlowRuleDTO);
@@ -657,10 +720,17 @@ public class AiCallService {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    /**
+     * Returns the set of AI-enabled Docker names matching the given search key.
+     */
     public Set<String> browseDockers(String email, String vdmsid, String searchkey) {
         return deviceService.listAiEnabledDockers(email, vdmsid, searchkey);
     }
 
+    /**
+     * Returns a paginated list of devices eligible for call flow, each mapped to a rule DTO carrying
+     * the device id, name, and whether it has already been added.
+     */
     public List<CallFlowRuleDTO> browseCallFlowDevicesWithSearch(String username, String vdmsid, String dockername, Integer pageno, Integer pagesize, String searchkey) {
         List<CallFlowRuleDTO> aiCallEnabledDevices = new ArrayList<>();
         List<DeviceDTO> devices = deviceService.browseAiCallFlowDevicesWithSearch(username, vdmsid, dockername, pageno, pagesize, searchkey);
@@ -674,6 +744,9 @@ public class AiCallService {
         return aiCallEnabledDevices;
     }
 
+    /**
+     * Inserts or updates the supplied conditions for a call-flow rule, generating ids for new ones.
+     */
     public void upsertCallFlowConditions(CallFlowRuleDTO callFlowRuleDTO, List<CallFlowRuleConditionDTO> callFlowRuleConditionDTOs) {
         if (callFlowRuleDTO != null && callFlowRuleConditionDTOs != null && !callFlowRuleConditionDTOs.isEmpty()) {
             for (CallFlowRuleConditionDTO callFlowRuleConditionDTO : callFlowRuleConditionDTOs) {
@@ -685,20 +758,33 @@ public class AiCallService {
         }
     }
 
+    /**
+     * Returns all conditions belonging to the given call-flow rule.
+     */
     public List<CallFlowRuleConditionDTO> getCallFlowRuleConditionsByCallFlowRuleId(String callFlowRuleId) {
         return callFlowRuleConditionRepository.getCallFlowRuleConditionsByCallFlowRuleId(callFlowRuleId);
     }
 
+    /**
+     * Returns the conditions of a call-flow rule that match the given criteria.
+     */
     public List<CallFlowRuleConditionDTO> getCallFlowRuleConditionByRuleIdAndCriteria(String callFlowRuleId, String criteria) {
         return callFlowRuleConditionRepository.getCallFlowRuleConditionByRuleIdAndCriteria(callFlowRuleId, criteria);
     }
 
+    /**
+     * Deletes the call-flow rule conditions identified by the supplied ids.
+     */
     public void deleteCallFlowConditions(CallFlowRuleDTO callFlowRuleDTO, List<String> callFlowRuleConditionIds) {
         if (callFlowRuleDTO != null && callFlowRuleConditionIds != null && !callFlowRuleConditionIds.isEmpty()) {
             callFlowRuleConditionRepository.deleteCallFlowRuleConditionById(callFlowRuleConditionIds);
         }
     }
 
+    /**
+     * Retrieves all call-flow rules for a device, each populated with its conditions. Returns an
+     * empty list when the device id is blank or on error.
+     */
     public List<CallFlowRuleDTO> getCallFlowByDeviceId(String deviceId) {
         List<CallFlowRuleDTO> callFlowRuleDTOS = new ArrayList<>();
         try {
@@ -727,6 +813,10 @@ public class AiCallService {
         return callFlowRuleDTOS;
     }
 
+    /**
+     * Retrieves the call-flow rules for a device, each populated only with the conditions matching
+     * the given criteria. Returns an empty list when the device id is blank or on error.
+     */
     public List<CallFlowRuleDTO> getCallFlowByDeviceIdAndCriteria(String deviceId, String criteria) {
         if (deviceId == null || deviceId.trim().isEmpty()) {
             log.warn("Device ID is null or empty.");
@@ -756,6 +846,10 @@ public class AiCallService {
         return fetchedRules;
     }
 
+    /**
+     * Executes the call-flow actions configured for a device and criteria, dispatching re-route
+     * calls, emails, and SMS messages and recording each action in the call-log history.
+     */
     public void triggerCallFlow(String deviceId, String criteria, String callLogId) {
         List<CallFlowRuleDTO> callFlowRuleDTOS = getCallFlowByDeviceIdAndCriteria(deviceId, criteria);
         String date = "";
@@ -844,6 +938,9 @@ public class AiCallService {
         }
     }
 
+    /**
+     * Records a call-flow action outcome as a call-log history entry and pushes a socket update.
+     */
     public void insertCallFlowResponse(String description, String state, String aiCallLogId) {
         String id = Generators.timeBasedGenerator().generate().toString();
         aiCallLogHistoryRepository.insertAiCallLogHistoryState(id, BigInteger.valueOf(System.currentTimeMillis()), description, null, aiCallLogId, state);
@@ -854,6 +951,12 @@ public class AiCallService {
         }
     }
 
+    /**
+     * Places an escalation call to a manager phone number for a device and records the resulting
+     * events in the call-log history.
+     *
+     * @return a reactive result emitting "success" or "failed"
+     */
     public Mono<String> makeManagerCall(String deviceId, String phoneNo, String aiCallLogId) {
         try {
             VdmsDTO vdmsDTO = new VdmsDTO();

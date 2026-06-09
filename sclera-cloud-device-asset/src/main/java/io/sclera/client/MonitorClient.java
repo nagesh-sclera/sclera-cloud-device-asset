@@ -26,6 +26,10 @@ public class MonitorClient {
         this.dapr = dapr;
     }
 
+    /**
+     * Upserts device monitor records via sclera-edge.
+     * Swallows any failure with a WARN log.
+     */
     public void deviceUpsertbyId(String dockerName, List<DeviceMonitorDTO> deviceMonitors, String type) {
         try {
             dapr.invokeMethod(APP_ID, "monitor/deviceUpsertbyId", null, HttpExtension.GET).block();
@@ -34,6 +38,10 @@ public class MonitorClient {
         }
     }
 
+    /**
+     * Inserts device history records via sclera-edge.
+     * Swallows any failure with a WARN log.
+     */
     public void insertDevicesHistory(String dockerName, List<DeviceHistoryDTO> devicesHistory) {
         try {
             dapr.invokeMethod(APP_ID, "monitor/insertDevicesHistory", null, HttpExtension.GET).block();

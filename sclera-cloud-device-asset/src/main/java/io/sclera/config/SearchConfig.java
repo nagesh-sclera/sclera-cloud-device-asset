@@ -9,6 +9,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 
+/**
+ * Configures the JDBC template used for search queries and enables the PostgreSQL
+ * {@code fuzzystrmatch} extension so the native {@code levenshtein()} function is available.
+ */
 @Configuration
 public class SearchConfig {
 
@@ -17,6 +21,12 @@ public class SearchConfig {
     @Autowired
     private DataSource dataSource;
 
+    /**
+     * Provides a JDBC template backed by the application data source and attempts to enable the
+     * {@code fuzzystrmatch} extension for fuzzy-string search support.
+     *
+     * @return the configured JDBC template
+     */
     @Bean
     public JdbcTemplate jdbcTemplate() {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);

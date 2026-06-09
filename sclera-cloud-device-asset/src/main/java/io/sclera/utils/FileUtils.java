@@ -9,6 +9,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * Utility for storing and removing document and media files on the local server filesystem and
+ * returning their public URLs.
+ */
 @Component
 public class FileUtils {
 	
@@ -21,6 +25,10 @@ public class FileUtils {
 	
 	
 	
+	/**
+	 * Writes the given document file to the document storage path and returns its public URL, or null
+	 * if the inputs are missing.
+	 */
 	public String addDocumentToServer(String fileName, MultipartFile documentFile)
 	{
 		if(fileName != null && documentFile != null)
@@ -39,6 +47,9 @@ public class FileUtils {
 	}
 	
 	
+	/**
+	 * Deletes the named document file from the document storage path if it exists.
+	 */
 	public void removeDocumentFromServer(String fileName)
 	{
 		File file = new File(ABSOLUTE_DOCUMENT_PATH + fileName);
@@ -54,6 +65,10 @@ public class FileUtils {
 	}
 	
 	
+	/**
+	 * Writes the given media file to the media storage path and returns its public URL, or null if the
+	 * inputs are missing.
+	 */
 	public String addMediaToServer(String fileName, MultipartFile mediaFile)
 	{
 		if(fileName != null && mediaFile != null)
@@ -72,6 +87,9 @@ public class FileUtils {
 	}
 	
 	
+	/**
+	 * Deletes the named media file from the media storage path if it exists.
+	 */
 	public void removeMediaFromServer(String fileName)
 	{
 		File file = new File(ABSOLUTE_MEDIA_PATH + fileName);

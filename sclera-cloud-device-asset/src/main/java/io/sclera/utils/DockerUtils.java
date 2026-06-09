@@ -28,6 +28,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * Provides Docker network and container management helpers, including validation of
+ * network boundary conditions and wrappers around the Docker daemon HTTP API.
+ */
 @Component
 public class DockerUtils {
     private static final Logger log = LoggerFactory.getLogger(DockerUtils.class);
@@ -122,6 +126,9 @@ public class DockerUtils {
 //        return dockers.stream().anyMatch(d -> d.getName() != null && d.getName().equals(name) && d.getNetwork_origin() != null && d.getNetwork_origin().equals(network_origin));
 //    }
 
+    /**
+     * Returns true if any docker in the list has the given network name.
+     */
     public Boolean checkIfNetworkNameExist(List<DockerDTO> dockers, String name) {
         log.info("Network id {}", name);
         log.info("NETWORKS: {}", dockers);
@@ -183,6 +190,10 @@ public class DockerUtils {
         });
     }
 
+    /**
+     * Builds a macvlan name by joining the interface name and VLAN id with an
+     * underscore, or returns the interface name alone when the VLAN id is null.
+     */
     public String generateMacvlanName(String interface_name, Integer vlan_id) {
         if (interface_name != null && vlan_id != null) {
             return interface_name + "_" + vlan_id;
@@ -426,6 +437,10 @@ public class DockerUtils {
 
 
     // Docker API calls
+    /**
+     * Creates a container via the Docker daemon, targeting the master or local daemon
+     * based on the network origin.
+     */
     public NetworkConditionsResponseDTO createNetwork(ContainerDTO container, Integer network_origin) {
         log.info("Container DTO is : {}", container);
         log.info("Network origin is : {}", network_origin);
@@ -445,6 +460,9 @@ public class DockerUtils {
         return buildResponse(response);
     }
 
+    /**
+     * Starts the container with the given id via the appropriate Docker daemon.
+     */
     public NetworkConditionsResponseDTO start(String id, Integer network_origin) {
         String response = null;
         if (network_origin == 0) {
@@ -455,6 +473,9 @@ public class DockerUtils {
         return buildResponse(response);
     }
 
+    /**
+     * Connects a container to the named network via the appropriate Docker daemon.
+     */
     public NetworkConditionsResponseDTO connect(ConnectorDTO connector, String networkName, Integer network_origin) {
         String response = null;
         if (network_origin == 0) {
@@ -465,6 +486,9 @@ public class DockerUtils {
         return buildResponse(response);
     }
 
+    /**
+     * Creates a macvlan network via the appropriate Docker daemon.
+     */
     public NetworkConditionsResponseDTO createMacVlan(NetworkDTO network, Integer network_origin) {
         String response = null;
         if (network_origin == 0) {
@@ -475,6 +499,9 @@ public class DockerUtils {
         return buildResponse(response);
     }
 
+    /**
+     * Deletes the macvlan network with the given id via the appropriate Docker daemon.
+     */
     public NetworkConditionsResponseDTO deleteMacVlan(String id, Integer network_origin) {
         String response = null;
         if (network_origin == 0) {
@@ -489,6 +516,9 @@ public class DockerUtils {
         }
     }
 
+    /**
+     * Force-removes the named container via the appropriate Docker daemon.
+     */
     public NetworkConditionsResponseDTO deleteNetwork(String name, Integer network_origin) {
         String response = null;
         if (network_origin == 0) {
@@ -504,6 +534,9 @@ public class DockerUtils {
         }
     }
 
+    /**
+     * Sends a KILL signal to the named container via the appropriate Docker daemon.
+     */
     public NetworkConditionsResponseDTO dockerKillNetwork(String name, Integer network_origin) {
         Map<String, String> body = new HashMap<>();
         body.put("signal", "KILL");
@@ -522,6 +555,10 @@ public class DockerUtils {
         }
     }
 
+    /**
+     * Removes the named container after it has been killed, via the appropriate
+     * Docker daemon.
+     */
     public NetworkConditionsResponseDTO deleteNetworkAfterKilling(String name, Integer network_origin) {
         String response = null;
         if (network_origin == 0) {
@@ -537,6 +574,10 @@ public class DockerUtils {
         }
     }
 
+    /**
+     * Parses a raw Docker daemon JSON response into a NetworkConditionsResponseDTO,
+     * translating known error messages into user-facing messages.
+     */
     public NetworkConditionsResponseDTO buildResponse(String result) {
         try {
             ObjectMapper mapper = new ObjectMapper();

@@ -24,9 +24,17 @@ import java.security.cert.X509Certificate;
 import java.util.Map;
 
 
+/**
+ * Utility service for issuing raw HTTP/HTTPS requests to external systems and integrations,
+ * including helpers for building query strings and reading connection responses.
+ */
 @Service
 public class APIRequest {
 
+    /**
+     * Reads the response body from the given connection (error stream when status is above 299,
+     * otherwise the input stream) and returns it wrapped in a ResponseEntity with the matching status.
+     */
     public ResponseEntity<String> validateResponse(HttpURLConnection con) throws IOException {
         int status = con.getResponseCode();
         BufferedReader in = null;
@@ -47,6 +55,10 @@ public class APIRequest {
         return new ResponseEntity<String>(content.toString(), HttpStatus.valueOf(status));
     }
 
+    /**
+     * Reads the response body like validateResponse but preserves line breaks by appending a newline
+     * after each line, returning it in a ResponseEntity with the matching status.
+     */
     public ResponseEntity<String> validateAndFormatSlaveResponse(HttpURLConnection con) throws IOException {
         int status = con.getResponseCode();
         BufferedReader in = null;
@@ -67,6 +79,9 @@ public class APIRequest {
         return new ResponseEntity<String>(content.toString(), HttpStatus.valueOf(status));
     }
 
+    /**
+     * Appends the URL-encoded query parameters to the base API URL and returns the full URL string.
+     */
     public String getParamsString(String apiurl, Map<String, String> params) throws UnsupportedEncodingException {
         StringBuilder result = new StringBuilder();
         result.append(apiurl);
@@ -89,6 +104,11 @@ public class APIRequest {
     }
 
 
+    /**
+     * Sends a JSON HTTP request with the given method, body, headers and parameters, applying
+     * default timeouts when not provided, and returns the response (or an Unauthorized/Bad Request
+     * entity on 401 or failure).
+     */
     public ResponseEntity<String> httpRequest(String apiurl, String requestMethod, String requestBody, Map<String, String> headers, Map<String, String> parameters, Integer connectionTimeout, Integer readTimeout) {
 
         try {
@@ -139,6 +159,9 @@ public class APIRequest {
         }
     }
 
+    /**
+     * Same as httpRequest but uses the slave formatter so newlines in the response body are preserved.
+     */
     // Preserve newlines in response body for slave formatter (used by Slave)
     public ResponseEntity<String> httpRequestSlaveFormatter(String apiurl, String requestMethod, String requestBody, Map<String, String> headers, Map<String, String> parameters, Integer connectionTimeout, Integer readTimeout) {
 
@@ -193,6 +216,9 @@ public class APIRequest {
 
     // temepropry with basic auth
 
+    /**
+     * Sends a JSON HTTP request with a hard-coded Basic authentication header for testing purposes.
+     */
     public ResponseEntity<String> httpRequesttest(String apiurl, String requestMethod, String requestBody, Map<String, String> headers, Map<String, String> parameters, Integer connectionTimeout, Integer readTimeout) {
 
         try {
@@ -252,6 +278,10 @@ public class APIRequest {
 
     }
 
+    /**
+     * Executes an HTTP request against the Docker daemon API using Apache HttpClient for the given
+     * method, returning the response body as a string (or an empty JSON object when there is no body).
+     */
     public String dockerHttpRequest(String apiUrl, String requestBody, Map<String, String> headers, Map<String, String> parameters, String method) {
         try {
             String urlWithParams = getParamsString(apiUrl, parameters);
@@ -302,6 +332,9 @@ public class APIRequest {
 
     /**********************************************Daintree API's******************************************************************/
 
+    /**
+     * Requests a Daintree access token using Basic authentication built from the client id and secret.
+     */
     public ResponseEntity<String> httpRequestForDaintreeAccessToken(String authUrl, String client_id, String client_secret, String request, Map<String, String> parameter, Integer connectionTimeout, Integer readTimeout) {
         try {
             String encoding = Base64.encodeBase64String((client_id + ":" + client_secret).getBytes("UTF-8"));
@@ -327,6 +360,10 @@ public class APIRequest {
         }
     }
 
+    /**
+     * Performs a Daintree read operation by posting Zinc-encoded parameters with a Bearer token and
+     * returns the response grid converted to JSON.
+     */
     public ResponseEntity<String> httpRequestForDaintreeReadOperation(String apiurl, String mimeType, String token, String parameters, String requestbody, Integer connectionTimeout, Integer readTimeout) {
         URL url;
         try {
@@ -355,6 +392,10 @@ public class APIRequest {
 
     /**********************************************Siemens API's******************************************************************/
 
+    /**
+     * Sends a JSON HTTPS request that trusts all certificates and disables hostname verification,
+     * returning the response (or an Unauthorized/Bad Request entity on failure).
+     */
     public ResponseEntity<String> httpsRequest(String apiurl, String requestMethod, String requestBody, Map<String, String> headers, Map<String, String> parameters, Integer connectionTimeout, Integer readTimeout) {
 
         TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
@@ -419,6 +460,10 @@ public class APIRequest {
 
     /**********************************************Siemens API's******************************************************************/
 
+    /**
+     * Sends a JSON HTTP request to a Gaiamesh endpoint with retry and exponential backoff on network
+     * timeouts, returning the response or an appropriate error status when retries are exhausted.
+     */
     public ResponseEntity<String> gaiameshHttpRequest(String apiurl, String requestMethod, String requestBody, Map<String, String> headers, Map<String, String> parameters, Integer connectionTimeout, Integer readTimeout) {
 
         int maxRetries = 3;

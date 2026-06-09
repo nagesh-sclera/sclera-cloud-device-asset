@@ -1,0 +1,11 @@
+# Build context is the repo root for every service's multi-stage build.
+# Only Maven poms + src are needed; keep the context lean.
+.git
+.idea
+**/target
+*.zip
+*.pdf
+*.iml
+dapr_cli.zip
+infra/otel/*.jar
+architecture.html

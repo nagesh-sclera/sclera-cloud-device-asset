@@ -11,9 +11,17 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigInteger;
 
+/**
+ * Global controller advice that translates {@link MaximoException} instances into a
+ * standardized {@link ResponseDTO} error response with HTTP 500 status.
+ */
 @ControllerAdvice
 public class MaximoExceptionHandler {
 
+    /**
+     * Handles a {@link MaximoException} by building a {@link ResponseDTO} from the
+     * exception details and request URI, returned with HTTP 500 (internal server error).
+     */
     @ExceptionHandler(value = MaximoException.class)
     public ResponseEntity<?> handleMaximoException(MaximoException maximoException, HttpServletRequest httpServletRequest) {
         StringWriter sw = new StringWriter();

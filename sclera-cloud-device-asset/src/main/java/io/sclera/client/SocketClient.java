@@ -29,6 +29,7 @@ public class SocketClient {
         this.dapr = dapr;
     }
 
+    /** Pushes a device-count socket update via sclera-edge. Swallows exceptions with a WARN log. */
     public void socketDeviceCount() {
         try {
             dapr.invokeMethod(APP_ID, "socket/socketDeviceCount", null, HttpExtension.GET).block();
@@ -37,6 +38,7 @@ public class SocketClient {
         }
     }
 
+    /** Pushes a per-docker device-count socket update via sclera-edge. Swallows exceptions with a WARN log. */
     public void sockerDeviceCountByDocker(String dockername, String assignee) {
         try {
             dapr.invokeMethod(APP_ID, "socket/sockerDeviceCountByDocker", null, HttpExtension.GET).block();
@@ -45,6 +47,7 @@ public class SocketClient {
         }
     }
 
+    /** Pushes an AI call-log history socket update for the given id via sclera-edge. Swallows exceptions with a WARN log. */
     public void socketAiCallLogHistoryUpdate(String id) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -55,6 +58,7 @@ public class SocketClient {
         }
     }
 
+    /** Pushes an ongoing AI call-log history socket update for the given id via sclera-edge. Swallows exceptions with a WARN log. */
     public void socketAiCallLogOngoingHistoryUpdate(String id) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -65,6 +69,7 @@ public class SocketClient {
         }
     }
 
+    /** Pushes a device-status socket update via sclera-edge. Swallows exceptions with a WARN log. */
     public void socketDeviceStatus(DeviceMonitorDTO dto) {
         try {
             dapr.invokeMethod(APP_ID, "socket/socketDeviceStatus", null, HttpExtension.GET).block();
@@ -73,6 +78,7 @@ public class SocketClient {
         }
     }
 
+    /** Pushes an online-device socket notification for the given device via sclera-edge. Swallows exceptions with a WARN log. */
     public void socketOnlineDevice(String deviceId) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -83,6 +89,7 @@ public class SocketClient {
         }
     }
 
+    /** Pushes an offline-device socket notification for the given device via sclera-edge. Swallows exceptions with a WARN log. */
     public void socketOfflineDevice(String deviceId) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -93,6 +100,7 @@ public class SocketClient {
         }
     }
 
+    /** Pushes a device-update socket message via sclera-edge. Swallows exceptions with a WARN log. */
     public void socketDeviceUpdate(Set<DeviceDTO> devices) {
         try {
             dapr.invokeMethod(APP_ID, "socket/socketDeviceUpdate", null, HttpExtension.GET).block();
@@ -101,6 +109,7 @@ public class SocketClient {
         }
     }
 
+    /** Pushes a device interface-status socket update via sclera-edge. Swallows exceptions with a WARN log. */
     public void updateDeviceInterfaceStatus(InterfaceDTO dto, String a, String b) {
         try {
             dapr.invokeMethod(APP_ID, "socket/updateDeviceInterfaceStatus", null, HttpExtension.GET).block();
@@ -109,6 +118,7 @@ public class SocketClient {
         }
     }
 
+    /** Pushes a measuring-instrument sensor-value socket update for the given device via sclera-edge. Swallows exceptions with a WARN log. */
     public void socketMeasuringInstrumentSensorValueUpdate(String deviceId) {
         try {
             Map<String, String> p = new HashMap<>();
@@ -119,6 +129,7 @@ public class SocketClient {
         }
     }
 
+    /** Pushes a docker interface-status socket update via sclera-edge. Swallows exceptions with a WARN log. */
     public void socketDockerInterfaceStatus(String interfaceName, String interfaceStatus, Integer networkOrigin) {
         try {
             dapr.invokeMethod(APP_ID, "socket/socketDockerInterfaceStatus", null, HttpExtension.GET).block();

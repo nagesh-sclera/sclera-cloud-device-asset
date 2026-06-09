@@ -36,31 +36,38 @@ public class VdmsClient {
 
     // ── Service invocation (cached) ───────────────────────────────────────────
 
+    /** Fetches the VDMS id from vdms-service via the read-through cache. Returns null on origin failure. */
     public Map<String, Object> getVdmsId() {
         return readThroughCache("vdms-id", "vdms/id");
     }
 
+    /** Fetches VDMS details from vdms-service via the read-through cache. Returns null on origin failure. */
     public Map<String, Object> getVdmsDetails() {
         return readThroughCache("vdms-details", "vdms/details");
     }
 
+    /** Fetches the VDMS master record from vdms-service via the read-through cache. Returns null on origin failure. */
     public Map<String, Object> getMaster() {
         return readThroughCache("vdms-master", "vdms/master");
     }
 
+    /** Fetches whether a secondary device exists from vdms-service via the read-through cache. Returns null on origin failure. */
     public Map<String, Object> getHasSecondaryDevice() {
         return readThroughCache("vdms-has-secondary-device", "vdms/has-secondary-device");
     }
 
+    /** Fetches the secondary device id from vdms-service via the read-through cache. Returns null on origin failure. */
     public Map<String, Object> getSecondaryDeviceId() {
         return readThroughCache("vdms-secondary-device-id", "vdms/secondary-device-id");
     }
 
+    /** Fetches the customer organisation id for the given VDMS id via the read-through cache. Returns null on origin failure. */
     public Map<String, Object> getCustomerOrgId(String vdmsId) {
         return readThroughCache("vdms-customer-org-id:" + vdmsId,
                                 "vdms/customer-org-id/" + vdmsId);
     }
 
+    /** Fetches ADC sync details from vdms-service via the read-through cache. Returns null on origin failure. */
     public Map<String, Object> getSyncDetailsForAdc() {
         return readThroughCache("vdms-sync-details-for-adc", "vdms/sync-details-for-adc");
     }

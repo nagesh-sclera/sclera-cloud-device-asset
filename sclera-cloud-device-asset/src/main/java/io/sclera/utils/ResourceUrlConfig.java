@@ -4,6 +4,10 @@ package io.sclera.utils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+/**
+ * Configuration holder that exposes resource paths and URLs (backup, image, analytics, checklist
+ * images, QR-code server) and database credentials injected from application properties.
+ */
 @Component
 public class ResourceUrlConfig {
 

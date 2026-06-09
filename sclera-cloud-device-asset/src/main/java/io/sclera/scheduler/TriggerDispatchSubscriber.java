@@ -42,6 +42,10 @@ public class TriggerDispatchSubscriber extends DaprEventSubscriber<SchedulerTrig
     void setPubsubName(String v) { this.pubsubName = v; }
     void setResultTopic(String v) { this.resultTopic = v; }
 
+    /**
+     * Dapr subscription endpoint for the {@code scheduler.trigger} topic; forwards the
+     * incoming cloud event to the base subscriber's event-handling pipeline.
+     */
     @Topic(name = "scheduler.trigger", pubsubName = "pubsub",
            deadLetterTopic = "scheduler.trigger.dlq")
     @PostMapping("/internal/scheduler-trigger")

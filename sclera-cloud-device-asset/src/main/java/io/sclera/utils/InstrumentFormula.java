@@ -9,10 +9,18 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Computes display values for measuring instruments by applying type-specific
+ * formulas and formatting to a list of raw instrument attributes.
+ */
 @Component
 public class InstrumentFormula {
 
 
+    /**
+     * Returns the highest parameter index found in the input by matching tokens of
+     * the form {@code parameter_N}.
+     */
     public Integer getNoOfParametersFromString(String input) {
         Integer maxNumber = 0;
         Pattern pattern = Pattern.compile("parameter_\\d+");
@@ -28,6 +36,11 @@ public class InstrumentFormula {
     }
 
 
+    /**
+     * Dispatches to the appropriate per-type formula and returns the computed
+     * display value for the given measuring instrument type, or null on error or
+     * when no attributes are supplied.
+     */
     public String getValuebyMeasuringParameter(String calculation_type, String type, String value, String unit, List<MeasuringInstrumentAttributesDTO> attributes) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -403,6 +416,10 @@ public class InstrumentFormula {
     }
 
 
+    /**
+     * Computes cylindrical volume from the Diameter and Length attributes,
+     * formatted to two decimals.
+     */
     public String getCylindricalVolumeByParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOS) {
         try {
             Double diameter = 0.0;
@@ -445,6 +462,9 @@ public class InstrumentFormula {
     }
 
 
+    /**
+     * Computes rectangular area as Length times Breadth, formatted to two decimals.
+     */
     public String getRectangularAreaByParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOList) {
         Double breadth = 0.0;
         Double length = 0.0;
@@ -469,6 +489,10 @@ public class InstrumentFormula {
     }
 
 
+    /**
+     * Computes rectangular volume as Length times Breadth times Width, formatted to
+     * two decimals.
+     */
     public String getRectangularVolumeByParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOList) {
         Double breadth = 0.0;
         Double length = 0.0;
@@ -513,6 +537,9 @@ public class InstrumentFormula {
     }
 
 
+    /**
+     * Returns the first attribute's value formatted to two decimals, or null when blank.
+     */
     public String getLightIntensityValueByParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOList) {
         String value = measuringInstrumentAttributesDTOList.get(0).getValue();
         if (value != null && (!value.isBlank())) {
@@ -522,6 +549,9 @@ public class InstrumentFormula {
         return null;
     }
 
+    /**
+     * Computes power as Voltage times Current, formatted to two decimals.
+     */
     public String getPowerByParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOList) {
         try {
             Double voltage = null;
@@ -617,6 +647,9 @@ public class InstrumentFormula {
     }
 
 
+    /**
+     * Computes circular area from the Diameter attribute, formatted to two decimals.
+     */
     public String getCircularAreaByParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOS) {
 
         try {
@@ -649,6 +682,10 @@ public class InstrumentFormula {
     }
 
 
+    /**
+     * Derives the ladder base length from the Length attribute by dividing it by the
+     * square root of 17, formatted to two decimals.
+     */
     public String getLadderLengthbyParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOS) {
         try {
             Double base_length = null;
@@ -844,6 +881,10 @@ public class InstrumentFormula {
         return measuringInstrumentAttributesDTOList.get(0).getValue();
     }
 
+    /**
+     * Computes printer ink level as a percentage of Current Capacity over Maximum
+     * Capacity, formatted to two decimals.
+     */
     public String getPrinterInkPercentageValueByParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOList) {
         try {
             Double maximumcapacity = 0.0;
@@ -868,6 +909,10 @@ public class InstrumentFormula {
         return null;
     }
 
+    /**
+     * Maps the first attribute's numeric code to a human-readable interface status
+     * such as Up, Down, or Testing.
+     */
     public String getInterfaceStatusByParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOList) {
         if (!measuringInstrumentAttributesDTOList.isEmpty()) {
             MeasuringInstrumentAttributesDTO measuringInstrumentAttributesDTO = measuringInstrumentAttributesDTOList.get(0);
@@ -896,6 +941,10 @@ public class InstrumentFormula {
     }
 
 
+    /**
+     * Computes flow as K-Factor times Pulse Count plus Offset, formatted to two
+     * decimals.
+     */
     public String getFlowValueByParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOList) {
         Double pulseCountValue = 0.0;
         Double kFactorValue = 0.0;
@@ -923,6 +972,10 @@ public class InstrumentFormula {
         return null;
     }
 
+    /**
+     * Returns "Wasted" when the space is unoccupied while equipment is active,
+     * otherwise "Normal".
+     */
     public String getEnergyConsumptionStatusByOccupancyAndEquipmentParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOList) {
         String occupancyStatus = null;
         String equipmentStatus = null;
@@ -943,6 +996,9 @@ public class InstrumentFormula {
         }
     }
 
+    /**
+     * Returns the occupancy count as Counter In minus Counter Out, or null if negative.
+     */
     public String getCounterValueBySingleCounterInAndOut(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOList) {
         Double count_in_value = 0.0;
         Double count_out_value = 0.0;
@@ -963,6 +1019,10 @@ public class InstrumentFormula {
     }
 
 
+    /**
+     * Sums the difference of each indexed Counter In and Counter Out attribute pair
+     * and returns the total, or null if negative.
+     */
     public String getCounterValueByMultipleAttributeCounterInAndOut(List<MeasuringInstrumentAttributesDTO> attributes) {
         Double value = 0.0;
         int count = 1;
@@ -983,6 +1043,10 @@ public class InstrumentFormula {
         }
     }
 
+    /**
+     * Aggregates the two Counter In and two Counter Out attributes and returns the
+     * net count, or null if negative.
+     */
     public String getCounterValueByMultipleCounterInAndOut(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOList) {
         Double counterInvalue = 0.0;
         Double counterOutvalue = 0.0;
@@ -1008,6 +1072,9 @@ public class InstrumentFormula {
     }
 
 
+    /**
+     * Returns "ON" when the Light Intensity attribute is greater than zero, otherwise "OFF".
+     */
     public String getLightStatusByParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOList) {
         for (MeasuringInstrumentAttributesDTO measuringInstrumentAttributesDTO : measuringInstrumentAttributesDTOList) {
             if (measuringInstrumentAttributesDTO.getName() != null && measuringInstrumentAttributesDTO.getValue() != null) {
@@ -1021,6 +1088,10 @@ public class InstrumentFormula {
     }
 
 
+    /**
+     * Converts the Temperature attribute from Celsius to Fahrenheit, formatted to
+     * two decimals.
+     */
     public String getFahrenheitByCelsiusParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOList) {
         Double value = 0.0;
         for (MeasuringInstrumentAttributesDTO measuringInstrumentAttributesDTO : measuringInstrumentAttributesDTOList) {
@@ -1036,6 +1107,10 @@ public class InstrumentFormula {
     }
 
 
+    /**
+     * Returns "Faulty" when the Failure Since attribute is greater than zero,
+     * otherwise "Normal".
+     */
     public String getConfigurationStatusByParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOS) {
         for (MeasuringInstrumentAttributesDTO measuringInstrumentAttributesDTO : measuringInstrumentAttributesDTOS) {
             if (measuringInstrumentAttributesDTO.getName() != null && measuringInstrumentAttributesDTO.getName().equalsIgnoreCase("Failure Since") && measuringInstrumentAttributesDTO.getValue() != null && !measuringInstrumentAttributesDTO.getValue().isEmpty()) {
@@ -1049,6 +1124,10 @@ public class InstrumentFormula {
     }
 
 
+    /**
+     * Returns "Faulty" when the Failure Since attribute is greater than zero,
+     * otherwise "Normal".
+     */
     public String getCommunicationStatusByParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOS) {
         for (MeasuringInstrumentAttributesDTO measuringInstrumentAttributesDTO : measuringInstrumentAttributesDTOS) {
             if (measuringInstrumentAttributesDTO.getName() != null && measuringInstrumentAttributesDTO.getName().equalsIgnoreCase("Failure Since") && measuringInstrumentAttributesDTO.getValue() != null && !measuringInstrumentAttributesDTO.getValue().isEmpty()) {
@@ -1062,6 +1141,10 @@ public class InstrumentFormula {
     }
 
 
+    /**
+     * Returns the average of the non-zero light intensity values, "0" when all are
+     * zero, or null when none are present.
+     */
     public String getMultipleLightIntensityByParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOS) {
         try {
             double totalIntensity = 0.0;
@@ -1110,6 +1193,9 @@ public class InstrumentFormula {
         return null;
     }
 
+    /**
+     * Returns "Occupied" if any attribute indicates occupancy, otherwise "Unoccupied".
+     */
     public String getMultipleOccupancyStatusByParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOS) {
         try {
             boolean isUnOccupied = false;
@@ -1137,6 +1223,9 @@ public class InstrumentFormula {
     }
 
 
+    /**
+     * Maps the first matching attribute value to "Occupied" or "Unoccupied".
+     */
     public String getOccupancyStatusByParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOList) {
         for (MeasuringInstrumentAttributesDTO measuringInstrumentAttributesDTO : measuringInstrumentAttributesDTOList) {
             if (measuringInstrumentAttributesDTO.getName() != null && measuringInstrumentAttributesDTO.getValue() != null && !measuringInstrumentAttributesDTO.getValue().isEmpty()) {
@@ -1229,6 +1318,10 @@ public class InstrumentFormula {
     }
 
 
+    /**
+     * Converts the Temperature attribute from Fahrenheit to Celsius, formatted to
+     * two decimals.
+     */
     public String getCelsiusByFahrenheitParameter(List<MeasuringInstrumentAttributesDTO> measuringInstrumentAttributesDTOList) {
         Double value = 0.0;
         for (MeasuringInstrumentAttributesDTO measuringInstrumentAttributesDTO : measuringInstrumentAttributesDTOList) {

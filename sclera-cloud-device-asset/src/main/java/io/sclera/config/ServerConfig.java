@@ -15,6 +15,10 @@ import org.springframework.core.env.Environment;
 
 import java.util.Objects;
 
+/**
+ * Configures the embedded Tomcat server (when SSL is enabled) to require confidential transport on
+ * all paths and to add an additional HTTP connector that redirects to the secure port.
+ */
 @Configuration
 @ConditionalOnProperty(name = "server.ssl.enabled", havingValue = "true", matchIfMissing = true)
 public class ServerConfig {
@@ -22,6 +26,12 @@ public class ServerConfig {
     @Autowired
     private Environment environment;
 
+    /**
+     * Provides a Tomcat servlet web server factory that enforces a CONFIDENTIAL security constraint
+     * on all paths and registers the HTTP-to-HTTPS redirect connector.
+     *
+     * @return the configured servlet web server factory
+     */
     @Bean
     public ServletWebServerFactory servletWebServerFactory() {
         TomcatServletWebServerFactory tomcatServletWebServerFactory = null;

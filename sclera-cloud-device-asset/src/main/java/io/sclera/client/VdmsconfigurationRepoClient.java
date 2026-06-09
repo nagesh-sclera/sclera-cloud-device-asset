@@ -26,6 +26,7 @@ public class VdmsconfigurationRepoClient implements VdmsconfigurationRepository 
         this.dapr = dapr;
     }
 
+    /** Retrieves the VDMS configuration from vdms-service. Returns null on sidecar failure. */
     @Override
     public VdmsConfigurationDTO getConfiguration() {
         try {
