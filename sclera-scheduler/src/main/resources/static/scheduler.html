@@ -109,6 +109,15 @@
   .inst-summary .att{color:var(--amber)}
   .jcaret{display:inline-block;width:.9em;color:var(--muted);transition:transform .15s;cursor:pointer}
   .job.expanded .jcaret{transform:rotate(90deg)}
+  .instances{padding:0 .85rem .4rem 1.6rem;border-bottom:1px solid #16203a;background:#0d1424}
+  .instances:empty{display:none}
+  .inst-msg{color:var(--muted2);font-size:.74rem;padding:.45rem 0}
+  .inst-row{display:grid;grid-template-columns:150px 96px 1fr auto;align-items:center;
+            gap:.5rem;padding:.32rem 0;border-bottom:1px solid #121a2c}
+  .inst-row:last-child{border-bottom:none}
+  .inst-vdms{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .inst-when{color:var(--muted2);font-size:.7rem}
+  .inst-actions{display:flex;gap:.25rem;justify-content:flex-end}
 
   /* ---- live feed ---- */
   .fhead{display:flex;align-items:center;gap:.5rem;padding:.7rem .9rem;border-bottom:1px solid var(--line)}
@@ -221,6 +230,7 @@ async function fetchData(){
     fetch('/api/runs?limit=1500').then(x=>x.json())
   ]);
   lastData = {jobs:j, runs:r};
+  await refreshOpenInstances();
   render();
 }
 
@@ -341,18 +351,87 @@ function render(){
   document.getElementById('flist').innerHTML = feed || `<div class="empty">No runs yet.</div>`;
 }
 
-function renderInstances(jobName){
-  if(instLoading[jobName]) return `<div class="inst-msg">loading instances…</div>`;
-  const data = instCache[jobName];
-  if(!data) return `<div class="inst-msg">loading instances…</div>`;
-  if(!data.length) return `<div class="inst-msg">no instances yet</div>`;
-  return data.map(i=>`<div class="inst-row">${esc(i.vdmsId)} · ${esc(i.state)}</div>`).join('');
+function lastStatusFor(jobName, vdmsId){
+  // derive from the runs cache (lastData.runs is newest-first)
+  for(const r of lastData.runs){ if(r.jobName===jobName && r.vdmsId===vdmsId) return r.status; }
+  return null;
 }
+function instActions(state){
+  switch(state){
+    case 'ENABLED':  return [['snooze','Snooze'],['run-at','Run at'],['pause','Pause'],['disable','Disable']];
+    case 'PAUSED':   return [['resume','Resume'],['run-at','Run at'],['disable','Disable']];
+    case 'SNOOZED':  return [['resume','Resume'],['run-at','Run at']];
+    case 'DISABLED': return [['resume','Resume']];
+    default:         return [];
+  }
+}
+function instControls(jobName, f){ return ''; } // real version added in the next task
+function renderInstances(jobName){
+  if(instLoading[jobName] || !instCache[jobName]) return `<div class="inst-msg">loading instances…</div>`;
+  let data = instCache[jobName];
+  if(!data.length) return `<div class="inst-msg">no instances yet</div>`;
+  const f = instFilter[jobName] || {q:'',state:'all'};
+  let rows = data;
+  if(f.state!=='all') rows = rows.filter(i=>i.state===f.state);
+  if(f.q) rows = rows.filter(i=>i.vdmsId.toLowerCase().includes(f.q.toLowerCase()));
+  const controls = instControls(jobName, f);
+  if(!rows.length) return controls + `<div class="inst-msg">no instances match</div>`;
+  const body = rows.map(i=>{
+    const ls = lastStatusFor(jobName, i.vdmsId);
+    const sCls = ls? cls(ls):'none';
+    const when = i.state==='SNOOZED' && i.snoozeUntil ? `until ${hhmm(i.snoozeUntil)}`
+               : i.nextFireAt ? `next ${hhmm(i.nextFireAt)}` : '';
+    const acts = instActions(i.state).map(([act,lbl])=>
+      `<button class="ab${act==='disable'?' danger':''}" data-iact="${act}" data-job="${esc(jobName)}" data-vdms="${esc(i.vdmsId)}">${lbl}</button>`).join('');
+    return `<div class="inst-row">
+      <div class="inst-vdms" title="${esc(i.vdmsId)}">${esc(i.vdmsId)}</div>
+      <div><span class="badge-state st-${i.state}">${i.state}</span></div>
+      <div class="inst-when">${when}${ls?` · <span class="s ${sCls}" style="font-size:.7rem">${ls}</span>`:''}</div>
+      <div class="inst-actions">${acts}</div>
+    </div>`;
+  }).join('');
+  return controls + body;
+}
+
+async function loadInstances(jobName){
+  instLoading[jobName] = true;
+  try{ instCache[jobName] = await fetch(`/api/jobs/${encodeURIComponent(jobName)}/instances`).then(x=>x.json()); }
+  catch(_){ instCache[jobName] = instCache[jobName] || []; }
+  finally{ instLoading[jobName] = false; }
+}
+function refreshOpenInstances(){
+  return Promise.all([...jobExpanded].map(loadInstances));
+}
+function openDelayPopover(kind, job, vdms, anchor){ /* implemented in the next task */ }
 
 // ---------- interactions ----------
 document.getElementById('groups').addEventListener('click', async e=>{
   const head = e.target.closest('[data-toggle]');
   if(head){ const o=head.dataset.toggle; collapsed.has(o)?collapsed.delete(o):collapsed.add(o); render(); return; }
+
+  // expand/collapse a PER_VDMS job's instance list (ignore clicks on instance action buttons)
+  const pv = e.target.closest('[data-pervdms]');
+  if(pv && !e.target.closest('.inst-actions')){
+    const name = pv.dataset.pervdms;
+    if(jobExpanded.has(name)){ jobExpanded.delete(name); render(); return; }
+    jobExpanded.add(name); render();                 // shows "loading…"
+    if(!instCache[name]){ await loadInstances(name); render(); }
+    return;
+  }
+
+  // per-instance action
+  const iab = e.target.closest('[data-iact]');
+  if(iab){
+    const {iact, job, vdms} = iab.dataset;
+    if(iact==='snooze' || iact==='run-at'){ openDelayPopover(iact, job, vdms, iab); return; }
+    iab.disabled=true;
+    try{ await fetch(`/api/jobs/${encodeURIComponent(job)}/instances/${encodeURIComponent(vdms)}/${iact}`,{method:'POST'}); }
+    catch(_){}
+    await loadInstances(job); render();
+    return;
+  }
+
+  // global-job action (unchanged)
   const btn = e.target.closest('.ab');
   if(btn){
     const job = btn.closest('.jactions').dataset.job;
