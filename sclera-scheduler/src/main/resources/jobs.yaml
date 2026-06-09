@@ -31,6 +31,7 @@ scheduler:
       - name: vdmsSystemHealth
         schedule: "0 0 0 * * *"
         owner: device-asset
+        scope: PER_VDMS
       - name: recordChecklistStatusSync
         schedule: "0 0 0 * * *"
         owner: inspection

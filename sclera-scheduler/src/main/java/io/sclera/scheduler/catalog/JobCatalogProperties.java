@@ -6,9 +6,10 @@ import java.util.List;
 @ConfigurationProperties(prefix = "scheduler.catalog")
 public record JobCatalogProperties(List<Entry> jobs) {
 
-    public record Entry(String name, String schedule, String owner, String triggerTopic) {
+    public record Entry(String name, String schedule, String owner, String triggerTopic, String scope) {
         public Entry {
             if (triggerTopic == null) triggerTopic = "scheduler.trigger";
+            if (scope == null) scope = "GLOBAL";
         }
     }
 }

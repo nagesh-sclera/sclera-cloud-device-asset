@@ -19,7 +19,7 @@ class CatalogStartupRunnerTest {
     @Test
     void reconcilesThenRegistersInOrder() throws Exception {
         var props = new JobCatalogProperties(List.of(
-            new JobCatalogProperties.Entry("a", "@every 1m", "x", "scheduler.trigger")));
+            new JobCatalogProperties.Entry("a", "@every 1m", "x", "scheduler.trigger", "GLOBAL")));
         var runner = new CatalogStartupRunner(props, reconciler, jobService);
 
         runner.run(null);
