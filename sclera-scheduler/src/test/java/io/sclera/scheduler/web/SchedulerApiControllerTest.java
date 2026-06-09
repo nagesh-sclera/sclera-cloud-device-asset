@@ -35,6 +35,8 @@ class SchedulerApiControllerTest extends AbstractPostgresTest {
     @Autowired WebApplicationContext ctx;
     @Autowired JobRepository jobs;
     @Autowired JobRunRepository runs;
+    @Autowired JobInstanceRepository jobInstancesRepo;
+    @Autowired VdmsRegistryRepository registryRepo;
 
     @MockitoBean SchedulerClient schedulerClient;          // pause/resume/disable delegate here
     @MockitoBean DaprEventPublisher publisher;              // run-now publishes here
@@ -177,5 +179,29 @@ class SchedulerApiControllerTest extends AbstractPostgresTest {
     void pauseInstanceEndpointDelegatesToService() {
         controller().pauseInstance("vdmsSystemHealth", "vdms-1");
         verify(jobService).pauseInstance("vdmsSystemHealth", "vdms-1");
+    }
+
+    @Test
+    void listExposesScopeAndInstanceCounts() throws Exception {
+        jobs.save(new JobEntity("snmpSync", "0 0 */3 * * *", "integrations",
+                "scheduler.trigger", JobState.ENABLED));
+        JobEntity pv = new JobEntity("vdmsSystemHealth", "0 0 0 * * *", "device-asset",
+                "scheduler.trigger", JobState.ENABLED);
+        pv.setScope(JobScope.PER_VDMS);
+        jobs.save(pv);
+        registryRepo.save(new VdmsRegistryEntity("vdms-1", "UTC", true));
+        registryRepo.save(new VdmsRegistryEntity("vdms-2", "UTC", true));
+        jobInstancesRepo.save(new JobInstanceEntity("vdmsSystemHealth", "vdms-1", "vdmsSystemHealth::vdms-1"));
+        JobInstanceEntity snoozed = new JobInstanceEntity("vdmsSystemHealth", "vdms-2", "vdmsSystemHealth::vdms-2");
+        snoozed.setState(JobInstanceState.SNOOZED);
+        jobInstancesRepo.save(snoozed);
+
+        mvc().perform(get("/api/jobs"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[?(@.name=='snmpSync')].scope").value(org.hamcrest.Matchers.hasItem("GLOBAL")))
+            .andExpect(jsonPath("$[?(@.name=='snmpSync')].instanceCount").value(org.hamcrest.Matchers.hasItem(0)))
+            .andExpect(jsonPath("$[?(@.name=='vdmsSystemHealth')].scope").value(org.hamcrest.Matchers.hasItem("PER_VDMS")))
+            .andExpect(jsonPath("$[?(@.name=='vdmsSystemHealth')].instanceCount").value(org.hamcrest.Matchers.hasItem(2)))
+            .andExpect(jsonPath("$[?(@.name=='vdmsSystemHealth')].attentionCount").value(org.hamcrest.Matchers.hasItem(1)));
     }
 }

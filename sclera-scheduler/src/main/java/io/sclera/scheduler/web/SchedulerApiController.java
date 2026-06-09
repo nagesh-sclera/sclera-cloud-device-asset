@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -34,12 +35,14 @@ public class SchedulerApiController {
 
     @GetMapping
     public List<JobView> list() {
-        return jobs.findAll().stream().map(this::toView).toList();
+        Map<String, int[]> counts = instanceCounts();
+        return jobs.findAll().stream().map(j -> toView(j, counts)).toList();
     }
 
     @GetMapping("/{name}")
     public ResponseEntity<JobView> get(@PathVariable String name) {
-        return jobs.findById(name).map(j -> ResponseEntity.ok(toView(j)))
+        Map<String, int[]> counts = instanceCounts();
+        return jobs.findById(name).map(j -> ResponseEntity.ok(toView(j, counts)))
             .orElse(ResponseEntity.notFound().build());
     }
 
@@ -107,15 +110,31 @@ public class SchedulerApiController {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public void notFound() {}
 
-    private JobView toView(JobEntity j) {
+    // jobName -> [totalInstances, attentionInstances(not ENABLED)] in ONE query (no N+1).
+    private Map<String, int[]> instanceCounts() {
+        Map<String, int[]> m = new java.util.HashMap<>();
+        for (JobInstanceStateCount c : jobInstances.countByJobNameAndState()) {
+            int[] ta = m.computeIfAbsent(c.getJobName(), k -> new int[2]);
+            ta[0] += (int) c.getCnt();
+            if (c.getState() != JobInstanceState.ENABLED) ta[1] += (int) c.getCnt();
+        }
+        return m;
+    }
+
+    private JobView toView(JobEntity j, Map<String, int[]> counts) {
         Optional<JobRunEntity> last = j.getLastRunId() == null
             ? Optional.empty() : runs.findById(j.getLastRunId());
+        int[] ta = counts.getOrDefault(j.getName(), new int[2]);
+        boolean perVdms = j.getScope() == JobScope.PER_VDMS;
         return new JobView(
             j.getName(), j.getSchedule(), j.getOwner(), j.getState().name(),
             last.map(r -> r.getStatus().name()).orElse(null),
             last.map(JobRunEntity::getDurationMs).orElse(null),
             last.map(r -> iso(r.getFiredAt())).orElse(null),
-            iso(j.getNextFireAt()));
+            iso(j.getNextFireAt()),
+            j.getScope().name(),
+            perVdms ? ta[0] : 0,
+            perVdms ? ta[1] : 0);
     }
 
     private RunView toRunView(JobRunEntity r) {
