@@ -43,4 +43,19 @@ class JobRepositoryTest extends AbstractPostgresTest {
         assertThat(history).hasSize(2);
         assertThat(history.get(0).getStatus()).isEqualTo(RunStatus.FIRED);
     }
+
+    @Test
+    void findsJobsByScope() {
+        JobEntity perVdms = new JobEntity("vdmsSystemHealth", "0 0 0 * * *", "device-asset",
+                "scheduler.trigger", JobState.ENABLED);
+        perVdms.setScope(JobScope.PER_VDMS);
+        jobs.save(perVdms);
+        jobs.save(new JobEntity("snmpSync", "0 0 */3 * * *", "integrations",
+                "scheduler.trigger", JobState.ENABLED)); // defaults to GLOBAL
+
+        assertThat(jobs.findByScope(JobScope.PER_VDMS))
+                .extracting(JobEntity::getName).containsExactly("vdmsSystemHealth");
+        assertThat(jobs.findByScope(JobScope.GLOBAL))
+                .extracting(JobEntity::getName).containsExactly("snmpSync");
+    }
 }

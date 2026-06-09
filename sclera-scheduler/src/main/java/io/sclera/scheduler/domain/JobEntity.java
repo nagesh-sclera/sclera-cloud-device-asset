@@ -25,6 +25,10 @@ public class JobEntity {
     @Column(name = "state", nullable = false)
     private JobState state = JobState.ENABLED;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "scope", nullable = false)
+    private JobScope scope = JobScope.GLOBAL;
+
     @Column(name = "last_run_id")
     private UUID lastRunId;
 
@@ -59,6 +63,8 @@ public class JobEntity {
     public void setTriggerTopic(String t) { this.triggerTopic = t; }
     public JobState getState() { return state; }
     public void setState(JobState s) { this.state = s; }
+    public JobScope getScope() { return scope; }
+    public void setScope(JobScope s) { this.scope = s; }
     public UUID getLastRunId() { return lastRunId; }
     public void setLastRunId(UUID id) { this.lastRunId = id; }
     public Instant getNextFireAt() { return nextFireAt; }
