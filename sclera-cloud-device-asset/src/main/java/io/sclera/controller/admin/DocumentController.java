@@ -26,6 +26,7 @@ import jakarta.servlet.http.HttpServletRequest;
  */
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class DocumentController {
 
 
@@ -50,8 +51,8 @@ public class DocumentController {
      * @param document            document payload to upsert
      * @param httpServletRequest  current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/upsertdocument")
-    public void upsertDocument(@PathVariable String username, @PathVariable String vdmsid, @RequestBody DocumentMediaDTO document, HttpServletRequest httpServletRequest) {
+    @RequestMapping(method = RequestMethod.POST, value = "/upsertdocument")
+    public void upsertDocument(@RequestParam String username, @RequestParam String vdmsid, @RequestBody DocumentMediaDTO document, HttpServletRequest httpServletRequest) {
         documentService.upsertDocument(username, vdmsid, document,httpServletRequest);
     }
 
@@ -63,8 +64,8 @@ public class DocumentController {
      * @param vdmsid      owning VDMS id
      * @param documentid  document to delete
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "user/{username}/vdms/{vdmsid}/documentid/{documentid}/deletedocument")
-    public void deleteDocumentbyId(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String documentid) {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/documentid/{documentid}/deletedocument")
+    public void deleteDocumentbyId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String documentid) {
         documentService.deleteDocument(username, vdmsid, documentid);
     }
 
@@ -86,8 +87,8 @@ public class DocumentController {
      * @param searchkey  optional search filter (default "null")
      * @return the matching documents
      */
-    @RequestMapping(method = RequestMethod.GET, value = "user/{username}/vdms/{vdmsid}/getdocuments")
-    public Set<DocumentMediaDTO> getDocuments(@PathVariable String username, @PathVariable String vdmsid, @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey) {
+    @RequestMapping(method = RequestMethod.GET, value = "/getdocuments")
+    public Set<DocumentMediaDTO> getDocuments(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey) {
         return documentService.getDocuments(username, vdmsid, pageno, pagesize, searchkey);
     }
 
@@ -102,8 +103,8 @@ public class DocumentController {
      * @param pagesize  number of documents per page (default 5)
      * @return the documents tagged to the device
      */
-    @RequestMapping(method = RequestMethod.GET, value = "user/{username}/vdms/{vdmsid}/device/{deviceid}/getdocumentbydeviceid")
-    public Set<DocumentMediaDTO> getDocumentsByDeviceId(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String deviceid
+    @RequestMapping(method = RequestMethod.GET, value = "/device/{deviceid}/getdocumentbydeviceid")
+    public Set<DocumentMediaDTO> getDocumentsByDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String deviceid
             , @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize) {
         return documentService.getDocumentsByDeviceId(username, vdmsid, deviceid, pageno, pagesize);
     }
@@ -116,8 +117,8 @@ public class DocumentController {
      * @param share_method  how the documents are shared/tagged (default "add")
      * @param document      documents to tag
      */
-    @RequestMapping(method = RequestMethod.POST, value = "user/{username}/vdms/{vdmsid}/tagdocumenttodevice")
-    public void tagDocumentToDevice(@PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.POST, value = "/tagdocumenttodevice")
+    public void tagDocumentToDevice(@RequestParam String username, @RequestParam String vdmsid,
                                     @RequestParam(defaultValue = "add") String share_method, @RequestBody Set<DocumentMediaDTO> document) {
         documentService.tagDocumentToDevice(username, vdmsid, share_method, document);
     }
@@ -130,8 +131,8 @@ public class DocumentController {
      * @param vdmsid    owning VDMS id
      * @param document  documents to untag
      */
-    @RequestMapping(method = RequestMethod.POST, value = "user/{username}/vdms/{vdmsid}/untagdocumenttodevice")
-    public void untagDocumentToDevice(@PathVariable String username, @PathVariable String vdmsid, @RequestBody Set<DocumentMediaDTO> document) {
+    @RequestMapping(method = RequestMethod.POST, value = "/untagdocumenttodevice")
+    public void untagDocumentToDevice(@RequestParam String username, @RequestParam String vdmsid, @RequestBody Set<DocumentMediaDTO> document) {
         documentService.untagDocumentToDevice(username, vdmsid, document);
     }
 

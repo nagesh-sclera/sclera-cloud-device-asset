@@ -655,7 +655,7 @@ tr:hover td { background: #181b28; }
     <div class="card-hdr"><h2>Raw Request (via Gateway)</h2></div>
     <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px;flex-wrap:wrap">
       <div class="ff" style="width:90px"><label>Method</label><select id="raw_m" style="background:#0f1117;border:1px solid #2d3148;color:#e2e8f0;border-radius:5px;padding:6px 8px;font-size:12px"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option></select></div>
-      <div class="ff" style="flex:1;min-width:300px"><label>Full Path (after gateway base)</label><input id="raw_path" value="/vdms/id" placeholder="/asset/user/admin/vdms/VDMS760/docker/right_wing/devices"></div>
+      <div class="ff" style="flex:1;min-width:300px"><label>Full Path (after gateway base)</label><input id="raw_path" value="/vdms/id" placeholder="/asset/api/v1/sclera-cloud-device-asset-service/docker/right_wing/devices?username=admin&vdmsid=VDMS760"></div>
     </div>
     <div class="ff"><label>Body JSON</label><textarea id="raw_body" rows="4" placeholder='{"key":"value"}'></textarea></div>
     <div style="margin-top:8px;display:flex;gap:8px"><button class="btn btn-primary" onclick="sendRaw()">Send</button><button class="btn btn-neutral btn-sm" onclick="$('raw_res').style.display='none'">Clear</button></div>
@@ -675,8 +675,11 @@ const delay = ms => new Promise(r => setTimeout(r, ms));
 
 // ── URL helpers ────────────────────────────────────────────────────────────────
 const gw    = () => sv('s_gw').replace(/\/$/, '');
-const aBase = () => `${gw()}/asset/user/${enc(sv('s_user'))}/vdms/${enc(sv('s_vid'))}/docker/${enc(sv('s_docker'))}`;
-const aVdms = () => `${gw()}/asset/user/${enc(sv('s_user'))}/vdms/${enc(sv('s_vid'))}`;
+// New scheme: base /api/v1/sclera-cloud-device-asset-service. The user/vdms ids moved
+// from the path to query params; they are auto-appended by withAssetCtx() inside go().
+const aRoot = () => `${gw()}/asset/api/v1/sclera-cloud-device-asset-service`;
+const aBase = () => `${aRoot()}/docker/${enc(sv('s_docker'))}`;
+const aVdms = () => aRoot();
 const sensDevId = () => sv('sens_device') || sv('s_device');
 const ncDevId   = () => sv('nc_device')   || sv('s_device');
 const specDevId = () => sv('spec_device') || sv('s_device');
@@ -687,7 +690,17 @@ function hdrs() {
   const t = sv('s_token'); if (t) h['Authorization'] = 'Bearer ' + t;
   return h;
 }
+// For device-asset endpoints, username & vdms id are now query params (not path
+// segments). Append them once here so every call site stays simple. Both vdmsid and
+// vdms_id are sent (controllers use one or the other); unused ones are ignored.
+function withAssetCtx(url) {
+  if (typeof url !== 'string' || !url.includes('/api/v1/sclera-cloud-device-asset-service')) return url;
+  const u = enc(sv('s_user')), v = enc(sv('s_vid'));
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}username=${u}&vdmsid=${v}&vdms_id=${v}`;
+}
 async function go(url, opts = {}) {
+  url = withAssetCtx(url);
   try {
     const r = await fetch(url, { headers: hdrs(), ...opts });
     let body; try { body = await r.json(); } catch { body = await r.text().catch(() => ''); }
@@ -883,12 +896,12 @@ async function deleteVirtualDevice() {
 async function getDeviceSensors() { const r=await go(`${aBase()}/device/${enc(sensDevId())}/getalldevicesensors`); showRes('sensors-res',r); }
 async function getSingleDevice()  { const r=await go(`${aBase()}/device/${enc(sensDevId())}/getdevice`); showRes('single-dev-res',r); }
 async function getAllDeviceDetails() { const r=await go(`${aBase()}/getalldevicedetails?page_no=${sv('add_pg')||1}&page_size=${sv('add_ps')||10}&search_key=${sv('add_sk')||'null'}&profile_type=${sv('add_pt')||'internal'}`); showRes('all-det-res',r); }
-async function getDevicesByIds() { const r=await go(`${gw()}/asset/docker/${enc(sv('s_docker'))}/getdevicedetailsbyids?page_no=1&page_size=10`,{method:'POST',body:sv('byids_body')||'[]'}); showRes('byids-res',r); }
-async function getAllDeviceIds() { const r=await go(`${gw()}/asset/docker/${enc(sv('s_docker'))}/getalldeviceids?page_no=${sv('adid_pg')||1}&page_size=${sv('adid_ps')||10}&search_key=${sv('adid_sk')||'null'}`); showRes('adid-res',r); }
+async function getDevicesByIds() { const r=await go(`${aRoot()}/docker/${enc(sv('s_docker'))}/getdevicedetailsbyids?page_no=1&page_size=10`,{method:'POST',body:sv('byids_body')||'[]'}); showRes('byids-res',r); }
+async function getAllDeviceIds() { const r=await go(`${aRoot()}/docker/${enc(sv('s_docker'))}/getalldeviceids?page_no=${sv('adid_pg')||1}&page_size=${sv('adid_ps')||10}&search_key=${sv('adid_sk')||'null'}`); showRes('adid-res',r); }
 async function getRebootStatus() { const r=await go(`${aBase()}/getdevicerebootstatus`); showRes('reboot-res',r); }
 async function getAssetImages()  { const r=await go(`${aVdms()}/device/${enc(sensDevId())}/getassetimages`); showRes('assetimg-res',r); }
 async function getAllAssetImages(){ const r=await go(`${aVdms()}/device/${enc(sensDevId())}/getallassetimages`); showRes('allassetimg-res',r); }
-async function syncOnboard()     { const r=await go(`${gw()}/asset/vdms/${enc(sv('s_vid'))}/device/${enc(sensDevId())}/syncsingledeviceonboardstatus`); showRes('sync-res',r); }
+async function syncOnboard()     { const r=await go(`${aRoot()}/device/${enc(sensDevId())}/syncsingledeviceonboardstatus`); showRes('sync-res',r); }
 async function getAlertMessages(){ const r=await go(`${aBase()}/getalertmessages`); showRes('devalert-res',r); }
 
 // ── Search & Filter ────────────────────────────────────────────────────────────
@@ -976,20 +989,20 @@ async function upsertConditions() {
 }
 
 // ── Specifications ──────────────────────────────────────────────────────────────
-async function getDeviceSpec()     { const r=await go(`${gw()}/asset/api/devicespecification/${enc(specDevId())}`); showRes('spec-res',r); }
-async function getInstalledApps()  { const r=await go(`${gw()}/asset/api/installedapps/${enc(specDevId())}`); showRes('apps-res',r); }
-async function getSystemUpdates()  { const r=await go(`${gw()}/asset/api/systemupdates/${enc(specDevId())}`); showRes('updates-res',r); }
-async function getRemoteSessions() { const r=await go(`${gw()}/asset/api/remotesupport/user/${enc(sv('s_user'))}/device/${enc(specDevId())}`); showRes('remote-res',r); }
-async function createRemoteSession(){ const r=await go(`${gw()}/asset/api/remotesupport`,{method:'POST',body:sv('remote_body')||'{}'}); showRes('remote-create-res',r); }
-async function upsertDeviceSpec()  { const r=await go(`${gw()}/asset/api/devicespecification?assignee=all`,{method:'POST',body:sv('specpost_body')||'{}'}); showRes('specpost-res',r); }
+async function getDeviceSpec()     { const r=await go(`${aRoot()}/devicespecification/${enc(specDevId())}`); showRes('spec-res',r); }
+async function getInstalledApps()  { const r=await go(`${aRoot()}/installedapps/${enc(specDevId())}`); showRes('apps-res',r); }
+async function getSystemUpdates()  { const r=await go(`${aRoot()}/systemupdates/${enc(specDevId())}`); showRes('updates-res',r); }
+async function getRemoteSessions() { const r=await go(`${aRoot()}/remotesupport/device/${enc(specDevId())}`); showRes('remote-res',r); }
+async function createRemoteSession(){ const r=await go(`${aRoot()}/remotesupport`,{method:'POST',body:sv('remote_body')||'{}'}); showRes('remote-create-res',r); }
+async function upsertDeviceSpec()  { const r=await go(`${aRoot()}/devicespecification?assignee=all`,{method:'POST',body:sv('specpost_body')||'{}'}); showRes('specpost-res',r); }
 
 // ── Topology ───────────────────────────────────────────────────────────────────
 async function getTopology()        { showRes('topo-res', await go(`${aBase()}/devicetopology`)); }
-async function getGatewayId()       { showRes('gwid-res', await go(`${gw()}/asset/docker/${enc(sv('s_docker'))}/getgatewayid`)); }
+async function getGatewayId()       { showRes('gwid-res', await go(`${aRoot()}/docker/${enc(sv('s_docker'))}/getgatewayid`)); }
 async function getPowerSourceCount(){ showRes('psc-res', await go(`${aVdms()}/getpowersourcetopologyconnectionscount`)); }
 async function getPowerSourceTopo() { showRes('pst-res', await go(`${aVdms()}/getpowersourcetopologybypagination?pageno=${sv('pst_pg')||1}&pagesize=${sv('pst_ps')||10}`)); }
 async function getDeviceListInt()   { showRes('dli-res', await go(`${aBase()}/devicelistintegration`)); }
-async function getAssigneeEmail()   { showRes('asgn-res', await go(`${gw()}/asset/vdms/${enc(sv('s_vid'))}/device/network/${enc(sv('net_name'))}/getassigneeemail`)); }
+async function getAssigneeEmail()   { showRes('asgn-res', await go(`${aRoot()}/device/network/${enc(sv('net_name'))}/getassigneeemail`)); }
 
 // ── VDMS endpoints ─────────────────────────────────────────────────────────────
 async function vdmsCall(key,method,url,body) {

@@ -15,6 +15,7 @@ import java.util.List;
  */
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class DeviceTechnicianAISuggestionController {
 
     @Autowired
@@ -23,15 +24,13 @@ public class DeviceTechnicianAISuggestionController {
     /**
      * Returns technicians recommended by the AI suggestion engine for a device type.
      *
-     * @param username           owning user
      * @param vdmsid             owning VDMS id
      * @param deviceType         device type to find technician suggestions for
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @return ranked list of suggested technicians
      */
-    @GetMapping("/user/{username}/vdms/{vdmsid}/getdevicetechnicianaisuggestion")
-    public ResponseEntity<List<TechnicianDTO>> getDeviceTechnicianAISuggestionByDeviceType(@PathVariable String username,
-                                                                                           @PathVariable String vdmsid,
+    @GetMapping("/getdevicetechnicianaisuggestion")
+    public ResponseEntity<List<TechnicianDTO>> getDeviceTechnicianAISuggestionByDeviceType(@RequestParam String vdmsid,
                                                                                            @RequestParam String deviceType,
                                                                                            HttpServletRequest httpServletRequest) {
         List<TechnicianDTO> technicians = deviceTechnicianAISuggestionService.getDeviceTechnicianAISuggestionsByDeviceType(deviceType, vdmsid, httpServletRequest);

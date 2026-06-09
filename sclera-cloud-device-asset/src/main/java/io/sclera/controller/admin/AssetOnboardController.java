@@ -20,6 +20,7 @@ import java.util.Set;
  */
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class AssetOnboardController {
 
     @Autowired
@@ -32,8 +33,8 @@ public class AssetOnboardController {
      * @param vdmsid      owning VDMS id
      * @param asset_data  asset data payload to add
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/addaionboardassets")
-    public void addAssetOnboardedData(@PathVariable String username, @PathVariable String vdmsid, @RequestBody JSONObject asset_data) {
+    @RequestMapping(method = RequestMethod.POST, value = "/addaionboardassets")
+    public void addAssetOnboardedData(@RequestParam String username, @RequestParam String vdmsid, @RequestBody JSONObject asset_data) {
         assetOnboardService.addAssetOnboardedData(username, vdmsid, asset_data);
     }
 
@@ -48,8 +49,8 @@ public class AssetOnboardController {
      * @param corrigo_configuration  Corrigo configuration payload driving the update
      * @throws JSONException if the configuration payload cannot be parsed
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/updatecorrigoassets")
-    public void updateCorrigoAssets(@PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.POST, value = "/updatecorrigoassets")
+    public void updateCorrigoAssets(@RequestParam String username, @RequestParam String vdmsid,
                                     @RequestParam(defaultValue = "1") Integer pageNo, @RequestParam(defaultValue = "10") Integer pageSize,
                                     @RequestParam(defaultValue = "null") String searchKey, @RequestBody CorrigoConfigurationDTO corrigo_configuration) throws JSONException {
         assetOnboardService.updateCorrigoAssets(username, vdmsid, pageNo, pageSize, searchKey, corrigo_configuration);
@@ -63,8 +64,8 @@ public class AssetOnboardController {
      * @param onboard_asset_data  onboard asset data payload to upsert
      * @param httpServletRequest  current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/upsertonboardassets")
-    public void upsertOnboardAssets(@PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.POST, value = "/upsertonboardassets")
+    public void upsertOnboardAssets(@RequestParam String username, @RequestParam String vdmsid,
                                     @RequestBody JSONObject onboard_asset_data, HttpServletRequest httpServletRequest) {
         assetOnboardService.upsertOnboardAssets(username, vdmsid, onboard_asset_data, httpServletRequest);
     }
@@ -77,8 +78,8 @@ public class AssetOnboardController {
      * @param onboard_asset_data  onboard asset data payload carrying the new status
      * @param httpServletRequest  current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/updateassetonboardstatus")
-    public void updateAssetOnboardStatus(@PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.POST, value = "/updateassetonboardstatus")
+    public void updateAssetOnboardStatus(@RequestParam String username, @RequestParam String vdmsid,
                                          @RequestBody JSONObject onboard_asset_data, HttpServletRequest httpServletRequest) {
         assetOnboardService.updateAssetOnboardStatus(username, vdmsid, onboard_asset_data,httpServletRequest);
     }
@@ -92,8 +93,8 @@ public class AssetOnboardController {
      * @param deviceOnboardStatusDTO  onboard status payload to apply
      * @param httpServletRequest      current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/device/{device_id}/updateassetonboarddata")
-    public void updateAssetOnboardData(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String device_id,
+    @RequestMapping(method = RequestMethod.POST, value = "/device/{device_id}/updateassetonboarddata")
+    public void updateAssetOnboardData(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String device_id,
                                        @RequestBody DeviceOnboardStatusDTO deviceOnboardStatusDTO, HttpServletRequest httpServletRequest) {
         assetOnboardService.updateAssetOnboardData(username, vdmsid, device_id, deviceOnboardStatusDTO, null,httpServletRequest);
     }
@@ -113,8 +114,8 @@ public class AssetOnboardController {
      * @param search_sort_filter_details  search, sort and filter criteria payload
      * @return map of onboard category to count
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/getassetonboardcount")
-    public Map<String, Integer> getAssetOnboardCount(@PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/getassetonboardcount")
+    public Map<String, Integer> getAssetOnboardCount(@RequestParam String username, @RequestParam String vdmsid,
                                                      @PathVariable String dockername,
                                                      @RequestBody com.alibaba.fastjson.JSONObject search_sort_filter_details) {
         return assetOnboardService.getAssetOnboardCount(username, vdmsid, dockername, search_sort_filter_details);
@@ -127,8 +128,8 @@ public class AssetOnboardController {
      * @param vdms_id   owning VDMS id
      * @return set of assignee identifiers
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdms_id}/getassetonboardassignees")
-    public Set<String> getAssetOnboardAssignees(@PathVariable String username, @PathVariable String vdms_id) {
+    @RequestMapping(method = RequestMethod.GET, value = "/getassetonboardassignees")
+    public Set<String> getAssetOnboardAssignees(@RequestParam String username, @RequestParam String vdms_id) {
         return assetOnboardService.getAssetOnboardAssignees(username, vdms_id);
     }
     //------------------------------get call to fetch adc property details --------------------------------
@@ -140,8 +141,8 @@ public class AssetOnboardController {
      * @param vdms_id   owning VDMS id
      * @return property details for the VDMS
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdms_id}/getpropertydetails")
-    public VdmsDTO getPropertyDetails(@PathVariable String username, @PathVariable String vdms_id) {
+    @RequestMapping(method = RequestMethod.GET, value = "/getpropertydetails")
+    public VdmsDTO getPropertyDetails(@RequestParam String username, @RequestParam String vdms_id) {
         return assetOnboardService.getPropertyDetails(username, vdms_id);
     }
 
