@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -19,6 +20,8 @@ public class JobService {
     private static final Logger log = LoggerFactory.getLogger(JobService.class);
 
     private final JobRepository jobs;
+    private final JobInstanceRepository instances;
+    private final VdmsRegistryRepository registry;
     private final SchedulerClient scheduler;
     private final DaprEventPublisher publisher;
     private final RunRecorder recorder;
@@ -26,9 +29,12 @@ public class JobService {
     @Value("${scheduler.pubsub-name}") private String pubsubName;
     @Value("${scheduler.trigger-topic}") private String triggerTopic;
 
-    public JobService(JobRepository jobs, SchedulerClient scheduler,
+    public JobService(JobRepository jobs, JobInstanceRepository instances,
+                      VdmsRegistryRepository registry, SchedulerClient scheduler,
                       DaprEventPublisher publisher, RunRecorder recorder) {
         this.jobs = jobs;
+        this.instances = instances;
+        this.registry = registry;
         this.scheduler = scheduler;
         this.publisher = publisher;
         this.recorder = recorder;
@@ -102,5 +108,66 @@ public class JobService {
     private JobEntity require(String name) {
         return jobs.findById(name)
             .orElseThrow(() -> new IllegalArgumentException("Unknown job: " + name));
+    }
+
+    @Transactional
+    public void pauseInstance(String name, String vdmsId) {
+        JobInstanceEntity inst = requireInstance(name, vdmsId);
+        scheduler.delete(inst.getDaprJobName());
+        inst.setState(JobInstanceState.PAUSED);
+    }
+
+    @Transactional
+    public void disableInstance(String name, String vdmsId) {
+        JobInstanceEntity inst = requireInstance(name, vdmsId);
+        scheduler.delete(inst.getDaprJobName());
+        inst.setState(JobInstanceState.DISABLED);
+    }
+
+    @Transactional
+    public void resumeInstance(String name, String vdmsId) {
+        JobInstanceEntity inst = requireInstance(name, vdmsId);
+        scheduler.schedule(new JobSchedule(inst.getDaprJobName(), scheduleOf(name), timezoneOf(vdmsId)));
+        inst.setState(JobInstanceState.ENABLED);
+        inst.setSnoozeUntil(null);
+    }
+
+    /** Time-bounded pause: delete the Dapr job now; the SnoozeReconciler re-arms it at `until`. */
+    @Transactional
+    public void snoozeInstance(String name, String vdmsId, Instant until) {
+        if (until == null || until.isBefore(Instant.now())) {
+            throw new IllegalArgumentException("snooze 'until' must be in the future");
+        }
+        JobInstanceEntity inst = requireInstance(name, vdmsId);
+        scheduler.delete(inst.getDaprJobName());
+        inst.setState(JobInstanceState.SNOOZED);
+        inst.setSnoozeUntil(until);
+    }
+
+    /** Schedule a single future run; does not touch the recurring schedule. */
+    @Transactional(readOnly = true)
+    public void runAtInstance(String name, String vdmsId, Instant at) {
+        if (at == null || at.isBefore(Instant.now())) {
+            throw new IllegalArgumentException("run-at 'at' must be in the future");
+        }
+        JobInstanceEntity inst = requireInstance(name, vdmsId);
+        String oneShotName = inst.getDaprJobName() + "::once-" + UUID.randomUUID();
+        scheduler.scheduleOnce(oneShotName, at);
+    }
+
+    private JobInstanceEntity requireInstance(String name, String vdmsId) {
+        return instances.findById(new JobInstanceId(name, vdmsId))
+            .orElseThrow(() -> new IllegalArgumentException(
+                "Unknown job instance: " + name + "::" + vdmsId));
+    }
+
+    private String scheduleOf(String name) {
+        return jobs.findById(name)
+            .orElseThrow(() -> new IllegalArgumentException("Unknown job: " + name))
+            .getSchedule();
+    }
+
+    private String timezoneOf(String vdmsId) {
+        return registry.findById(vdmsId).map(VdmsRegistryEntity::getTimezone).orElse(null);
     }
 }
