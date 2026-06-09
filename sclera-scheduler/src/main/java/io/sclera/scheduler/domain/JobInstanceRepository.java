@@ -11,4 +11,9 @@ public interface JobInstanceRepository
     List<JobInstanceEntity> findByVdmsId(String vdmsId);
     List<JobInstanceEntity> findByStateAndSnoozeUntilLessThanEqual(
             JobInstanceState state, Instant cutoff);
+
+    @org.springframework.data.jpa.repository.Query(
+        "select i.jobName as jobName, i.state as state, count(i) as cnt "
+      + "from JobInstanceEntity i group by i.jobName, i.state")
+    java.util.List<JobInstanceStateCount> countByJobNameAndState();
 }

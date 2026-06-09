@@ -50,4 +50,23 @@ class JobInstanceRepositoryTest extends AbstractPostgresTest {
                 JobInstanceState.SNOOZED, Instant.now()))
                 .hasSize(1);
     }
+
+    @Test
+    void countsInstancesByJobNameAndState() {
+        seed();
+        registry.save(new VdmsRegistryEntity("vdms-2", "UTC", true));
+        JobInstanceEntity a = new JobInstanceEntity("vdmsSystemHealth", "vdms-1", "vdmsSystemHealth::vdms-1");
+        JobInstanceEntity b = new JobInstanceEntity("vdmsSystemHealth", "vdms-2", "vdmsSystemHealth::vdms-2");
+        b.setState(JobInstanceState.SNOOZED);
+        instances.save(a);
+        instances.save(b);
+
+        var counts = instances.countByJobNameAndState();
+        long enabled = counts.stream().filter(c -> c.getJobName().equals("vdmsSystemHealth")
+                && c.getState() == JobInstanceState.ENABLED).mapToLong(JobInstanceStateCount::getCnt).sum();
+        long snoozed = counts.stream().filter(c -> c.getJobName().equals("vdmsSystemHealth")
+                && c.getState() == JobInstanceState.SNOOZED).mapToLong(JobInstanceStateCount::getCnt).sum();
+        assertThat(enabled).isEqualTo(1);
+        assertThat(snoozed).isEqualTo(1);
+    }
 }
