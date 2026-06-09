@@ -39,7 +39,8 @@ public class RunFeedController {
     private static FeedRunView toView(JobRunEntity r) {
         return new FeedRunView(
             r.getRunId().toString(), r.getJobName(), r.getStatus().name(), r.isManual(),
-            iso(r.getFiredAt()), iso(r.getFinishedAt()), r.getDurationMs(), r.getError());
+            iso(r.getFiredAt()), iso(r.getFinishedAt()), r.getDurationMs(), r.getError(),
+            r.getVdmsId());
     }
 
     private static String iso(Instant t) { return t == null ? null : t.toString(); }

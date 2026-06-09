@@ -9,4 +9,5 @@ public record FeedRunView(
     String firedAt,
     String finishedAt,
     Long durationMs,
-    String error) {}
+    String error,
+    String vdmsId) {}   // null for GLOBAL-job runs
