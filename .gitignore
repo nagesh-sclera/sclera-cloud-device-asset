@@ -43,3 +43,5 @@ dapr.exe
 
 # Local dev secrets
 .env
+# brainstorming visual-companion artifacts (throwaway)
+.superpowers/
