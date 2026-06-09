@@ -78,7 +78,9 @@
        gap:.6rem;padding:.5rem .85rem;border-bottom:1px solid #16203a}
   .job:last-child{border-bottom:none}
   .job:hover{background:#111a2e}
-  .jname{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .jname{display:flex;align-items:center;gap:.3rem;font-weight:600}
+  .jn-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .scope-badge,.badge-state{flex:none}
   .jsched{color:var(--muted2);font-size:.7rem;margin-top:.1rem}
   .track{position:relative;height:30px;border:1px solid var(--line);border-radius:7px;
          background:repeating-linear-gradient(90deg,#0c1322 0,#0c1322 1px,transparent 1px,transparent 25%);overflow:hidden}
@@ -294,7 +296,7 @@ function render(){
         rows += `
           <div class="job ${open?'expanded':''}" data-pervdms="${esc(job.name)}">
             <div>
-              <div class="jname"><span class="jcaret">▸</span>${esc(job.name)}<span class="scope-badge">PER-VDMS</span></div>
+              <div class="jname"><span class="jcaret">▸</span><span class="jn-text">${esc(job.name)}</span><span class="scope-badge">PER-VDMS</span></div>
               <div class="jsched">${esc(job.schedule)}</div>
             </div>
             <div class="inst-summary">${job.instanceCount} instance${job.instanceCount===1?'':'s'} ${att}</div>
@@ -317,7 +319,7 @@ function render(){
       rows += `
         <div class="job">
           <div>
-            <div class="jname">${esc(job.name)}${stateBadge}</div>
+            <div class="jname"><span class="jn-text">${esc(job.name)}</span>${stateBadge}</div>
             <div class="jsched">${esc(job.schedule)}</div>
           </div>
           <div class="track">${gl}<div class="nowline" style="left:${nowPct}%"></div>${dots}</div>
