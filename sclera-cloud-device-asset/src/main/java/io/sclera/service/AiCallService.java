@@ -10,6 +10,7 @@ import io.sclera.client.CallFlowRuleConditionClient;
 import io.sclera.dto.*;
 import io.sclera.dto.touchscreen.settings.VdmsDTO;
 import io.sclera.integration.dto.ResponseDTO;
+import io.sclera.interfaces.AiCallServiceInterface;
 //import io.sclera.service.touchscreen.VdmsService;
 import io.sclera.client.SocketClient;
 import org.json.JSONArray;
@@ -23,7 +24,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import java.math.BigInteger;
 import java.time.*;
@@ -32,7 +32,6 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Manages AI-driven device support calls, including creating call logs, escalating calls
@@ -40,7 +39,7 @@ import java.util.stream.Collectors;
  * rules such as re-routing, email, and SMS actions.
  */
 @Service
-public class AiCallService {
+public class AiCallService implements AiCallServiceInterface {
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AiCallService.class);

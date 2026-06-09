@@ -1,13 +1,14 @@
 package io.sclera.service;
 
 import io.sclera.dto.Product_PortsDTO;
+import io.sclera.interfaces.PortServiceInterface;
 import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.Set;
 
 /** STUB: replace with remote call to AP-C1edge */
 @Service
-public class PortService {
+public class PortService implements PortServiceInterface {
     /**
      * Returns the ports for the given device. Stub returns an empty set.
      */

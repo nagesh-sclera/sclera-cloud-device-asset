@@ -9,6 +9,7 @@ import io.sclera.dto.ConnectedDevicesDTO;
 import io.sclera.dto.DeviceDTO;
 import io.sclera.dto.LoadCalculationDTO;
 import io.sclera.dto.SpecificationsDTO;
+import io.sclera.interfaces.SpecificationsServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +23,7 @@ import java.util.List;
  * calculations derived from them, including connected-device wiring and power capacity computations.
  */
 @Service
-public class SpecificationsService {
+public class SpecificationsService implements SpecificationsServiceInterface {
 
     @Autowired
     SpecificationsRepository specificationsRepository;

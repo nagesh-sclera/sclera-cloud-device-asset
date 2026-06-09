@@ -11,13 +11,13 @@ import io.sclera.dto.FloorDTO;
 import io.sclera.dto.LocationDTO;
 import io.sclera.dto.RecordChecklistDTO;
 import io.sclera.dto.touchscreen.settings.VdmsDTO;
-import io.sclera.integration.dto.ResponseDTO;
 //import io.sclera.service.touchscreen.VdmsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.BuildingRepository;
 import io.sclera.dto.BuildingDTO;
+import io.sclera.interfaces.BuildingServiceInterface;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
@@ -25,7 +25,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * floor and location synchronization, and keeping the ADC server in sync with building changes.
  */
 @Service
-public class BuildingService {
+public class BuildingService implements BuildingServiceInterface {
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(BuildingService.class);

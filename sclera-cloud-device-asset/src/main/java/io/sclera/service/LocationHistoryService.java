@@ -3,6 +3,7 @@ package io.sclera.service;
 import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.LocationHistoryRepository;
 import io.sclera.dto.LocationHistoryDTO;
+import io.sclera.interfaces.LocationHistoryServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,7 @@ import java.util.Set;
  * <p>Delegates persistence and lookups to {@link LocationHistoryRepository}.
  */
 @Service
-public class LocationHistoryService {
+public class LocationHistoryService implements LocationHistoryServiceInterface {
 
     @Autowired
     LocationHistoryRepository locationHistoryRepository;

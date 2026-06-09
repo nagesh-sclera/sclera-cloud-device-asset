@@ -1,12 +1,13 @@
 package io.sclera.service;
 
+import io.sclera.interfaces.MasterSlaveAPICallServiceInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /** STUB: replace with remote call to edge-D */
 @Service
-public class MasterSlaveAPICallService {
+public class MasterSlaveAPICallService implements MasterSlaveAPICallServiceInterface {
 
     private static final Logger log = LoggerFactory.getLogger(MasterSlaveAPICallService.class);
 

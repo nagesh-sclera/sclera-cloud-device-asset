@@ -3,7 +3,7 @@ package io.sclera.service;
 import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.TechnicianAvailabilityRepository;
 import io.sclera.dto.TechnicianAvailabilityDTO;
-import io.sclera.dto.TechnicianSkillDTO;
+import io.sclera.interfaces.TechnicianAvailabilityServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * availability data is exchanged via {@link TechnicianAvailabilityDTO}.
  */
 @Service
-public class TechnicianAvailabilityService {
+public class TechnicianAvailabilityService implements TechnicianAvailabilityServiceInterface {
     private static final Logger log = LoggerFactory.getLogger(TechnicianAvailabilityService.class);
 
     private final TechnicianAvailabilityRepository technicianAvailabilityRepository;

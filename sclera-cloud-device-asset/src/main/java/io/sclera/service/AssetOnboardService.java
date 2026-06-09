@@ -13,6 +13,7 @@ import io.sclera.dto.DeviceDTO;
 import io.sclera.dto.DeviceOnboardStatusDTO;
 import io.sclera.dto.SpecificationsDTO;
 import io.sclera.dto.touchscreen.settings.VdmsDTO;
+import io.sclera.interfaces.AssetOnboardServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
@@ -39,7 +40,7 @@ import java.util.concurrent.Executors;
  */
 @Service
 @ConfigurationProperties(prefix = "sclera")
-public class AssetOnboardService {
+public class AssetOnboardService implements AssetOnboardServiceInterface {
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AssetOnboardService.class);

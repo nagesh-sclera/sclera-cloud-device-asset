@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 
 import io.sclera.dto.DeviceDTO;
+import io.sclera.interfaces.DeviceSearchServiceInterface;
 import me.xdrop.fuzzywuzzy.FuzzySearch;
 
 /**
@@ -27,7 +28,7 @@ import me.xdrop.fuzzywuzzy.FuzzySearch;
  * field queries and fuzzy matching, and returns the resulting devices via the device service.
  */
 @Service
-public class DeviceSearchService {
+public class DeviceSearchService implements DeviceSearchServiceInterface {
 
     @Autowired
     JdbcTemplate jdbcTemplate;

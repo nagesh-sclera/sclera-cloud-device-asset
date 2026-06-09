@@ -1,10 +1,6 @@
 package io.sclera.service;
 import io.sclera.client.APICallClient;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import io.sclera.dto.ProductDTO;
 import io.sclera.utils.Utils;
+import io.sclera.interfaces.Product_DetailsServiceInterface;
 
 /**
  * Manages product detail records and their associated product images.
@@ -23,7 +20,7 @@ import io.sclera.utils.Utils;
  * remote data, and relies on {@link Utils} for server-side image file handling.
  */
 @Service
-public class Product_DetailsService {
+public class Product_DetailsService implements Product_DetailsServiceInterface {
 
     private static final Logger log = LoggerFactory.getLogger(Product_DetailsService.class);
 

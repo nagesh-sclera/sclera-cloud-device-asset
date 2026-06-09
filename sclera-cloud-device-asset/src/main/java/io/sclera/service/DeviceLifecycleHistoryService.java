@@ -6,6 +6,7 @@ import io.sclera.client.InventoryDeviceClient;
 import io.sclera.dto.DeviceDTO;
 import io.sclera.dto.DeviceLifecycleHistoryDTO;
 import io.sclera.Repository.DeviceLifeCycleHistoryRepository;
+import io.sclera.interfaces.DeviceLifecycleHistoryServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,7 @@ import java.util.Set;
  * {@link DeviceService} and {@link InventoryDeviceClient}.
  */
 @Service
-public class DeviceLifecycleHistoryService {
+public class DeviceLifecycleHistoryService implements DeviceLifecycleHistoryServiceInterface {
 
     @Autowired
     private DeviceLifeCycleHistoryRepository deviceLifeCycleHistoryRepository;

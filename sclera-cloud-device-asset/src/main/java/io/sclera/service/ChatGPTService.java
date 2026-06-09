@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import io.sclera.dto.ChatGPTDTO;
 import org.json.JSONObject;
+import io.sclera.interfaces.ChatGPTServiceInterface;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 
 import java.util.*;
@@ -29,7 +30,7 @@ import java.util.*;
  * {@link ResponseBodyEmitter}.</p>
  */
 @Service
-public class ChatGPTService {
+public class ChatGPTService implements ChatGPTServiceInterface {
 
     @Autowired
     DeviceService deviceService;

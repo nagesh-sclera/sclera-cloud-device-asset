@@ -4,9 +4,6 @@ import io.sclera.client.APICallClient;
 import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.*;
 
-import io.sclera.dto.PropertyAddressDTO;
-import io.sclera.dto.RemoteAgentServerDetailsDTO;
-import io.sclera.dto.touchscreen.MasterSlaveConfigurationDTO;
 import io.sclera.dto.touchscreen.VdmsDetailsDTO;
 import io.sclera.dto.touchscreen.settings.VdmsConfigurationDTO;
 import io.sclera.dto.touchscreen.settings.VdmsDTO;
@@ -15,6 +12,7 @@ import io.sclera.client.CorrigoClient;
 import io.sclera.client.IntegrationClient;
 import io.sclera.client.RabbitmqClient;
 import io.sclera.service.*;
+import io.sclera.interfaces.VdmsServiceInterface;
 
 import io.sclera.utils.AuthenticationUtils;
 import io.sclera.utils.Utils;
@@ -24,18 +22,12 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -52,7 +44,7 @@ import java.util.stream.Collectors;
  * context.
  */
 @Service
-public class VdmsService {
+public class VdmsService implements VdmsServiceInterface {
     private static final Logger log = LoggerFactory.getLogger(VdmsService.class);
 
     @Autowired

@@ -226,7 +226,7 @@ class DeviceConditionsServiceTest {
         DeviceConditionsDTO existing = fullCond("c1", "d1", "temp>5");
         existing.setAlert_count(7);
         existing.setLast_alerted(true);
-        when(deviceConditionsRepository.deviceConditionById("c1")).thenReturn(1);
+        when(deviceConditionsRepository.existsById("c1")).thenReturn(true);
         when(deviceConditionsRepository.getDeviceConditionsById("c1")).thenReturn(existing);
         when(deviceService.getDeviceDetails("d1")).thenReturn(null);
 
@@ -244,7 +244,7 @@ class DeviceConditionsServiceTest {
         incoming.setTrigger_time(20);
         DeviceConditionsDTO existing = fullCond("c1", "d1", "temp>5");
         existing.setTrigger_time(10); // differs -> triggers job deletion path
-        when(deviceConditionsRepository.deviceConditionById("c1")).thenReturn(1);
+        when(deviceConditionsRepository.existsById("c1")).thenReturn(true);
         when(deviceConditionsRepository.getDeviceConditionsById("c1")).thenReturn(existing);
         when(jobSchedulerService.getScheduledJobByConditionId("c1")).thenReturn(mock(ScheduledJobDTO.class));
         when(deviceService.getDeviceDetails("d1")).thenReturn(null);

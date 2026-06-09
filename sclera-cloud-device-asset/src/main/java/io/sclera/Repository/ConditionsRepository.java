@@ -22,14 +22,6 @@ import io.sclera.models.Conditions;
 @Repository
 public interface ConditionsRepository extends JpaRepository<Conditions, String> {
 
-    /**
-     * Returns whether a condition with the given identifier exists.
-     *
-     * @param id the condition identifier
-     * @return the count of matching records
-     */
-    @Query(value = "SELECT COUNT(*) FROM conditions WHERE id = ?1", nativeQuery = true)
-    int conditionById(String id);
 
 //	@Modifying
 //	@Transactional

@@ -1,12 +1,13 @@
 package io.sclera.service;
 
 import io.sclera.dto.ScheduledJobDTO;
+import io.sclera.interfaces.JobSchedulerServiceInterface;
 import org.springframework.stereotype.Service;
 import java.util.Set;
 
 /** STUB: replace with remote call to edge-D */
 @Service
-public class JobSchedulerService {
+public class JobSchedulerService implements JobSchedulerServiceInterface {
     /**
      * Creates a scheduled job and returns its id. Stub returns null.
      */

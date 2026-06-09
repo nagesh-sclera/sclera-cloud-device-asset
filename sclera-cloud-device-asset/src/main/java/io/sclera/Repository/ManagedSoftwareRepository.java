@@ -199,7 +199,6 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      * @param applicationId the application identifier
      * @return the matching managed software entity
      */
-    @Query(value = "SELECT * FROM managed_software WHERE application_id = ?1", nativeQuery = true)
     ManagedSoftware findByApplicationId(String applicationId);
 
     /**
@@ -217,8 +216,7 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      * @param applicationIds the application identifiers
      * @return the matching managed software entities
      */
-    @Query(value = "SELECT * FROM managed_software WHERE application_id IN ?1", nativeQuery = true)
-    List<ManagedSoftware> findByApplicationIds(List<String> applicationIds);
+    List<ManagedSoftware> findByApplicationIdIn(List<String> applicationIds);
 
     /**
      * Updates the status of the managed software with the given identifier.

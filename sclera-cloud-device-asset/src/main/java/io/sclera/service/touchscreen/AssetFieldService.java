@@ -2,6 +2,7 @@ package io.sclera.service.touchscreen;
 
 import io.sclera.Repository.AssetFieldRepository;
 import io.sclera.dto.AssetFieldDTO;
+import io.sclera.interfaces.AssetFieldServiceInterface;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,7 @@ import java.util.List;
  * the configured asset fields as {@link AssetFieldDTO} instances.
  */
 @Service
-public class AssetFieldService {
+public class AssetFieldService implements AssetFieldServiceInterface {
     private static final Logger log = LoggerFactory.getLogger(AssetFieldService.class);
 
     private final AssetFieldRepository assetFieldRepository;

@@ -28,6 +28,7 @@ import com.fasterxml.uuid.Generators;
 
 import io.sclera.Repository.DocumentRepository;
 import io.sclera.dto.DocumentMediaDTO;
+import io.sclera.interfaces.DocumentServiceInterface;
 import io.sclera.utils.FileUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,7 +42,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * {@link AuthenticationUtils} for service access tokens, and {@link FileUtils} for document file storage.
  */
 @Service
-public class DocumentService {
+public class DocumentService implements DocumentServiceInterface {
     private static final Logger log = LoggerFactory.getLogger(DocumentService.class);
 
     @Autowired

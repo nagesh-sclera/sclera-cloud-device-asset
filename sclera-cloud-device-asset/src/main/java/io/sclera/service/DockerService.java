@@ -1,13 +1,14 @@
 package io.sclera.service;
 
 import io.sclera.dto.touchscreen.settings.DockerDTO;
+import io.sclera.interfaces.DockerServiceInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /** STUB: replace with remote call to edge-D */
 @Service
-public class DockerService {
+public class DockerService implements DockerServiceInterface {
 
     private static final Logger log = LoggerFactory.getLogger(DockerService.class);
 

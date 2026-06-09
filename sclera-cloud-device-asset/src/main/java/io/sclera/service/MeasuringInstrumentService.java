@@ -29,6 +29,7 @@ import io.sclera.utils.InstrumentFormula;
 
 import jakarta.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
+import io.sclera.interfaces.MeasuringInstrumentServiceInterface;
 
 /**
  * Manages measuring instruments (sensors) and their attributes: upsert, deletion,
@@ -44,7 +45,7 @@ import javax.sql.DataSource;
  * {@link RabbitmqClient}, {@link IOCClient}, {@link DaintreeClient}, and {@link APICallClient}.
  */
 @Service
-public class MeasuringInstrumentService {
+public class MeasuringInstrumentService implements MeasuringInstrumentServiceInterface {
     private static final Logger log = LoggerFactory.getLogger(MeasuringInstrumentService.class);
 
     @Autowired
@@ -527,7 +528,7 @@ public class MeasuringInstrumentService {
      * @return the instrument count
      */
     public Integer getInstrumentCountByDeviceId(String device_id) {
-        return measuingInstrumentRepository.getInstrumentCountByDeviceId(device_id);
+        return (int) measuingInstrumentRepository.countByDevice_Id(device_id);
     }
 
 
@@ -683,7 +684,7 @@ public class MeasuringInstrumentService {
      * @return {@code true} if at least one instrument has an active alert, otherwise {@code false}
      */
     public Boolean getMeasuringInstrumentAlertStatusByDeviceId(String device_id) {
-        Integer measuring_instrument_alert_count = measuingInstrumentRepository.getMeasuringInstrumentAlertCountDeviceId(device_id, true);
+        Integer measuring_instrument_alert_count = (int) measuingInstrumentRepository.countByDevice_IdAndAlert(device_id, true);
 
         if (measuring_instrument_alert_count > 0) {
             return true;

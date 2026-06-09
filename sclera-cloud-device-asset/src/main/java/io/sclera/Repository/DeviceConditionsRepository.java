@@ -150,14 +150,6 @@ public interface DeviceConditionsRepository extends JpaRepository<DeviceConditio
     @Query(value = "UPDATE device_conditions SET alert_count = ?2, last_alerted = ?3, last_alerted_time = NULL  WHERE id = ?1", nativeQuery = true)
     void resetDeviceConditions(String id, Integer alert_count, Boolean last_alerted);
 
-    /**
-     * Returns whether a device condition with the given identifier exists.
-     *
-     * @param id the device-condition identifier
-     * @return the count of matching records
-     */
-    @Query(value = "SELECT COUNT(*) FROM device_conditions WHERE id = ?1", nativeQuery = true)
-    int deviceConditionById(String id);
 
     /**
      * Returns the alert count of the offline AI-call condition for the given device.

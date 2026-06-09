@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import io.sclera.Repository.ManagedSoftwareRepository;
 import io.sclera.dto.ManagedSoftwareDTO;
+import io.sclera.interfaces.ManagedSoftwareSearchServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,7 @@ import java.util.Set;
  * {@link ManagedSoftwareRepository}.</p>
  */
 @Service
-public class ManagedSoftwareSearchService {
+public class ManagedSoftwareSearchService implements ManagedSoftwareSearchServiceInterface {
     private static final Logger log = LoggerFactory.getLogger(ManagedSoftwareSearchService.class);
 
     @Autowired

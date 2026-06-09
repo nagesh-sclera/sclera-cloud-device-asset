@@ -6,6 +6,7 @@ import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.DeviceTechnicianAISuggestionRepository;
 import io.sclera.dto.DeviceTechnicianAISuggestionDTO;
 import io.sclera.dto.TechnicianDTO;
+import io.sclera.interfaces.DeviceTechnicianAISuggestionServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -13,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Manages AI-generated technician suggestions for device types.
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  */
 @Service
 
-public class DeviceTechnicianAISuggestionService {
+public class DeviceTechnicianAISuggestionService implements DeviceTechnicianAISuggestionServiceInterface {
     private static final Logger log = LoggerFactory.getLogger(DeviceTechnicianAISuggestionService.class);
 
 

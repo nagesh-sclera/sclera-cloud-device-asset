@@ -1,5 +1,6 @@
 package io.sclera.service;
 import io.sclera.client.IOCClient;
+import io.sclera.interfaces.ConditionsServiceInterface;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -56,7 +57,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * {@link io.sclera.client.AlertProfileClient}, {@link io.sclera.client.AlertDowntimeScheduleClient}).
  */
 @Service
-public class ConditionsService {
+public class ConditionsService implements ConditionsServiceInterface {
 
     private static final Logger log = LoggerFactory.getLogger(ConditionsService.class);
 
@@ -154,7 +155,7 @@ public class ConditionsService {
     public void upsertConditions(String username, String vdmsid, String dockername, String conditionGroup, Set<ConditionsDTO> conditions, HttpServletRequest httpServletRequest) {
         for (ConditionsDTO condition : conditions) {
             try {
-                if (conditionsRepository.conditionById(condition.getId()) != 0) {
+                if (conditionsRepository.existsById(condition.getId())) {
 
                     ConditionsDTO conditionAlertCountDetails = conditionsRepository.getConditionAlertCountDetails(condition.getId());
 

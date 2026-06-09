@@ -17,6 +17,7 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import io.sclera.interfaces.TechnicianServiceInterface;
 
 /**
  * Service that manages technicians and their associated skill profiles,
@@ -35,7 +36,7 @@ import java.util.stream.Collectors;
  * {@link AiCallLogHistoryRepository}.
  */
 @Service
-public class TechnicianService {
+public class TechnicianService implements TechnicianServiceInterface {
     private static final Logger log = LoggerFactory.getLogger(TechnicianService.class);
 
     private final TechnicianRepository technicianRepository;

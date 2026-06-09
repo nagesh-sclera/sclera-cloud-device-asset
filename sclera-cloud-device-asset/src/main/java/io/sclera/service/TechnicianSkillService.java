@@ -3,9 +3,9 @@ package io.sclera.service;
 import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.TechnicianSkillRepository;
 import io.sclera.dto.TechnicianSkillDTO;
+import io.sclera.interfaces.TechnicianSkillServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.testng.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * data through {@link TechnicianSkillDTO}.
  */
 @Service
-public class TechnicianSkillService {
+public class TechnicianSkillService implements TechnicianSkillServiceInterface {
     private static final Logger log = LoggerFactory.getLogger(TechnicianSkillService.class);
 
     private final TechnicianSkillRepository technicianSkillRepository;
