@@ -57,4 +57,14 @@ class TriggerDispatchSubscriberTest {
         verifyNoInteractions(handlers);
         verifyNoInteractions(publisher);
     }
+
+    @Test
+    void perVdmsJob_passesVdmsIdToHandler() {
+        when(publisher.publish(any(), any(), any())).thenReturn(new PublishResult(true, "e1", null));
+        subscriber().handleEvent(new SchedulerTriggerEvent("vdmsSystemHealth", "r9", "vdms-7", 0L));
+        verify(handlers).vdmsSystemHealth("vdms-7");
+        ArgumentCaptor<SchedulerResultEvent> cap = ArgumentCaptor.forClass(SchedulerResultEvent.class);
+        verify(publisher).publish(eq("pubsub"), eq("scheduler.result"), cap.capture());
+        assertEquals("SUCCESS", cap.getValue().status());
+    }
 }

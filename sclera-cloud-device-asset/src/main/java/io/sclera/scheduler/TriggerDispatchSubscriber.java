@@ -61,19 +61,19 @@ public class TriggerDispatchSubscriber extends DaprEventSubscriber<SchedulerTrig
         }
         long t0 = System.currentTimeMillis();
         try {
-            run(data.jobName());
+            run(data.jobName(), data.vdmsId());
             publish(data, "SUCCESS", t0, null);
         } catch (Exception e) {
             publish(data, "FAILED", t0, e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
         }
     }
 
-    private void run(String job) {
+    private void run(String job, String vdmsId) {
         switch (job) {
             case "historyRecord" -> handlers.historyRecord();
             case "unlinkVendorOrganisation" -> handlers.unlinkVendorOrganisation();
             case "internetBandwidthCheck" -> handlers.internetBandwidthCheck();
-            case "vdmsSystemHealth" -> handlers.vdmsSystemHealth();
+            case "vdmsSystemHealth" -> handlers.vdmsSystemHealth(vdmsId);
             case "connectedStatusForIOC" -> handlers.connectedStatusForIOC();
             case "qrcodeNfcBarcodeSync" -> handlers.qrcodeNfcBarcodeSync();
             case "syncAssetCountToCloud" -> handlers.syncAssetCountToCloud();
