@@ -40,7 +40,7 @@ class JobCallbackControllerTest {
         // The recorded run and the published trigger MUST share one runId so the
         // result subscriber can correlate them.
         ArgumentCaptor<UUID> recordedRunId = ArgumentCaptor.forClass(UUID.class);
-        verify(recorder).recordFired(eq("snmpSync"), recordedRunId.capture(), eq(false));
+        verify(recorder).recordFired(eq("snmpSync"), recordedRunId.capture(), eq(false), isNull());
         verify(publisher).publish(eq("pubsub"), eq("scheduler.trigger"), argThat(payload ->
             payload instanceof SchedulerTriggerEvent e
                 && e.jobName().equals("snmpSync")
@@ -57,6 +57,37 @@ class JobCallbackControllerTest {
         // 500 signals the Dapr Scheduler to retry the fire.
         assertThat(response.getStatusCode().value()).isEqualTo(500);
         // The run was still recorded as FIRED (reaper reclaims it if the retry mints a new one).
-        verify(recorder).recordFired(eq("snmpSync"), any(), eq(false));
+        verify(recorder).recordFired(eq("snmpSync"), any(), eq(false), isNull());
+    }
+
+    @Test
+    void perVdmsFireRecordsAndPublishesVdmsId() {
+        when(publisher.publish(any(), any(), any())).thenReturn(new PublishResult(true, "e", null));
+
+        controller().onJobFired("vdmsSystemHealth::vdms-7");
+
+        verify(recorder).recordFired(eq("vdmsSystemHealth"), any(), eq(false), eq("vdms-7"));
+        verify(publisher).publish(eq("pubsub"), eq("scheduler.trigger"), argThat(p ->
+                p instanceof SchedulerTriggerEvent e
+                        && e.jobName().equals("vdmsSystemHealth")
+                        && "vdms-7".equals(e.vdmsId())));
+    }
+
+    @Test
+    void oneShotFireIsRecordedAsManual() {
+        when(publisher.publish(any(), any(), any())).thenReturn(new PublishResult(true, "e", null));
+
+        controller().onJobFired("vdmsSystemHealth::vdms-7::once-abc");
+
+        verify(recorder).recordFired(eq("vdmsSystemHealth"), any(), eq(true), eq("vdms-7"));
+    }
+
+    @Test
+    void globalFireHasNullVdmsId() {
+        when(publisher.publish(any(), any(), any())).thenReturn(new PublishResult(true, "e", null));
+
+        controller().onJobFired("snmpSync");
+
+        verify(recorder).recordFired(eq("snmpSync"), any(), eq(false), isNull());
     }
 }

@@ -5,7 +5,11 @@ import io.sclera.dapr.PublishResult;
 import io.sclera.scheduler.AbstractPostgresTest;
 import io.sclera.scheduler.client.SchedulerClient;
 import io.sclera.scheduler.domain.*;
+import io.sclera.scheduler.service.JobService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -36,7 +40,20 @@ class SchedulerApiControllerTest extends AbstractPostgresTest {
     @MockitoBean DaprEventPublisher publisher;              // run-now publishes here
     // CatalogStartupRunner is mocked in AbstractPostgresTest (keeps the job table clean).
 
+    // Unit-test mocks for the controller() factory (do NOT affect Spring context)
+    @Mock JobRepository mockJobs;
+    @Mock JobRunRepository mockRuns;
+    @Mock JobInstanceRepository instances;
+    @Mock JobService jobService;
+
+    @BeforeEach
+    void initMocks() { MockitoAnnotations.openMocks(this); }
+
     MockMvc mvc() { return MockMvcBuilders.webAppContextSetup(ctx).build(); }
+
+    private SchedulerApiController controller() {
+        return new SchedulerApiController(mockJobs, mockRuns, instances, jobService);
+    }
 
     private JobEntity enabledJob(String name) {
         return new JobEntity(name, "0 0 */3 * * *", "integrations", "scheduler.trigger", JobState.ENABLED);
@@ -140,5 +157,25 @@ class SchedulerApiControllerTest extends AbstractPostgresTest {
     @Test
     void unknownJobReturns404() throws Exception {
         mvc().perform(post("/api/jobs/nope/pause")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void snoozeEndpointDelegatesToService() {
+        controller().snooze("vdmsSystemHealth", "vdms-1", "2026-06-10T00:00:00Z");
+        verify(jobService).snoozeInstance("vdmsSystemHealth", "vdms-1",
+                java.time.Instant.parse("2026-06-10T00:00:00Z"));
+    }
+
+    @Test
+    void runAtEndpointDelegatesToService() {
+        controller().runAt("vdmsSystemHealth", "vdms-1", "2026-06-10T00:00:00Z");
+        verify(jobService).runAtInstance("vdmsSystemHealth", "vdms-1",
+                java.time.Instant.parse("2026-06-10T00:00:00Z"));
+    }
+
+    @Test
+    void pauseInstanceEndpointDelegatesToService() {
+        controller().pauseInstance("vdmsSystemHealth", "vdms-1");
+        verify(jobService).pauseInstance("vdmsSystemHealth", "vdms-1");
     }
 }

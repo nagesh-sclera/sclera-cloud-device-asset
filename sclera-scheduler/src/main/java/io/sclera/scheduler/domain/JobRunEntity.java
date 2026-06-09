@@ -34,15 +34,24 @@ public class JobRunEntity {
     @Column(name = "error")
     private String error;
 
+    @Column(name = "vdms_id")
+    private String vdmsId;
+
     protected JobRunEntity() {}
 
     public JobRunEntity(UUID runId, String jobName, RunStatus status,
                         boolean manual, Instant firedAt) {
+        this(runId, jobName, status, manual, firedAt, null);
+    }
+
+    public JobRunEntity(UUID runId, String jobName, RunStatus status,
+                        boolean manual, Instant firedAt, String vdmsId) {
         this.runId = runId;
         this.jobName = jobName;
         this.status = status;
         this.manual = manual;
         this.firedAt = firedAt;
+        this.vdmsId = vdmsId;
     }
 
     public UUID getRunId() { return runId; }
@@ -57,4 +66,5 @@ public class JobRunEntity {
     public void setDurationMs(Long d) { this.durationMs = d; }
     public String getError() { return error; }
     public void setError(String e) { this.error = e; }
+    public String getVdmsId() { return vdmsId; }
 }

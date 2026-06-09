@@ -51,4 +51,17 @@ class RunRecorderTest extends AbstractPostgresTest {
     void recordResultForUnknownRunIsIgnored() {
         recorder.recordResult(UUID.randomUUID(), RunStatus.SUCCESS, 1L, null); // no throw
     }
+
+    @Test
+    void recordFiredWithVdmsIdPersistsIt() {
+        JobRepository jobsMock = org.mockito.Mockito.mock(JobRepository.class);
+        JobRunRepository runsMock = org.mockito.Mockito.mock(JobRunRepository.class);
+        java.util.UUID runId = java.util.UUID.randomUUID();
+        new RunRecorder(jobsMock, runsMock).recordFired("vdmsSystemHealth", runId, false, "vdms-9");
+
+        org.mockito.ArgumentCaptor<JobRunEntity> cap =
+                org.mockito.ArgumentCaptor.forClass(JobRunEntity.class);
+        org.mockito.Mockito.verify(runsMock).save(cap.capture());
+        org.assertj.core.api.Assertions.assertThat(cap.getValue().getVdmsId()).isEqualTo("vdms-9");
+    }
 }

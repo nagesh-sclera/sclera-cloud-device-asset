@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Thin Dapr client delegating to the sclera-workorders microservice (AP-C3).
+ * Thin Dapr client delegating to the sclera-integrations microservice (AP-C3).
  *
  * Replaces the stub {@code io.sclera.service.MyDevicesService}.
  * Collection-returning methods return empty collections on sidecar failure (stub default).

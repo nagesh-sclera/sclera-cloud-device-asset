@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface JobRepository extends JpaRepository<JobEntity, String> {
     List<JobEntity> findByState(JobState state);
+    List<JobEntity> findByScope(JobScope scope);
 }

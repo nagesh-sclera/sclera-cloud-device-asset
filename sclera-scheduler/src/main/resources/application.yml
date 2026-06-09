@@ -43,6 +43,9 @@ scheduler:
   result-topic: scheduler.result
   orphan-timeout-seconds: 900
   history-retention-days: 30
+  vdms-app-id: sclera-vdms-service
+  max-instances: 5000
+  snooze-scan-ms: 60000
 
 logging:
   level:

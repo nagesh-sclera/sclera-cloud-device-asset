@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import jakarta.transaction.Transactional;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -15,6 +16,9 @@ public interface VdmsJpaRepository extends JpaRepository<Vdms, String> {
 
     @Query(value = "SELECT * FROM vdms LIMIT 1", nativeQuery = true)
     Optional<Vdms> findFirst();
+
+    @Query(value = "SELECT * FROM vdms WHERE activation_status = 'ACTIVE'", nativeQuery = true)
+    List<Vdms> findAllActive();
 
     @Modifying
     @Transactional

@@ -47,11 +47,11 @@ public class DeviceAssetJobHandlers {
      *  and these methods are absent from it. */
     public void internetBandwidthCheck()   { stub("internetBandwidthCheck"); }
 
-    /** Mirrors {@code Schedular#scheduleVdmsSystemHealth} (which calls
-     *  scheduleLorawanDownlink + scheduleVdmsSystemHealth + scheduleVDMSDataForIOCSync).
+    /** Mirrors {@code Schedular#scheduleVdmsSystemHealth}, now per-VDMS. The scheduler fires
+     *  this once per VDMS; vdmsId identifies which site to process.
      *  STUB: LorawanService, vdmsService.AddSystemHealthAsResponse(), and
      *  vdmsService.sendVDMSData() were not extracted into this service. */
-    public void vdmsSystemHealth()         { stub("vdmsSystemHealth"); }
+    public void vdmsSystemHealth(String vdmsId) { stub("vdmsSystemHealth[" + vdmsId + "]"); }
 
     /** Mirrors {@code Schedular#scheduleConnectedStatusForIOC} (scheduleConnectedStatusForIOC
      *  + scheduleUserActivityData).

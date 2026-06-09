@@ -22,16 +22,20 @@ public class JobCatalogReconciler {
     @Transactional
     public void reconcile(List<JobCatalogProperties.Entry> entries) {
         for (JobCatalogProperties.Entry e : entries) {
+            JobScope scope = JobScope.valueOf(e.scope());
             jobs.findById(e.name()).ifPresentOrElse(existing -> {
                 existing.setSchedule(e.schedule());
                 existing.setOwner(e.owner());
                 existing.setTriggerTopic(e.triggerTopic());
+                existing.setScope(scope);
                 // state, lastRunId, nextFireAt are runtime-owned — left untouched
-                log.info("Catalog: updated job name={} schedule={}", e.name(), e.schedule());
+                log.info("Catalog: updated job name={} schedule={} scope={}", e.name(), e.schedule(), scope);
             }, () -> {
-                jobs.save(new JobEntity(e.name(), e.schedule(), e.owner(),
-                        e.triggerTopic(), JobState.ENABLED));
-                log.info("Catalog: inserted new job name={}", e.name());
+                JobEntity job = new JobEntity(e.name(), e.schedule(), e.owner(),
+                        e.triggerTopic(), JobState.ENABLED);
+                job.setScope(scope);
+                jobs.save(job);
+                log.info("Catalog: inserted new job name={} scope={}", e.name(), scope);
             });
         }
     }

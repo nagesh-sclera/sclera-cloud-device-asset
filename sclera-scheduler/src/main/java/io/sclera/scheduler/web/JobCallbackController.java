@@ -44,13 +44,20 @@ public class JobCallbackController {
 
     @PostMapping("/job/{name}")
     public ResponseEntity<Void> onJobFired(@PathVariable("name") String name) {
+        // Dapr job names: "{jobName}" (global), "{jobName}::{vdmsId}" (per-VDMS),
+        // or "{jobName}::{vdmsId}::once-{id}" (one-shot delayed run).
+        String[] parts = name.split("::");
+        String jobName = parts[0];
+        String vdmsId = parts.length >= 2 ? parts[1] : null;
+        boolean oneShot = parts.length >= 3 && parts[2].startsWith("once-");
+
         UUID runId = UUID.randomUUID();
-        recorder.recordFired(name, runId, false);
+        recorder.recordFired(jobName, runId, oneShot, vdmsId);
         PublishResult result = publisher.publish(pubsubName, triggerTopic,
-            new SchedulerTriggerEvent(name, runId.toString(), System.currentTimeMillis()));
+            new SchedulerTriggerEvent(jobName, runId.toString(), vdmsId, System.currentTimeMillis()));
         if (!result.success()) {
-            log.error("Trigger publish failed job={} runId={} error={}",
-                name, runId, result.error());
+            log.error("Trigger publish failed job={} vdmsId={} runId={} error={}",
+                jobName, vdmsId, runId, result.error());
             return ResponseEntity.internalServerError().build();
         }
         return ResponseEntity.ok().build();

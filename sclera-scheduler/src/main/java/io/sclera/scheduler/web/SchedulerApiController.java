@@ -2,6 +2,7 @@ package io.sclera.scheduler.web;
 
 import io.sclera.scheduler.domain.*;
 import io.sclera.scheduler.service.JobService;
+import io.sclera.scheduler.web.dto.JobInstanceView;
 import io.sclera.scheduler.web.dto.JobView;
 import io.sclera.scheduler.web.dto.RunView;
 import org.springframework.data.domain.Limit;
@@ -20,11 +21,14 @@ public class SchedulerApiController {
 
     private final JobRepository jobs;
     private final JobRunRepository runs;
+    private final JobInstanceRepository jobInstances;
     private final JobService jobService;
 
-    public SchedulerApiController(JobRepository jobs, JobRunRepository runs, JobService jobService) {
+    public SchedulerApiController(JobRepository jobs, JobRunRepository runs,
+                                  JobInstanceRepository jobInstances, JobService jobService) {
         this.jobs = jobs;
         this.runs = runs;
+        this.jobInstances = jobInstances;
         this.jobService = jobService;
     }
 
@@ -62,6 +66,40 @@ public class SchedulerApiController {
 
     @PostMapping("/{name}/run")
     public void run(@PathVariable String name) { jobService.runNow(name); }
+
+    @GetMapping("/{name}/instances")
+    public List<JobInstanceView> instances(@PathVariable String name) {
+        return jobInstances.findByJobName(name).stream().map(i -> new JobInstanceView(
+            i.getJobName(), i.getVdmsId(), i.getState().name(),
+            iso(i.getSnoozeUntil()), iso(i.getNextFireAt()))).toList();
+    }
+
+    @PostMapping("/{name}/instances/{vdmsId}/pause")
+    public void pauseInstance(@PathVariable String name, @PathVariable String vdmsId) {
+        jobService.pauseInstance(name, vdmsId);
+    }
+
+    @PostMapping("/{name}/instances/{vdmsId}/resume")
+    public void resumeInstance(@PathVariable String name, @PathVariable String vdmsId) {
+        jobService.resumeInstance(name, vdmsId);
+    }
+
+    @PostMapping("/{name}/instances/{vdmsId}/disable")
+    public void disableInstance(@PathVariable String name, @PathVariable String vdmsId) {
+        jobService.disableInstance(name, vdmsId);
+    }
+
+    @PostMapping("/{name}/instances/{vdmsId}/snooze")
+    public void snooze(@PathVariable String name, @PathVariable String vdmsId,
+                       @RequestParam("until") String until) {
+        jobService.snoozeInstance(name, vdmsId, Instant.parse(until));
+    }
+
+    @PostMapping("/{name}/instances/{vdmsId}/run-at")
+    public void runAt(@PathVariable String name, @PathVariable String vdmsId,
+                      @RequestParam("at") String at) {
+        jobService.runAtInstance(name, vdmsId, Instant.parse(at));
+    }
 
     // Thrown by JobService.require() for an unknown job name. The bad-limit case is
     // handled separately above (400) so this only ever means "no such job" (404).

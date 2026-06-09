@@ -64,4 +64,28 @@ class SchedulerClientTest {
         client().delete("missing");
         assertThat(requests).containsExactly("DELETE /v1.0-alpha1/jobs/missing");
     }
+
+    @Test
+    void scheduleWithTimezonePrefixesCronTz() {
+        client().schedule(new JobSchedule("vdmsSystemHealth::vdms-1", "0 0 0 * * *", "America/New_York"));
+
+        assertThat(requests).containsExactly("POST /v1.0-alpha1/jobs/vdmsSystemHealth::vdms-1");
+        assertThat(bodies.get(0)).contains("\"schedule\":\"CRON_TZ=America/New_York 0 0 0 * * *\"");
+    }
+
+    @Test
+    void scheduleWithTimezoneLeavesEveryScheduleUnchanged() {
+        client().schedule(new JobSchedule("offlineDeviceCheck::vdms-1", "@every 90s", "America/New_York"));
+        assertThat(bodies.get(0)).contains("\"schedule\":\"@every 90s\"");
+    }
+
+    @Test
+    void scheduleOncePostsDueTimeAndSingleRepeat() {
+        client().scheduleOnce("vdmsSystemHealth::vdms-1::once-abc",
+                java.time.Instant.parse("2026-06-09T15:00:00Z"));
+
+        assertThat(requests).containsExactly("POST /v1.0-alpha1/jobs/vdmsSystemHealth::vdms-1::once-abc");
+        assertThat(bodies.get(0)).contains("\"dueTime\":\"2026-06-09T15:00:00Z\"");
+        assertThat(bodies.get(0)).contains("\"repeats\":1");
+    }
 }
