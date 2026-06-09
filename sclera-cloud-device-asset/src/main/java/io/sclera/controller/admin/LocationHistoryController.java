@@ -13,6 +13,7 @@ import java.util.Set;
  */
 @RestController
 @CrossOrigin(allowedHeaders = "*", origins = "*")
+@RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class LocationHistoryController {
 
     @Autowired
@@ -25,8 +26,8 @@ public class LocationHistoryController {
      * @param vdmsid          owning VDMS id
      * @param locationHistory history entry to record
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/addlocationhistory")
-    public void addLocationHistory(@PathVariable String username, @PathVariable String vdmsid, @RequestBody LocationHistoryDTO locationHistory) {
+    @RequestMapping(method = RequestMethod.POST, value = "/addlocationhistory")
+    public void addLocationHistory(@RequestParam String username, @RequestParam String vdmsid, @RequestBody LocationHistoryDTO locationHistory) {
         locationHistoryService.addLocationHistory(username, vdmsid, locationHistory);
     }
 
@@ -39,8 +40,8 @@ public class LocationHistoryController {
      * @param location_id location whose history is fetched
      * @return set of history entries for the location
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/location/{location_id}/getlocationhistory")
-    public Set<LocationHistoryDTO> getLocationHistory(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String location_id) {
+    @RequestMapping(method = RequestMethod.GET, value = "/location/{location_id}/getlocationhistory")
+    public Set<LocationHistoryDTO> getLocationHistory(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String location_id) {
         return locationHistoryService.getLocationHistory(username, vdmsid, location_id);
     }
 }

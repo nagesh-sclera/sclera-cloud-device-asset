@@ -17,6 +17,7 @@ import java.util.Set;
  */
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class BuildingController {
 
     @Autowired
@@ -31,8 +32,8 @@ public class BuildingController {
      * @param httpServletRequest  current request, used to resolve tenant/VDMS context
      * @return set of upserted buildings
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdms_id}/upsertbuildings")
-    public Set<BuildingDTO> upsertBuildingsByVdmsId(@PathVariable String username, @PathVariable String vdms_id, @RequestBody Set<BuildingDTO> buildings, HttpServletRequest httpServletRequest) {
+    @RequestMapping(method = RequestMethod.POST, value = "/upsertbuildings")
+    public Set<BuildingDTO> upsertBuildingsByVdmsId(@RequestParam String username, @RequestParam String vdms_id, @RequestBody Set<BuildingDTO> buildings, HttpServletRequest httpServletRequest) {
         return buildingService.upsertBuildingsByVdmsId(username, vdms_id, buildings, httpServletRequest);
     }
 
@@ -44,8 +45,8 @@ public class BuildingController {
      * @param location_id  location whose building is requested
      * @return building containing the location
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdms_id}/building/floor/location/{location_id}/getbuildingbylocation")
-    public BuildingDTO getBuildingByLocationId(@PathVariable String username, @PathVariable String vdms_id, @PathVariable String location_id) {
+    @RequestMapping(method = RequestMethod.GET, value = "/building/floor/location/{location_id}/getbuildingbylocation")
+    public BuildingDTO getBuildingByLocationId(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String location_id) {
         return buildingService.getBuildingByLocationId(username, vdms_id, location_id);
     }
 
@@ -53,14 +54,13 @@ public class BuildingController {
     /**
      * Returns the buildings for the tenant, optionally filtered by a field and value.
      *
-     * @param username  owning user
      * @param vdms_id   owning VDMS id
      * @param field     optional field name to filter on
      * @param field_id  optional field value to match
      * @return set of matching buildings
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdms_id}/getbuildingsbyvdmsid")
-    public Set<BuildingDTO> getBuildingsByVdmsId(@PathVariable String username, @PathVariable String vdms_id,
+    @RequestMapping(method = RequestMethod.GET, value = "/getbuildingsbyvdmsid")
+    public Set<BuildingDTO> getBuildingsByVdmsId(@RequestParam String vdms_id,
                                                  @RequestParam(required = false) String field,@RequestParam(required = false) String field_id) {
         return buildingService.getBuildingsByVdmsId(vdms_id, field, field_id);
     }
@@ -74,8 +74,8 @@ public class BuildingController {
      * @param building_ids        set of building ids to delete
      * @param httpServletRequest  current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/user/{username}/vdms/{vdmsid}/deletebuildings")
-    public void deleteBuildingsByIds(@PathVariable String username, @PathVariable String vdmsid, @RequestBody Set<String> building_ids, HttpServletRequest httpServletRequest) {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/deletebuildings")
+    public void deleteBuildingsByIds(@RequestParam String username, @RequestParam String vdmsid, @RequestBody Set<String> building_ids, HttpServletRequest httpServletRequest) {
         buildingService.deleteBuildingsByIds(username, vdmsid, building_ids, httpServletRequest);
     }
 
@@ -99,8 +99,8 @@ public class BuildingController {
      * @param vdms_id  owning VDMS id
      * @return set of synchronized floors
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/vdms/{vdms_id}/syncfloormaps")
-    public Set<FloorDTO> syncFloorMaps(@PathVariable String vdms_id) {
+    @RequestMapping(method = RequestMethod.GET, value = "/syncfloormaps")
+    public Set<FloorDTO> syncFloorMaps(@RequestParam String vdms_id) {
         return buildingService.syncFloorMaps(vdms_id);
     }
 
@@ -112,8 +112,8 @@ public class BuildingController {
      * @param floorImages  floor map images to apply
      * @return list of updated floors
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/vdms/{vdms_id}/updatefloormaps")
-    public List<FloorDTO> updateFloorMaps(@PathVariable String vdms_id, @RequestBody List<FloorDTO> floorImages) {
+    @RequestMapping(method = RequestMethod.POST, value = "/updatefloormaps")
+    public List<FloorDTO> updateFloorMaps(@RequestParam String vdms_id, @RequestBody List<FloorDTO> floorImages) {
         System.out.println("******************Floor Images********************* " + floorImages);
         return buildingService.updateFloorMaps(vdms_id, floorImages);
     }

@@ -14,6 +14,7 @@ import java.util.Set;
  */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
+@RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class PropertyServiceController {
 
     @Autowired
@@ -28,8 +29,8 @@ public class PropertyServiceController {
      * @param propertyService  property service payload to upsert
      * @return the upserted property service
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/upsertpropertyservice")
-    public PropertyServiceDTO upsertPropertyServiceDetails(@PathVariable String username, @PathVariable String vdmsid, @RequestBody PropertyServiceDTO propertyService) {
+    @RequestMapping(method = RequestMethod.POST, value = "/upsertpropertyservice")
+    public PropertyServiceDTO upsertPropertyServiceDetails(@RequestParam String username, @RequestParam String vdmsid, @RequestBody PropertyServiceDTO propertyService) {
         return propertyQrcodeService.upsertPropertyServiceDetails(username, vdmsid, propertyService);
     }
 
@@ -47,8 +48,8 @@ public class PropertyServiceController {
      * @param property_service_id  property service the locations are added to
      * @param locationDTOS         locations to add
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/service/{property_service_id}/addpropertyservicelocations")
-    public void addPropertyServiceLocations(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String property_service_id, @RequestBody Set<LocationDTO> locationDTOS) {
+    @RequestMapping(method = RequestMethod.POST, value = "/service/{property_service_id}/addpropertyservicelocations")
+    public void addPropertyServiceLocations(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String property_service_id, @RequestBody Set<LocationDTO> locationDTOS) {
         propertyQrcodeService.addPropertyServiceLocations(username, vdmsid, property_service_id,locationDTOS);
     }
 
@@ -61,8 +62,8 @@ public class PropertyServiceController {
      * @param vdmsid                    owning VDMS id
      * @param propertyServiceResponses  property service responses to update
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/updatepropertyserviceresponses")
-    public void multiUpdatePropertyServiceResponse(@PathVariable String username, @PathVariable String vdmsid,@RequestBody Set<PropertyServiceResponseDTO> propertyServiceResponses) {
+    @RequestMapping(method = RequestMethod.POST, value = "/updatepropertyserviceresponses")
+    public void multiUpdatePropertyServiceResponse(@RequestParam String username, @RequestParam String vdmsid,@RequestBody Set<PropertyServiceResponseDTO> propertyServiceResponses) {
         propertyQrcodeService.multiUpdatePropertyServiceResponse(username,vdmsid,propertyServiceResponses);
     }
 
@@ -74,8 +75,8 @@ public class PropertyServiceController {
      * @param vdmsid    owning VDMS id
      * @return the property services
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/getpropertyservices")
-    public Set<PropertyServiceDTO> getPropertyServices(@PathVariable String username, @PathVariable String vdmsid) {
+    @RequestMapping(method = RequestMethod.GET, value = "/getpropertyservices")
+    public Set<PropertyServiceDTO> getPropertyServices(@RequestParam String username, @RequestParam String vdmsid) {
        return propertyQrcodeService.getPropertyServices(username, vdmsid);
     }
 
@@ -88,8 +89,8 @@ public class PropertyServiceController {
      * @param property_service_id  property service whose locations are requested
      * @return the tagged locations as QR-code entries
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/service/{property_service_id}/getpropertyservicelocations")
-    public  Set<PropertyQrcodeDTO> getPropertyServiceLocationsById(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String property_service_id) {
+    @RequestMapping(method = RequestMethod.GET, value = "/service/{property_service_id}/getpropertyservicelocations")
+    public  Set<PropertyQrcodeDTO> getPropertyServiceLocationsById(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String property_service_id) {
         return propertyQrcodeService.getPropertyServiceLocationsById(username, vdmsid, property_service_id);
     }
 
@@ -101,8 +102,8 @@ public class PropertyServiceController {
      * @param vdmsid                   owning VDMS id
      * @param propertyServiceRequests  property service requests to delete
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/user/{username}/vdms/{vdmsid}/deletepropertyservicerequests")
-    public void deletePropertyServiceRequests(@PathVariable String username, @PathVariable String vdmsid, @RequestBody Set<PropertyServiceRequestDTO> propertyServiceRequests) {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/deletepropertyservicerequests")
+    public void deletePropertyServiceRequests(@RequestParam String username, @RequestParam String vdmsid, @RequestBody Set<PropertyServiceRequestDTO> propertyServiceRequests) {
         propertyQrcodeService.deletePropertyServiceRequests(username, vdmsid, propertyServiceRequests);
     }
 
@@ -115,8 +116,8 @@ public class PropertyServiceController {
      * @param property_service_id  property service the locations are removed from
      * @param locations            ids of the locations to delete
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/user/{username}/vdms/{vdmsid}/service/{property_service_id}/deletepropertyservicelocations")
-    public void deletePropertyServiceLocations(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String property_service_id,
+    @RequestMapping(method = RequestMethod.DELETE, value = "/service/{property_service_id}/deletepropertyservicelocations")
+    public void deletePropertyServiceLocations(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String property_service_id,
                                               @RequestBody Set<String> locations) {
         propertyQrcodeService.deletePropertyServiceLocations(username, vdmsid, property_service_id, locations);
     }
@@ -129,8 +130,8 @@ public class PropertyServiceController {
      * @param vdmsid               owning VDMS id
      * @param property_service_id  property service to delete
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/user/{username}/vdms/{vdmsid}/service/{property_service_id}/deletepropertyservice")
-    public void deletePropertyService(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String property_service_id) {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/service/{property_service_id}/deletepropertyservice")
+    public void deletePropertyService(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String property_service_id) {
         propertyQrcodeService.deletePropertyService(username, vdmsid, property_service_id);
     }
 
@@ -146,8 +147,8 @@ public class PropertyServiceController {
      * @param property_service_id  property service scope of the zone map
      * @return the zone map as QR-code entries
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/building/{building_id}/floor/{floor_id}/location/{location_id}/service/{property_service_id}/getzonemap")
-    public  Set<PropertyQrcodeDTO> getZoneMap(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String building_id,@PathVariable String floor_id, @PathVariable String location_id,@PathVariable String property_service_id) {
+    @RequestMapping(method = RequestMethod.GET, value = "/building/{building_id}/floor/{floor_id}/location/{location_id}/service/{property_service_id}/getzonemap")
+    public  Set<PropertyQrcodeDTO> getZoneMap(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String building_id,@PathVariable String floor_id, @PathVariable String location_id,@PathVariable String property_service_id) {
        return propertyQrcodeService.getZoneMap(username, vdmsid,building_id,floor_id,location_id,property_service_id);
     }
    

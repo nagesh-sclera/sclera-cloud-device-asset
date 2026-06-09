@@ -25,6 +25,7 @@ import java.util.Set;
  * Delegates all persistence and business logic to {@link AiCallService}.
  */
 @RestController
+@RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class AiCallLogController {
     @Autowired
     AiCallService aiCallService;
@@ -36,7 +37,7 @@ public class AiCallLogController {
     * @param issueType  type of issue the call concerns
     * @return identifier or status of the created call log
     */
-   @PostMapping("/user/{username}/vdms/{vdmsid}/deviceId/{deviceId}/createcalllog")
+   @PostMapping("/deviceId/{deviceId}/createcalllog")
     public String createCallLog(@PathVariable String deviceId, @RequestParam String issueType) {
         return aiCallService.createCallLog(deviceId, issueType);
     }
@@ -52,8 +53,8 @@ public class AiCallLogController {
      * @param isCompleted  whether to return only completed calls (default false)
      * @return list of call log entries for the requested page
      */
-    @GetMapping("/user/{username}/vdms/{vdmsid}/getallcallstatus")
-    public List<AiCallLogDTO>  getallcallstatus(@PathVariable String username, @PathVariable String vdmsid,@RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey, @RequestParam(defaultValue = "false") boolean isCompleted) {
+    @GetMapping("/getallcallstatus")
+    public List<AiCallLogDTO>  getallcallstatus(@RequestParam String username, @RequestParam String vdmsid,@RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey, @RequestParam(defaultValue = "false") boolean isCompleted) {
         return aiCallService.getallcallstatus(username, vdmsid, pageno, pagesize, searchkey, isCompleted);
     }
 
@@ -64,8 +65,8 @@ public class AiCallLogController {
      * @param vdmsid    owning VDMS id
      * @return map of status name to count
      */
-    @GetMapping("/user/{username}/vdms/{vdmsid}/getcallstatuscount")
-    public Map<String, Integer> getCallStatusCount(@PathVariable String username, @PathVariable String vdmsid) {
+    @GetMapping("/getcallstatuscount")
+    public Map<String, Integer> getCallStatusCount(@RequestParam String username, @RequestParam String vdmsid) {
         return aiCallService.getCallStatusCount(username, vdmsid);
     }
 
@@ -119,8 +120,8 @@ public class AiCallLogController {
      * @param callFlowRuleDTO  call-flow rule payload to upsert
      * @return response entity wrapping the upsert result
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/upsertcallflow")
-    public ResponseEntity<ResponseDTO> upsertCallFlow(@PathVariable String username, @PathVariable String vdmsid, @RequestBody CallFlowRuleDTO callFlowRuleDTO) {
+    @RequestMapping(method = RequestMethod.POST, value = "/upsertcallflow")
+    public ResponseEntity<ResponseDTO> upsertCallFlow(@RequestParam String username, @RequestParam String vdmsid, @RequestBody CallFlowRuleDTO callFlowRuleDTO) {
         System.out.println("Received DTO: " + callFlowRuleDTO);
         return aiCallService.upsertCallFlow(callFlowRuleDTO, username, vdmsid);
     }
@@ -133,8 +134,8 @@ public class AiCallLogController {
      * @param searchkey  optional search filter (default "null")
      * @return set of matching docker names
      */
-    @GetMapping("/user/{username}/vdms/{vdmsid}/browsedockers")
-    public Set<String> browseDockers(@PathVariable String username, @PathVariable String vdmsid, @RequestParam(defaultValue = "null") String searchkey) {
+    @GetMapping("/browsedockers")
+    public Set<String> browseDockers(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "null") String searchkey) {
         return aiCallService.browseDockers(username,vdmsid,searchkey);
     }
 
@@ -149,8 +150,8 @@ public class AiCallLogController {
      * @param searchkey   optional search filter (default "null")
      * @return list of call-flow rules for the matching devices
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/browsedevices")
-    public List<CallFlowRuleDTO> browseCallFlowDevicesWithSearch(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
+    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/browsedevices")
+    public List<CallFlowRuleDTO> browseCallFlowDevicesWithSearch(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                                                     @RequestParam(defaultValue = "1") Integer pageno,
                                                                     @RequestParam(defaultValue = "10") Integer pagesize,
                                                                     @RequestParam(defaultValue = "null") String searchkey) {
@@ -167,8 +168,8 @@ public class AiCallLogController {
      * @param searchkey  optional search filter (default "null")
      * @return list of call-flow rules for the requested page
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/getcallflow")
-    public List<CallFlowRuleDTO> getCallFlow(@PathVariable String username, @PathVariable String vdmsid, @RequestParam(defaultValue = "1") Integer pageno,
+    @RequestMapping(method = RequestMethod.GET, value = "/getcallflow")
+    public List<CallFlowRuleDTO> getCallFlow(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "1") Integer pageno,
                                              @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey) {
         return aiCallService.getCallFlow(username, vdmsid, pageno, pagesize, searchkey);
     }
@@ -180,22 +181,20 @@ public class AiCallLogController {
      * @param vdmsid          owning VDMS id
      * @param callFlowRuleId  set of call-flow rule ids to delete
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/user/{username}/vdms/{vdmsid}/configuration/deletecallflowbyid")
-    public void deleteCallFlowById(@PathVariable String username, @PathVariable String vdmsid, @RequestBody Set<String> callFlowRuleId) {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/configuration/deletecallflowbyid")
+    public void deleteCallFlowById(@RequestParam String username, @RequestParam String vdmsid, @RequestBody Set<String> callFlowRuleId) {
         aiCallService.deleteCallFlowById(username, vdmsid, callFlowRuleId);
     }
 
     /**
      * Triggers the call flow for a device matching the given criteria and call log.
      *
-     * @param username   owning user
-     * @param vdmsid     owning VDMS id
      * @param deviceid   device whose call flow is triggered
      * @param criteria   criteria selecting the call-flow rule
      * @param calllogid  call log associated with the trigger
      */
-    @RequestMapping(method= RequestMethod.GET , value = "/user/{username}/vdms/{vdmsid}/{deviceid}/{criteria}/{calllogid}/triggercallflow")
-    public void triggerCallFlow(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String deviceid, @PathVariable String criteria, @PathVariable String calllogid) {
+    @RequestMapping(method= RequestMethod.GET , value = "/{deviceid}/{criteria}/{calllogid}/triggercallflow")
+    public void triggerCallFlow(@PathVariable String deviceid, @PathVariable String criteria, @PathVariable String calllogid) {
         aiCallService.triggerCallFlow(deviceid, criteria, calllogid);
     }
 

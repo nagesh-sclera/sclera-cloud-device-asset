@@ -40,6 +40,7 @@ import jakarta.servlet.http.HttpServletResponse;
  */
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class DeviceController {
 
     @Autowired
@@ -65,8 +66,8 @@ public class DeviceController {
      * @param dockername docker (gateway) name to scope devices to
      * @return set of devices for the VDMS/docker
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/devices")
-    public Set<DeviceDTO> listAllDevicebyVdmsidAndDockerName(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername) {
+    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/devices")
+    public Set<DeviceDTO> listAllDevicebyVdmsidAndDockerName(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername) {
         return deviceService.listAllDevicebyVdmsidAndDockerName(username, vdmsid, dockername);
 
     }
@@ -83,8 +84,8 @@ public class DeviceController {
      * @param pagesize   number of devices per page (default 10)
      * @return matching page of devices
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/getfilterdevice")
-    public Set<DeviceDTO> getfilterdevice(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition, @RequestParam(defaultValue = "null") String searchKey,
+    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/getfilterdevice")
+    public Set<DeviceDTO> getfilterdevice(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition, @RequestParam(defaultValue = "null") String searchKey,
                                           @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize) {
         return deviceService.getfilterdevices(username, vdmsid, dockername, condition, searchKey, pageno, pagesize);
     }
@@ -102,8 +103,8 @@ public class DeviceController {
      * @param assignee   assignee to filter by (default "all")
      * @return matching page of subsystem parent devices
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/getsubsystemparentdevicesbypagination")
-    public Set<DeviceDTO> getSubsystemParentDevicesByPagination(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
+    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/getsubsystemparentdevicesbypagination")
+    public Set<DeviceDTO> getSubsystemParentDevicesByPagination(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                                                 @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") String assignee) {
         return deviceService.getSubsystemParentDevicesByPagination(username, vdmsid, dockername, condition, pageno, pagesize, assignee);
     }
@@ -122,8 +123,8 @@ public class DeviceController {
      * @param assignee   assignee to filter by (default "all")
      * @return matching page of subsystem devices
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/device/{device_id}/getsubsystemdevicesbypagination")
-    public Set<DeviceDTO> getSubsystemDevicesByPagination(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername, @PathVariable String device_id, @RequestParam(defaultValue = "all") String condition,
+    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/{device_id}/getsubsystemdevicesbypagination")
+    public Set<DeviceDTO> getSubsystemDevicesByPagination(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String device_id, @RequestParam(defaultValue = "all") String condition,
                                                           @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") String assignee) {
         return deviceService.getSubsystemDevicesByPagination(username, vdmsid, dockername, device_id, condition, pageno, pagesize, assignee);
     }
@@ -138,8 +139,8 @@ public class DeviceController {
      * @param dockername docker (gateway) name to scope devices to
      * @param assignee   assignee to associate with the devices (default "all")
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/devicesupsert")
-    public void upsertDeviceListByVdmsIdAndDockerName(@RequestBody List<DeviceDTO> devicesDto, @PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String assignee) {
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/devicesupsert")
+    public void upsertDeviceListByVdmsIdAndDockerName(@RequestBody List<DeviceDTO> devicesDto, @RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String assignee) {
         deviceService.upsertDeviceListByVdmsIdAndDockerName(devicesDto, username, vdmsid, dockername, assignee);
     }
 
@@ -157,8 +158,8 @@ public class DeviceController {
      * @throws JSONException if the request payload cannot be parsed as JSON
      * @throws IOException   if reading the request or downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/device/{device_id}/edit")
-    public DeviceDTO editDeviceByDeviceId(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/device/{device_id}/edit")
+    public DeviceDTO editDeviceByDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                           @PathVariable String device_id, @RequestBody DeviceDTO devicedto, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) throws JSONException, IOException {
         return deviceService.editDeviceByDeviceID(username, vdmsid, dockername, device_id, devicedto, httpServletRequest, assignee);
     }
@@ -174,8 +175,8 @@ public class DeviceController {
      * @param vendor_type        type of vendor to unlink
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.PUT, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/phoneaccount/{phoneaccount}/device/{device_id}/{vendor_type}")
-    public void unlinkVendorByVendorIdAndDeviceId(@PathVariable String username, @PathVariable String dockername, @PathVariable String phoneaccount,
+    @RequestMapping(method = RequestMethod.PUT, value = "/docker/{dockername}/phoneaccount/{phoneaccount}/device/{device_id}/{vendor_type}")
+    public void unlinkVendorByVendorIdAndDeviceId(@RequestParam String username, @PathVariable String dockername, @PathVariable String phoneaccount,
                                                   @PathVariable String device_id, @PathVariable String vendor_type, HttpServletRequest httpServletRequest) {
         deviceService.unlinkVendorByVendorIdAndDeviceId(username, dockername, phoneaccount, device_id, vendor_type, httpServletRequest);
     }
@@ -192,8 +193,8 @@ public class DeviceController {
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @return identifier or status of the created vendor link
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/phoneaccount/device/{device_id}/{vendor_type}/link")
-    public String linkVendorByVendorIdAndDeviceId(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/phoneaccount/device/{device_id}/{vendor_type}/link")
+    public String linkVendorByVendorIdAndDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                                   @PathVariable String device_id, @PathVariable String vendor_type,
                                                   @RequestBody PhonebookAddressDto phonebookaddressdto, HttpServletRequest httpServletRequest) {
         return deviceService.linkVendorByVendorIdAndDeviceId(username, vdmsid, dockername, device_id, phonebookaddressdto, vendor_type, httpServletRequest);
@@ -211,8 +212,8 @@ public class DeviceController {
      * @throws JSONException if a request payload cannot be parsed as JSON
      * @throws IOException   if reading the request or downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.PUT, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/devices")
-    public void multiDeviceUpdate(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
+    @RequestMapping(method = RequestMethod.PUT, value = "/docker/{dockername}/devices")
+    public void multiDeviceUpdate(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                   @RequestBody Set<MultiDeviceDTO> multidevicedtos, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) throws JSONException, IOException {
         System.out.println("***************************************************************");
         System.out.println(multidevicedtos);
@@ -233,8 +234,8 @@ public class DeviceController {
      * @return set of devices affected by the quick update
      * @throws IOException if downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/devices/quickupdate")
-    public Set<DeviceDTO> quickUpdate(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/devices/quickupdate")
+    public Set<DeviceDTO> quickUpdate(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                       @RequestBody TagDeviceOrLocationDTO tagDeviceOrLocationDTO, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) throws IOException {
         return deviceService.quickUpdate(username, vdmsid, dockername, tagDeviceOrLocationDTO, httpServletRequest, assignee);
     }
@@ -247,8 +248,8 @@ public class DeviceController {
      * @param dockername docker (gateway) name to scope devices to
      * @return set of devices carrying their names
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/device/names")
-    public Set<DeviceDTO> getDeviceNamesByVdmsIdAndDockerName(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername) {
+    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/names")
+    public Set<DeviceDTO> getDeviceNamesByVdmsIdAndDockerName(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername) {
         return deviceService.getDeviceNamesByVdmsIdAndDockerName(username, vdmsid, dockername);
     }
 
@@ -270,8 +271,8 @@ public class DeviceController {
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @param assignee           assignee to associate with the devices (default "all")
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/addvirtualdevice")
-    public void addVirtualDeviceByVdmsIdAndDockerName(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/addvirtualdevice")
+    public void addVirtualDeviceByVdmsIdAndDockerName(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                                       @RequestParam(value = "images", required = false) List<MultipartFile> asset_images,
                                                       @RequestParam(value = "virtual_devices") String virtualDevicesDTO, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) {
         deviceService.addVirtualDeviceByVdmsIdAndDockerName(username, vdmsid, dockername, virtualDevicesDTO, asset_images, httpServletRequest, assignee);
@@ -293,8 +294,8 @@ public class DeviceController {
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @throws IOException if downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/updatevirtualdevice")
-    public void editVirtualDeviceByVirtualDeviceId(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/updatevirtualdevice")
+    public void editVirtualDeviceByVirtualDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                                    @RequestBody Set<DeviceDTO> virtualDevices, HttpServletRequest httpServletRequest) throws IOException {
         deviceService.editVirtualDeviceByVirtualDeviceId(username, vdmsid, dockername, virtualDevices, httpServletRequest);
     }
@@ -309,8 +310,8 @@ public class DeviceController {
      * @param virtual_device_id virtual device to delete
      * @param assignee          assignee scope for the deletion (default "all")
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/virtual-device/{virtual_device_id}")
-    public void deleteVirtualDeviceByVirtualDeviceId(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
+    @RequestMapping(method = RequestMethod.DELETE, value = "/docker/{dockername}/virtual-device/{virtual_device_id}")
+    public void deleteVirtualDeviceByVirtualDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                                      @PathVariable String virtual_device_id, @RequestParam(defaultValue = "all") String assignee) {
         deviceService.deleteVirtualDeviceByVirtualDeviceId(username, vdmsid, dockername, virtual_device_id, assignee);
     }
@@ -325,8 +326,8 @@ public class DeviceController {
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @param assignee           assignee scope for the deletion (default "all")
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/deletedevices")
-    public void deleteDevicesById(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername, @RequestBody Set<String> deviceIds, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/docker/{dockername}/deletedevices")
+    public void deleteDevicesById(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestBody Set<String> deviceIds, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) {
 //        deviceService.deleteDevicesById(username, vdmsid, dockername, deviceIds, httpServletRequest);
         deviceService.softDeleteDevicesById(username, vdmsid, dockername, deviceIds, httpServletRequest, assignee);
     }
@@ -341,8 +342,8 @@ public class DeviceController {
      * @param device_id  device to retrieve
      * @return the requested device
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/device/{device_id}/getdevice")
-    public DeviceDTO getDeviceByDeviceId(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername, @PathVariable String device_id) {
+    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/{device_id}/getdevice")
+    public DeviceDTO getDeviceByDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String device_id) {
         return deviceService.getDeviceByDeviceId(username, vdmsid, dockername, device_id);
     }
 
@@ -358,8 +359,8 @@ public class DeviceController {
      * @return the updated virtual device
      * @throws IOException if downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.PUT, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/virtual-device/{virtual_device_id}/syncstatus")
-    public DeviceDTO updateVirtualDeviceStatusByVirtualDeviceId(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername, @PathVariable String virtual_device_id, @RequestBody DeviceDTO virtualdevicedto) throws IOException {
+    @RequestMapping(method = RequestMethod.PUT, value = "/docker/{dockername}/virtual-device/{virtual_device_id}/syncstatus")
+    public DeviceDTO updateVirtualDeviceStatusByVirtualDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String virtual_device_id, @RequestBody DeviceDTO virtualdevicedto) throws IOException {
         return deviceService.updateVirtualDeviceStatusByVirtualDeviceId(username, vdmsid, dockername, virtual_device_id, virtualdevicedto);
     }
 
@@ -384,8 +385,8 @@ public class DeviceController {
      * @param assignee   assignee to filter the counts by (default "all")
      * @return map of category to device count
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/getdevicecount")
-    public Map<String, Integer> getDeviceCount(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String assignee) {
+    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/getdevicecount")
+    public Map<String, Integer> getDeviceCount(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String assignee) {
 
 
         return deviceService.getDeviceCount(username, vdmsid, dockername, assignee);
@@ -401,8 +402,8 @@ public class DeviceController {
      * @param dockername docker (gateway) name to scope devices to
      * @return list of topology device entries
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/devicetopology")
-    public List<DeviceTopologyDTO> listTopologyDevicesByDockerName(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername) {
+    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/devicetopology")
+    public List<DeviceTopologyDTO> listTopologyDevicesByDockerName(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername) {
         return deviceService.listTopologyDevicesByDockerName(username, vdmsid, dockername);
     }
 
@@ -415,8 +416,8 @@ public class DeviceController {
      * @param devicePositions    devices with their updated position coordinates
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/updatedeviceposition")
-    public void updateDevicePosition(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/updatedeviceposition")
+    public void updateDevicePosition(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                      @RequestBody List<DeviceDTO> devicePositions, HttpServletRequest httpServletRequest) {
 
         deviceService.updateDevicePosition(devicePositions, vdmsid, username, httpServletRequest);
@@ -426,13 +427,11 @@ public class DeviceController {
     /**
      * Returns the device list for the given docker, intended for integration consumers.
      *
-     * @param username   owning user
-     * @param vdmsid     owning VDMS id
      * @param dockername docker (gateway) name whose devices are listed
      * @return list of devices for the docker
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/devicelistintegration")
-    public List<DeviceDTO> listDevicebyDockerIntegration(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername) {
+    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/devicelistintegration")
+    public List<DeviceDTO> listDevicebyDockerIntegration(@PathVariable String dockername) {
         return deviceService.listDevicebyDockerIntegration(dockername);
     }
 
@@ -457,8 +456,8 @@ public class DeviceController {
      * @param devices            topology device entries to persist
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/updatetopology")
-    public void updateTopology(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/updatetopology")
+    public void updateTopology(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                @RequestBody List<DeviceTopologyDTO> devices, HttpServletRequest httpServletRequest) {
         deviceService.updateTopology(username, vdmsid, dockername, devices, httpServletRequest);
     }
@@ -472,8 +471,8 @@ public class DeviceController {
      * @param dockername         docker (gateway) name whose topology is reset
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/resettopology")
-    public void resetTopology(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername, HttpServletRequest httpServletRequest) {
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/resettopology")
+    public void resetTopology(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, HttpServletRequest httpServletRequest) {
         deviceService.resetTopologyByDockername(username, vdmsid, dockername, httpServletRequest);
     }
 
@@ -487,8 +486,8 @@ public class DeviceController {
      * @param device_id  device whose sensors are requested
      * @return the sensors associated with the device
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/device/{device_id}/getalldevicesensors")
-    public AllSensorsDTO getDeviceSensors(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
+    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/{device_id}/getalldevicesensors")
+    public AllSensorsDTO getDeviceSensors(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                           @PathVariable String device_id) {
         return deviceService.getDeviceSensors(username, vdmsid, dockername, device_id);
     }
@@ -515,8 +514,8 @@ public class DeviceController {
      * @param virtual_device_types virtual device types to filter by (default "all")
      * @return matching page of parent devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/getparentdevicebypagination")
-    public Set<DeviceDTO> getParentDeviceByPagination(@PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.POST, value = "/getparentdevicebypagination")
+    public Set<DeviceDTO> getParentDeviceByPagination(@RequestParam String username, @RequestParam String vdmsid,
                                                       @RequestParam(defaultValue = "null") String searchKey, @RequestParam(defaultValue = "1") Integer pageno,
                                                       @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") Set<String> dockernames, @RequestParam(defaultValue = "all") Set<String> types, @RequestParam(defaultValue = "all") Set<String> virtual_device_types) {
         return deviceService.getParentDeviceByPagination(username, vdmsid, searchKey, pageno, pagesize, dockernames, types, virtual_device_types);
@@ -533,8 +532,8 @@ public class DeviceController {
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @return set of resolved parent devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/getparentdevice")
-    public Set<DeviceDTO> getParentDeviceById(@PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/getparentdevice")
+    public Set<DeviceDTO> getParentDeviceById(@RequestParam String username, @RequestParam String vdmsid,
                                               @PathVariable String dockername, @RequestBody Set<DeviceDTO> parent_devices, HttpServletRequest httpServletRequest) {
         return deviceService.getParentDeviceById(username, vdmsid, dockername, parent_devices, httpServletRequest);
     }
@@ -550,8 +549,8 @@ public class DeviceController {
      * @param parent_id  id of the subsystem parent device
      * @return the subsystem parent device details
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/device/{device_id}/parent/{parent_id}/getsubsystemparentdeviceinfo")
-    public DeviceDTO getSubsystemParentDeviceInfo(@PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/{device_id}/parent/{parent_id}/getsubsystemparentdeviceinfo")
+    public DeviceDTO getSubsystemParentDeviceInfo(@RequestParam String username, @RequestParam String vdmsid,
                                                   @PathVariable String dockername, @PathVariable String device_id, @PathVariable String parent_id) {
         return deviceService.getSubsystemParentDeviceInfo(username, vdmsid, dockername, device_id, parent_id);
     }
@@ -566,8 +565,8 @@ public class DeviceController {
      * @param device             device payload carrying the matched product info
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/updatematcheddeviceproduct")
-    public void updateMatchedDeviceProduct(@PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/updatematcheddeviceproduct")
+    public void updateMatchedDeviceProduct(@RequestParam String username, @RequestParam String vdmsid,
                                            @PathVariable String dockername, @RequestBody DeviceDTO device, HttpServletRequest httpServletRequest) {
         deviceService.updateMatchedDeviceProduct(username, vdmsid, dockername, device, httpServletRequest);
     }
@@ -585,8 +584,8 @@ public class DeviceController {
      * @param search_details map describing the search criteria
      * @return matching page of devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/searchdevices")
-    public Set<DeviceDTO> searchDevices(@PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/searchdevices")
+    public Set<DeviceDTO> searchDevices(@RequestParam String username, @RequestParam String vdmsid,
                                         @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                         @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
                                         @RequestBody Map<String, Object> search_details) {
@@ -606,8 +605,8 @@ public class DeviceController {
      * @param sort_details map describing the sort criteria
      * @return matching page of sorted devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/sortdevices")
-    public Set<DeviceDTO> sortDevices(@PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/sortdevices")
+    public Set<DeviceDTO> sortDevices(@RequestParam String username, @RequestParam String vdmsid,
                                       @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                       @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
                                       @RequestBody Map<String, Object> sort_details) {
@@ -627,8 +626,8 @@ public class DeviceController {
      * @param filter_details list of maps describing the filter criteria
      * @return matching page of filtered devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/filterdevices")
-    public Set<DeviceDTO> filterDevices(@PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/filterdevices")
+    public Set<DeviceDTO> filterDevices(@RequestParam String username, @RequestParam String vdmsid,
                                         @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                         @RequestParam(defaultValue = "1") Integer pageno,
                                         @RequestParam(defaultValue = "10") Integer pagesize, @RequestBody List<Map<String, Object>> filter_details) {
@@ -646,8 +645,8 @@ public class DeviceController {
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @param assignee           assignee scope for the operation (default "all")
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/archivedevices")
-    public void archiveDevices(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/archivedevices")
+    public void archiveDevices(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                @RequestParam(defaultValue = "1") Integer archive, @RequestBody Set<String> deviceIds, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) {
         deviceService.archiveDevices(username, vdmsid, dockername, archive, deviceIds, httpServletRequest, assignee);
     }
@@ -661,8 +660,8 @@ public class DeviceController {
      * @param custom_fields JSON object of custom field values to match
      * @return list of matching devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/getdeviceinfobycustomfields")
-    public List<DeviceDTO> getDeviceInfoByCustomFields(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/getdeviceinfobycustomfields")
+    public List<DeviceDTO> getDeviceInfoByCustomFields(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                                        @RequestBody com.alibaba.fastjson.JSONObject custom_fields) {
         return deviceSearchService.getDeviceInfoByCustomFields(username, vdmsid, dockername, custom_fields);
     }
@@ -681,8 +680,8 @@ public class DeviceController {
      * @param search_sort_filter_details JSON object describing the search/sort/filter criteria
      * @return matching page of devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/searchsortfilterdevices")
-    public Set<DeviceDTO> multipleKeywordSearchSortFilterDevices(@PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/searchsortfilterdevices")
+    public Set<DeviceDTO> multipleKeywordSearchSortFilterDevices(@RequestParam String username, @RequestParam String vdmsid,
                                                                  @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                                                  @RequestParam(defaultValue = "1") Integer pageno,
                                                                  @RequestParam(defaultValue = "10") Integer pagesize,
@@ -703,8 +702,8 @@ public class DeviceController {
      * @param search_sort_filter_details JSON object describing the search/sort/filter criteria
      * @return count of matching devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/searchsortfilterdevicescount")
-    public String multipleKeywordSearchSortFilterDevicesCount(@PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/searchsortfilterdevicescount")
+    public String multipleKeywordSearchSortFilterDevicesCount(@RequestParam String username, @RequestParam String vdmsid,
                                                               @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                                               @RequestParam(defaultValue = "123") Integer onboard_status,
                                                               @RequestBody com.alibaba.fastjson.JSONObject search_sort_filter_details) {
@@ -719,8 +718,8 @@ public class DeviceController {
      * @param network_name network whose assigned users are requested
      * @return list of unique assigned-user email addresses
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/vdms/{vdms_id}/device/network/{network_name}/getassignedemail")
-    public List<String> getUniqueAssignedUser(@PathVariable String vdms_id, @PathVariable String network_name) {
+    @RequestMapping(method = RequestMethod.GET, value = "/device/network/{network_name}/getassignedemail")
+    public List<String> getUniqueAssignedUser(@RequestParam String vdms_id, @PathVariable String network_name) {
         return deviceMonitorService.getUniqueAssignedUserEmail(vdms_id, network_name);
     }
 
@@ -733,8 +732,8 @@ public class DeviceController {
      * @param dockername docker (gateway) name to scope devices to
      * @return list of alert condition messages
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/getalertmessages")
-    public List<ConditionsDTO> getDeviceAlertMessages(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername) {
+    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/getalertmessages")
+    public List<ConditionsDTO> getDeviceAlertMessages(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername) {
         return deviceService.getDeviceAlertMessages(username, vdmsid, dockername);
     }
 
@@ -757,8 +756,8 @@ public class DeviceController {
      * @param asset_images       optional asset image files to upsert
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdms_id}/upsertassetimages")
-    public void upsertAssetImages(@PathVariable String username, @PathVariable String vdms_id,
+    @RequestMapping(method = RequestMethod.POST, value = "/upsertassetimages")
+    public void upsertAssetImages(@RequestParam String username, @RequestParam String vdms_id,
                                   @RequestParam List<String> device_ids, @RequestParam(value = "images", required = false) List<MultipartFile> asset_images, HttpServletRequest httpServletRequest) {
         deviceService.upsertAssetImages(username, vdms_id, device_ids, asset_images, httpServletRequest);
     }
@@ -771,8 +770,8 @@ public class DeviceController {
      * @param deviceDTOS         devices whose asset images should be deleted
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/user/{username}/vdms/{vdms_id}/deleteassetimages")
-    public void deleteAssetImages(@PathVariable String username, @PathVariable String vdms_id, @RequestBody List<DeviceDTO> deviceDTOS, HttpServletRequest httpServletRequest) {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/deleteassetimages")
+    public void deleteAssetImages(@RequestParam String username, @RequestParam String vdms_id, @RequestBody List<DeviceDTO> deviceDTOS, HttpServletRequest httpServletRequest) {
         System.out.println("heere");
         deviceService.deleteAssetImages(username, vdms_id, deviceDTOS, httpServletRequest);
     }
@@ -786,8 +785,8 @@ public class DeviceController {
      * @param category           image category to delete
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/user/{username}/vdms/{vdms_id}/deletedeviceimages")
-    public void deleteDeviceImages(@PathVariable String username, @PathVariable String vdms_id, @RequestBody List<DeviceDTO> deviceDTOS, @RequestParam String category, HttpServletRequest httpServletRequest) {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/deletedeviceimages")
+    public void deleteDeviceImages(@RequestParam String username, @RequestParam String vdms_id, @RequestBody List<DeviceDTO> deviceDTOS, @RequestParam String category, HttpServletRequest httpServletRequest) {
         deviceService.deleteDeviceImages(username, vdms_id, deviceDTOS, category,httpServletRequest);
     }
 
@@ -799,8 +798,8 @@ public class DeviceController {
      * @param device_id device whose asset image URLs are requested
      * @return serialized asset image URLs
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdms_id}/device/{device_id}/getassetimages")
-    public String getAssetImageUrls(@PathVariable String username, @PathVariable String vdms_id, @PathVariable String device_id) {
+    @RequestMapping(method = RequestMethod.GET, value = "/device/{device_id}/getassetimages")
+    public String getAssetImageUrls(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String device_id) {
         return deviceService.getAssetImageUrls(username, vdms_id, device_id);
     }
 
@@ -812,8 +811,8 @@ public class DeviceController {
      * @param device_id device whose categorized asset image URLs are requested
      * @return serialized asset image URLs by category
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdms_id}/device/{device_id}/getallassetimages")
-    public String getAssetImageUrlsByCategory(@PathVariable String username, @PathVariable String vdms_id, @PathVariable String device_id) {
+    @RequestMapping(method = RequestMethod.GET, value = "/device/{device_id}/getallassetimages")
+    public String getAssetImageUrlsByCategory(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String device_id) {
         return deviceService.getAssetImageUrlsCategory(username, vdms_id, device_id);
     }
 
@@ -829,8 +828,8 @@ public class DeviceController {
      * @param filterObject JSON object describing additional filters
      * @return matching page of devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/group/{group}/getalldevicespagination")
-    public Set<DeviceDTO> getAllDevicesPagination(@PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.POST, value = "/group/{group}/getalldevicespagination")
+    public Set<DeviceDTO> getAllDevicesPagination(@RequestParam String username, @RequestParam String vdmsid,
                                                   @PathVariable String group, @RequestParam(defaultValue = "null") String searchkey,
                                                   @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
                                                   @RequestBody JSONObject filterObject) {
@@ -851,8 +850,8 @@ public class DeviceController {
      * @param virtual_device_types virtual device types to filter by (default "all")
      * @return matching page of virtual devices
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/getfiltervirtualdevicesbypagination")
-    public Set<DeviceDTO> getFilterVirtualDevicesByPagination(@PathVariable String username, @PathVariable String vdmsid, @RequestParam(defaultValue = "null") String searchKey,
+    @RequestMapping(method = RequestMethod.GET, value = "/getfiltervirtualdevicesbypagination")
+    public Set<DeviceDTO> getFilterVirtualDevicesByPagination(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "null") String searchKey,
                                                               @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") Set<String> dockernames, @RequestParam(defaultValue = "all") Set<String> types, @RequestParam(defaultValue = "all") Set<String> virtual_device_types) {
         return deviceService.getFilterVirtualDevicesByPagination(username, vdmsid, searchKey, pageno, pagesize, dockernames, types, virtual_device_types);
     }
@@ -864,8 +863,8 @@ public class DeviceController {
      * @param vdmsid   owning VDMS id
      * @return count of power-source topology connections
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/getpowersourcetopologyconnectionscount")
-    public Integer getPowerSourceTopologyConnectionsCount(@PathVariable String username, @PathVariable String vdmsid) {
+    @RequestMapping(method = RequestMethod.GET, value = "/getpowersourcetopologyconnectionscount")
+    public Integer getPowerSourceTopologyConnectionsCount(@RequestParam String username, @RequestParam String vdmsid) {
         return deviceService.getPowerSourceTopologyConnectionsCount(username, vdmsid);
     }
 
@@ -878,8 +877,8 @@ public class DeviceController {
      * @param pagesize number of entries per page (default 10)
      * @return the requested page of the power-source topology
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/getpowersourcetopologybypagination")
-    public PowerSourceTopologyDTO getPowerSourceTopologyByPagination(@PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.GET, value = "/getpowersourcetopologybypagination")
+    public PowerSourceTopologyDTO getPowerSourceTopologyByPagination(@RequestParam String username, @RequestParam String vdmsid,
                                                                      @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize) {
         return deviceService.getPowerSourceTopologyByPagination(username, vdmsid, pageno, pagesize);
     }
@@ -894,8 +893,8 @@ public class DeviceController {
      * @param pagesize    number of devices per page (default 10)
      * @return matching page of devices at the location
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/location/{location_id}/getdevicesbylocationid")
-    public Set<DeviceDTO> getAssetsByLocationId(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String location_id,
+    @RequestMapping(method = RequestMethod.GET, value = "/location/{location_id}/getdevicesbylocationid")
+    public Set<DeviceDTO> getAssetsByLocationId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String location_id,
                                                 @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize) {
         return deviceService.getAssetsByLocationId(username, vdmsid, location_id, pageno, pagesize);
     }
@@ -908,8 +907,8 @@ public class DeviceController {
      * @param deviceid device whose reboot status is requested
      * @return the device reboot status
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/device/{deviceid}/getdevicerebootstatus")
-    public String getDeviceRebootStatus(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String deviceid) {
+    @RequestMapping(method = RequestMethod.GET, value = "/device/{deviceid}/getdevicerebootstatus")
+    public String getDeviceRebootStatus(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String deviceid) {
 
         return deviceService.getDeviceRebootStatus(username, vdmsid, deviceid);
 
@@ -924,8 +923,8 @@ public class DeviceController {
      * @param asset_ocr_images   optional asset OCR image files to upsert
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdms_id}/upsertassetocrimages")
-    public void upsertAssetOcrImages(@PathVariable String username, @PathVariable String vdms_id,
+    @RequestMapping(method = RequestMethod.POST, value = "/upsertassetocrimages")
+    public void upsertAssetOcrImages(@RequestParam String username, @RequestParam String vdms_id,
                                      @RequestParam List<String> device_ids, @RequestParam(value = "images", required = false) List<MultipartFile> asset_ocr_images, HttpServletRequest httpServletRequest) {
         deviceService.upsertAssetOcrImages(username, vdms_id, device_ids, asset_ocr_images, httpServletRequest);
     }
@@ -938,8 +937,8 @@ public class DeviceController {
      * @param deviceDTOS         devices whose asset OCR images should be deleted
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/user/{username}/vdms/{vdms_id}/deleteassetocrimages")
-    public void deleteAssetOcrImages(@PathVariable String username, @PathVariable String vdms_id, @RequestBody List<DeviceDTO> deviceDTOS, HttpServletRequest httpServletRequest) {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/deleteassetocrimages")
+    public void deleteAssetOcrImages(@RequestParam String username, @RequestParam String vdms_id, @RequestBody List<DeviceDTO> deviceDTOS, HttpServletRequest httpServletRequest) {
         System.out.println("heere");
         deviceService.deleteAssetOcrImages(username, vdms_id, deviceDTOS, httpServletRequest);
     }
@@ -953,8 +952,8 @@ public class DeviceController {
      * @param device_id device whose asset OCR image URLs are requested
      * @return serialized asset OCR image URLs
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdms_id}/device/{device_id}/getassetocrimages")
-    public String getAssetOcrImageUrls(@PathVariable String username, @PathVariable String vdms_id, @PathVariable String device_id) {
+    @RequestMapping(method = RequestMethod.GET, value = "/device/{device_id}/getassetocrimages")
+    public String getAssetOcrImageUrls(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String device_id) {
         return deviceService.getAssetOcrImageUrls(username, vdms_id, device_id);
     }
 
@@ -969,8 +968,8 @@ public class DeviceController {
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @return the created device
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/adddevice")
-    public DeviceDTO addDevice(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/adddevice")
+    public DeviceDTO addDevice(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                @RequestBody DeviceDTO deviceDto, HttpServletRequest httpServletRequest) {
         return deviceService.addDevice(username, vdmsid, dockername, deviceDto, httpServletRequest);
     }
@@ -991,8 +990,8 @@ public class DeviceController {
      * @param httpServletRequest         current request, used to resolve tenant/VDMS context
      * @throws IOException if writing the export or downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/exportfiltereddevices")
-    public void exportFilteredDevices(HttpServletResponse response, @PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/exportfiltereddevices")
+    public void exportFilteredDevices(HttpServletResponse response, @RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                       @RequestParam(defaultValue = "all") String condition, @RequestParam(defaultValue = "123") Integer onboard_status,
                                       @RequestParam(defaultValue = "simple_report") String template_name, @RequestParam(defaultValue = "excel") String file_type,
                                       @RequestBody com.alibaba.fastjson.JSONObject search_sort_filter_details, @RequestParam(defaultValue = "") String email, HttpServletRequest httpServletRequest) throws IOException {
@@ -1006,8 +1005,8 @@ public class DeviceController {
      *
      * @param vdmsid owning VDMS id
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/vdms/{vdmsid}/syncdeviceonboardstatus")
-    public void syncDeviceOnboardStatus(@PathVariable String vdmsid) {
+    @RequestMapping(method = RequestMethod.GET, value = "/syncdeviceonboardstatus")
+    public void syncDeviceOnboardStatus(@RequestParam String vdmsid) {
         deviceService.syncDeviceOnboardStatus(vdmsid);
     }
 
@@ -1017,8 +1016,8 @@ public class DeviceController {
      * @param vdmsid    owning VDMS id
      * @param device_id device whose onboard status is synced
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/vdms/{vdmsid}/device/{device_id}/syncsingledeviceonboardstatus")
-    public void syncSingleDeviceOnboardStatus(@PathVariable String vdmsid, @PathVariable String device_id) {
+    @RequestMapping(method = RequestMethod.GET, value = "/device/{device_id}/syncsingledeviceonboardstatus")
+    public void syncSingleDeviceOnboardStatus(@RequestParam String vdmsid, @PathVariable String device_id) {
         deviceService.syncSingleDeviceOnboardStatus(vdmsid, device_id);
     }
 
@@ -1033,8 +1032,8 @@ public class DeviceController {
      * @param assignee           assignee to associate with the device (default "all")
      * @return the updated device
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/updateassetmatchdetails")
-    public DeviceDTO updateAssetMatchDetails(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String dockername,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/updateassetmatchdetails")
+    public DeviceDTO updateAssetMatchDetails(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                              @RequestBody JSONObject deviceObject, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) {
         return deviceService.updateAssetMatchDetails(username, vdmsid, dockername, deviceObject, httpServletRequest, assignee);
     }
@@ -1047,8 +1046,8 @@ public class DeviceController {
      * @param filterObject       payload describing the digital twin instruments to upsert
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/upsertdigitaltwininstruments")
-    public void upsertDigitalTwin(@PathVariable String username, @PathVariable String vdmsid, @RequestBody TagDeviceOrLocationDTO filterObject, HttpServletRequest httpServletRequest) {
+    @RequestMapping(method = RequestMethod.POST, value = "/upsertdigitaltwininstruments")
+    public void upsertDigitalTwin(@RequestParam String username, @RequestParam String vdmsid, @RequestBody TagDeviceOrLocationDTO filterObject, HttpServletRequest httpServletRequest) {
         deviceService.upsertDigitalTwin(username, vdmsid, filterObject, httpServletRequest);
     }
 
@@ -1060,8 +1059,8 @@ public class DeviceController {
      * @param device_id          device whose digital twin should be deleted
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/user/{username}/vdms/{vdmsid}/device_id/{device_id}/deletedigitaltwin")
-    public void deleteDigitalTwin(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String device_id, HttpServletRequest httpServletRequest) {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/device_id/{device_id}/deletedigitaltwin")
+    public void deleteDigitalTwin(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String device_id, HttpServletRequest httpServletRequest) {
         deviceService.deleteDigitalTwin(username, vdmsid, device_id, httpServletRequest);
     }
 
@@ -1076,8 +1075,8 @@ public class DeviceController {
      * @param image              optional image file to associate
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/multieditdigitaltwininstruments")
-    public void multiEditDigitalTwin(@PathVariable String username, @PathVariable String vdmsid, @RequestParam(required = true) String data,
+    @RequestMapping(method = RequestMethod.POST, value = "/multieditdigitaltwininstruments")
+    public void multiEditDigitalTwin(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(required = true) String data,
                                      @RequestParam(required = false) String image_url,
                                      @RequestParam(required = false) MultipartFile image, HttpServletRequest httpServletRequest) {
         deviceService.multiEditDigitalTwin(username, vdmsid, data, image_url, image, httpServletRequest);
@@ -1097,8 +1096,8 @@ public class DeviceController {
      * @param search_sort_filter_details JSON object describing the search/sort/filter criteria
      * @throws IOException if writing the export or downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/exportfilteredmeasuringinstrument")
-    public void exportFilteredMeasuringInstrument(HttpServletResponse response, @PathVariable String username, @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/exportfilteredmeasuringinstrument")
+    public void exportFilteredMeasuringInstrument(HttpServletResponse response, @RequestParam String username, @RequestParam String vdmsid,
                                                   @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                                   @RequestParam(defaultValue = "1") Integer pageno,
                                                   @RequestParam(defaultValue = "10") Integer pagesize,
@@ -1121,15 +1120,13 @@ public class DeviceController {
     /**
      * Toggles the do-not-disturb (DND) status of a device.
      *
-     * @param username           owning user
-     * @param vdmsid             owning VDMS id
      * @param device_id          device whose DND status is toggled (required)
      * @param is_dnd_enabled     whether DND should be enabled (required)
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @throws IOException if downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/togglednd")
-    public void toggleDndStatus(@PathVariable String username, @PathVariable String vdmsid, @RequestParam(value = "device_id", required = true) String device_id,
+    @RequestMapping(method = RequestMethod.POST, value = "/togglednd")
+    public void toggleDndStatus(@RequestParam(value = "device_id", required = true) String device_id,
                                 @RequestParam(value = "is_dnd_enabled", required = true) Boolean is_dnd_enabled, HttpServletRequest httpServletRequest) throws IOException {
         deviceService.toggleDndStatus(device_id, is_dnd_enabled, httpServletRequest);
     }
@@ -1166,8 +1163,8 @@ public class DeviceController {
      * @return list of devices with their custom details
      * @throws IOException if downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/docker/{docker_name}/getalldevicedetails")
-    public List<DeviceDTO> getAllDeviceCustomDetails(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String docker_name,
+    @RequestMapping(method = RequestMethod.GET, value = "/docker/{docker_name}/getalldevicedetails")
+    public List<DeviceDTO> getAllDeviceCustomDetails(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String docker_name,
                                                      @RequestParam(defaultValue = "1") Integer page_no, @RequestParam(defaultValue = "10") Integer page_size,
                                                      @RequestParam(defaultValue = "null") String search_key, @RequestParam(defaultValue = "internal") String profile_type) throws IOException {
         return deviceService.getAllDeviceCustomDetails(username, vdmsid, docker_name, page_no, page_size, search_key, profile_type);
@@ -1207,8 +1204,8 @@ public class DeviceController {
      * @return list of devices with their custom details
      * @throws IOException if downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{docker_name}/getdevicecustomdetailsbyids")
-    public List<DeviceDTO> getDeviceCustomDetailsByIds(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String docker_name,
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{docker_name}/getdevicecustomdetailsbyids")
+    public List<DeviceDTO> getDeviceCustomDetailsByIds(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String docker_name,
                                                        @RequestParam(defaultValue = "1") Integer page_no, @RequestParam(defaultValue = "10") Integer page_size,
                                                        @RequestParam(defaultValue = "null") String search_key, @RequestParam(defaultValue = "0") Integer has_pagination,
                                                        @RequestBody JSONObject requestBody) throws IOException {

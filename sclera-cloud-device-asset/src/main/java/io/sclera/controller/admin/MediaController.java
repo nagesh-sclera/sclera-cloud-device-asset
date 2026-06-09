@@ -25,6 +25,7 @@ import io.sclera.service.MediaService;
  */
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class MediaController {
 
     @Autowired
@@ -38,8 +39,8 @@ public class MediaController {
      * @param media     media payload to upsert
      * @return identifier or status of the upserted media
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/upsertmedia")
-    public String upsertDocument(@PathVariable String username, @PathVariable String vdmsid, @RequestBody DocumentMediaDTO media) {
+    @RequestMapping(method = RequestMethod.POST, value = "/upsertmedia")
+    public String upsertDocument(@RequestParam String username, @RequestParam String vdmsid, @RequestBody DocumentMediaDTO media) {
 
 
         return mediaService.upsertMedia(username, vdmsid, media);
@@ -53,8 +54,8 @@ public class MediaController {
      * @param vdmsid    owning VDMS id
      * @param mediaid   media item to delete
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "user/{username}/vdms/{vdmsid}/mediaid/{mediaid}/deletemedia")
-    public void deleteDocumentbyId(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String mediaid) {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/mediaid/{mediaid}/deletemedia")
+    public void deleteDocumentbyId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String mediaid) {
         mediaService.deleteMedia(username, vdmsid, mediaid);
     }
 
@@ -69,8 +70,8 @@ public class MediaController {
      * @param searchkey  optional search filter (default "null")
      * @return the matching media items
      */
-    @RequestMapping(method = RequestMethod.GET, value = "user/{username}/vdms/{vdmsid}/getmedias")
-    public Set<DocumentMediaDTO> getMedias(@PathVariable String username, @PathVariable String vdmsid, @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey) {
+    @RequestMapping(method = RequestMethod.GET, value = "/getmedias")
+    public Set<DocumentMediaDTO> getMedias(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey) {
         return mediaService.getMedias(username, vdmsid, pageno, pagesize, searchkey);
     }
 
@@ -84,8 +85,8 @@ public class MediaController {
      * @param pagesize  number of media items per page (default 5)
      * @return the media items tagged to the device
      */
-    @RequestMapping(method = RequestMethod.GET, value = "user/{username}/vdms/{vdmsid}/device/{deviceid}/getmediabydeviceid")
-    public Set<DocumentMediaDTO> getMediasByDeviceId(@PathVariable String username, @PathVariable String vdmsid, @PathVariable String deviceid, @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize) {
+    @RequestMapping(method = RequestMethod.GET, value = "/device/{deviceid}/getmediabydeviceid")
+    public Set<DocumentMediaDTO> getMediasByDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String deviceid, @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize) {
         return mediaService.getMediasByDeviceId(username, vdmsid, deviceid, pageno, pagesize);
     }
 
@@ -98,8 +99,8 @@ public class MediaController {
      * @param share_method  how the media items are shared/tagged (default "add")
      * @param media         media items to tag
      */
-    @RequestMapping(method = RequestMethod.POST, value = "user/{username}/vdms/{vdmsid}/tagmediatodevice")
-    public void tagMediaToDevice(@PathVariable String username, @PathVariable String vdmsid, @RequestParam(defaultValue = "add") String share_method, @RequestBody Set<DocumentMediaDTO> media) {
+    @RequestMapping(method = RequestMethod.POST, value = "/tagmediatodevice")
+    public void tagMediaToDevice(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "add") String share_method, @RequestBody Set<DocumentMediaDTO> media) {
         mediaService.tagMediaToDevice(username, vdmsid, share_method, media);
     }
 
@@ -111,8 +112,8 @@ public class MediaController {
      * @param vdmsid    owning VDMS id
      * @param media     media items to untag
      */
-    @RequestMapping(method = RequestMethod.POST, value = "user/{username}/vdms/{vdmsid}/untagmediatodevice")
-    public void untagMediaToDevice(@PathVariable String username, @PathVariable String vdmsid, @RequestBody Set<DocumentMediaDTO> media) {
+    @RequestMapping(method = RequestMethod.POST, value = "/untagmediatodevice")
+    public void untagMediaToDevice(@RequestParam String username, @RequestParam String vdmsid, @RequestBody Set<DocumentMediaDTO> media) {
         mediaService.untagMediaToDevice(username, vdmsid, media);
     }
 

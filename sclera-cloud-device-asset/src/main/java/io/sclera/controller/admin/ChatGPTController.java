@@ -16,6 +16,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter
  */
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class ChatGPTController {
 
     @Autowired
@@ -28,7 +29,7 @@ public class ChatGPTController {
      * @return streaming emitter that delivers the generated response
      * @throws JSONException if the request payload cannot be parsed
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/troubleshoot-asset")
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/troubleshoot-asset")
     public ResponseEntity<ResponseBodyEmitter> generateMessage(@RequestBody ChatGPTDTO chatGPTDTO) throws JSONException {
         return chatGPTService.generateMessage(chatGPTDTO);
     }

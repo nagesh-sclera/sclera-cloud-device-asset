@@ -18,6 +18,7 @@ import java.util.Set;
  */
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class FloorController {
 
     @Autowired
@@ -33,8 +34,8 @@ public class FloorController {
      * @param httpServletRequest  current request, used to resolve tenant/VDMS context
      * @return the upserted floors
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdms_id}/building/{building_id}/upsertfloors")
-    public Set<FloorDTO> upsertFloorsByBuildingId(@PathVariable String username, @PathVariable String vdms_id, @PathVariable String building_id, @RequestBody Set<FloorDTO> floors,  HttpServletRequest httpServletRequest) {
+    @RequestMapping(method = RequestMethod.POST, value = "/building/{building_id}/upsertfloors")
+    public Set<FloorDTO> upsertFloorsByBuildingId(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String building_id, @RequestBody Set<FloorDTO> floors,  HttpServletRequest httpServletRequest) {
         return floorService.upsertFloorsByBuildingId(username, vdms_id, building_id, floors, httpServletRequest);
     }
 
@@ -48,8 +49,8 @@ public class FloorController {
      * @param httpServletRequest  current request, used to resolve tenant/VDMS context
      * @return status/identifier resulting from the image upsert
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdms_id}/upsertfloordetails")
-    public Integer addFloorImageByFloorId(@PathVariable String username, @PathVariable String vdms_id, @RequestParam(value = "images", required = false) MultipartFile floor_image,
+    @RequestMapping(method = RequestMethod.POST, value = "/upsertfloordetails")
+    public Integer addFloorImageByFloorId(@RequestParam String username, @RequestParam String vdms_id, @RequestParam(value = "images", required = false) MultipartFile floor_image,
                                           @RequestParam(value = "floor", required = false)  String floor_dto, HttpServletRequest httpServletRequest) {
         return floorService.addFloorImageByFloorId(username, vdms_id, floor_image,floor_dto, httpServletRequest);
     }
@@ -63,8 +64,8 @@ public class FloorController {
      * @param floor_ids           ids of the floors to delete
      * @param httpServletRequest  current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/user/{username}/vdms/{vdms_id}/building/deletefloors")
-    public void deleteFloorsByIds(@PathVariable String username , @PathVariable String vdms_id , @RequestBody Set<String> floor_ids, HttpServletRequest httpServletRequest){
+    @RequestMapping(method = RequestMethod.DELETE, value = "/building/deletefloors")
+    public void deleteFloorsByIds(@RequestParam String username , @RequestParam String vdms_id , @RequestBody Set<String> floor_ids, HttpServletRequest httpServletRequest){
         floorService.deleteFloorsByIds(username ,vdms_id ,floor_ids, httpServletRequest);
     }
 
@@ -78,8 +79,8 @@ public class FloorController {
      * @param clear_path          whether to also clear the stored image path (default "no")
      * @param httpServletRequest  current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/user/{username}/vdms/{vdms_id}/floor/{floor_id}/deletefloorimage")
-    public void deleteFloorImageByFloorId(@PathVariable String username, @PathVariable String vdms_id,  @PathVariable String floor_id, @RequestParam(defaultValue = "no") String clear_path, HttpServletRequest httpServletRequest) {
+    @RequestMapping(method = RequestMethod.DELETE, value = "/floor/{floor_id}/deletefloorimage")
+    public void deleteFloorImageByFloorId(@RequestParam String username, @RequestParam String vdms_id,  @PathVariable String floor_id, @RequestParam(defaultValue = "no") String clear_path, HttpServletRequest httpServletRequest) {
         floorService.deleteFloorImageByFloorId(username, vdms_id,floor_id,clear_path, httpServletRequest);
     }
 
@@ -87,14 +88,13 @@ public class FloorController {
      * Updates the stored map path for the given floor.
      *
      * @param username            owning user
-     * @param vdms_id             owning VDMS id
      * @param floor_id            floor whose path is updated
      * @param path                new floor map path
      * @param httpServletRequest  current request, used to resolve tenant/VDMS context
      * @return status of the path update
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdms_id}/floor/{floor_id}/updatefloorpath")
-    public String updatePathByFloorId(@PathVariable String username, @PathVariable String vdms_id, @PathVariable String floor_id, @RequestBody String path, HttpServletRequest httpServletRequest) {
+    @RequestMapping(method = RequestMethod.POST, value = "/floor/{floor_id}/updatefloorpath")
+    public String updatePathByFloorId(@RequestParam String username, @PathVariable String floor_id, @RequestBody String path, HttpServletRequest httpServletRequest) {
         return floorService.updatePathByFloorId(username,floor_id,path, httpServletRequest);
     }
 
@@ -106,8 +106,8 @@ public class FloorController {
      * @param floor_id  floor whose path is requested
      * @return the floor map path
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdms_id}/floor/{floor_id}/getfloorpathbyfloorid")
-    public String getFloorPathByFloorId(@PathVariable String username, @PathVariable String vdms_id, @PathVariable String floor_id) {
+    @RequestMapping(method = RequestMethod.GET, value = "/floor/{floor_id}/getfloorpathbyfloorid")
+    public String getFloorPathByFloorId(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String floor_id) {
         return floorService.getFloorPathByFloorId(username, vdms_id, floor_id);
     }
 
@@ -119,8 +119,8 @@ public class FloorController {
      * @param floor_id  floor to return
      * @return the floor
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdms_id}/floor/{floor_id}/getfloorbyfloorid")
-    public FloorDTO getFloorByFloorId(@PathVariable String username, @PathVariable String vdms_id, @PathVariable String floor_id) {
+    @RequestMapping(method = RequestMethod.GET, value = "/floor/{floor_id}/getfloorbyfloorid")
+    public FloorDTO getFloorByFloorId(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String floor_id) {
         return floorService.getFloorByFloorId(username, vdms_id, floor_id);
     }
 
@@ -134,8 +134,8 @@ public class FloorController {
      * @param field_id     optional field value to filter on
      * @return the matching floors
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdms_id}/building/{building_id}/getfloorsbybuildingid")
-    public Set<FloorDTO> getFloorsByBuildingId(@PathVariable String username, @PathVariable String vdms_id, @PathVariable String building_id ,
+    @RequestMapping(method = RequestMethod.GET, value = "/building/{building_id}/getfloorsbybuildingid")
+    public Set<FloorDTO> getFloorsByBuildingId(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String building_id ,
                                                @RequestParam(required = false) String field,@RequestParam(required = false) String field_id) {
         return floorService.getFloorsByBuildingId(username, vdms_id, building_id, field, field_id);
     }
@@ -148,8 +148,8 @@ public class FloorController {
      * @param floor_id  floor whose details are requested
      * @return the floor details
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdms_id}/floor/{floor_id}/getfloordetailsbyfloorid")
-    public FloorDTO getFloorDetailsByFloorId(@PathVariable String username, @PathVariable String vdms_id, @PathVariable String floor_id) {
+    @RequestMapping(method = RequestMethod.GET, value = "/floor/{floor_id}/getfloordetailsbyfloorid")
+    public FloorDTO getFloorDetailsByFloorId(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String floor_id) {
         return floorService.getFloorDetailsByFloorId(username, vdms_id, floor_id);
     }
 

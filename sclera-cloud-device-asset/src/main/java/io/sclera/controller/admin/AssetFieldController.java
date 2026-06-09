@@ -12,7 +12,7 @@ import java.util.List;
  * Delegates to {@link AssetFieldService}.
  */
 @RestController
-@RequestMapping("/user/{username}/vdms/{vdms_id}/asset-fields")
+@RequestMapping("/api/v1/sclera-cloud-device-asset-service/asset-fields")
 public class AssetFieldController {
 
     private final AssetFieldService assetFieldService;
@@ -24,13 +24,11 @@ public class AssetFieldController {
     /**
      * Returns all asset fields configured for the VDMS resolved from the request.
      *
-     * @param username           owning user
-     * @param vdms_id            owning VDMS id
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @return list of asset field definitions
      */
     @GetMapping
-    public List<AssetFieldDTO> getAllAssetFields(@PathVariable String username, @PathVariable String vdms_id, HttpServletRequest httpServletRequest) {
+    public List<AssetFieldDTO> getAllAssetFields(HttpServletRequest httpServletRequest) {
         return assetFieldService.getAssetFields(httpServletRequest);
     }
 }

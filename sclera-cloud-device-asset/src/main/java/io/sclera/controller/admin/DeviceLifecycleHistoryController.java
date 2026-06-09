@@ -13,6 +13,7 @@ import java.util.Set;
  */
 @RestController
 @CrossOrigin(allowedHeaders = "*", origins = "*")
+@RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class DeviceLifecycleHistoryController {
 
     @Autowired
@@ -26,9 +27,9 @@ public class DeviceLifecycleHistoryController {
      * @param dto          lifecycle history entry to record
      * @param retireStatus retirement status applied alongside the entry
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/adddevicehistory")
-    public void addDeviceHistory(@PathVariable String username,
-                                 @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.POST, value = "/adddevicehistory")
+    public void addDeviceHistory(@RequestParam String username,
+                                 @RequestParam String vdmsid,
                                  @RequestBody DeviceLifecycleHistoryDTO dto,
                                  @RequestParam String retireStatus) {
         deviceLifeCycleHistoryService.addDeviceHistory(username, vdmsid, dto, retireStatus);
@@ -44,9 +45,9 @@ public class DeviceLifecycleHistoryController {
      * @param pagesize  page size (default 5)
      * @return set of lifecycle history entries for the requested page
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/user/{username}/vdms/{vdmsid}/device/{device_id}/getdevicehistory")
-    public Set<DeviceLifecycleHistoryDTO> getDeviceHistory(@PathVariable String username,
-                                                           @PathVariable String vdmsid,
+    @RequestMapping(method = RequestMethod.GET, value = "/device/{device_id}/getdevicehistory")
+    public Set<DeviceLifecycleHistoryDTO> getDeviceHistory(@RequestParam String username,
+                                                           @RequestParam String vdmsid,
                                                            @PathVariable String device_id,
                                                            @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize) {
         return deviceLifeCycleHistoryService.getDeviceHistory(username, vdmsid, device_id, pageno, pagesize);

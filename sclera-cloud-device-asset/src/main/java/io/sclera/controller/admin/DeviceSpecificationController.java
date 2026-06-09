@@ -20,7 +20,7 @@ import java.util.List;
  * Delegates persistence and business logic to {@link DeviceSpecificationService} and
  * {@link DeviceInstalledAppsService}, and remote-support operations to {@link RemoteDesktopSessionClient}.
  */
-@RequestMapping("/api")
+@RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class DeviceSpecificationController {
@@ -131,8 +131,8 @@ public class DeviceSpecificationController {
      * @param username the user requesting the remote-connect info
      * @return the remote-connect information
      */
-    @GetMapping("/remotesupport/user/{username}/device/{deviceId}")
-    public ResponseEntity<?> getRemoteConnectInfo(@PathVariable String deviceId, @PathVariable String username) {
+    @GetMapping("/remotesupport/device/{deviceId}")
+    public ResponseEntity<?> getRemoteConnectInfo(@PathVariable String deviceId, @RequestParam String username) {
         return remoteDesktopSessionService.getRemoteConnectInfo(deviceId,username);
     }
 
