@@ -2,6 +2,8 @@ package io.sclera.controller.admin;
 
 import io.sclera.dto.LocationHistoryDTO;
 import io.sclera.service.LocationHistoryService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +18,8 @@ import java.util.Set;
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class LocationHistoryController {
 
+    private static final Logger log = LoggerFactory.getLogger(LocationHistoryController.class);
+
     @Autowired
     LocationHistoryService locationHistoryService;
 
@@ -28,7 +32,13 @@ public class LocationHistoryController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/addlocationhistory")
     public void addLocationHistory(@RequestParam String username, @RequestParam String vdmsid, @RequestBody LocationHistoryDTO locationHistory) {
-        locationHistoryService.addLocationHistory(username, vdmsid, locationHistory);
+        log.info("addLocationHistory username={} vdmsid={}", username, vdmsid);
+        try {
+            locationHistoryService.addLocationHistory(username, vdmsid, locationHistory);
+        } catch (Exception e) {
+            log.error("addLocationHistory failed username={}: {}", username, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -42,6 +52,12 @@ public class LocationHistoryController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/location/{location_id}/getlocationhistory")
     public Set<LocationHistoryDTO> getLocationHistory(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String location_id) {
-        return locationHistoryService.getLocationHistory(username, vdmsid, location_id);
+        log.info("getLocationHistory username={} vdmsid={} location_id={}", username, vdmsid, location_id);
+        try {
+            return locationHistoryService.getLocationHistory(username, vdmsid, location_id);
+        } catch (Exception e) {
+            log.error("getLocationHistory failed username={} location_id={}: {}", username, location_id, e.getMessage(), e);
+            throw e;
+        }
     }
 }

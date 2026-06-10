@@ -2,6 +2,8 @@ package io.sclera.controller.admin;
 
 import io.sclera.dto.*;
 import io.sclera.client.PropertyQrcodeClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +18,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class PropertyServiceController {
+    private static final Logger log = LoggerFactory.getLogger(PropertyServiceController.class);
 
     @Autowired
     PropertyQrcodeClient propertyQrcodeService;
@@ -31,7 +34,13 @@ public class PropertyServiceController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/upsertpropertyservice")
     public PropertyServiceDTO upsertPropertyServiceDetails(@RequestParam String username, @RequestParam String vdmsid, @RequestBody PropertyServiceDTO propertyService) {
-        return propertyQrcodeService.upsertPropertyServiceDetails(username, vdmsid, propertyService);
+        log.info("upsertPropertyServiceDetails username={} vdmsid={}", username, vdmsid);
+        try {
+            return propertyQrcodeService.upsertPropertyServiceDetails(username, vdmsid, propertyService);
+        } catch (Exception e) {
+            log.error("upsertPropertyServiceDetails failed username={}: {}", username, e.getMessage(), e);
+            throw e;
+        }
     }
 
     // Add Locations to Property Service
@@ -50,7 +59,13 @@ public class PropertyServiceController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/service/{property_service_id}/addpropertyservicelocations")
     public void addPropertyServiceLocations(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String property_service_id, @RequestBody Set<LocationDTO> locationDTOS) {
-        propertyQrcodeService.addPropertyServiceLocations(username, vdmsid, property_service_id,locationDTOS);
+        log.info("addPropertyServiceLocations username={} vdmsid={} property_service_id={}", username, vdmsid, property_service_id);
+        try {
+            propertyQrcodeService.addPropertyServiceLocations(username, vdmsid, property_service_id,locationDTOS);
+        } catch (Exception e) {
+            log.error("addPropertyServiceLocations failed username={}: {}", username, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -64,7 +79,13 @@ public class PropertyServiceController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/updatepropertyserviceresponses")
     public void multiUpdatePropertyServiceResponse(@RequestParam String username, @RequestParam String vdmsid,@RequestBody Set<PropertyServiceResponseDTO> propertyServiceResponses) {
-        propertyQrcodeService.multiUpdatePropertyServiceResponse(username,vdmsid,propertyServiceResponses);
+        log.info("multiUpdatePropertyServiceResponse username={} vdmsid={}", username, vdmsid);
+        try {
+            propertyQrcodeService.multiUpdatePropertyServiceResponse(username,vdmsid,propertyServiceResponses);
+        } catch (Exception e) {
+            log.error("multiUpdatePropertyServiceResponse failed username={}: {}", username, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //Get Property Services
@@ -77,7 +98,13 @@ public class PropertyServiceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/getpropertyservices")
     public Set<PropertyServiceDTO> getPropertyServices(@RequestParam String username, @RequestParam String vdmsid) {
-       return propertyQrcodeService.getPropertyServices(username, vdmsid);
+        log.info("getPropertyServices username={} vdmsid={}", username, vdmsid);
+        try {
+            return propertyQrcodeService.getPropertyServices(username, vdmsid);
+        } catch (Exception e) {
+            log.error("getPropertyServices failed username={}: {}", username, e.getMessage(), e);
+            throw e;
+        }
     }
 
     // Get property service locations
@@ -91,7 +118,13 @@ public class PropertyServiceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/service/{property_service_id}/getpropertyservicelocations")
     public  Set<PropertyQrcodeDTO> getPropertyServiceLocationsById(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String property_service_id) {
-        return propertyQrcodeService.getPropertyServiceLocationsById(username, vdmsid, property_service_id);
+        log.info("getPropertyServiceLocationsById username={} vdmsid={} property_service_id={}", username, vdmsid, property_service_id);
+        try {
+            return propertyQrcodeService.getPropertyServiceLocationsById(username, vdmsid, property_service_id);
+        } catch (Exception e) {
+            log.error("getPropertyServiceLocationsById failed username={}: {}", username, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //delete property service requests
@@ -104,7 +137,13 @@ public class PropertyServiceController {
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/deletepropertyservicerequests")
     public void deletePropertyServiceRequests(@RequestParam String username, @RequestParam String vdmsid, @RequestBody Set<PropertyServiceRequestDTO> propertyServiceRequests) {
-        propertyQrcodeService.deletePropertyServiceRequests(username, vdmsid, propertyServiceRequests);
+        log.info("deletePropertyServiceRequests username={} vdmsid={}", username, vdmsid);
+        try {
+            propertyQrcodeService.deletePropertyServiceRequests(username, vdmsid, propertyServiceRequests);
+        } catch (Exception e) {
+            log.error("deletePropertyServiceRequests failed username={}: {}", username, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //delete locations tagged to service
@@ -119,7 +158,13 @@ public class PropertyServiceController {
     @RequestMapping(method = RequestMethod.DELETE, value = "/service/{property_service_id}/deletepropertyservicelocations")
     public void deletePropertyServiceLocations(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String property_service_id,
                                               @RequestBody Set<String> locations) {
-        propertyQrcodeService.deletePropertyServiceLocations(username, vdmsid, property_service_id, locations);
+        log.info("deletePropertyServiceLocations username={} vdmsid={} property_service_id={}", username, vdmsid, property_service_id);
+        try {
+            propertyQrcodeService.deletePropertyServiceLocations(username, vdmsid, property_service_id, locations);
+        } catch (Exception e) {
+            log.error("deletePropertyServiceLocations failed username={}: {}", username, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //delete property service
@@ -132,7 +177,13 @@ public class PropertyServiceController {
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/service/{property_service_id}/deletepropertyservice")
     public void deletePropertyService(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String property_service_id) {
-        propertyQrcodeService.deletePropertyService(username, vdmsid, property_service_id);
+        log.info("deletePropertyService username={} vdmsid={} property_service_id={}", username, vdmsid, property_service_id);
+        try {
+            propertyQrcodeService.deletePropertyService(username, vdmsid, property_service_id);
+        } catch (Exception e) {
+            log.error("deletePropertyService failed username={}: {}", username, e.getMessage(), e);
+            throw e;
+        }
     }
 
     // Get zone map
@@ -149,7 +200,13 @@ public class PropertyServiceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/building/{building_id}/floor/{floor_id}/location/{location_id}/service/{property_service_id}/getzonemap")
     public  Set<PropertyQrcodeDTO> getZoneMap(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String building_id,@PathVariable String floor_id, @PathVariable String location_id,@PathVariable String property_service_id) {
-       return propertyQrcodeService.getZoneMap(username, vdmsid,building_id,floor_id,location_id,property_service_id);
+        log.info("getZoneMap username={} vdmsid={} building_id={} floor_id={} location_id={} property_service_id={}", username, vdmsid, building_id, floor_id, location_id, property_service_id);
+        try {
+            return propertyQrcodeService.getZoneMap(username, vdmsid,building_id,floor_id,location_id,property_service_id);
+        } catch (Exception e) {
+            log.error("getZoneMap failed username={}: {}", username, e.getMessage(), e);
+            throw e;
+        }
     }
    
 }

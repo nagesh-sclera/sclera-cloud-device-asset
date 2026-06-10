@@ -5,7 +5,14 @@
 #     Java service so the broken -javaagent is not applied.
 #  2) daprio/scheduler runs as non-root and can't mkdir in the scheduler-data volume.
 #     Run it as root for the demo so it can create its etcd data dir.
+#  3) A foreign `postgres` container already holds host port 5432, so remap this
+#     stack's Postgres to host 5433. Inter-service traffic uses the container
+#     network (postgres:5432) and is unaffected.
 services:
+  postgres:
+    ports:
+      - "5433:5432"
+
   app:
     environment:
       JAVA_TOOL_OPTIONS: ""

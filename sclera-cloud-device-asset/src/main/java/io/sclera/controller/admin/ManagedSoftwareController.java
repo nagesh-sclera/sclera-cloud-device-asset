@@ -6,6 +6,8 @@ import io.sclera.dto.ManagedSoftwareDTO;
 import io.sclera.dto.ManagedSoftwareUsersDTO;
 import io.sclera.service.ManagedSoftwareSearchService;
 import io.sclera.service.ManagedSoftwareService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +25,8 @@ import java.util.Set;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class ManagedSoftwareController {
+
+    private static final Logger log = LoggerFactory.getLogger(ManagedSoftwareController.class);
 
     @Autowired
     ManagedSoftwareService managedSoftwareService;
@@ -43,7 +47,13 @@ public class ManagedSoftwareController {
     @GetMapping(value = "/docker/{dockername}/getallmanagedsoftwares")
     public List<ManagedSoftwareDTO> getAllManagedSoftwares(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition, @RequestParam(defaultValue = "null") String searchKey,
                                                            @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize) {
-        return managedSoftwareService.getAllManagedSoftwares(username, vdmsid, dockername, condition, searchKey, pageno, pagesize);
+        log.info("getAllManagedSoftwares username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return managedSoftwareService.getAllManagedSoftwares(username, vdmsid, dockername, condition, searchKey, pageno, pagesize);
+        } catch (Exception e) {
+            log.error("getAllManagedSoftwares failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -54,7 +64,13 @@ public class ManagedSoftwareController {
      */
     @PutMapping(value = "/docker/all/upsertmanagedsoftware")
     public ManagedSoftwareDTO updateManagedSoftware(@RequestParam String username, @RequestParam String vdmsid, @RequestBody ManagedSoftwareDTO managedSoftwareDTO) {
-        return managedSoftwareService.updateManagedSoftware(username, vdmsid, managedSoftwareDTO);
+        log.info("updateManagedSoftware username={} vdmsid={}", username, vdmsid);
+        try {
+            return managedSoftwareService.updateManagedSoftware(username, vdmsid, managedSoftwareDTO);
+        } catch (Exception e) {
+            log.error("updateManagedSoftware failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -66,7 +82,13 @@ public class ManagedSoftwareController {
      */
     @PutMapping(value = "/docker/{dockername}/taginventorydetails")
     public ManagedSoftwareDTO tagInventoryDetails(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestBody ManagedSoftwareDTO managedSoftwareDTO) {
-        return managedSoftwareService.tagInventoryDetails(username, vdmsid, managedSoftwareDTO);
+        log.info("tagInventoryDetails username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return managedSoftwareService.tagInventoryDetails(username, vdmsid, managedSoftwareDTO);
+        } catch (Exception e) {
+            log.error("tagInventoryDetails failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -78,7 +100,13 @@ public class ManagedSoftwareController {
      */
     @PutMapping(value = "/docker/{dockername}/untaginventorydetails")
     public ManagedSoftwareDTO unTagInventoryDetails(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestBody ManagedSoftwareDTO managedSoftwareDTO) {
-        return managedSoftwareService.unTagInventoryDetails(username, vdmsid, managedSoftwareDTO);
+        log.info("unTagInventoryDetails username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return managedSoftwareService.unTagInventoryDetails(username, vdmsid, managedSoftwareDTO);
+        } catch (Exception e) {
+            log.error("unTagInventoryDetails failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -90,7 +118,13 @@ public class ManagedSoftwareController {
      */
     @GetMapping(value = "/docker/{dockername}/managedsoftware/{managedsoftwareid}/users")
     public List<ManagedSoftwareUsersDTO> getManagedSoftwareUsers(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String managedsoftwareid) {
-        return managedSoftwareService.getManagedSoftwareUsers(username, vdmsid, dockername, managedsoftwareid);
+        log.info("getManagedSoftwareUsers username={} vdmsid={} dockername={} managedsoftwareid={}", username, vdmsid, dockername, managedsoftwareid);
+        try {
+            return managedSoftwareService.getManagedSoftwareUsers(username, vdmsid, dockername, managedsoftwareid);
+        } catch (Exception e) {
+            log.error("getManagedSoftwareUsers failed username={} vdmsid={} dockername={} managedsoftwareid={}: {}", username, vdmsid, dockername, managedsoftwareid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -103,7 +137,13 @@ public class ManagedSoftwareController {
      */
     @GetMapping(value = "/docker/{dockername}/managedsoftware/{managedsoftwareid}/license")
     public Map<String, Integer> getManagedSoftwareLicense(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String managedsoftwareid, @RequestParam String applicationId) {
-        return managedSoftwareService.getManagedSoftwareLicense(username, vdmsid, dockername, managedsoftwareid, applicationId);
+        log.info("getManagedSoftwareLicense username={} vdmsid={} dockername={} managedsoftwareid={} applicationId={}", username, vdmsid, dockername, managedsoftwareid, applicationId);
+        try {
+            return managedSoftwareService.getManagedSoftwareLicense(username, vdmsid, dockername, managedsoftwareid, applicationId);
+        } catch (Exception e) {
+            log.error("getManagedSoftwareLicense failed username={} vdmsid={} dockername={} managedsoftwareid={} applicationId={}: {}", username, vdmsid, dockername, managedsoftwareid, applicationId, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -114,7 +154,13 @@ public class ManagedSoftwareController {
      */
     @GetMapping(value = "/docker/{dockername}/getmanagedsoftwarecount")
     public Map<String, Integer> getManagedSoftwareCount(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername) {
-        return managedSoftwareService.getManagedSoftwareCount(username, vdmsid, dockername);
+        log.info("getManagedSoftwareCount username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return managedSoftwareService.getManagedSoftwareCount(username, vdmsid, dockername);
+        } catch (Exception e) {
+            log.error("getManagedSoftwareCount failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -126,7 +172,13 @@ public class ManagedSoftwareController {
      */
     @GetMapping(value = "/docker/{dockername}/managedsoftware/{managedsoftwareid}/riskandcompliance")
     public List<Map<String, String>> getManagedSoftwareRiskAndCompliances(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String managedsoftwareid) {
-        return managedSoftwareService.getAllRiskAndCompliances(username, vdmsid, dockername, managedsoftwareid);
+        log.info("getManagedSoftwareRiskAndCompliances username={} vdmsid={} dockername={} managedsoftwareid={}", username, vdmsid, dockername, managedsoftwareid);
+        try {
+            return managedSoftwareService.getAllRiskAndCompliances(username, vdmsid, dockername, managedsoftwareid);
+        } catch (Exception e) {
+            log.error("getManagedSoftwareRiskAndCompliances failed username={} vdmsid={} dockername={} managedsoftwareid={}: {}", username, vdmsid, dockername, managedsoftwareid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -138,7 +190,13 @@ public class ManagedSoftwareController {
      */
     @PutMapping(value = "/docker/{dockername}/managedsoftware/{managedsoftwareid}/riskandcompliance/action")
     public void riskAndComplianceAction(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String managedsoftwareid, @RequestBody JSONObject data) {
-        managedSoftwareService.riskAndComplianceAction(username, vdmsid, dockername, managedsoftwareid, data);
+        log.info("riskAndComplianceAction username={} vdmsid={} dockername={} managedsoftwareid={}", username, vdmsid, dockername, managedsoftwareid);
+        try {
+            managedSoftwareService.riskAndComplianceAction(username, vdmsid, dockername, managedsoftwareid, data);
+        } catch (Exception e) {
+            log.error("riskAndComplianceAction failed username={} vdmsid={} dockername={} managedsoftwareid={}: {}", username, vdmsid, dockername, managedsoftwareid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -159,7 +217,13 @@ public class ManagedSoftwareController {
                                                                    @RequestParam(defaultValue = "1") Integer pageno,
                                                                    @RequestParam(defaultValue = "10") Integer pagesize,
                                                                    @RequestBody JSONObject search_sort_filter_details) {
-        return managedSoftwareSearchService.searchSortFilterManagedSoftware(username, vdmsid, dockername, condition, pageno, pagesize, search_sort_filter_details);
+        log.info("searchSortFilterManagedSoftware username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return managedSoftwareSearchService.searchSortFilterManagedSoftware(username, vdmsid, dockername, condition, pageno, pagesize, search_sort_filter_details);
+        } catch (Exception e) {
+            log.error("searchSortFilterManagedSoftware failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -176,7 +240,13 @@ public class ManagedSoftwareController {
                                                        @PathVariable String dockername,
                                                        @RequestParam(defaultValue = "all") String condition,
                                                        @RequestBody JSONObject search_sort_filter_details) {
-        return managedSoftwareSearchService.searchSortFilterManagedSoftwareCount(username, vdmsid, dockername, condition, search_sort_filter_details);
+        log.info("searchSortFilterManagedSoftwareCount username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return managedSoftwareSearchService.searchSortFilterManagedSoftwareCount(username, vdmsid, dockername, condition, search_sort_filter_details);
+        } catch (Exception e) {
+            log.error("searchSortFilterManagedSoftwareCount failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -186,7 +256,13 @@ public class ManagedSoftwareController {
      */
     @GetMapping(value = "/getmanagedsoftwarefieldslist")
     public String getManagedSoftwareFieldsList(@RequestParam String username, @RequestParam String vdmsid) {
-        return managedSoftwareService.getManagedSoftwareFieldsList(username, vdmsid);
+        log.info("getManagedSoftwareFieldsList username={} vdmsid={}", username, vdmsid);
+        try {
+            return managedSoftwareService.getManagedSoftwareFieldsList(username, vdmsid);
+        } catch (Exception e) {
+            log.error("getManagedSoftwareFieldsList failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -196,7 +272,13 @@ public class ManagedSoftwareController {
      */
     @GetMapping(value = "/getmanagedsoftwareuserslist")
     public List<String> getManagedSoftwareUsersList(@RequestParam String username, @RequestParam String vdmsid) {
-        return managedSoftwareService.getManagedSoftwareUsersList(username, vdmsid);
+        log.info("getManagedSoftwareUsersList username={} vdmsid={}", username, vdmsid);
+        try {
+            return managedSoftwareService.getManagedSoftwareUsersList(username, vdmsid);
+        } catch (Exception e) {
+            log.error("getManagedSoftwareUsersList failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -206,7 +288,13 @@ public class ManagedSoftwareController {
      */
     @GetMapping(value = "/getmanagedsoftwareostypeslist")
     public List<String> getManagedSoftwareOSTypesList(@RequestParam String username, @RequestParam String vdmsid) {
-        return managedSoftwareService.getManagedSoftwareOSTypesList(username, vdmsid);
+        log.info("getManagedSoftwareOSTypesList username={} vdmsid={}", username, vdmsid);
+        try {
+            return managedSoftwareService.getManagedSoftwareOSTypesList(username, vdmsid);
+        } catch (Exception e) {
+            log.error("getManagedSoftwareOSTypesList failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -217,7 +305,13 @@ public class ManagedSoftwareController {
      */
     @DeleteMapping(value = "/docker/{dockername}/managedsoftware/{managedsoftwareid}/deletemanagedsoftware")
     public void deleteManagedSoftware(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String managedsoftwareid) {
-        managedSoftwareService.deleteManagedSoftware(username, vdmsid, dockername, managedsoftwareid);
+        log.info("deleteManagedSoftware username={} vdmsid={} dockername={} managedsoftwareid={}", username, vdmsid, dockername, managedsoftwareid);
+        try {
+            managedSoftwareService.deleteManagedSoftware(username, vdmsid, dockername, managedsoftwareid);
+        } catch (Exception e) {
+            log.error("deleteManagedSoftware failed username={} vdmsid={} dockername={} managedsoftwareid={}: {}", username, vdmsid, dockername, managedsoftwareid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -228,6 +322,12 @@ public class ManagedSoftwareController {
      */
     @GetMapping(value = "/docker/{dockername}/getinventoryapplications")
     public List<InventoryApplicationDTO> getInventoryApplications(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername) {
-        return managedSoftwareService.getInventoryApplications(username, vdmsid, dockername);
+        log.info("getInventoryApplications username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return managedSoftwareService.getInventoryApplications(username, vdmsid, dockername);
+        } catch (Exception e) {
+            log.error("getInventoryApplications failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 }

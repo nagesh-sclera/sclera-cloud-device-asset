@@ -1278,7 +1278,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // get unique device types
     @Transactional
-    @Query(value = "SELECT DISTINCT(d.type) FROM device d LEFT JOIN docker do ON (do.name = d.docker_name AND do.vdms_id = d.docker_vdms_id) LEFT JOIN location l ON l.id = d.location_id LEFT JOIN floor f ON f.id = l.floor_id WHERE (?1 = 'all' or d.docker_name = ?1) AND (?2 = 'null' or f.id = ?2) AND d.type IS NOT NULL AND d.monitor = 1 AND d.asset_match_status != 3 ORDER BY d.type", nativeQuery = true)
+    @Query(value = "SELECT DISTINCT(d.type) FROM device d LEFT JOIN docker dk ON (dk.name = d.docker_name AND dk.vdms_id = d.docker_vdms_id) LEFT JOIN location l ON l.id = d.location_id LEFT JOIN floor f ON f.id = l.floor_id WHERE (?1 = 'all' or d.docker_name = ?1) AND (?2 = 'null' or f.id = ?2) AND d.type IS NOT NULL AND d.monitor = 1 AND d.asset_match_status != 3 ORDER BY d.type", nativeQuery = true)
     List<String> getUniqueDeviceTypes(String network_name, String floor_id);
 
     /**
@@ -1288,7 +1288,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the distinct asset groups
      */
     @Transactional
-    @Query(value = "SELECT DISTINCT(d.asset_group) FROM device d LEFT JOIN docker do ON (do.name = d.docker_name AND do.vdms_id = d.docker_vdms_id) WHERE (?1 = 'all' or d.docker_name = ?1) AND d.asset_group IS NOT NULL ORDER BY d.asset_group", nativeQuery = true)
+    @Query(value = "SELECT DISTINCT(d.asset_group) FROM device d LEFT JOIN docker dk ON (dk.name = d.docker_name AND dk.vdms_id = d.docker_vdms_id) WHERE (?1 = 'all' or d.docker_name = ?1) AND d.asset_group IS NOT NULL ORDER BY d.asset_group", nativeQuery = true)
     List<String> getUniqueAssetGroups(String network_name);
 
     /**
@@ -1298,7 +1298,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the distinct categories
      */
     @Transactional
-    @Query(value = "SELECT DISTINCT(d.category) FROM device d LEFT JOIN docker do ON (do.name = d.docker_name AND do.vdms_id = d.docker_vdms_id) WHERE (?1 = 'all' or d.docker_name = ?1) AND d.category IS NOT NULL ORDER BY d.category", nativeQuery = true)
+    @Query(value = "SELECT DISTINCT(d.category) FROM device d LEFT JOIN docker dk ON (dk.name = d.docker_name AND dk.vdms_id = d.docker_vdms_id) WHERE (?1 = 'all' or d.docker_name = ?1) AND d.category IS NOT NULL ORDER BY d.category", nativeQuery = true)
     List<String> getUniqueCategory(String network_name);
 
     /**
@@ -1309,7 +1309,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the distinct sub-categories
      */
     @Transactional
-    @Query(value = "SELECT DISTINCT(d.sub_category) FROM device d LEFT JOIN docker do ON (do.name = d.docker_name AND do.vdms_id = d.docker_vdms_id) WHERE (?1 = 'all' or d.docker_name = ?1) AND d.category = ?2 AND d.sub_category IS NOT NULL ORDER BY d.sub_category", nativeQuery = true)
+    @Query(value = "SELECT DISTINCT(d.sub_category) FROM device d LEFT JOIN docker dk ON (dk.name = d.docker_name AND dk.vdms_id = d.docker_vdms_id) WHERE (?1 = 'all' or d.docker_name = ?1) AND d.category = ?2 AND d.sub_category IS NOT NULL ORDER BY d.sub_category", nativeQuery = true)
     List<String> getUniqueSubCategory(String network_name, String category);
 
     /**
@@ -1320,7 +1320,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the distinct assigned user emails
      */
     @Transactional
-    @Query(value = "SELECT DISTINCT(d.assigned_user_email) FROM device d LEFT JOIN docker do ON (do.name = d.docker_name AND do.vdms_id = d.docker_vdms_id) WHERE d.docker_vdms_id = ?1 AND (?2 = 'all' or d.docker_name = ?2) AND d.assigned_user_email IS NOT NULL ORDER BY d.assigned_user_email", nativeQuery = true)
+    @Query(value = "SELECT DISTINCT(d.assigned_user_email) FROM device d LEFT JOIN docker dk ON (dk.name = d.docker_name AND dk.vdms_id = d.docker_vdms_id) WHERE d.docker_vdms_id = ?1 AND (?2 = 'all' or d.docker_name = ?2) AND d.assigned_user_email IS NOT NULL ORDER BY d.assigned_user_email", nativeQuery = true)
     List<String> getUniqueAssignedUserEmail(String vdms_id, String network_name);
 
     /**
@@ -1359,7 +1359,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the number of matching devices
      */
     @Query(value = "SELECT COUNT(*) FROM device d "
-            + " LEFT JOIN docker do ON (do.name = d.docker_name AND do.vdms_id = d.docker_vdms_id) "
+            + " LEFT JOIN docker dk ON (dk.name = d.docker_name AND dk.vdms_id = d.docker_vdms_id) "
             + " LEFT JOIN location l ON d.location_id = l.id "
             + " LEFT JOIN floor f ON l.floor_id = f.id "
             + " WHERE (?1 = 'all' or d.docker_name = ?1) AND (?2 = 'null' or f.id = ?2) AND d.type IN ?3 AND d.monitor = 1 AND d.asset_match_status != 3", nativeQuery = true)

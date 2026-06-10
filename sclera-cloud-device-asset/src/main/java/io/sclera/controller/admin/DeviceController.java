@@ -11,6 +11,8 @@ import io.sclera.dto.*;
 import io.sclera.service.touchscreen.DeviceMonitorService;
 import io.sclera.integration.dto.ResponseDTO;
 import org.json.JSONException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,6 +45,8 @@ import jakarta.servlet.http.HttpServletResponse;
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class DeviceController {
 
+    private static final Logger log = LoggerFactory.getLogger(DeviceController.class);
+
     @Autowired
     DeviceService deviceService;
 
@@ -68,8 +72,14 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/devices")
     public Set<DeviceDTO> listAllDevicebyVdmsidAndDockerName(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername) {
-        return deviceService.listAllDevicebyVdmsidAndDockerName(username, vdmsid, dockername);
+        log.info("listAllDevicebyVdmsidAndDockerName username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return deviceService.listAllDevicebyVdmsidAndDockerName(username, vdmsid, dockername);
 
+        } catch (Exception e) {
+            log.error("listAllDevicebyVdmsidAndDockerName failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -87,7 +97,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/getfilterdevice")
     public Set<DeviceDTO> getfilterdevice(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition, @RequestParam(defaultValue = "null") String searchKey,
                                           @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize) {
-        return deviceService.getfilterdevices(username, vdmsid, dockername, condition, searchKey, pageno, pagesize);
+        log.info("getfilterdevice username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return deviceService.getfilterdevices(username, vdmsid, dockername, condition, searchKey, pageno, pagesize);
+        } catch (Exception e) {
+            log.error("getfilterdevice failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //new get method with subsystem parent device get initial
@@ -106,7 +122,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/getsubsystemparentdevicesbypagination")
     public Set<DeviceDTO> getSubsystemParentDevicesByPagination(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                                                 @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") String assignee) {
-        return deviceService.getSubsystemParentDevicesByPagination(username, vdmsid, dockername, condition, pageno, pagesize, assignee);
+        log.info("getSubsystemParentDevicesByPagination username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return deviceService.getSubsystemParentDevicesByPagination(username, vdmsid, dockername, condition, pageno, pagesize, assignee);
+        } catch (Exception e) {
+            log.error("getSubsystemParentDevicesByPagination failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //new get method with subsystem devices get
@@ -126,7 +148,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/{device_id}/getsubsystemdevicesbypagination")
     public Set<DeviceDTO> getSubsystemDevicesByPagination(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String device_id, @RequestParam(defaultValue = "all") String condition,
                                                           @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") String assignee) {
-        return deviceService.getSubsystemDevicesByPagination(username, vdmsid, dockername, device_id, condition, pageno, pagesize, assignee);
+        log.info("getSubsystemDevicesByPagination username={} vdmsid={} dockername={} device_id={}", username, vdmsid, dockername, device_id);
+        try {
+            return deviceService.getSubsystemDevicesByPagination(username, vdmsid, dockername, device_id, condition, pageno, pagesize, assignee);
+        } catch (Exception e) {
+            log.error("getSubsystemDevicesByPagination failed username={} vdmsid={} dockername={} device_id={}: {}", username, vdmsid, dockername, device_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -141,7 +169,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/devicesupsert")
     public void upsertDeviceListByVdmsIdAndDockerName(@RequestBody List<DeviceDTO> devicesDto, @RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String assignee) {
-        deviceService.upsertDeviceListByVdmsIdAndDockerName(devicesDto, username, vdmsid, dockername, assignee);
+        log.info("upsertDeviceListByVdmsIdAndDockerName username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            deviceService.upsertDeviceListByVdmsIdAndDockerName(devicesDto, username, vdmsid, dockername, assignee);
+        } catch (Exception e) {
+            log.error("upsertDeviceListByVdmsIdAndDockerName failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -161,7 +195,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/device/{device_id}/edit")
     public DeviceDTO editDeviceByDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                           @PathVariable String device_id, @RequestBody DeviceDTO devicedto, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) throws JSONException, IOException {
-        return deviceService.editDeviceByDeviceID(username, vdmsid, dockername, device_id, devicedto, httpServletRequest, assignee);
+        log.info("editDeviceByDeviceId username={} vdmsid={} dockername={} device_id={}", username, vdmsid, dockername, device_id);
+        try {
+            return deviceService.editDeviceByDeviceID(username, vdmsid, dockername, device_id, devicedto, httpServletRequest, assignee);
+        } catch (Exception e) {
+            log.error("editDeviceByDeviceId failed username={} vdmsid={} dockername={} device_id={}: {}", username, vdmsid, dockername, device_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -178,7 +218,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.PUT, value = "/docker/{dockername}/phoneaccount/{phoneaccount}/device/{device_id}/{vendor_type}")
     public void unlinkVendorByVendorIdAndDeviceId(@RequestParam String username, @PathVariable String dockername, @PathVariable String phoneaccount,
                                                   @PathVariable String device_id, @PathVariable String vendor_type, HttpServletRequest httpServletRequest) {
-        deviceService.unlinkVendorByVendorIdAndDeviceId(username, dockername, phoneaccount, device_id, vendor_type, httpServletRequest);
+        log.info("unlinkVendorByVendorIdAndDeviceId username={} dockername={} phoneaccount={} device_id={} vendor_type={}", username, dockername, phoneaccount, device_id, vendor_type);
+        try {
+            deviceService.unlinkVendorByVendorIdAndDeviceId(username, dockername, phoneaccount, device_id, vendor_type, httpServletRequest);
+        } catch (Exception e) {
+            log.error("unlinkVendorByVendorIdAndDeviceId failed username={} dockername={} phoneaccount={} device_id={} vendor_type={}: {}", username, dockername, phoneaccount, device_id, vendor_type, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -197,7 +243,13 @@ public class DeviceController {
     public String linkVendorByVendorIdAndDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                                   @PathVariable String device_id, @PathVariable String vendor_type,
                                                   @RequestBody PhonebookAddressDto phonebookaddressdto, HttpServletRequest httpServletRequest) {
-        return deviceService.linkVendorByVendorIdAndDeviceId(username, vdmsid, dockername, device_id, phonebookaddressdto, vendor_type, httpServletRequest);
+        log.info("linkVendorByVendorIdAndDeviceId username={} vdmsid={} dockername={} device_id={} vendor_type={}", username, vdmsid, dockername, device_id, vendor_type);
+        try {
+            return deviceService.linkVendorByVendorIdAndDeviceId(username, vdmsid, dockername, device_id, phonebookaddressdto, vendor_type, httpServletRequest);
+        } catch (Exception e) {
+            log.error("linkVendorByVendorIdAndDeviceId failed username={} vdmsid={} dockername={} device_id={} vendor_type={}: {}", username, vdmsid, dockername, device_id, vendor_type, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -215,11 +267,17 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.PUT, value = "/docker/{dockername}/devices")
     public void multiDeviceUpdate(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                   @RequestBody Set<MultiDeviceDTO> multidevicedtos, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) throws JSONException, IOException {
-        System.out.println("***************************************************************");
-        System.out.println(multidevicedtos);
-        System.out.println("***************************************************************");
+        log.info("multiDeviceUpdate username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            System.out.println("***************************************************************");
+            System.out.println(multidevicedtos);
+            System.out.println("***************************************************************");
 
-        deviceService.multiDeviceUpdate(username, vdmsid, dockername, multidevicedtos, httpServletRequest, assignee);
+            deviceService.multiDeviceUpdate(username, vdmsid, dockername, multidevicedtos, httpServletRequest, assignee);
+        } catch (Exception e) {
+            log.error("multiDeviceUpdate failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -237,7 +295,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/devices/quickupdate")
     public Set<DeviceDTO> quickUpdate(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                       @RequestBody TagDeviceOrLocationDTO tagDeviceOrLocationDTO, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) throws IOException {
-        return deviceService.quickUpdate(username, vdmsid, dockername, tagDeviceOrLocationDTO, httpServletRequest, assignee);
+        log.info("quickUpdate username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return deviceService.quickUpdate(username, vdmsid, dockername, tagDeviceOrLocationDTO, httpServletRequest, assignee);
+        } catch (Exception e) {
+            log.error("quickUpdate failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -250,7 +314,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/names")
     public Set<DeviceDTO> getDeviceNamesByVdmsIdAndDockerName(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername) {
-        return deviceService.getDeviceNamesByVdmsIdAndDockerName(username, vdmsid, dockername);
+        log.info("getDeviceNamesByVdmsIdAndDockerName username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return deviceService.getDeviceNamesByVdmsIdAndDockerName(username, vdmsid, dockername);
+        } catch (Exception e) {
+            log.error("getDeviceNamesByVdmsIdAndDockerName failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
 //	@RequestMapping(method = RequestMethod.POST , value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/virtual-device")
@@ -275,7 +345,13 @@ public class DeviceController {
     public void addVirtualDeviceByVdmsIdAndDockerName(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                                       @RequestParam(value = "images", required = false) List<MultipartFile> asset_images,
                                                       @RequestParam(value = "virtual_devices") String virtualDevicesDTO, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) {
-        deviceService.addVirtualDeviceByVdmsIdAndDockerName(username, vdmsid, dockername, virtualDevicesDTO, asset_images, httpServletRequest, assignee);
+        log.info("addVirtualDeviceByVdmsIdAndDockerName username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            deviceService.addVirtualDeviceByVdmsIdAndDockerName(username, vdmsid, dockername, virtualDevicesDTO, asset_images, httpServletRequest, assignee);
+        } catch (Exception e) {
+            log.error("addVirtualDeviceByVdmsIdAndDockerName failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //	@RequestMapping(method = RequestMethod.POST , value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/virtual-device/{virtual_device_id}")
@@ -297,7 +373,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/updatevirtualdevice")
     public void editVirtualDeviceByVirtualDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                                    @RequestBody Set<DeviceDTO> virtualDevices, HttpServletRequest httpServletRequest) throws IOException {
-        deviceService.editVirtualDeviceByVirtualDeviceId(username, vdmsid, dockername, virtualDevices, httpServletRequest);
+        log.info("editVirtualDeviceByVirtualDeviceId username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            deviceService.editVirtualDeviceByVirtualDeviceId(username, vdmsid, dockername, virtualDevices, httpServletRequest);
+        } catch (Exception e) {
+            log.error("editVirtualDeviceByVirtualDeviceId failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -313,7 +395,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.DELETE, value = "/docker/{dockername}/virtual-device/{virtual_device_id}")
     public void deleteVirtualDeviceByVirtualDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                                      @PathVariable String virtual_device_id, @RequestParam(defaultValue = "all") String assignee) {
-        deviceService.deleteVirtualDeviceByVirtualDeviceId(username, vdmsid, dockername, virtual_device_id, assignee);
+        log.info("deleteVirtualDeviceByVirtualDeviceId username={} vdmsid={} dockername={} virtual_device_id={}", username, vdmsid, dockername, virtual_device_id);
+        try {
+            deviceService.deleteVirtualDeviceByVirtualDeviceId(username, vdmsid, dockername, virtual_device_id, assignee);
+        } catch (Exception e) {
+            log.error("deleteVirtualDeviceByVirtualDeviceId failed username={} vdmsid={} dockername={} virtual_device_id={}: {}", username, vdmsid, dockername, virtual_device_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -328,8 +416,14 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/docker/{dockername}/deletedevices")
     public void deleteDevicesById(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestBody Set<String> deviceIds, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) {
+        log.info("deleteDevicesById username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
 //        deviceService.deleteDevicesById(username, vdmsid, dockername, deviceIds, httpServletRequest);
-        deviceService.softDeleteDevicesById(username, vdmsid, dockername, deviceIds, httpServletRequest, assignee);
+            deviceService.softDeleteDevicesById(username, vdmsid, dockername, deviceIds, httpServletRequest, assignee);
+        } catch (Exception e) {
+            log.error("deleteDevicesById failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //Get Single device information
@@ -344,7 +438,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/{device_id}/getdevice")
     public DeviceDTO getDeviceByDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String device_id) {
-        return deviceService.getDeviceByDeviceId(username, vdmsid, dockername, device_id);
+        log.info("getDeviceByDeviceId username={} vdmsid={} dockername={} device_id={}", username, vdmsid, dockername, device_id);
+        try {
+            return deviceService.getDeviceByDeviceId(username, vdmsid, dockername, device_id);
+        } catch (Exception e) {
+            log.error("getDeviceByDeviceId failed username={} vdmsid={} dockername={} device_id={}: {}", username, vdmsid, dockername, device_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //Sync Virtual Device Status
@@ -361,7 +461,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.PUT, value = "/docker/{dockername}/virtual-device/{virtual_device_id}/syncstatus")
     public DeviceDTO updateVirtualDeviceStatusByVirtualDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String virtual_device_id, @RequestBody DeviceDTO virtualdevicedto) throws IOException {
-        return deviceService.updateVirtualDeviceStatusByVirtualDeviceId(username, vdmsid, dockername, virtual_device_id, virtualdevicedto);
+        log.info("updateVirtualDeviceStatusByVirtualDeviceId username={} vdmsid={} dockername={} virtual_device_id={}", username, vdmsid, dockername, virtual_device_id);
+        try {
+            return deviceService.updateVirtualDeviceStatusByVirtualDeviceId(username, vdmsid, dockername, virtual_device_id, virtualdevicedto);
+        } catch (Exception e) {
+            log.error("updateVirtualDeviceStatusByVirtualDeviceId failed username={} vdmsid={} dockername={} virtual_device_id={}: {}", username, vdmsid, dockername, virtual_device_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -371,8 +477,14 @@ public class DeviceController {
      */
     @GetMapping(value = "/test/product")
     public ProductDTO test() {
-        String product_id = "6aeeae74-2855-4b67-943e-49d979a45abf";
-        return apicallService.getProductDetailsByProductId(product_id);
+        log.info("test called");
+        try {
+            String product_id = "6aeeae74-2855-4b67-943e-49d979a45abf";
+            return apicallService.getProductDetailsByProductId(product_id);
+        } catch (Exception e) {
+            log.error("test failed: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -387,10 +499,16 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/getdevicecount")
     public Map<String, Integer> getDeviceCount(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String assignee) {
+        log.info("getDeviceCount username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
 
 
-        return deviceService.getDeviceCount(username, vdmsid, dockername, assignee);
+            return deviceService.getDeviceCount(username, vdmsid, dockername, assignee);
 
+        } catch (Exception e) {
+            log.error("getDeviceCount failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //listing all devices for snmp topology
@@ -404,7 +522,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/devicetopology")
     public List<DeviceTopologyDTO> listTopologyDevicesByDockerName(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername) {
-        return deviceService.listTopologyDevicesByDockerName(username, vdmsid, dockername);
+        log.info("listTopologyDevicesByDockerName username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return deviceService.listTopologyDevicesByDockerName(username, vdmsid, dockername);
+        } catch (Exception e) {
+            log.error("listTopologyDevicesByDockerName failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -419,8 +543,14 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/updatedeviceposition")
     public void updateDevicePosition(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                      @RequestBody List<DeviceDTO> devicePositions, HttpServletRequest httpServletRequest) {
+        log.info("updateDevicePosition username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
 
-        deviceService.updateDevicePosition(devicePositions, vdmsid, username, httpServletRequest);
+            deviceService.updateDevicePosition(devicePositions, vdmsid, username, httpServletRequest);
+        } catch (Exception e) {
+            log.error("updateDevicePosition failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     // Device list by docker name for integration
@@ -432,7 +562,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/devicelistintegration")
     public List<DeviceDTO> listDevicebyDockerIntegration(@PathVariable String dockername) {
-        return deviceService.listDevicebyDockerIntegration(dockername);
+        log.info("listDevicebyDockerIntegration dockername={}", dockername);
+        try {
+            return deviceService.listDevicebyDockerIntegration(dockername);
+        } catch (Exception e) {
+            log.error("listDevicebyDockerIntegration failed dockername={}: {}", dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //Get Gateway ID
@@ -444,7 +580,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/getgatewayid")
     public String getGatewayId(@PathVariable String dockername) {
-        return deviceService.getGatewayId(dockername);
+        log.info("getGatewayId dockername={}", dockername);
+        try {
+            return deviceService.getGatewayId(dockername);
+        } catch (Exception e) {
+            log.error("getGatewayId failed dockername={}: {}", dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -459,7 +601,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/updatetopology")
     public void updateTopology(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                @RequestBody List<DeviceTopologyDTO> devices, HttpServletRequest httpServletRequest) {
-        deviceService.updateTopology(username, vdmsid, dockername, devices, httpServletRequest);
+        log.info("updateTopology username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            deviceService.updateTopology(username, vdmsid, dockername, devices, httpServletRequest);
+        } catch (Exception e) {
+            log.error("updateTopology failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //reset topology
@@ -473,7 +621,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/resettopology")
     public void resetTopology(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, HttpServletRequest httpServletRequest) {
-        deviceService.resetTopologyByDockername(username, vdmsid, dockername, httpServletRequest);
+        log.info("resetTopology username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            deviceService.resetTopologyByDockername(username, vdmsid, dockername, httpServletRequest);
+        } catch (Exception e) {
+            log.error("resetTopology failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //Get All sensors tagged to a device
@@ -489,7 +643,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/{device_id}/getalldevicesensors")
     public AllSensorsDTO getDeviceSensors(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                           @PathVariable String device_id) {
-        return deviceService.getDeviceSensors(username, vdmsid, dockername, device_id);
+        log.info("getDeviceSensors username={} vdmsid={} dockername={} device_id={}", username, vdmsid, dockername, device_id);
+        try {
+            return deviceService.getDeviceSensors(username, vdmsid, dockername, device_id);
+        } catch (Exception e) {
+            log.error("getDeviceSensors failed username={} vdmsid={} dockername={} device_id={}: {}", username, vdmsid, dockername, device_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //Get Parent Device by Pagination
@@ -518,7 +678,13 @@ public class DeviceController {
     public Set<DeviceDTO> getParentDeviceByPagination(@RequestParam String username, @RequestParam String vdmsid,
                                                       @RequestParam(defaultValue = "null") String searchKey, @RequestParam(defaultValue = "1") Integer pageno,
                                                       @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") Set<String> dockernames, @RequestParam(defaultValue = "all") Set<String> types, @RequestParam(defaultValue = "all") Set<String> virtual_device_types) {
-        return deviceService.getParentDeviceByPagination(username, vdmsid, searchKey, pageno, pagesize, dockernames, types, virtual_device_types);
+        log.info("getParentDeviceByPagination username={} vdmsid={}", username, vdmsid);
+        try {
+            return deviceService.getParentDeviceByPagination(username, vdmsid, searchKey, pageno, pagesize, dockernames, types, virtual_device_types);
+        } catch (Exception e) {
+            log.error("getParentDeviceByPagination failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //Get Parent Device by Id
@@ -535,7 +701,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/getparentdevice")
     public Set<DeviceDTO> getParentDeviceById(@RequestParam String username, @RequestParam String vdmsid,
                                               @PathVariable String dockername, @RequestBody Set<DeviceDTO> parent_devices, HttpServletRequest httpServletRequest) {
-        return deviceService.getParentDeviceById(username, vdmsid, dockername, parent_devices, httpServletRequest);
+        log.info("getParentDeviceById username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return deviceService.getParentDeviceById(username, vdmsid, dockername, parent_devices, httpServletRequest);
+        } catch (Exception e) {
+            log.error("getParentDeviceById failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //get subsystem parent device info
@@ -552,7 +724,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/{device_id}/parent/{parent_id}/getsubsystemparentdeviceinfo")
     public DeviceDTO getSubsystemParentDeviceInfo(@RequestParam String username, @RequestParam String vdmsid,
                                                   @PathVariable String dockername, @PathVariable String device_id, @PathVariable String parent_id) {
-        return deviceService.getSubsystemParentDeviceInfo(username, vdmsid, dockername, device_id, parent_id);
+        log.info("getSubsystemParentDeviceInfo username={} vdmsid={} dockername={} device_id={} parent_id={}", username, vdmsid, dockername, device_id, parent_id);
+        try {
+            return deviceService.getSubsystemParentDeviceInfo(username, vdmsid, dockername, device_id, parent_id);
+        } catch (Exception e) {
+            log.error("getSubsystemParentDeviceInfo failed username={} vdmsid={} dockername={} device_id={} parent_id={}: {}", username, vdmsid, dockername, device_id, parent_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //update device matched product info
@@ -568,7 +746,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/updatematcheddeviceproduct")
     public void updateMatchedDeviceProduct(@RequestParam String username, @RequestParam String vdmsid,
                                            @PathVariable String dockername, @RequestBody DeviceDTO device, HttpServletRequest httpServletRequest) {
-        deviceService.updateMatchedDeviceProduct(username, vdmsid, dockername, device, httpServletRequest);
+        log.info("updateMatchedDeviceProduct username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            deviceService.updateMatchedDeviceProduct(username, vdmsid, dockername, device, httpServletRequest);
+        } catch (Exception e) {
+            log.error("updateMatchedDeviceProduct failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //search device by specific column or all columns
@@ -589,7 +773,13 @@ public class DeviceController {
                                         @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                         @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
                                         @RequestBody Map<String, Object> search_details) {
-        return deviceSearchService.searchDevices(username, vdmsid, dockername, condition, pageno, pagesize, search_details);
+        log.info("searchDevices username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return deviceSearchService.searchDevices(username, vdmsid, dockername, condition, pageno, pagesize, search_details);
+        } catch (Exception e) {
+            log.error("searchDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //sort device by specific column
@@ -610,7 +800,13 @@ public class DeviceController {
                                       @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                       @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
                                       @RequestBody Map<String, Object> sort_details) {
-        return deviceSearchService.sortDevices(username, vdmsid, dockername, condition, pageno, pagesize, sort_details);
+        log.info("sortDevices username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return deviceSearchService.sortDevices(username, vdmsid, dockername, condition, pageno, pagesize, sort_details);
+        } catch (Exception e) {
+            log.error("sortDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //filter devices by specific or multiple columns
@@ -631,7 +827,13 @@ public class DeviceController {
                                         @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                         @RequestParam(defaultValue = "1") Integer pageno,
                                         @RequestParam(defaultValue = "10") Integer pagesize, @RequestBody List<Map<String, Object>> filter_details) {
-        return deviceSearchService.filterDevices(username, vdmsid, dockername, condition, pageno, pagesize, filter_details);
+        log.info("filterDevices username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return deviceSearchService.filterDevices(username, vdmsid, dockername, condition, pageno, pagesize, filter_details);
+        } catch (Exception e) {
+            log.error("filterDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -648,7 +850,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/archivedevices")
     public void archiveDevices(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                @RequestParam(defaultValue = "1") Integer archive, @RequestBody Set<String> deviceIds, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) {
-        deviceService.archiveDevices(username, vdmsid, dockername, archive, deviceIds, httpServletRequest, assignee);
+        log.info("archiveDevices username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            deviceService.archiveDevices(username, vdmsid, dockername, archive, deviceIds, httpServletRequest, assignee);
+        } catch (Exception e) {
+            log.error("archiveDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -663,7 +871,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/getdeviceinfobycustomfields")
     public List<DeviceDTO> getDeviceInfoByCustomFields(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                                        @RequestBody com.alibaba.fastjson.JSONObject custom_fields) {
-        return deviceSearchService.getDeviceInfoByCustomFields(username, vdmsid, dockername, custom_fields);
+        log.info("getDeviceInfoByCustomFields username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return deviceSearchService.getDeviceInfoByCustomFields(username, vdmsid, dockername, custom_fields);
+        } catch (Exception e) {
+            log.error("getDeviceInfoByCustomFields failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //multiple keyword search sort filter
@@ -687,7 +901,13 @@ public class DeviceController {
                                                                  @RequestParam(defaultValue = "10") Integer pagesize,
                                                                  @RequestParam(defaultValue = "123") Integer onboard_status,
                                                                  @RequestBody com.alibaba.fastjson.JSONObject search_sort_filter_details) {
-        return deviceSearchService.multipleKeywordSearchSortFilterDevices(username, vdmsid, dockername, condition, pageno, pagesize, search_sort_filter_details, onboard_status);
+        log.info("multipleKeywordSearchSortFilterDevices username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return deviceSearchService.multipleKeywordSearchSortFilterDevices(username, vdmsid, dockername, condition, pageno, pagesize, search_sort_filter_details, onboard_status);
+        } catch (Exception e) {
+            log.error("multipleKeywordSearchSortFilterDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //return count of search sort filter result
@@ -707,8 +927,14 @@ public class DeviceController {
                                                               @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                                               @RequestParam(defaultValue = "123") Integer onboard_status,
                                                               @RequestBody com.alibaba.fastjson.JSONObject search_sort_filter_details) {
-        return deviceSearchService.multipleKeywordSearchSortFilterDevicesCount(username, vdmsid, dockername, condition,
-                search_sort_filter_details, onboard_status);
+        log.info("multipleKeywordSearchSortFilterDevicesCount username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return deviceSearchService.multipleKeywordSearchSortFilterDevicesCount(username, vdmsid, dockername, condition,
+                    search_sort_filter_details, onboard_status);
+        } catch (Exception e) {
+            log.error("multipleKeywordSearchSortFilterDevicesCount failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -720,7 +946,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/device/network/{network_name}/getassignedemail")
     public List<String> getUniqueAssignedUser(@RequestParam String vdms_id, @PathVariable String network_name) {
-        return deviceMonitorService.getUniqueAssignedUserEmail(vdms_id, network_name);
+        log.info("getUniqueAssignedUser vdms_id={} network_name={}", vdms_id, network_name);
+        try {
+            return deviceMonitorService.getUniqueAssignedUserEmail(vdms_id, network_name);
+        } catch (Exception e) {
+            log.error("getUniqueAssignedUser failed vdms_id={} network_name={}: {}", vdms_id, network_name, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //Device Alert Message
@@ -734,7 +966,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/getalertmessages")
     public List<ConditionsDTO> getDeviceAlertMessages(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername) {
-        return deviceService.getDeviceAlertMessages(username, vdmsid, dockername);
+        log.info("getDeviceAlertMessages username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return deviceService.getDeviceAlertMessages(username, vdmsid, dockername);
+        } catch (Exception e) {
+            log.error("getDeviceAlertMessages failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //search Parent devices by specific column or all columns
@@ -759,7 +997,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.POST, value = "/upsertassetimages")
     public void upsertAssetImages(@RequestParam String username, @RequestParam String vdms_id,
                                   @RequestParam List<String> device_ids, @RequestParam(value = "images", required = false) List<MultipartFile> asset_images, HttpServletRequest httpServletRequest) {
-        deviceService.upsertAssetImages(username, vdms_id, device_ids, asset_images, httpServletRequest);
+        log.info("upsertAssetImages username={} vdms_id={}", username, vdms_id);
+        try {
+            deviceService.upsertAssetImages(username, vdms_id, device_ids, asset_images, httpServletRequest);
+        } catch (Exception e) {
+            log.error("upsertAssetImages failed username={} vdms_id={}: {}", username, vdms_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -772,8 +1016,14 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/deleteassetimages")
     public void deleteAssetImages(@RequestParam String username, @RequestParam String vdms_id, @RequestBody List<DeviceDTO> deviceDTOS, HttpServletRequest httpServletRequest) {
-        System.out.println("heere");
-        deviceService.deleteAssetImages(username, vdms_id, deviceDTOS, httpServletRequest);
+        log.info("deleteAssetImages username={} vdms_id={}", username, vdms_id);
+        try {
+            System.out.println("heere");
+            deviceService.deleteAssetImages(username, vdms_id, deviceDTOS, httpServletRequest);
+        } catch (Exception e) {
+            log.error("deleteAssetImages failed username={} vdms_id={}: {}", username, vdms_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -787,7 +1037,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/deletedeviceimages")
     public void deleteDeviceImages(@RequestParam String username, @RequestParam String vdms_id, @RequestBody List<DeviceDTO> deviceDTOS, @RequestParam String category, HttpServletRequest httpServletRequest) {
-        deviceService.deleteDeviceImages(username, vdms_id, deviceDTOS, category,httpServletRequest);
+        log.info("deleteDeviceImages username={} vdms_id={} category={}", username, vdms_id, category);
+        try {
+            deviceService.deleteDeviceImages(username, vdms_id, deviceDTOS, category,httpServletRequest);
+        } catch (Exception e) {
+            log.error("deleteDeviceImages failed username={} vdms_id={} category={}: {}", username, vdms_id, category, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -800,7 +1056,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/device/{device_id}/getassetimages")
     public String getAssetImageUrls(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String device_id) {
-        return deviceService.getAssetImageUrls(username, vdms_id, device_id);
+        log.info("getAssetImageUrls username={} vdms_id={} device_id={}", username, vdms_id, device_id);
+        try {
+            return deviceService.getAssetImageUrls(username, vdms_id, device_id);
+        } catch (Exception e) {
+            log.error("getAssetImageUrls failed username={} vdms_id={} device_id={}: {}", username, vdms_id, device_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -813,7 +1075,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/device/{device_id}/getallassetimages")
     public String getAssetImageUrlsByCategory(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String device_id) {
-        return deviceService.getAssetImageUrlsCategory(username, vdms_id, device_id);
+        log.info("getAssetImageUrlsByCategory username={} vdms_id={} device_id={}", username, vdms_id, device_id);
+        try {
+            return deviceService.getAssetImageUrlsCategory(username, vdms_id, device_id);
+        } catch (Exception e) {
+            log.error("getAssetImageUrlsByCategory failed username={} vdms_id={} device_id={}: {}", username, vdms_id, device_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -833,7 +1101,13 @@ public class DeviceController {
                                                   @PathVariable String group, @RequestParam(defaultValue = "null") String searchkey,
                                                   @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
                                                   @RequestBody JSONObject filterObject) {
-        return deviceService.getAllDevicesPagination(username, vdmsid, group, searchkey, pageno, pagesize, filterObject);
+        log.info("getAllDevicesPagination username={} vdmsid={} group={}", username, vdmsid, group);
+        try {
+            return deviceService.getAllDevicesPagination(username, vdmsid, group, searchkey, pageno, pagesize, filterObject);
+        } catch (Exception e) {
+            log.error("getAllDevicesPagination failed username={} vdmsid={} group={}: {}", username, vdmsid, group, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -853,7 +1127,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.GET, value = "/getfiltervirtualdevicesbypagination")
     public Set<DeviceDTO> getFilterVirtualDevicesByPagination(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "null") String searchKey,
                                                               @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") Set<String> dockernames, @RequestParam(defaultValue = "all") Set<String> types, @RequestParam(defaultValue = "all") Set<String> virtual_device_types) {
-        return deviceService.getFilterVirtualDevicesByPagination(username, vdmsid, searchKey, pageno, pagesize, dockernames, types, virtual_device_types);
+        log.info("getFilterVirtualDevicesByPagination username={} vdmsid={}", username, vdmsid);
+        try {
+            return deviceService.getFilterVirtualDevicesByPagination(username, vdmsid, searchKey, pageno, pagesize, dockernames, types, virtual_device_types);
+        } catch (Exception e) {
+            log.error("getFilterVirtualDevicesByPagination failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -865,7 +1145,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/getpowersourcetopologyconnectionscount")
     public Integer getPowerSourceTopologyConnectionsCount(@RequestParam String username, @RequestParam String vdmsid) {
-        return deviceService.getPowerSourceTopologyConnectionsCount(username, vdmsid);
+        log.info("getPowerSourceTopologyConnectionsCount username={} vdmsid={}", username, vdmsid);
+        try {
+            return deviceService.getPowerSourceTopologyConnectionsCount(username, vdmsid);
+        } catch (Exception e) {
+            log.error("getPowerSourceTopologyConnectionsCount failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -880,7 +1166,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.GET, value = "/getpowersourcetopologybypagination")
     public PowerSourceTopologyDTO getPowerSourceTopologyByPagination(@RequestParam String username, @RequestParam String vdmsid,
                                                                      @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize) {
-        return deviceService.getPowerSourceTopologyByPagination(username, vdmsid, pageno, pagesize);
+        log.info("getPowerSourceTopologyByPagination username={} vdmsid={}", username, vdmsid);
+        try {
+            return deviceService.getPowerSourceTopologyByPagination(username, vdmsid, pageno, pagesize);
+        } catch (Exception e) {
+            log.error("getPowerSourceTopologyByPagination failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -896,7 +1188,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.GET, value = "/location/{location_id}/getdevicesbylocationid")
     public Set<DeviceDTO> getAssetsByLocationId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String location_id,
                                                 @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize) {
-        return deviceService.getAssetsByLocationId(username, vdmsid, location_id, pageno, pagesize);
+        log.info("getAssetsByLocationId username={} vdmsid={} location_id={}", username, vdmsid, location_id);
+        try {
+            return deviceService.getAssetsByLocationId(username, vdmsid, location_id, pageno, pagesize);
+        } catch (Exception e) {
+            log.error("getAssetsByLocationId failed username={} vdmsid={} location_id={}: {}", username, vdmsid, location_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -909,9 +1207,15 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/device/{deviceid}/getdevicerebootstatus")
     public String getDeviceRebootStatus(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String deviceid) {
+        log.info("getDeviceRebootStatus username={} vdmsid={} deviceid={}", username, vdmsid, deviceid);
+        try {
 
-        return deviceService.getDeviceRebootStatus(username, vdmsid, deviceid);
+            return deviceService.getDeviceRebootStatus(username, vdmsid, deviceid);
 
+        } catch (Exception e) {
+            log.error("getDeviceRebootStatus failed username={} vdmsid={} deviceid={}: {}", username, vdmsid, deviceid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -926,7 +1230,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.POST, value = "/upsertassetocrimages")
     public void upsertAssetOcrImages(@RequestParam String username, @RequestParam String vdms_id,
                                      @RequestParam List<String> device_ids, @RequestParam(value = "images", required = false) List<MultipartFile> asset_ocr_images, HttpServletRequest httpServletRequest) {
-        deviceService.upsertAssetOcrImages(username, vdms_id, device_ids, asset_ocr_images, httpServletRequest);
+        log.info("upsertAssetOcrImages username={} vdms_id={}", username, vdms_id);
+        try {
+            deviceService.upsertAssetOcrImages(username, vdms_id, device_ids, asset_ocr_images, httpServletRequest);
+        } catch (Exception e) {
+            log.error("upsertAssetOcrImages failed username={} vdms_id={}: {}", username, vdms_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -939,8 +1249,14 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/deleteassetocrimages")
     public void deleteAssetOcrImages(@RequestParam String username, @RequestParam String vdms_id, @RequestBody List<DeviceDTO> deviceDTOS, HttpServletRequest httpServletRequest) {
-        System.out.println("heere");
-        deviceService.deleteAssetOcrImages(username, vdms_id, deviceDTOS, httpServletRequest);
+        log.info("deleteAssetOcrImages username={} vdms_id={}", username, vdms_id);
+        try {
+            System.out.println("heere");
+            deviceService.deleteAssetOcrImages(username, vdms_id, deviceDTOS, httpServletRequest);
+        } catch (Exception e) {
+            log.error("deleteAssetOcrImages failed username={} vdms_id={}: {}", username, vdms_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -954,7 +1270,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/device/{device_id}/getassetocrimages")
     public String getAssetOcrImageUrls(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String device_id) {
-        return deviceService.getAssetOcrImageUrls(username, vdms_id, device_id);
+        log.info("getAssetOcrImageUrls username={} vdms_id={} device_id={}", username, vdms_id, device_id);
+        try {
+            return deviceService.getAssetOcrImageUrls(username, vdms_id, device_id);
+        } catch (Exception e) {
+            log.error("getAssetOcrImageUrls failed username={} vdms_id={} device_id={}: {}", username, vdms_id, device_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -971,7 +1293,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/adddevice")
     public DeviceDTO addDevice(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                @RequestBody DeviceDTO deviceDto, HttpServletRequest httpServletRequest) {
-        return deviceService.addDevice(username, vdmsid, dockername, deviceDto, httpServletRequest);
+        log.info("addDevice username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return deviceService.addDevice(username, vdmsid, dockername, deviceDto, httpServletRequest);
+        } catch (Exception e) {
+            log.error("addDevice failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -995,9 +1323,15 @@ public class DeviceController {
                                       @RequestParam(defaultValue = "all") String condition, @RequestParam(defaultValue = "123") Integer onboard_status,
                                       @RequestParam(defaultValue = "simple_report") String template_name, @RequestParam(defaultValue = "excel") String file_type,
                                       @RequestBody com.alibaba.fastjson.JSONObject search_sort_filter_details, @RequestParam(defaultValue = "") String email, HttpServletRequest httpServletRequest) throws IOException {
-        deviceService.exportFilteredDevices(response, username, vdmsid, dockername, condition, search_sort_filter_details, onboard_status,
-                template_name, email, httpServletRequest, file_type);
+        log.info("exportFilteredDevices username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            deviceService.exportFilteredDevices(response, username, vdmsid, dockername, condition, search_sort_filter_details, onboard_status,
+                    template_name, email, httpServletRequest, file_type);
 
+        } catch (Exception e) {
+            log.error("exportFilteredDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -1007,7 +1341,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/syncdeviceonboardstatus")
     public void syncDeviceOnboardStatus(@RequestParam String vdmsid) {
-        deviceService.syncDeviceOnboardStatus(vdmsid);
+        log.info("syncDeviceOnboardStatus vdmsid={}", vdmsid);
+        try {
+            deviceService.syncDeviceOnboardStatus(vdmsid);
+        } catch (Exception e) {
+            log.error("syncDeviceOnboardStatus failed vdmsid={}: {}", vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -1018,7 +1358,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/device/{device_id}/syncsingledeviceonboardstatus")
     public void syncSingleDeviceOnboardStatus(@RequestParam String vdmsid, @PathVariable String device_id) {
-        deviceService.syncSingleDeviceOnboardStatus(vdmsid, device_id);
+        log.info("syncSingleDeviceOnboardStatus vdmsid={} device_id={}", vdmsid, device_id);
+        try {
+            deviceService.syncSingleDeviceOnboardStatus(vdmsid, device_id);
+        } catch (Exception e) {
+            log.error("syncSingleDeviceOnboardStatus failed vdmsid={} device_id={}: {}", vdmsid, device_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -1035,7 +1381,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/updateassetmatchdetails")
     public DeviceDTO updateAssetMatchDetails(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                              @RequestBody JSONObject deviceObject, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) {
-        return deviceService.updateAssetMatchDetails(username, vdmsid, dockername, deviceObject, httpServletRequest, assignee);
+        log.info("updateAssetMatchDetails username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            return deviceService.updateAssetMatchDetails(username, vdmsid, dockername, deviceObject, httpServletRequest, assignee);
+        } catch (Exception e) {
+            log.error("updateAssetMatchDetails failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -1048,7 +1400,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/upsertdigitaltwininstruments")
     public void upsertDigitalTwin(@RequestParam String username, @RequestParam String vdmsid, @RequestBody TagDeviceOrLocationDTO filterObject, HttpServletRequest httpServletRequest) {
-        deviceService.upsertDigitalTwin(username, vdmsid, filterObject, httpServletRequest);
+        log.info("upsertDigitalTwin username={} vdmsid={}", username, vdmsid);
+        try {
+            deviceService.upsertDigitalTwin(username, vdmsid, filterObject, httpServletRequest);
+        } catch (Exception e) {
+            log.error("upsertDigitalTwin failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -1061,7 +1419,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/device_id/{device_id}/deletedigitaltwin")
     public void deleteDigitalTwin(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String device_id, HttpServletRequest httpServletRequest) {
-        deviceService.deleteDigitalTwin(username, vdmsid, device_id, httpServletRequest);
+        log.info("deleteDigitalTwin username={} vdmsid={} device_id={}", username, vdmsid, device_id);
+        try {
+            deviceService.deleteDigitalTwin(username, vdmsid, device_id, httpServletRequest);
+        } catch (Exception e) {
+            log.error("deleteDigitalTwin failed username={} vdmsid={} device_id={}: {}", username, vdmsid, device_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -1079,7 +1443,13 @@ public class DeviceController {
     public void multiEditDigitalTwin(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(required = true) String data,
                                      @RequestParam(required = false) String image_url,
                                      @RequestParam(required = false) MultipartFile image, HttpServletRequest httpServletRequest) {
-        deviceService.multiEditDigitalTwin(username, vdmsid, data, image_url, image, httpServletRequest);
+        log.info("multiEditDigitalTwin username={} vdmsid={}", username, vdmsid);
+        try {
+            deviceService.multiEditDigitalTwin(username, vdmsid, data, image_url, image, httpServletRequest);
+        } catch (Exception e) {
+            log.error("multiEditDigitalTwin failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -1103,7 +1473,13 @@ public class DeviceController {
                                                   @RequestParam(defaultValue = "10") Integer pagesize,
                                                   @RequestParam(defaultValue = "123") Integer onboard_status,
                                                   @RequestBody com.alibaba.fastjson.JSONObject search_sort_filter_details) throws IOException {
-        deviceService.exportFilteredMeasuringInstrument(response, username, vdmsid, dockername, condition, pageno, pagesize, search_sort_filter_details, onboard_status);
+        log.info("exportFilteredMeasuringInstrument username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            deviceService.exportFilteredMeasuringInstrument(response, username, vdmsid, dockername, condition, pageno, pagesize, search_sort_filter_details, onboard_status);
+        } catch (Exception e) {
+            log.error("exportFilteredMeasuringInstrument failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -1114,7 +1490,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.PUT, value = "/vdms/updatedevicetype")
     public ResponseDTO updateDeviceTypes(@RequestParam(required = false) String vdmsId) {
-        return deviceService.updateDeviceTypeForAll(vdmsId);
+        log.info("updateDeviceTypes vdmsId={}", vdmsId);
+        try {
+            return deviceService.updateDeviceTypeForAll(vdmsId);
+        } catch (Exception e) {
+            log.error("updateDeviceTypes failed vdmsId={}: {}", vdmsId, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -1128,7 +1510,13 @@ public class DeviceController {
     @RequestMapping(method = RequestMethod.POST, value = "/togglednd")
     public void toggleDndStatus(@RequestParam(value = "device_id", required = true) String device_id,
                                 @RequestParam(value = "is_dnd_enabled", required = true) Boolean is_dnd_enabled, HttpServletRequest httpServletRequest) throws IOException {
-        deviceService.toggleDndStatus(device_id, is_dnd_enabled, httpServletRequest);
+        log.info("toggleDndStatus device_id={} is_dnd_enabled={}", device_id, is_dnd_enabled);
+        try {
+            deviceService.toggleDndStatus(device_id, is_dnd_enabled, httpServletRequest);
+        } catch (Exception e) {
+            log.error("toggleDndStatus failed device_id={}: {}", device_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
 //    // HAM Assets import changes ///
@@ -1146,7 +1534,13 @@ public class DeviceController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/deviceid/{id}/timetamp/{timetamp}/updatedndstatus")
     public void updatedndstatus(@PathVariable String id, @PathVariable BigInteger timetamp) {
-        deviceService.UpdateDeviceDndEnabledAndTimestamp(id, timetamp);
+        log.info("updatedndstatus id={} timetamp={}", id, timetamp);
+        try {
+            deviceService.UpdateDeviceDndEnabledAndTimestamp(id, timetamp);
+        } catch (Exception e) {
+            log.error("updatedndstatus failed id={} timetamp={}: {}", id, timetamp, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -1167,7 +1561,13 @@ public class DeviceController {
     public List<DeviceDTO> getAllDeviceCustomDetails(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String docker_name,
                                                      @RequestParam(defaultValue = "1") Integer page_no, @RequestParam(defaultValue = "10") Integer page_size,
                                                      @RequestParam(defaultValue = "null") String search_key, @RequestParam(defaultValue = "internal") String profile_type) throws IOException {
-        return deviceService.getAllDeviceCustomDetails(username, vdmsid, docker_name, page_no, page_size, search_key, profile_type);
+        log.info("getAllDeviceCustomDetails username={} vdmsid={} docker_name={}", username, vdmsid, docker_name);
+        try {
+            return deviceService.getAllDeviceCustomDetails(username, vdmsid, docker_name, page_no, page_size, search_key, profile_type);
+        } catch (Exception e) {
+            log.error("getAllDeviceCustomDetails failed username={} vdmsid={} docker_name={}: {}", username, vdmsid, docker_name, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -1186,7 +1586,13 @@ public class DeviceController {
                                                   @RequestParam(defaultValue = "1") Integer page_no, @RequestParam(defaultValue = "10") Integer page_size,
                                                   @RequestParam(defaultValue = "null") String search_key,
                                                   @RequestBody List<String> device_ids) throws IOException {
-        return deviceService.getDeviceCustomDetails(docker_name, page_no, page_size, search_key, device_ids);
+        log.info("getDeviceCustomDetails docker_name={}", docker_name);
+        try {
+            return deviceService.getDeviceCustomDetails(docker_name, page_no, page_size, search_key, device_ids);
+        } catch (Exception e) {
+            log.error("getDeviceCustomDetails failed docker_name={}: {}", docker_name, e.getMessage(), e);
+            throw e;
+        }
     }
 
     // This is not currently being used, was written when there was a filter page with asset_category and model in the edit profile section
@@ -1209,7 +1615,13 @@ public class DeviceController {
                                                        @RequestParam(defaultValue = "1") Integer page_no, @RequestParam(defaultValue = "10") Integer page_size,
                                                        @RequestParam(defaultValue = "null") String search_key, @RequestParam(defaultValue = "0") Integer has_pagination,
                                                        @RequestBody JSONObject requestBody) throws IOException {
-        return deviceService.getDeviceCustomDetailsByIds(username, vdmsid, docker_name, has_pagination, page_no, page_size, search_key, requestBody);
+        log.info("getDeviceCustomDetailsByIds username={} vdmsid={} docker_name={}", username, vdmsid, docker_name);
+        try {
+            return deviceService.getDeviceCustomDetailsByIds(username, vdmsid, docker_name, has_pagination, page_no, page_size, search_key, requestBody);
+        } catch (Exception e) {
+            log.error("getDeviceCustomDetailsByIds failed username={} vdmsid={} docker_name={}: {}", username, vdmsid, docker_name, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -1227,7 +1639,13 @@ public class DeviceController {
                                         @RequestParam(defaultValue = "1") Integer page_no, @RequestParam(defaultValue = "10") Integer page_size,
                                         @RequestParam(defaultValue = "null") String search_key,
                                         @RequestParam(defaultValue = "false") String is_select_all){
-        return deviceService.getAllDeviceIds(docker_name, page_no, page_size, search_key, is_select_all);
+        log.info("getAllDeviceIds docker_name={}", docker_name);
+        try {
+            return deviceService.getAllDeviceIds(docker_name, page_no, page_size, search_key, is_select_all);
+        } catch (Exception e) {
+            log.error("getAllDeviceIds failed docker_name={}: {}", docker_name, e.getMessage(), e);
+            throw e;
+        }
     }
 
 }

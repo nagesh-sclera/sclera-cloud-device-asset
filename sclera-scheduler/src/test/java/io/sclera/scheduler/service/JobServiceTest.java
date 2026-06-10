@@ -135,7 +135,7 @@ class JobServiceTest {
         JobInstanceEntity i = inst();
         when(instances.findById(new JobInstanceId("vdmsSystemHealth", "vdms-1")))
                 .thenReturn(Optional.of(i));
-        Instant until = Instant.parse("2026-06-10T00:00:00Z");
+        Instant until = Instant.now().plusSeconds(3600);
         service().snoozeInstance("vdmsSystemHealth", "vdms-1", until);
         verify(scheduler).delete("vdmsSystemHealth::vdms-1");
         assertThat(i.getState()).isEqualTo(JobInstanceState.SNOOZED);

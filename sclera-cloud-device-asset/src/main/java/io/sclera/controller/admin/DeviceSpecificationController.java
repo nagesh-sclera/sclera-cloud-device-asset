@@ -8,6 +8,8 @@ import io.sclera.dto.RemoteAgentServerDetailsDTO;
 import io.sclera.service.DeviceInstalledAppsService;
 import io.sclera.service.DeviceSpecificationService;
 import io.sclera.client.RemoteDesktopSessionClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +26,8 @@ import java.util.List;
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class DeviceSpecificationController {
+
+    private static final Logger log = LoggerFactory.getLogger(DeviceSpecificationController.class);
 
     private final DeviceSpecificationService deviceSpecificationService;
 
@@ -48,11 +52,17 @@ public class DeviceSpecificationController {
      */
     @PostMapping("/devicespecification")
     public ResponseEntity<String> receiveFullSpec(@RequestBody JSONObject body, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) {
-        String deviceId = deviceSpecificationService.saveFullJson(body, httpServletRequest, assignee);
-        if (deviceId == null) {
-            return ResponseEntity.ok().body(null);
+        log.info("receiveFullSpec assignee={}", assignee);
+        try {
+            String deviceId = deviceSpecificationService.saveFullJson(body, httpServletRequest, assignee);
+            if (deviceId == null) {
+                return ResponseEntity.ok().body(null);
+            }
+            return ResponseEntity.ok(deviceId);
+        } catch (Exception e) {
+            log.error("receiveFullSpec failed assignee={}: {}", assignee, e.getMessage(), e);
+            throw e;
         }
-        return ResponseEntity.ok(deviceId);
     }
 
 
@@ -64,11 +74,17 @@ public class DeviceSpecificationController {
      */
     @PostMapping("/deltadevicespecs")
     public ResponseEntity<String> receiveDeltaJson(@RequestBody JSONObject json) {
-        String message = deviceSpecificationService.upsertDeltaJson(json);
-        if (message == null) {
-            return ResponseEntity.badRequest().body("Invalid input or device not found");
+        log.info("receiveDeltaJson called");
+        try {
+            String message = deviceSpecificationService.upsertDeltaJson(json);
+            if (message == null) {
+                return ResponseEntity.badRequest().body("Invalid input or device not found");
+            }
+            return ResponseEntity.ok(message);
+        } catch (Exception e) {
+            log.error("receiveDeltaJson failed: {}", e.getMessage(), e);
+            throw e;
         }
-        return ResponseEntity.ok(message);
     }
 
 
@@ -80,11 +96,17 @@ public class DeviceSpecificationController {
      */
     @GetMapping("/devicespecification/{deviceId}")
     public ResponseEntity<DeviceSpecificationDTO> getDeviceSpec(@PathVariable String deviceId) {
-        DeviceSpecificationDTO dto = deviceSpecificationService.getSpecDtoByDeviceId(deviceId);
-        if (dto == null) {
-            return ResponseEntity.ok(DeviceSpecificationDTO.builder().build());
+        log.info("getDeviceSpec deviceId={}", deviceId);
+        try {
+            DeviceSpecificationDTO dto = deviceSpecificationService.getSpecDtoByDeviceId(deviceId);
+            if (dto == null) {
+                return ResponseEntity.ok(DeviceSpecificationDTO.builder().build());
+            }
+            return ResponseEntity.ok(dto);
+        } catch (Exception e) {
+            log.error("getDeviceSpec failed deviceId={}: {}", deviceId, e.getMessage(), e);
+            throw e;
         }
-        return ResponseEntity.ok(dto);
     }
 
     /**
@@ -95,8 +117,14 @@ public class DeviceSpecificationController {
      */
     @GetMapping("/installedapps/{deviceId}")
     public ResponseEntity<List<DeviceInstalledAppsDTO>> getInstalledApps(@PathVariable String deviceId) {
-        List<DeviceInstalledAppsDTO> apps = deviceInstalledAppsService.getInstalledAppDTOs(deviceId);
-        return ResponseEntity.ok(apps);
+        log.info("getInstalledApps deviceId={}", deviceId);
+        try {
+            List<DeviceInstalledAppsDTO> apps = deviceInstalledAppsService.getInstalledAppDTOs(deviceId);
+            return ResponseEntity.ok(apps);
+        } catch (Exception e) {
+            log.error("getInstalledApps failed deviceId={}: {}", deviceId, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -107,8 +135,14 @@ public class DeviceSpecificationController {
      */
     @GetMapping("/systemupdates/{deviceId}")
     public ResponseEntity<JSONArray> getSystemUpdates(@PathVariable String deviceId) {
-        JSONArray systemUpdates = deviceSpecificationService.getSystemUpdatesArrayByDeviceId(deviceId);
-        return ResponseEntity.ok(systemUpdates);
+        log.info("getSystemUpdates deviceId={}", deviceId);
+        try {
+            JSONArray systemUpdates = deviceSpecificationService.getSystemUpdatesArrayByDeviceId(deviceId);
+            return ResponseEntity.ok(systemUpdates);
+        } catch (Exception e) {
+            log.error("getSystemUpdates failed deviceId={}: {}", deviceId, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -120,7 +154,13 @@ public class DeviceSpecificationController {
      */
     @PostMapping("/remotesupport")
     public ResponseEntity<?> updateRemoteConnectFlag(@RequestBody JSONObject json) {
-        return remoteDesktopSessionService.updateRemoteConnectFlag(json);
+        log.info("updateRemoteConnectFlag called");
+        try {
+            return remoteDesktopSessionService.updateRemoteConnectFlag(json);
+        } catch (Exception e) {
+            log.error("updateRemoteConnectFlag failed: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -133,7 +173,13 @@ public class DeviceSpecificationController {
      */
     @GetMapping("/remotesupport/device/{deviceId}")
     public ResponseEntity<?> getRemoteConnectInfo(@PathVariable String deviceId, @RequestParam String username) {
-        return remoteDesktopSessionService.getRemoteConnectInfo(deviceId,username);
+        log.info("getRemoteConnectInfo deviceId={} username={}", deviceId, username);
+        try {
+            return remoteDesktopSessionService.getRemoteConnectInfo(deviceId,username);
+        } catch (Exception e) {
+            log.error("getRemoteConnectInfo failed deviceId={}: {}", deviceId, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -144,8 +190,14 @@ public class DeviceSpecificationController {
      */
     @GetMapping("/sessions/{id}")
     public ResponseEntity<RemoteAgentServerDetailsDTO> getRemoteSessions(@PathVariable String id) {
-        RemoteAgentServerDetailsDTO sessions = remoteDesktopSessionService.getRemoteSessionDetails(id);
-        return ResponseEntity.ok(sessions);
+        log.info("getRemoteSessions id={}", id);
+        try {
+            RemoteAgentServerDetailsDTO sessions = remoteDesktopSessionService.getRemoteSessionDetails(id);
+            return ResponseEntity.ok(sessions);
+        } catch (Exception e) {
+            log.error("getRemoteSessions failed id={}: {}", id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -156,8 +208,14 @@ public class DeviceSpecificationController {
      */
     @PostMapping("/session/approval")
     public String updateAcknowledge(@RequestBody JSONObject json) {
-        remoteDesktopSessionService.updateAcknowledge(json);
-        return "Successfully updated session approval";
+        log.info("updateAcknowledge called");
+        try {
+            remoteDesktopSessionService.updateAcknowledge(json);
+            return "Successfully updated session approval";
+        } catch (Exception e) {
+            log.error("updateAcknowledge failed: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
 }

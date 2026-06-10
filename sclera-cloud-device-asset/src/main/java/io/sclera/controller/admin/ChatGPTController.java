@@ -4,6 +4,8 @@ import io.sclera.dto.ChatGPTDTO;
 import org.springframework.web.bind.annotation.RestController;
 import io.sclera.service.ChatGPTService;
 import org.json.JSONException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class ChatGPTController {
 
+    private static final Logger log = LoggerFactory.getLogger(ChatGPTController.class);
+
     @Autowired
     ChatGPTService chatGPTService;
 
@@ -31,7 +35,13 @@ public class ChatGPTController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/troubleshoot-asset")
     public ResponseEntity<ResponseBodyEmitter> generateMessage(@RequestBody ChatGPTDTO chatGPTDTO) throws JSONException {
-        return chatGPTService.generateMessage(chatGPTDTO);
+        log.info("generateMessage called");
+        try {
+            return chatGPTService.generateMessage(chatGPTDTO);
+        } catch (Exception e) {
+            log.error("generateMessage failed: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 }
 

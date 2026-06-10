@@ -4,7 +4,7 @@ services:
     image: postgres:16
     container_name: sclera-postgres
     environment:
-      POSTGRES_DB: vdms
+      POSTGRES_DB: sclera_assets
       POSTGRES_USER: root
       POSTGRES_PASSWORD: mypass123
     ports:
@@ -15,7 +15,7 @@ services:
     networks:
       - sclera-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root -d vdms"]
+      test: ["CMD-SHELL", "pg_isready -U root -d sclera_assets"]
       interval: 5s
       timeout: 5s
       retries: 12
@@ -43,7 +43,7 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_URL: jdbc:postgresql://postgres:5432/vdms
+      DB_URL: jdbc:postgresql://postgres:5432/sclera_assets
       DB_USER: root
       DB_PASS: mypass123
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
@@ -105,7 +105,7 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_URL: jdbc:postgresql://postgres:5432/vdms
+      DB_URL: jdbc:postgresql://postgres:5432/sclera_assets
       DB_USER: root
       DB_PASS: mypass123
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
@@ -351,7 +351,7 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_URL: jdbc:postgresql://postgres:5432/vdms
+      DB_URL: jdbc:postgresql://postgres:5432/sclera_assets
       DB_USER: root
       DB_PASS: mypass123
       DAPR_HTTP_PORT: "3500"
@@ -397,7 +397,7 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_URL: jdbc:postgresql://postgres:5432/vdms
+      DB_URL: jdbc:postgresql://postgres:5432/sclera_assets
       DB_USER: root
       DB_PASS: mypass123
       DAPR_HTTP_PORT: "3500"
@@ -531,7 +531,7 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_URL: jdbc:postgresql://postgres:5432/vdms
+      DB_URL: jdbc:postgresql://postgres:5432/sclera_assets
       DB_USER: root
       DB_PASS: mypass123
       DAPR_HTTP_PORT: "3500"
@@ -629,16 +629,8 @@ services:
       - sclera-net
     restart: on-failure
 
-  ui:
-    image: nginx:alpine
-    container_name: sclera-test-ui
-    ports:
-      - "3000:80"
-    volumes:
-      - ./test-ui:/usr/share/nginx/html:ro
-      - ./test-ui/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    networks:
-      - sclera-net
+  # Old diagnostic test-ui removed — the React app (sclera-ui/docker-compose.yml)
+  # serves the real UI on port 3000 instead. Re-add if you need the old harness.
 
 networks:
   sclera-net:
