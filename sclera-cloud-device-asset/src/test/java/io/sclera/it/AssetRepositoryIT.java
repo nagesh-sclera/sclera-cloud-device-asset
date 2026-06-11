@@ -2,6 +2,7 @@ package io.sclera.it;
 
 import io.sclera.Repository.AssetRepository;
 import io.sclera.dto.touchscreen.assetmapper.AssetDTO;
+import io.sclera.models.Asset;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -170,5 +171,25 @@ class AssetRepositoryIT extends PostgresJpaIT {
     void getAllAssets_bacnetImportType() {
         List<AssetDTO> result = assetRepository.getAllAssets("bacnet");
         assertThat(result).extracting(AssetDTO::getId).containsExactly("a3");
+    }
+
+    /**
+     * Regression for CONCAT_WS null-skip semantics: a row with a NULL description must still
+     * match a searchKey on its display_name. Plain JPQL CONCAT can propagate NULL (dropping the
+     * row); the COALESCE wrapping preserves the original CONCAT_WS('', ...) behavior.
+     */
+    @Test
+    void getPaginatedAssets_matchesRowWithNullDescription() {
+        Asset nullDesc = new Asset();
+        nullDesc.setId("a-null");
+        nullDesc.setDisplay_name("Zeta Widget");
+        nullDesc.setDescription(null);
+        nullDesc.setImport_type("corrigo");
+        nullDesc.setOriginalKeys("");
+        nullDesc.setIsMatched(false);
+        assetRepository.saveAndFlush(nullDesc);
+
+        List<AssetDTO> result = assetRepository.getPaginatedAssets("corrigo", "Zeta", PageRequest.of(0, 10));
+        assertThat(result).extracting(AssetDTO::getId).containsExactly("a-null");
     }
 }

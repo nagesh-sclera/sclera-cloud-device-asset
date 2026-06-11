@@ -35,7 +35,7 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
            "a.ip_address, a.network_layer, a.serial_number, a.warranty, CAST(NULL AS integer), " +
            "a.originalKeys, a.customFields, a.matchedProductIds, a.subsystem_parent_id, a.import_type) " +
            "FROM Asset a WHERE a.import_type = :importType " +
-           "AND (:searchKey = 'null' OR CONCAT(a.display_name, a.description) LIKE CONCAT('%', :searchKey, '%')) " +
+           "AND (:searchKey = 'null' OR CONCAT(COALESCE(a.display_name, ''), COALESCE(a.description, '')) LIKE CONCAT('%', :searchKey, '%')) " +
            "ORDER BY a.display_name")
     List<AssetDTO> getPaginatedAssets(@Param("importType") String importType,
                                       @Param("searchKey") String searchKey,

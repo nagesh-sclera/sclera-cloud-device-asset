@@ -152,3 +152,13 @@ CREATE TABLE IF NOT EXISTS asset_device_mapping (
     device_id     VARCHAR(255)  REFERENCES device(id),
     match_score   INTEGER
 );
+
+-- building: eagerly loaded via Asset -> vdms -> building when a full Asset entity is fetched
+CREATE TABLE IF NOT EXISTS building (
+    id                 VARCHAR(255)  PRIMARY KEY,
+    name               VARCHAR(128),
+    code               VARCHAR(128),
+    updated_timestamp  NUMERIC,
+    source_type        VARCHAR(255),
+    vdms_id            VARCHAR(64)   REFERENCES vdms(id)
+);
