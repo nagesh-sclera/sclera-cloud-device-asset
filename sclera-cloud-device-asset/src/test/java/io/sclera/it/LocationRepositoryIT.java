@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
 
@@ -123,5 +124,57 @@ class LocationRepositoryIT extends PostgresJpaIT {
                 "SELECT l.record_checklist_status FROM Location l WHERE l.id = 'loc2'")
                 .getSingleResult();
         assertThat(status).isEqualTo("done");
+    }
+
+    @Test
+    void updateLocationRecordChecklistCount_mutatesAndReadsBack() {
+        locationRepository.updateLocationRecordChecklistCount("loc2", 5);
+        Integer count = (Integer) em.createQuery(
+                "SELECT l.record_checklist_count FROM Location l WHERE l.id = 'loc2'")
+                .getSingleResult();
+        assertThat(count).isEqualTo(5);
+    }
+
+    @Test
+    void updateArea_updatesAllLocationsOnFloorByFloorNavPath() {
+        // Bulk UPDATE whose WHERE navigates the @ManyToOne via l.floor.id = ?1.
+        locationRepository.updateArea("f1", "{\"w\":1}", 9);
+        // loc1 and loc2 are on f1 -> both updated; loc3 (f2) untouched.
+        assertThat((String) em.createQuery(
+                "SELECT l.area FROM Location l WHERE l.id = 'loc1'").getSingleResult())
+                .isEqualTo("{\"w\":1}");
+        assertThat((Integer) em.createQuery(
+                "SELECT l.z_index FROM Location l WHERE l.id = 'loc2'").getSingleResult())
+                .isEqualTo(9);
+        assertThat((Integer) em.createQuery(
+                "SELECT l.z_index FROM Location l WHERE l.id = 'loc3'").getSingleResult())
+                .isEqualTo(3); // f2, unchanged
+    }
+
+    @Test
+    void updateLocationByLocationId_updatesSelectedFields() {
+        locationRepository.updateLocationByLocationId(
+                "NewName", "{\"x\":1}", "loc1", "{\"w\":2}", "newtype", BigInteger.valueOf(123));
+        assertThat((String) em.createQuery(
+                "SELECT l.name FROM Location l WHERE l.id = 'loc1'").getSingleResult())
+                .isEqualTo("NewName");
+        assertThat((String) em.createQuery(
+                "SELECT l.type FROM Location l WHERE l.id = 'loc1'").getSingleResult())
+                .isEqualTo("newtype");
+    }
+
+    @Test
+    void updateLocationDetailsByLocationId_updatesAllDetailFields() {
+        locationRepository.updateLocationDetailsByLocationId(
+                "loc3", "Hall X", "{\"x\":9}", "{\"w\":9}", 7, "newtype", "NEW-CODE", BigInteger.valueOf(99));
+        assertThat((String) em.createQuery(
+                "SELECT l.name FROM Location l WHERE l.id = 'loc3'").getSingleResult())
+                .isEqualTo("Hall X");
+        assertThat((String) em.createQuery(
+                "SELECT l.code FROM Location l WHERE l.id = 'loc3'").getSingleResult())
+                .isEqualTo("NEW-CODE");
+        assertThat((Integer) em.createQuery(
+                "SELECT l.z_index FROM Location l WHERE l.id = 'loc3'").getSingleResult())
+                .isEqualTo(7);
     }
 }
