@@ -50,7 +50,8 @@ import org.springframework.context.annotation.Configuration;
                             io.sclera.Repository.LocationRepository.class,
                             io.sclera.Repository.FloorRepository.class,
                             io.sclera.Repository.AssetDeviceMappingRepository.class,
-                            io.sclera.Repository.BuildingRepository.class }))
+                            io.sclera.Repository.BuildingRepository.class,
+                            io.sclera.Repository.DeviceOnboardStatusRepository.class }))
 public class JpaTestConfig {
     // Intentionally empty — all beans come from @ImportAutoConfiguration.
 }

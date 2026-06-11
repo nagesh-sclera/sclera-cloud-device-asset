@@ -157,8 +157,20 @@ CREATE TABLE IF NOT EXISTS device (
     ip_address    VARCHAR(64),
     network_layer VARCHAR(64),
     status        INTEGER,
+    onboard_status INTEGER,
     vdms_id       VARCHAR(64)  REFERENCES vdms(id),
     location_id   VARCHAR(255) REFERENCES location(id)
+);
+
+-- device_onboard_status: per-device onboarding progress (device is a @OneToOne -> device_id FK)
+CREATE TABLE IF NOT EXISTS device_onboard_status (
+    id                 VARCHAR(255) PRIMARY KEY,
+    assignee_email     VARCHAR(255),
+    image_status       INTEGER DEFAULT 0,
+    geolocation_status INTEGER DEFAULT 0,
+    tag_status         INTEGER DEFAULT 0,
+    field_status       INTEGER DEFAULT 0,
+    device_id          VARCHAR(255) REFERENCES device(id)
 );
 
 -- device_ip_address: IP addresses assigned to a device (FK -> device)
