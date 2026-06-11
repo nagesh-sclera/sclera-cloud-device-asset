@@ -212,6 +212,24 @@ CREATE TABLE IF NOT EXISTS asset_device_mapping (
     match_score   INTEGER
 );
 
+-- device_onboard_status_assignee: users assigned to an onboarding task (@ManyToOne -> device_onboard_status)
+CREATE TABLE IF NOT EXISTS device_onboard_status_assignee (
+    id                        VARCHAR(255) PRIMARY KEY,
+    type                      VARCHAR(128),
+    email                     VARCHAR(255),
+    device_onboard_status_id  VARCHAR(255) REFERENCES device_onboard_status(id)
+);
+
+-- device_network_specification: per-device network metadata (@OneToOne Device via device_id FK)
+CREATE TABLE IF NOT EXISTS device_network_specification (
+    id                  VARCHAR(255) PRIMARY KEY,
+    network_interfaces  TEXT,
+    network_settings    TEXT,
+    network_ports       TEXT,
+    network_processes   TEXT,
+    device_id           VARCHAR(255) REFERENCES device(id)
+);
+
 -- building: eagerly loaded via Asset -> vdms -> building when a full Asset entity is fetched
 CREATE TABLE IF NOT EXISTS building (
     id                 VARCHAR(255)  PRIMARY KEY,
