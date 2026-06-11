@@ -41,6 +41,12 @@ import org.springframework.context.annotation.Configuration;
         PersistenceExceptionTranslationAutoConfiguration.class,
 })
 @EntityScan(basePackages = "io.sclera.models")
+@org.springframework.data.jpa.repository.config.EnableJpaRepositories(
+        basePackageClasses = io.sclera.Repository.AssetRepository.class,
+        includeFilters = @org.springframework.context.annotation.ComponentScan.Filter(
+                type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE,
+                classes = { io.sclera.Repository.AssetRepository.class,
+                            io.sclera.Repository.DeviceIPAddressRepository.class }))
 public class JpaTestConfig {
     // Intentionally empty — all beans come from @ImportAutoConfiguration.
 }

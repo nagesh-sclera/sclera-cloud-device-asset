@@ -108,3 +108,47 @@ CREATE TABLE IF NOT EXISTS ai_call_log_history (
     id            VARCHAR(255) PRIMARY KEY,
     technician_id VARCHAR(255) REFERENCES technician(id)
 );
+
+-- device: FK target for asset_device_mapping.device_id (and AssetDeviceMapping.device @ManyToOne)
+-- Only id is required for FK resolution; other columns added as nullable stubs.
+CREATE TABLE IF NOT EXISTS device (
+    id            VARCHAR(255) PRIMARY KEY,
+    display_name  VARCHAR(255),
+    mac_address   VARCHAR(64),
+    type          VARCHAR(128),
+    ip_address    VARCHAR(64),
+    network_layer VARCHAR(64),
+    status        INTEGER,
+    vdms_id       VARCHAR(64)  REFERENCES vdms(id)
+);
+
+-- asset: the primary table under conversion
+CREATE TABLE IF NOT EXISTS asset (
+    id                   VARCHAR(255)  PRIMARY KEY,
+    display_name         VARCHAR(128),
+    description          TEXT,
+    mac_address          VARCHAR(32),
+    model                VARCHAR(255),
+    vendor               VARCHAR(255),
+    type                 VARCHAR(128),
+    ip_address           VARCHAR(64),
+    network_layer        INTEGER,
+    serial_number        VARCHAR(255),
+    warranty             VARCHAR(32),
+    import_type          VARCHAR(255),
+    is_matched           BOOLEAN       DEFAULT false,
+    subsystem_parent_id  VARCHAR(255),
+    subsystem_count      INTEGER       DEFAULT 0,
+    original_keys        TEXT          NOT NULL,
+    custom_fields        TEXT,
+    matched_products     TEXT,
+    vdms_id              VARCHAR(64)   REFERENCES vdms(id)
+);
+
+-- asset_device_mapping: join table between asset and device
+CREATE TABLE IF NOT EXISTS asset_device_mapping (
+    id            VARCHAR(255)  PRIMARY KEY,
+    asset_id      VARCHAR(255)  REFERENCES asset(id),
+    device_id     VARCHAR(255)  REFERENCES device(id),
+    match_score   INTEGER
+);
