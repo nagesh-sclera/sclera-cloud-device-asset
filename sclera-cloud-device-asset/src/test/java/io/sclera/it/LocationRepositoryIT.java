@@ -1,10 +1,13 @@
 package io.sclera.it;
 
 import io.sclera.Repository.LocationRepository;
+import io.sclera.dto.LocationAlertDTO;
+import io.sclera.dto.LocationDTO;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -176,5 +179,144 @@ class LocationRepositoryIT extends PostgresJpaIT {
         assertThat((Integer) em.createQuery(
                 "SELECT l.z_index FROM Location l WHERE l.id = 'loc3'").getSingleResult())
                 .isEqualTo(7);
+    }
+
+    // ── Pass 2: JPQL constructor-expression projection tests ──────────────────
+
+    @Test
+    void getLocationDetails_returnsLocationDetailsMapping() {
+        LocationDTO dto = locationRepository.getLocationDetails("loc1");
+        assertThat(dto).isNotNull();
+        assertThat(dto.getLocation_id()).isEqualTo("loc1");
+        assertThat(dto.getName()).isEqualTo("Room A");
+        // 6-arg constructor: (location_id, name, floor_name, building_name, type, code)
+        assertThat(dto.getFloor_name()).isEqualTo("Floor 1");
+        assertThat(dto.getBuilding_name()).isEqualTo("Building One");
+        assertThat(dto.getType()).isEqualTo("office");
+        assertThat(dto.getCode()).isEqualTo("LOC-001");
+    }
+
+    @Test
+    void getLocationByLocationId_returnsLocationsMappingDto() {
+        LocationDTO dto = locationRepository.getLocationByLocationId("loc2");
+        assertThat(dto).isNotNull();
+        assertThat(dto.getLocation_id()).isEqualTo("loc2");
+        assertThat(dto.getName()).isEqualTo("Room B");
+        assertThat(dto.getType()).isEqualTo("lab");
+        assertThat(dto.getCode()).isEqualTo("LOC-002");
+    }
+
+    @Test
+    void getLocationByLocationId_returnsNullForMissingId() {
+        LocationDTO dto = locationRepository.getLocationByLocationId("no-such-id");
+        assertThat(dto).isNull();
+    }
+
+    @Test
+    void getLocationDetailsByLocationId_returns13ArgDto() {
+        LocationDTO dto = locationRepository.getLocationDetailsByLocationId("loc1");
+        assertThat(dto).isNotNull();
+        assertThat(dto.getLocation_id()).isEqualTo("loc1");
+        assertThat(dto.getName()).isEqualTo("Room A");
+        assertThat(dto.getFloor_id()).isEqualTo("f1");
+        assertThat(dto.getFloor_name()).isEqualTo("Floor 1");
+        assertThat(dto.getBuilding_name()).isEqualTo("Building One");
+        assertThat(dto.getBuilding_id()).isEqualTo("b1");
+        assertThat(dto.getType()).isEqualTo("office");
+        assertThat(dto.getCode()).isEqualTo("LOC-001");
+        assertThat(dto.getRecord_checklist_count()).isEqualTo(3);
+        assertThat(dto.getRecord_checklist_status()).isEqualTo("completed");
+    }
+
+    @Test
+    void getLocationsByFloorId_returns15ArgDtosWithBuildingFields() {
+        Set<LocationDTO> dtos = locationRepository.getLocationsByFloorId("f1");
+        assertThat(dtos).hasSize(2);
+        LocationDTO loc1 = dtos.stream().filter(d -> "loc1".equals(d.getLocation_id())).findFirst().orElseThrow();
+        assertThat(loc1.getName()).isEqualTo("Room A");
+        assertThat(loc1.getFloor_id()).isEqualTo("f1");
+        assertThat(loc1.getFloor_name()).isEqualTo("Floor 1");
+        assertThat(loc1.getBuilding_id()).isEqualTo("b1");
+        assertThat(loc1.getBuilding_name()).isEqualTo("Building One");
+        assertThat(loc1.getBuilding_code()).isEqualTo("B-001");
+        assertThat(loc1.getStatus()).isEqualTo("active");
+        assertThat(loc1.getZ_index()).isEqualTo(1);
+    }
+
+    @Test
+    void getLocationsByFloor_returns4ArgDtos() {
+        Set<LocationDTO> dtos = locationRepository.getLocationsByFloor("f2");
+        assertThat(dtos).hasSize(1);
+        LocationDTO dto = dtos.iterator().next();
+        assertThat(dto.getLocation_id()).isEqualTo("loc3");
+        assertThat(dto.getName()).isEqualTo("Hall C");
+        assertThat(dto.getType()).isEqualTo("corridor");
+        assertThat(dto.getCode()).isEqualTo("LOC-003");
+    }
+
+    @Test
+    void getLocationsByFloorIds_returns5ArgDtosForMultipleFloors() {
+        List<LocationDTO> dtos = locationRepository.getLocationsByFloorIds(List.of("f1", "f2"));
+        assertThat(dtos).hasSize(3);
+        LocationDTO loc3 = dtos.stream().filter(d -> "loc3".equals(d.getId())).findFirst().orElseThrow();
+        assertThat(loc3.getName()).isEqualTo("Hall C");
+        assertThat(loc3.getType()).isEqualTo("corridor");
+        // 5-arg constructor sets floorId field (not floor_id)
+        assertThat(loc3.getFloorId()).isEqualTo("f2");
+    }
+
+    @Test
+    void getAllLocationDetails_returnsAllLocations() {
+        List<LocationDTO> dtos = locationRepository.getAllLocationDetails();
+        assertThat(dtos).hasSize(3);
+        assertThat(dtos).extracting(LocationDTO::getLocation_id)
+                .containsExactlyInAnyOrder("loc1", "loc2", "loc3");
+    }
+
+    @Test
+    void getAllLocationsByIds_returnsSubsetByIdSet() {
+        Set<LocationDTO> dtos = locationRepository.getAllLocationsByIds(Set.of("loc1", "loc3"));
+        assertThat(dtos).hasSize(2);
+        assertThat(dtos).extracting(LocationDTO::getLocation_id)
+                .containsExactlyInAnyOrder("loc1", "loc3");
+    }
+
+    @Test
+    void getLocationAlertDetails_returns6ArgAlertDto() {
+        LocationAlertDTO dto = locationRepository.getLocationAlertDetails("loc2");
+        assertThat(dto).isNotNull();
+        assertThat(dto.getId()).isEqualTo("loc2");
+        assertThat(dto.getName()).isEqualTo("Room B");
+        assertThat(dto.getFloor_id()).isEqualTo("f1");
+        assertThat(dto.getFloor_name()).isEqualTo("Floor 1");
+        assertThat(dto.getBuilding_id()).isEqualTo("b1");
+        assertThat(dto.getBuilding_name()).isEqualTo("Building One");
+    }
+
+    @Test
+    void getLocationsByStatus_paginatesWithPageable() {
+        // loc1 status='active', loc2 status='inactive', loc3 status='active'
+        // 'active' LIKE '%active%' matches loc1, loc2, loc3 (inactive contains active)
+        List<LocationAlertDTO> page1 = locationRepository.getLocationsByStatus(
+                "active", PageRequest.of(0, 2));
+        assertThat(page1).hasSize(2);
+
+        List<LocationAlertDTO> page2 = locationRepository.getLocationsByStatus(
+                "active", PageRequest.of(1, 2));
+        assertThat(page2).hasSize(1);
+
+        // Verify DTO shape: floor and building fields populated
+        LocationAlertDTO anyDto = page1.get(0);
+        assertThat(anyDto.getFloor_name()).isIn("Floor 1", "Floor 2");
+        assertThat(anyDto.getBuilding_name()).isEqualTo("Building One");
+    }
+
+    @Test
+    void getLocationByVdmsId_returnsLocationsLinkedToVdms() {
+        // All 3 locations are on floors linked to building b1 -> vdms vdms1
+        Set<LocationDTO> dtos = locationRepository.getLocationByVdmsId("vdms1");
+        assertThat(dtos).hasSize(3);
+        assertThat(dtos).extracting(LocationDTO::getLocation_id)
+                .containsExactlyInAnyOrder("loc1", "loc2", "loc3");
     }
 }

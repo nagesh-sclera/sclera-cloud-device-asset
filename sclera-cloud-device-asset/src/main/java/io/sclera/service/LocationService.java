@@ -25,6 +25,7 @@ import io.sclera.queryrepository.LocationQueryRepository;
 import io.sclera.utils.AuthenticationUtils;
 import io.sclera.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.uuid.Generators;
@@ -1321,8 +1322,7 @@ public class LocationService implements LocationServiceInterface {
      * Returns a page of location alert details having the given status.
      */
     public List<LocationAlertDTO> getLocationsByStatus(String status, Integer pageno, Integer pagesize) {
-        Integer offset = pagesize * (pageno - 1);
-        return locationRepository.getLocationsByStatus(status, offset, pagesize);
+        return locationRepository.getLocationsByStatus(status, PageRequest.of(pageno - 1, pagesize));
     }
 
     public Integer getLocationsByStatusCountTs(String status) {

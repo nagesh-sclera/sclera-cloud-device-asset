@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional;
 import com.alibaba.fastjson.JSONArray;
 import io.sclera.dto.LocationAlertDTO;
 import io.sclera.dto.LocationDTO;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -125,7 +126,10 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param location_id the location identifier
      * @return the matching location details
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(l.id, l.name, f.name, b.name, l.type, l.code)" +
+           " FROM Location l" +
+           " LEFT JOIN l.floor f LEFT JOIN f.building b" +
+           " WHERE l.id = ?1")
     LocationDTO getLocationDetails(String location_id);
 
     /**
@@ -196,7 +200,10 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param vdms_id the VDMS identifier
      * @return the matching locations
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(l.id, l.name, l.type, l.code)" +
+           " FROM Location l" +
+           " LEFT JOIN l.floor f LEFT JOIN f.building b" +
+           " WHERE b.vdms.id = ?1")
     Set<LocationDTO> getLocationByVdmsId(String vdms_id);
 
     /**
@@ -205,7 +212,13 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param floor_id the floor identifier
      * @return the matching locations
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(" +
+           " l.id, l.name, l.position, l.area, l.floor.id, l.status, l.z_index," +
+           " l.record_checklist_count, l.record_checklist_status, l.type, f.name," +
+           " b.id, b.name, l.code, b.code)" +
+           " FROM Location l" +
+           " LEFT JOIN l.floor f LEFT JOIN f.building b" +
+           " WHERE l.floor.id = ?1")
     Set<LocationDTO> getLocationsByFloorId(String floor_id);
 
     /**
@@ -214,7 +227,8 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param floor_id the floor identifier
      * @return the matching locations
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(l.id, l.name, l.type, l.code)" +
+           " FROM Location l WHERE l.floor.id = ?1")
     Set<LocationDTO> getLocationsByFloor(String floor_id);
 
     /**
@@ -223,7 +237,8 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param floorIds the floor identifiers
      * @return the matching locations
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(l.id, l.name, l.type, l.code, l.floor.id)" +
+           " FROM Location l WHERE l.floor.id IN ?1")
     List<LocationDTO> getLocationsByFloorIds(List<String> floorIds);
 
     /**
@@ -254,7 +269,8 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param location_id the location identifier
      * @return the matching location
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(l.id, l.name, l.type, l.code)" +
+           " FROM Location l WHERE l.id = ?1")
     LocationDTO getLocationByLocationId(String location_id);
 
     /**
@@ -326,7 +342,13 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param location_id the location identifier
      * @return the matching location details
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(" +
+           " l.id, l.name, l.position, l.area, l.floor.id, l.z_index," +
+           " f.name, b.name, l.record_checklist_count, l.record_checklist_status," +
+           " b.id, l.type, l.code)" +
+           " FROM Location l" +
+           " LEFT JOIN l.floor f LEFT JOIN f.building b" +
+           " WHERE l.id = ?1")
     LocationDTO getLocationDetailsByLocationId(String location_id);
 
     /**
@@ -335,7 +357,10 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param location_id the location identifier
      * @return the matching location alert details
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationAlertDTO(l.id, l.name, l.floor.id, f.name, b.id, b.name)" +
+           " FROM Location l" +
+           " LEFT JOIN l.floor f LEFT JOIN f.building b" +
+           " WHERE l.id = ?1")
     LocationAlertDTO getLocationAlertDetails(String location_id);
 
 
@@ -419,7 +444,8 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      *
      * @return all location details
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(l.id, l.name, l.type, l.code)" +
+           " FROM Location l")
     List<LocationDTO> getAllLocationDetails();
 
     /**
@@ -628,7 +654,8 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param locationIds the location identifiers
      * @return the matching locations
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(l.id, l.name, l.type, l.code)" +
+           " FROM Location l WHERE l.id IN ?1")
     Set<LocationDTO> getAllLocationsByIds(Set<String> locationIds);
 
     /**
@@ -692,12 +719,14 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * Returns a paginated list of location alert details matching the given status.
      *
      * @param status the status to match
-     * @param offset the starting row offset
-     * @param pagesize the maximum number of rows to return
+     * @param pageable the page and size (replaces the former scalar offset/pagesize params)
      * @return the matching location alert details for the page
      */
-    @Query(nativeQuery = true)
-    List<LocationAlertDTO> getLocationsByStatus(String status, Integer offset, Integer pagesize);
+    @Query("SELECT new io.sclera.dto.LocationAlertDTO(l.id, l.name, l.floor.id, f.name, b.id, b.name)" +
+           " FROM Location l" +
+           " LEFT JOIN l.floor f LEFT JOIN f.building b" +
+           " WHERE l.status LIKE CONCAT('%', ?1, '%')")
+    List<LocationAlertDTO> getLocationsByStatus(String status, Pageable pageable);
 
     /**
      * Returns the number of locations whose status matches the given value (touchscreen).
