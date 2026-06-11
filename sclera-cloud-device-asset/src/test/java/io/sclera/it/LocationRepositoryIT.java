@@ -445,4 +445,37 @@ class LocationRepositoryIT extends PostgresJpaIT {
                 "SELECT l.code FROM Location l WHERE l.id = 'loc1'").getSingleResult())
                 .isEqualTo("LOC-001");
     }
+
+    /**
+     * Simulates the CONFLICT path of upsertlocationdetails service method: updates
+     * name, status, type, code, area, position, updated_timestamp via JPQL UPDATE, then asserts
+     * that FLOOR remains unchanged. This invariant is the inverse of upsertLocationByFloorId
+     * (which leaves position/area untouched) — here position/area ARE updated but floor is NOT.
+     */
+    @Test
+    void conflictPath_upsertlocationdetails_updatesPositionAreaButNotFloor() {
+        // loc1 already seeded on floor f1.
+        em.createQuery(
+                "UPDATE Location l SET l.name = 'Detailed Room A', l.status = 'reserved'," +
+                " l.type = 'storage', l.code = 'DET-001', l.area = '{\"w\":11,\"h\":22}'," +
+                " l.position = '{\"x\":1,\"y\":2}', l.updated_timestamp = 6666666" +
+                " WHERE l.id = 'loc1'").executeUpdate();
+        em.flush();
+        em.clear();
+
+        // position and area ARE updated by this upsert (unlike upsertLocationByFloorId)
+        assertThat((String) em.createQuery(
+                "SELECT l.position FROM Location l WHERE l.id = 'loc1'").getSingleResult())
+                .isEqualTo("{\"x\":1,\"y\":2}");
+        assertThat((String) em.createQuery(
+                "SELECT l.area FROM Location l WHERE l.id = 'loc1'").getSingleResult())
+                .isEqualTo("{\"w\":11,\"h\":22}");
+        assertThat((String) em.createQuery(
+                "SELECT l.status FROM Location l WHERE l.id = 'loc1'").getSingleResult())
+                .isEqualTo("reserved");
+        // floor must be unchanged — NOT in the upsertlocationdetails DO UPDATE SET
+        assertThat((String) em.createQuery(
+                "SELECT l.floor.id FROM Location l WHERE l.id = 'loc1'").getSingleResult())
+                .isEqualTo("f1");
+    }
 }
