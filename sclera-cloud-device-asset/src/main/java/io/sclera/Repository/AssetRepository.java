@@ -8,9 +8,11 @@ import java.util.List;
 import java.util.Set;
 import jakarta.transaction.Transactional;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Repository;
 
@@ -23,14 +25,21 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
     /**
      * Retrieves a page of assets filtered by import type and search key.
      *
-     * @param limit the maximum number of assets to return
-     * @param offset the number of assets to skip
      * @param importType the import type to filter by
-     * @param searchKey the search key to filter by
+     * @param searchKey  the search key to filter by, or {@code "null"} to skip
+     * @param pageable   pagination parameters
      * @return the matching page of assets
      */
-    @Query(nativeQuery = true)
-    List<AssetDTO> getPaginatedAssets(Integer limit, Integer offset, String importType, String searchKey);
+    @Query("SELECT new io.sclera.dto.touchscreen.assetmapper.AssetDTO(" +
+           "a.id, a.display_name, a.description, a.mac_address, a.model, a.vendor, a.type, " +
+           "a.ip_address, a.network_layer, a.serial_number, a.warranty, CAST(NULL AS integer), " +
+           "a.originalKeys, a.customFields, a.matchedProductIds, a.subsystem_parent_id, a.import_type) " +
+           "FROM Asset a WHERE a.import_type = :importType " +
+           "AND (:searchKey = 'null' OR CONCAT(a.display_name, a.description) LIKE CONCAT('%', :searchKey, '%')) " +
+           "ORDER BY a.display_name")
+    List<AssetDTO> getPaginatedAssets(@Param("importType") String importType,
+                                      @Param("searchKey") String searchKey,
+                                      Pageable pageable);
 
     /**
      * Removes all asset records.
@@ -41,23 +50,32 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
     void deleteAllRecords();
 
     /**
-     * Retrieves the assets linked to the given asset.
+     * Retrieves the assets linked to the given device.
      *
-     * @param id the asset identifier
+     * @param deviceId the device identifier
      * @return the linked assets
      */
-    @Query(nativeQuery = true)
-    List<AssetDTO> getLinkedAssets(String id);
+    @Query("SELECT new io.sclera.dto.touchscreen.assetmapper.AssetDTO(" +
+           "a.id, a.display_name, a.description, a.mac_address, a.model, a.vendor, a.type, " +
+           "a.ip_address, a.network_layer, a.serial_number, a.warranty, adm.matchScore, " +
+           "a.originalKeys, a.customFields, a.matchedProductIds, a.subsystem_parent_id, a.import_type) " +
+           "FROM Asset a JOIN a.assetDeviceMappings adm " +
+           "WHERE a.id IN (SELECT m.asset.id FROM AssetDeviceMapping m WHERE m.device.id = :deviceId)")
+    List<AssetDTO> getLinkedAssets(@Param("deviceId") String deviceId);
 
     /**
      * Retrieves a page of unmapped assets.
      *
-     * @param pageSize the maximum number of assets to return
-     * @param offset the number of assets to skip
+     * @param pageable pagination parameters
      * @return the matching page of unmapped assets
      */
-    @Query(nativeQuery = true)
-    List<AssetDTO> getUnmappedAssets(Integer pageSize, Integer offset);
+    @Query("SELECT new io.sclera.dto.touchscreen.assetmapper.AssetDTO(" +
+           "a.id, a.display_name, a.description, a.mac_address, a.model, a.vendor, a.type, " +
+           "a.ip_address, a.network_layer, a.serial_number, a.warranty, CAST(NULL AS integer), " +
+           "a.originalKeys, a.customFields, a.matchedProductIds, a.subsystem_parent_id, a.import_type) " +
+           "FROM Asset a WHERE a.id NOT IN (SELECT m.asset.id FROM AssetDeviceMapping m) " +
+           "AND a.isMatched = false")
+    List<AssetDTO> getUnmappedAssets(Pageable pageable);
 
     /**
      * Counts all assets.
@@ -70,7 +88,7 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
     /**
      * Updates the matched products for the given asset.
      *
-     * @param id the asset identifier
+     * @param id              the asset identifier
      * @param matchedProducts the matched products to store
      */
     @Modifying
@@ -81,13 +99,16 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
     /**
      * Retrieves a page of assets matching the given filter.
      *
-     * @param filter the filter to apply
-     * @param pageSize the maximum number of assets to return
-     * @param offset the number of assets to skip
+     * @param filter   the filter to apply (column to order by)
+     * @param pageable pagination parameters
      * @return the matching page of assets
      */
-    @Query(nativeQuery = true)
-    List<AssetDTO> getFilteredAssets(String filter, Integer pageSize, Integer offset);
+    @Query("SELECT new io.sclera.dto.touchscreen.assetmapper.AssetDTO(" +
+           "a.id, a.display_name, a.description, a.mac_address, a.model, a.vendor, a.type, " +
+           "a.ip_address, a.network_layer, a.serial_number, a.warranty, CAST(NULL AS integer), " +
+           "a.originalKeys, a.customFields, a.matchedProductIds, a.subsystem_parent_id, a.import_type) " +
+           "FROM Asset a")
+    List<AssetDTO> getFilteredAssets(@Param("filter") String filter, Pageable pageable);
 
     /**
      * Returns the original keys of all assets.
@@ -113,14 +134,18 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @param idList the asset identifiers to match
      * @return the matching assets
      */
-    @Query(nativeQuery = true)
-    List<AssetDTO> getAssetsById(List<String> idList);
+    @Query("SELECT new io.sclera.dto.touchscreen.assetmapper.AssetDTO(" +
+           "a.id, a.display_name, a.description, a.mac_address, a.model, a.vendor, a.type, " +
+           "a.ip_address, a.network_layer, a.serial_number, a.warranty, CAST(NULL AS integer), " +
+           "a.originalKeys, a.customFields, a.matchedProductIds, a.subsystem_parent_id, a.import_type) " +
+           "FROM Asset a WHERE a.id IN :idList")
+    List<AssetDTO> getAssetsById(@Param("idList") List<String> idList);
 
     /**
      * Updates the matched flag for the given asset.
      *
      * @param matched the matched state to set
-     * @param id the asset identifier
+     * @param id      the asset identifier
      */
     @Modifying
     @Transactional
@@ -132,7 +157,12 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      *
      * @return the unmapped matched assets
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.touchscreen.assetmapper.AssetDTO(" +
+           "a.id, a.display_name, a.description, a.mac_address, a.model, a.vendor, a.type, " +
+           "a.ip_address, a.network_layer, a.serial_number, a.warranty, CAST(NULL AS integer), " +
+           "a.originalKeys, a.customFields, a.matchedProductIds, a.subsystem_parent_id, a.import_type) " +
+           "FROM Asset a WHERE a.isMatched = true " +
+           "AND a.id NOT IN (SELECT m.asset.id FROM AssetDeviceMapping m)")
     List<AssetDTO> getUnmappedMatchedAssets();
 
     /**
@@ -149,8 +179,12 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @param asset_id the parent asset identifier
      * @return the sub-assets of the parent asset
      */
-    @Query(nativeQuery = true)
-    List<AssetDTO> getSubAssetsByParentId(String asset_id);
+    @Query("SELECT new io.sclera.dto.touchscreen.assetmapper.AssetDTO(" +
+           "a.id, a.display_name, a.description, a.mac_address, a.model, a.vendor, a.type, " +
+           "a.ip_address, a.network_layer, a.serial_number, a.warranty, CAST(NULL AS integer), " +
+           "a.originalKeys, a.customFields, a.matchedProductIds, a.subsystem_parent_id, a.import_type) " +
+           "FROM Asset a WHERE a.subsystem_parent_id = :asset_id")
+    List<AssetDTO> getSubAssetsByParentId(@Param("asset_id") String asset_id);
 
     /**
      * Retrieves the unmapped assets among the given ids.
@@ -158,8 +192,13 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @param idList the asset identifiers to match
      * @return the matching unmapped assets
      */
-    @Query(nativeQuery = true)
-    List<AssetDTO> getUnmappedAssetsByIds(List<String> idList);
+    @Query("SELECT new io.sclera.dto.touchscreen.assetmapper.AssetDTO(" +
+           "a.id, a.display_name, a.description, a.mac_address, a.model, a.vendor, a.type, " +
+           "a.ip_address, a.network_layer, a.serial_number, a.warranty, CAST(NULL AS integer), " +
+           "a.originalKeys, a.customFields, a.matchedProductIds, a.subsystem_parent_id, a.import_type) " +
+           "FROM Asset a WHERE a.id NOT IN (SELECT m.asset.id FROM AssetDeviceMapping m) " +
+           "AND a.isMatched = false AND a.id IN :idList")
+    List<AssetDTO> getUnmappedAssetsByIds(@Param("idList") List<String> idList);
 
     /**
      * Updates the matched products for the given asset.
@@ -186,7 +225,7 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * Updates the sub-system count for the given parent asset.
      *
      * @param parent_asset_id the parent asset identifier
-     * @param subsystemCount the sub-system count to set
+     * @param subsystemCount  the sub-system count to set
      */
     @Modifying
     @Transactional
@@ -196,37 +235,48 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
     /**
      * Retrieves a page of sub-system parent assets for the given import type.
      *
-     * @param pageSize the maximum number of assets to return
-     * @param offset the number of assets to skip
      * @param importType the import type to filter by
+     * @param pageable   pagination parameters
      * @return the matching sub-system parent assets
      */
     //parent asset sub system api - parent asset get
-    @Query(nativeQuery = true)
-    List<AssetDTO> getSubSystemParentAssets(Integer pageSize, Integer offset, String importType);
+    @Query("SELECT new io.sclera.dto.touchscreen.assetmapper.AssetDTO(" +
+           "a.id, a.display_name, a.description, a.mac_address, a.model, a.vendor, a.type, " +
+           "a.ip_address, a.network_layer, a.serial_number, a.warranty, " +
+           "a.originalKeys, a.customFields, a.matchedProductIds, a.subsystem_parent_id, a.subsystem_count) " +
+           "FROM Asset a WHERE a.subsystem_parent_id IS NULL AND a.import_type = :importType")
+    List<AssetDTO> getSubSystemParentAssets(@Param("importType") String importType, Pageable pageable);
 
     /**
      * Retrieves a page of sub-system assets for the given parent asset.
      *
      * @param asset_id the parent asset identifier
-     * @param pageSize the maximum number of assets to return
-     * @param offset the number of assets to skip
+     * @param pageable pagination parameters
      * @return the matching sub-system assets
      */
     //parent asset sub system api - sub system asset get
-    @Query(nativeQuery = true)
-    List<AssetDTO> getSubSystemAssets(String asset_id, Integer pageSize, Integer offset);
+    @Query("SELECT new io.sclera.dto.touchscreen.assetmapper.AssetDTO(" +
+           "a.id, a.display_name, a.description, a.mac_address, a.model, a.vendor, a.type, " +
+           "a.ip_address, a.network_layer, a.serial_number, a.warranty, " +
+           "a.originalKeys, a.customFields, a.matchedProductIds, a.subsystem_parent_id, a.subsystem_count) " +
+           "FROM Asset a WHERE a.subsystem_parent_id = :asset_id")
+    List<AssetDTO> getSubSystemAssets(@Param("asset_id") String asset_id, Pageable pageable);
 
     /**
      * Retrieves a page of unmapped sub-system parent assets.
      *
-     * @param pageSize the maximum number of assets to return
-     * @param offset the number of assets to skip
+     * @param pageable pagination parameters
      * @return the matching unmapped sub-system parent assets
      */
     //parent asset sub system api for unmapped assets - parent asset get
-    @Query(nativeQuery = true)
-    List<AssetDTO> getUnmappedSubSystemParentAssets(Integer pageSize, Integer offset);
+    @Query("SELECT new io.sclera.dto.touchscreen.assetmapper.AssetDTO(" +
+           "a.id, a.display_name, a.description, a.mac_address, a.model, a.vendor, a.type, " +
+           "a.ip_address, a.network_layer, a.serial_number, a.warranty, " +
+           "a.originalKeys, a.customFields, a.matchedProductIds, a.subsystem_parent_id, a.subsystem_count) " +
+           "FROM Asset a WHERE a.subsystem_parent_id IS NULL " +
+           "AND a.id NOT IN (SELECT m.asset.id FROM AssetDeviceMapping m) " +
+           "AND a.isMatched = false")
+    List<AssetDTO> getUnmappedSubSystemParentAssets(Pageable pageable);
 
     /**
      * Retrieves the unmapped sub-system parent assets among the given ids.
@@ -235,13 +285,19 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @return the matching unmapped sub-system parent assets
      */
     //parent asset sub system api for unmapped assets - parent asset get
-    @Query(nativeQuery = true)
-    List<AssetDTO> getUnmappedSubSystemParentAssetsByAssetIds(List<String> asset_ids);
+    @Query("SELECT new io.sclera.dto.touchscreen.assetmapper.AssetDTO(" +
+           "a.id, a.display_name, a.description, a.mac_address, a.model, a.vendor, a.type, " +
+           "a.ip_address, a.network_layer, a.serial_number, a.warranty, " +
+           "a.originalKeys, a.customFields, a.matchedProductIds, a.subsystem_parent_id, a.subsystem_count) " +
+           "FROM Asset a WHERE a.subsystem_parent_id IS NULL " +
+           "AND a.id NOT IN (SELECT m.asset.id FROM AssetDeviceMapping m) " +
+           "AND a.isMatched = false AND a.id IN :asset_ids")
+    List<AssetDTO> getUnmappedSubSystemParentAssetsByAssetIds(@Param("asset_ids") List<String> asset_ids);
 
     /**
      * Updates the sub-system parent id for the given asset.
      *
-     * @param asset_id the asset identifier
+     * @param asset_id            the asset identifier
      * @param subsystem_parent_id the sub-system parent id to set
      */
     //update sub system parent id
@@ -266,8 +322,12 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @return the matching assets
      */
     //updated method to get all assets from db
-    @Query(nativeQuery = true)
-    List<AssetDTO> getAllAssets(String importType);
+    @Query("SELECT new io.sclera.dto.touchscreen.assetmapper.AssetDTO(" +
+           "a.id, a.display_name, a.description, a.mac_address, a.model, a.vendor, a.type, " +
+           "a.ip_address, a.network_layer, a.serial_number, a.warranty, " +
+           "a.originalKeys, a.customFields, a.matchedProductIds, a.subsystem_parent_id, a.subsystem_count) " +
+           "FROM Asset a WHERE a.import_type = :importType")
+    List<AssetDTO> getAllAssets(@Param("importType") String importType);
 
     /**
      * Returns the sub-system parent id of the given asset.
@@ -292,7 +352,7 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
     /**
      * Updates the sub-system parent id for the given set of assets.
      *
-     * @param subsystem_assets the identifiers of the assets to update
+     * @param subsystem_assets    the identifiers of the assets to update
      * @param subsystem_parent_id the sub-system parent id to set
      */
     //update set of subsystem device parent id
@@ -304,25 +364,25 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
     /**
      * Inserts an asset, updating its display name, description and type if the id already exists.
      *
-     * @param id the asset identifier
-     * @param display_name the asset display name
-     * @param description the asset description
-     * @param type the asset type
-     * @param mac_address the asset MAC address
-     * @param model the asset model
-     * @param vendor the asset vendor
-     * @param ip_address the asset IP address
-     * @param network_layer the asset network layer
-     * @param serial_number the asset serial number
-     * @param warranty the asset warranty
-     * @param original_keys the asset original keys
-     * @param custom_fields the asset custom fields
+     * @param id                  the asset identifier
+     * @param display_name        the asset display name
+     * @param description         the asset description
+     * @param type                the asset type
+     * @param mac_address         the asset MAC address
+     * @param model               the asset model
+     * @param vendor              the asset vendor
+     * @param ip_address          the asset IP address
+     * @param network_layer       the asset network layer
+     * @param serial_number       the asset serial number
+     * @param warranty            the asset warranty
+     * @param original_keys       the asset original keys
+     * @param custom_fields       the asset custom fields
      * @param subsystem_parent_id the sub-system parent id
-     * @param is_matched whether the asset is matched
-     * @param matched_products the matched products
-     * @param vdms the VDMS identifier
-     * @param subsystem_count the sub-system count
-     * @param import_type the import type
+     * @param is_matched          whether the asset is matched
+     * @param matched_products    the matched products
+     * @param vdms                the VDMS identifier
+     * @param subsystem_count     the sub-system count
+     * @param import_type         the import type
      */
     @Modifying
     @Transactional
@@ -335,7 +395,7 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * Counts the assets of the given import type optionally matching the search key.
      *
      * @param parent_asset_id the import type to filter by
-     * @param searchKey the search key to match, or {@code "null"} to ignore
+     * @param searchKey       the search key to match, or {@code "null"} to ignore
      * @return the number of matching assets
      */
     @Query(value = "SELECT COUNT(*) FROM asset where import_type = ?1 AND ?2 = 'null' or CONCAT_WS('',display_name,description) LIKE CONCAT('%',?2,'%')", nativeQuery = true)
@@ -353,7 +413,7 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
     /**
      * Updates the type of assets whose type starts with the given prefix.
      *
-     * @param type the new type to set
+     * @param type     the new type to set
      * @param idPrefix the type prefix to match
      */
     @Modifying
@@ -380,7 +440,7 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
     /**
      * Updates assets of the given type to a new type.
      *
-     * @param type the existing type to match
+     * @param type    the existing type to match
      * @param generic the new type to set
      */
     @Modifying
