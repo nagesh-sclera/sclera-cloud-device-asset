@@ -14,7 +14,7 @@ import java.util.Set;
  * Manages persistence and querying of {@link DeviceInstalledApps} entities.
  */
 @Repository
-public interface DeviceInstalledAppsRepository extends JpaRepository<DeviceInstalledApps,String> {
+public interface DeviceInstalledAppsRepository extends JpaRepository<DeviceInstalledApps, String> {
 
     /**
      * Deletes all installed-app records for the given device.
@@ -37,9 +37,9 @@ public interface DeviceInstalledAppsRepository extends JpaRepository<DeviceInsta
      * @param serialNumber the device-specification identifier
      * @param deviceId     the device identifier to assign
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device_installed_apps SET device_id = ?2 WHERE device_specification_id = ?1", nativeQuery = true)
+    @Query("UPDATE DeviceInstalledApps d SET d.deviceId = ?2 WHERE d.deviceSpecificationId = ?1")
     void updateDeviceIdBySerialNumber(String serialNumber, String deviceId);
 
     /**
@@ -57,7 +57,7 @@ public interface DeviceInstalledAppsRepository extends JpaRepository<DeviceInsta
      * @param managedSoftwareId the managed software identifier
      * @return the matching device-specification identifiers
      */
-    @Query(value = "SELECT device_specification_id FROM device_installed_apps WHERE managed_software_id = ?1", nativeQuery = true)
+    @Query("SELECT d.deviceSpecificationId FROM DeviceInstalledApps d WHERE d.managedSoftwareId = ?1")
     Set<String> getDeviceSpecIdsByManagedSoftwareId(String managedSoftwareId);
 
     /**
@@ -68,11 +68,9 @@ public interface DeviceInstalledAppsRepository extends JpaRepository<DeviceInsta
      * @param status            the risk status to set
      * @return the number of rows updated
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device_installed_apps " +
-            "SET risk_status = ?3 " +
-            "WHERE device_specification_id IN ?1 AND managed_software_id = ?2", nativeQuery = true)
+    @Query("UPDATE DeviceInstalledApps d SET d.riskStatus = ?3 WHERE d.deviceSpecificationId IN ?1 AND d.managedSoftwareId = ?2")
     Integer updateRiskStatusForDevices(Set<String> deviceSpecId, String managedSoftwareId, Integer status);
 
     /**
@@ -81,7 +79,7 @@ public interface DeviceInstalledAppsRepository extends JpaRepository<DeviceInsta
      * @param managedsoftwareid the managed software identifier
      * @return the count of compliant records
      */
-    @Query(value = "SELECT COUNT(*) FROM device_installed_apps WHERE risk_status IN (0, 2) AND managed_software_id = ?1", nativeQuery = true)
+    @Query("SELECT COUNT(d) FROM DeviceInstalledApps d WHERE d.riskStatus IN (0, 2) AND d.managedSoftwareId = ?1")
     Integer getCompliantRiskStatusCount(String managedsoftwareid);
 
     /**
@@ -90,7 +88,7 @@ public interface DeviceInstalledAppsRepository extends JpaRepository<DeviceInsta
      * @param managedSoftwareId the managed software identifier
      * @return the matching device-specification identifiers
      */
-    @Query(value = "SELECT device_specification_id FROM device_installed_apps WHERE managed_software_id = ?1 AND risk_status = 1", nativeQuery = true)
+    @Query("SELECT d.deviceSpecificationId FROM DeviceInstalledApps d WHERE d.managedSoftwareId = ?1 AND d.riskStatus = 1")
     Set<String> getRiskyDeviceSpecIdsByManagedSoftwareId(String managedSoftwareId);
 
 //    @Modifying
@@ -104,11 +102,9 @@ public interface DeviceInstalledAppsRepository extends JpaRepository<DeviceInsta
      * @param managedSoftwareId the managed software identifier
      * @return the number of rows updated
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device_installed_apps " +
-            "SET managed_software_id = null, risk_status = null " +
-            "WHERE managed_software_id = ?1", nativeQuery = true)
+    @Query("UPDATE DeviceInstalledApps d SET d.managedSoftwareId = null, d.riskStatus = null WHERE d.managedSoftwareId = ?1")
     Integer clearManagedSoftwareIdAndRiskStatus(String managedSoftwareId);
 
     /**
@@ -117,11 +113,9 @@ public interface DeviceInstalledAppsRepository extends JpaRepository<DeviceInsta
      * @param managedSoftwareId the managed software identifier
      * @return the number of rows updated
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device_installed_apps " +
-            "SET risk_status = null " +
-            "WHERE managed_software_id = ?1", nativeQuery = true)
+    @Query("UPDATE DeviceInstalledApps d SET d.riskStatus = null WHERE d.managedSoftwareId = ?1")
     Integer clearRiskStatusByManagedSoftwareId(String managedSoftwareId);
 
     /**
@@ -132,11 +126,9 @@ public interface DeviceInstalledAppsRepository extends JpaRepository<DeviceInsta
      * @param status            the risk status to set
      * @return the number of rows updated
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device_installed_apps " +
-            "SET risk_status = ?3 " +
-            "WHERE device_specification_id = ?1 AND managed_software_id = ?2", nativeQuery = true)
+    @Query("UPDATE DeviceInstalledApps d SET d.riskStatus = ?3 WHERE d.deviceSpecificationId = ?1 AND d.managedSoftwareId = ?2")
     Integer updateRiskStatusByDeviceSpecId(String deviceSpecId, String managedSoftwareId, Integer status);
 
 }

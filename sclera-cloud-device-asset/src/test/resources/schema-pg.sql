@@ -276,6 +276,48 @@ CREATE TABLE IF NOT EXISTS device_specification (
     device_id        VARCHAR(255) REFERENCES device(id)
 );
 
+-- notes: per-device notes; composite PK (id, device_id); device_id FK -> device
+CREATE TABLE IF NOT EXISTS notes (
+    id         VARCHAR(255) NOT NULL,
+    title      VARCHAR(128),
+    body       TEXT,
+    type       VARCHAR(64),
+    is_global  INTEGER      DEFAULT 0,
+    device_id  VARCHAR(255) NOT NULL REFERENCES device(id),
+    PRIMARY KEY (id, device_id)
+);
+
+-- managed_software: FK target for device_installed_apps.managed_software_id
+CREATE TABLE IF NOT EXISTS managed_software (
+    id                      VARCHAR(255) PRIMARY KEY,
+    name                    VARCHAR(255),
+    application_name        VARCHAR(255),
+    application_type        VARCHAR(255),
+    url                     VARCHAR(255),
+    vendor                  VARCHAR(255),
+    subscription_id         VARCHAR(255),
+    subscription_type       VARCHAR(255),
+    unit_price              DOUBLE PRECISION,
+    currency                VARCHAR(32),
+    subscription_start_date BIGINT,
+    subscription_end_date   BIGINT,
+    status                  VARCHAR(64),
+    application_id          VARCHAR(255)
+);
+
+-- device_installed_apps: installed applications on a device/device-specification
+CREATE TABLE IF NOT EXISTS device_installed_apps (
+    id                      VARCHAR(255) PRIMARY KEY,
+    created_at              BIGINT,
+    name                    VARCHAR(255),
+    publisher               VARCHAR(255),
+    version                 VARCHAR(255),
+    device_id               VARCHAR(255),
+    device_specification_id VARCHAR(255) REFERENCES device_specification(id),
+    managed_software_id     VARCHAR(255) REFERENCES managed_software(id),
+    risk_status             INTEGER
+);
+
 -- building: eagerly loaded via Asset -> vdms -> building when a full Asset entity is fetched
 CREATE TABLE IF NOT EXISTS building (
     id                 VARCHAR(255)  PRIMARY KEY,

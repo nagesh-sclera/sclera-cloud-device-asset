@@ -4,16 +4,7 @@ package io.sclera.models;
 import jakarta.persistence.*;
 import java.util.Objects;
 
-@NamedNativeQueries({
-    @NamedNativeQuery(name = "DeviceInstalledApps.updateDeviceIdBySerialNumber", query = "UPDATE device_installed_apps SET device_id = ?2 WHERE device_specification_id = ?1", resultClass = DeviceInstalledApps.class),
-    @NamedNativeQuery(name = "DeviceInstalledApps.getDeviceSpecIdsByManagedSoftwareId", query = "SELECT device_specification_id FROM device_installed_apps WHERE managed_software_id = ?1", resultClass = DeviceInstalledApps.class),
-    @NamedNativeQuery(name = "DeviceInstalledApps.updateRiskStatusForDevices", query = "UPDATE device_installed_apps SET risk_status = ?3 WHERE device_specification_id IN ?1 AND managed_software_id = ?2", resultClass = DeviceInstalledApps.class),
-    @NamedNativeQuery(name = "DeviceInstalledApps.getCompliantRiskStatusCount", query = "SELECT COUNT(*) FROM device_installed_apps WHERE risk_status IN (0, 2) AND managed_software_id = ?1", resultClass = DeviceInstalledApps.class),
-    @NamedNativeQuery(name = "DeviceInstalledApps.getRiskyDeviceSpecIdsByManagedSoftwareId", query = "SELECT device_specification_id FROM device_installed_apps WHERE managed_software_id = ?1 AND risk_status = 1", resultClass = DeviceInstalledApps.class),
-    @NamedNativeQuery(name = "DeviceInstalledApps.clearManagedSoftwareIdAndRiskStatus", query = "UPDATE device_installed_apps SET managed_software_id = null, risk_status = null WHERE managed_software_id = ?1", resultClass = DeviceInstalledApps.class),
-    @NamedNativeQuery(name = "DeviceInstalledApps.clearRiskStatusByManagedSoftwareId", query = "UPDATE device_installed_apps SET risk_status = null WHERE managed_software_id = ?1", resultClass = DeviceInstalledApps.class),
-    @NamedNativeQuery(name = "DeviceInstalledApps.updateRiskStatusByDeviceSpecId", query = "UPDATE device_installed_apps SET risk_status = ?3 WHERE device_specification_id = ?1 AND managed_software_id = ?2", resultClass = DeviceInstalledApps.class)
-})
+// All @NamedNativeQuery entries removed — all queries converted to JPQL in DeviceInstalledAppsRepository.
 @Entity
 public class DeviceInstalledApps {
     @Id

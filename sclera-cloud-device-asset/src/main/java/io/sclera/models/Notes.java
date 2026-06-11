@@ -2,7 +2,6 @@ package io.sclera.models;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import io.sclera.dto.Product_NotesDTO;
 import io.sclera.models.compositeclass.NoteIds;
 
 import jakarta.persistence.*;
@@ -11,58 +10,28 @@ import jakarta.persistence.*;
  * JPA entity representing a free-text note attached to a device, optionally marked global,
  * used to capture user annotations within the asset-management domain.
  */
+// @NamedNativeQuery("Notes.getNotesByDeviceId") and its @SqlResultSetMapping("notemapping") removed —
+// getNotesByDeviceId() converted to a JPQL constructor expression in NotesRepository.
 @Entity
 @IdClass(NoteIds.class)
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class , property = "id" , scope = Notes.class)
-
-@SqlResultSetMapping(
-		name = "notemapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = Product_NotesDTO.class,
-                        columns = {
-                        		@ColumnResult(name = "id",type = String.class),
-                        		@ColumnResult(name = "title",type = String.class),
-                        		@ColumnResult(name = "body",type = String.class),
-                        		@ColumnResult(name = "device_id",type = String.class),
-                        		@ColumnResult(name = "is_global",type = Integer.class)
-                        		   }
-                        )
-                }
-        )
-
-
-
-
-
-@NamedNativeQuery(
-		name = "Notes.getNotesByDeviceId",
-        query = "SELECT id ,title ,body ,device_id ,is_global FROM notes WHERE device_id = ?1",
-        resultSetMapping = "notemapping"	
-
-)
-
-
-
-
-
 public class Notes {
-	
+
 	@Id
 	private String id;
-	
-	
+
+
 	@Column(length = 128)
 	private String title;
 
 	private String body;
-	
+
 	@Column(length = 64)
 	private String type;
-	
+
 	@Column(columnDefinition = "integer default 0")
 	private Integer is_global;
-	
+
 	@MapsId
 	@ManyToOne
 	private Device device;
@@ -115,6 +84,6 @@ public class Notes {
 		this.is_global = is_global;
 	}
 
-	
-	
+
+
 }
