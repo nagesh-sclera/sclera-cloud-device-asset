@@ -209,6 +209,14 @@ public interface LocationRepository extends JpaRepository<Location, String> {
     /**
      * Returns the locations on the given floor.
      *
+     * <p>BUGFIX during JPQL conversion: the original native query selected {@code f.name},
+     * {@code b.id}, {@code b.name}, {@code b.code} but its FROM clause was only
+     * {@code FROM location l} with NO join defining {@code f}/{@code b} — invalid SQL that
+     * fails at runtime on both MySQL and PostgreSQL (undefined alias). The floor/building
+     * LEFT JOINs below restore the obvious intent, matching the working paginated sibling
+     * {@code getLocationsByFloorByPagination}. This repairs a previously-broken call path
+     * (LocationService#getLocationsByFloorId, used by BuildingService/FloorService).
+     *
      * @param floor_id the floor identifier
      * @return the matching locations
      */
