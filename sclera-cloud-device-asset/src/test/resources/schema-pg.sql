@@ -230,6 +230,52 @@ CREATE TABLE IF NOT EXISTS device_network_specification (
     device_id           VARCHAR(255) REFERENCES device(id)
 );
 
+-- device_lifecycle_history: per-device lifecycle events (FK -> device)
+-- Note: assigned_user_email is NOT a column of this table (it lives on device);
+-- the getLatestAssignedUserEmailFromHistory query referencing it is kept native with a comment.
+CREATE TABLE IF NOT EXISTS device_lifecycle_history (
+    id                   VARCHAR(255) PRIMARY KEY,
+    operational_status   VARCHAR(32),
+    usage_status         VARCHAR(32),
+    assigned_user_id     VARCHAR(128),
+    assignment_count     INTEGER,
+    created_timestamp    NUMERIC,
+    assigned_timestamp   NUMERIC,
+    description          TEXT,
+    assigned_by_user_id  VARCHAR(255),
+    device_id            VARCHAR(255) REFERENCES device(id)
+);
+
+-- device_specification: hardware/software metadata for a device (FK -> device via device_id)
+-- @Id is the MAC address (serial number); device_id is a non-insertable/non-updatable FK column
+-- managed via the @OneToOne Device relation.
+CREATE TABLE IF NOT EXISTS device_specification (
+    id               VARCHAR(255) PRIMARY KEY,
+    created_at       BIGINT,
+    updated_at       BIGINT,
+    username         VARCHAR(255),
+    email            VARCHAR(255),
+    account_type     VARCHAR(255),
+    user_uuid        VARCHAR(255),
+    device_name      VARCHAR(255),
+    model            VARCHAR(255),
+    os_type          VARCHAR(255),
+    location_info    VARCHAR(1024),
+    os_info          VARCHAR(1024),
+    cpu_info         VARCHAR(512),
+    disk_drives      TEXT,
+    physical_disks   TEXT,
+    bios             VARCHAR(512),
+    ram_info         VARCHAR(512),
+    video_cards      VARCHAR(1024),
+    sound_devices    VARCHAR(1024),
+    battery_info     VARCHAR(255),
+    processes        TEXT,
+    system_updates   TEXT,
+    child_devices    TEXT,
+    device_id        VARCHAR(255) REFERENCES device(id)
+);
+
 -- building: eagerly loaded via Asset -> vdms -> building when a full Asset entity is fetched
 CREATE TABLE IF NOT EXISTS building (
     id                 VARCHAR(255)  PRIMARY KEY,
