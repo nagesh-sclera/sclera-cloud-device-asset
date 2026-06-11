@@ -94,6 +94,27 @@ MySQL→PostgreSQL move without per-query SQL translation, and gain compiler/Spr
   class: `.\mvnw.cmd -q -Dtest=<Class>IT test`. Logback `NumberFormatException`/appender WARN/ERROR at startup is
   pre-existing noise — judge by `Tests run: N, Failures: 0, Errors: 0` and exit 0.
 
+## Lessons from the LocationRepository pass (2nd repo)
+- **The phase3 audit undercounts.** LocationRepository was listed as "~8 queries" but is ~60 methods. Re-scope by reading
+  the actual file before estimating: a large fraction (JSONArray-`IN` params, multi-join `'all' IN ?n` dynamic filters,
+  `CASE WHEN` tagging conditions) have no portable JPQL form — leave them native and add a
+  `// NOT CONVERTED — stays native (PG-translation track): <reason>` comment so the next maintainer knows it was a
+  deliberate skip, not an oversight.
+- **JPQL conversion surfaces pre-existing broken native SQL.** `getLocationsByFloorId`'s original query selected
+  `f.name, b.*` but its FROM clause had no join defining `f`/`b` — invalid SQL that throws at runtime on MySQL and PG
+  alike. You literally cannot write the JPQL without deciding the join, which forces the latent bug into the open. When
+  this happens, restore the obvious intent (here: the joins its working paginated sibling already had), and document it
+  in the method Javadoc as a deliberate bugfix — don't reproduce a query that never worked.
+- **Entity relations vs scalar columns in JPQL:** `Location.floor` is a `@ManyToOne` (column `floor_id`). JPQL must
+  navigate `l.floor.id` (NOT `l.floor_id`); a bulk `UPDATE ... WHERE l.floor.id = ?1` works. Reaching a grandparent is a
+  path chain: `l.floor.building.vdms.id`. Verify each hop's field name in the entity before writing it.
+- **Don't `findById` a heavily-associated entity in an IT.** Loading a full `Location` drags in a deep eager chain
+  (floor→building→vdms, GlobalQrcode, Device…) whose tables aren't in the minimal test schema. Assert converted writes
+  via scalar JPQL reads (`SELECT l.field FROM Location l WHERE l.id=...`) or the converted projection methods instead.
+- **String-returning count/LIMIT-1 methods:** preserve the original return type with a `default` wrapper over a
+  `Long`/`List` backing query rather than silently changing the signature (`getLocationsCountByFloorId`,
+  `getLocationIdbyLocationName`).
+
 ## Pilot residuals / known follow-ups (non-blocking)
 - **`AssetRepository.getFilteredAssets`** keeps an unused `filter` param and applies no `ORDER BY`. The original was
   `ORDER BY ?1` — a *bind parameter*, i.e. SQL ordering by a constant literal (no-op, since a column name can't be a bind
