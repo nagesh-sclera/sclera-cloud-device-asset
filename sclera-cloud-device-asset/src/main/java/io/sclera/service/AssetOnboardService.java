@@ -148,6 +148,7 @@ public class AssetOnboardService implements AssetOnboardServiceInterface {
      * @param assetImportType the asset import type
      * @param username        the requesting user
      */
+    @org.springframework.transaction.annotation.Transactional
     public void assetUpsert(DeviceDTO device, String vdmsid, String assetImportType, String username) {
         Asset asset = assetRepository.findById(device.getId()).orElse(null);
         if (asset != null) {
