@@ -39,6 +39,7 @@ import io.sclera.Repository.FloorRepository;
 import io.sclera.dto.FloorDTO;
 import io.sclera.interfaces.FloorServiceInterface;
 import io.sclera.utils.Utils;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -1193,7 +1194,7 @@ public class FloorService implements FloorServiceInterface {
 
         while (true) {
             int offset = pageSize * (pageNo - 1);
-            List<FloorDTO> batchResults = floorRepository.getBatchFloorsByPagination(floorIds, pageSize, offset);
+            List<FloorDTO> batchResults = floorRepository.getBatchFloorsByPagination(floorIds, PageRequest.of(offset / pageSize, pageSize));
 
             if (batchResults == null || batchResults.isEmpty()) {
                 break;
@@ -1301,7 +1302,7 @@ public class FloorService implements FloorServiceInterface {
 
         while (true) {
             int offset = pageSize * (pageNo - 1);
-            List<FloorDTO> batchResults = floorRepository.getFloorIdsByBuildingIds(buildingIds, pageSize, offset);
+            List<FloorDTO> batchResults = floorRepository.getFloorIdsByBuildingIds(buildingIds, PageRequest.of(offset / pageSize, pageSize));
 
             if (batchResults == null || batchResults.isEmpty()) {
                 break;

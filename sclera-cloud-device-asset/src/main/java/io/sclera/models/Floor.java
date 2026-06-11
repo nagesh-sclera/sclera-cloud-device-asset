@@ -2,7 +2,6 @@ package io.sclera.models;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import io.sclera.dto.FloorDTO;
 import org.hibernate.annotations.ColumnDefault;
 
 import jakarta.persistence.*;
@@ -12,108 +11,11 @@ import java.util.Set;
 /**
  * Represents a floor within a building, including its floor plan image, zoom/positioning metadata, and the
  * locations it contains. Used to organise devices spatially and to render floor plans in the asset-mapping UI.
+ *
+ * All @NamedNativeQuery / @SqlResultSetMapping entries that previously backed FloorRepository projection
+ * methods have been removed — those methods are now JPQL constructor expressions and no longer need
+ * named-query metadata.
  */
-@SqlResultSetMapping(
-        name = "floormapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = FloorDTO.class,
-                        columns = {
-                                @ColumnResult(name = "floor_id", type = String.class),
-                                @ColumnResult(name = "name", type = String.class),
-                                @ColumnResult(name = "initial_position", type = String.class),
-                                @ColumnResult(name = "image_url", type = String.class),
-                                @ColumnResult(name = "building_id", type = String.class),
-                                @ColumnResult(name = "angle", type = Integer.class),
-                                @ColumnResult(name = "min_zoom", type = String.class),
-                                @ColumnResult(name = "max_zoom", type = String.class),
-                                @ColumnResult(name = "local_image_url", type = String.class)
-                        }
-                )
-        }
-)
-
-@NamedNativeQuery(
-        name = "Floor.getFloorById",
-        query = "SELECT f.id AS floor_id , f.name ,f.initial_position ,f.image_url , f.building_id, f.angle, f.min_zoom, f.max_zoom, f.local_image_url  FROM floor f WHERE f.id = ?1 ",
-        resultSetMapping = "floormapping"
-)
-
-@NamedNativeQuery(
-        name = "Floor.getFloorsDetailsByBuildingId",
-        query = "SELECT f.id AS floor_id , f.name ,f.initial_position ,f.image_url , f.building_id, f.angle, f.min_zoom, f.max_zoom, f.local_image_url FROM floor f WHERE f.building_id = ?1 ",
-        resultSetMapping = "floormapping"
-)
-
-
-@NamedNativeQuery(
-        name = "Floor.getBatchFloorsByPagination",
-        query = "SELECT f.id AS floor_id , f.name ,f.initial_position ,f.image_url , f.building_id, f.angle, f.min_zoom, f.max_zoom, f.local_image_url  FROM floor f WHERE f.id IN (?1) LIMIT ?2 OFFSET ?3",
-        resultSetMapping = "floormapping"
-)
-
-@NamedNativeQuery(
-        name = "Floor.getFloorIdsByBuildingIds",
-        query = "SELECT f.id AS floor_id , f.name ,f.initial_position ,f.image_url , f.building_id, f.angle, f.min_zoom, f.max_zoom, f.local_image_url  FROM floor f WHERE f.building_id IN (?1) LIMIT ?2 OFFSET ?3",
-        resultSetMapping = "floormapping"
-)
-
-
-@SqlResultSetMapping(
-        name = "floordetailsmapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = FloorDTO.class,
-                        columns = {
-                                @ColumnResult(name = "floor_id", type = String.class),
-                                @ColumnResult(name = "name", type = String.class)
-
-                        }
-                )
-        }
-)
-
-@NamedNativeQuery(
-        name = "Floor.getFloorsByBuildingId",
-        query = "SELECT f.id AS floor_id, f.name FROM floor f WHERE ('all' = ?1 OR f.building_id = ?1) ORDER BY f.name, f.id",
-        resultSetMapping = "floordetailsmapping"
-)
-
-
-@NamedNativeQuery(
-        name = "Floor.getFloor",
-        query = "SELECT f.id AS floor_id, f.name  FROM floor f WHERE f.id = ?1 ",
-        resultSetMapping = "floordetailsmapping"
-)
-
-@NamedNativeQuery(
-        name = "Floor.getFloorByLocationId",
-        query = "SELECT f.id AS floor_id , f.name FROM floor f LEFT JOIN location l ON l.floor_id = f.id  WHERE l.id = ?1 ",
-        resultSetMapping = "floordetailsmapping"
-)
-
-@SqlResultSetMapping(
-        name = "floordetailsadcmapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = FloorDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "name", type = String.class),
-                                @ColumnResult(name = "buildingId", type = String.class)
-
-                        }
-                )
-        }
-)
-
-
-@NamedNativeQuery(
-        name = "Floor.getFloorsByBuildingIds",
-        query = "SELECT f.id AS id, f.name, f.building_id AS buildingId FROM floor f WHERE f.building_id IN ?1 ",
-        resultSetMapping = "floordetailsadcmapping"
-)
-
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", scope = Floor.class)
 public class Floor {
