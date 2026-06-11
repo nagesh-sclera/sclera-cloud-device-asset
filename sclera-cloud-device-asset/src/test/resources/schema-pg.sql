@@ -109,8 +109,46 @@ CREATE TABLE IF NOT EXISTS ai_call_log_history (
     technician_id VARCHAR(255) REFERENCES technician(id)
 );
 
+-- floor: FK target for location.floor_id (@ManyToOne Floor); also needed by JPQL
+-- queries that navigate l.floor.id (e.g. getLocationIdsByFloorId, updateArea).
+-- building_id is a plain VARCHAR (no FK constraint) to avoid ordering issues with
+-- the building table which is declared later in this file.
+CREATE TABLE IF NOT EXISTS floor (
+    id                 VARCHAR(255) PRIMARY KEY,
+    name               VARCHAR(128),
+    initial_position   TEXT,
+    image_url          VARCHAR(255),
+    angle              INTEGER,
+    path               TEXT,
+    min_zoom           VARCHAR(128),
+    max_zoom           VARCHAR(128),
+    local_image_url    VARCHAR(255),
+    updated_timestamp  BIGINT,
+    source_type        VARCHAR(255),
+    building_id        VARCHAR(255)
+);
+
+-- location: needed for LocationRepositoryIT
+-- floor_id is a scalar FK column (Location.floor is @ManyToOne Floor, but in test schema
+-- we keep it as a plain VARCHAR since there is no floor table in this minimal schema)
+CREATE TABLE IF NOT EXISTS location (
+    id                      VARCHAR(255) PRIMARY KEY,
+    name                    VARCHAR(128),
+    position                VARCHAR(128),
+    area                    TEXT,
+    type                    VARCHAR(128),
+    code                    VARCHAR(128),
+    z_index                 INTEGER      DEFAULT 0,
+    status                  VARCHAR(255),
+    record_checklist_status VARCHAR(32),
+    record_checklist_count  INTEGER      DEFAULT 0,
+    floor_id                VARCHAR(255),
+    updated_timestamp       NUMERIC
+);
+
 -- device: FK target for asset_device_mapping.device_id (and AssetDeviceMapping.device @ManyToOne)
 -- Only id is required for FK resolution; other columns added as nullable stubs.
+-- location_id added as FK to location table (needed for getUnlinkedLocationIds subquery).
 CREATE TABLE IF NOT EXISTS device (
     id            VARCHAR(255) PRIMARY KEY,
     display_name  VARCHAR(255),
@@ -119,7 +157,8 @@ CREATE TABLE IF NOT EXISTS device (
     ip_address    VARCHAR(64),
     network_layer VARCHAR(64),
     status        INTEGER,
-    vdms_id       VARCHAR(64)  REFERENCES vdms(id)
+    vdms_id       VARCHAR(64)  REFERENCES vdms(id),
+    location_id   VARCHAR(255) REFERENCES location(id)
 );
 
 -- device_ip_address: IP addresses assigned to a device (FK -> device)
