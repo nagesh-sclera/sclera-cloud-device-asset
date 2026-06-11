@@ -115,6 +115,23 @@ MySQL→PostgreSQL move without per-query SQL translation, and gain compiler/Spr
   `Long`/`List` backing query rather than silently changing the signature (`getLocationsCountByFloorId`,
   `getLocationIdbyLocationName`).
 
+## Lessons from the AssetDeviceMappingRepository pass (3rd repo)
+- **Not every upsert should become `save()`. An `ON CONFLICT` that's already valid PostgreSQL may be best left
+  native.** `saveNewAssetMapping`'s `INSERT ... ON CONFLICT (id) DO UPDATE SET match_score=EXCLUDED.match_score` is
+  already PG-portable; the only gain from converting is type-safety, and it isn't worth the cost below. Leave it native
+  with a `// NOT CONVERTED — stays native` comment explaining why.
+- **Assigned `@Id` + `save()` = `merge()` = SELECT-before-insert.** Spring Data treats an entity whose `@Id` is already
+  set as non-new, so `save()` routes to `merge()`, which issues a SELECT to load the row first. If the entity has eager
+  `@ManyToOne`s (here `asset` and `device`, and `Device` drags in a huge eager graph: `device_onboard_status`, `docker`,
+  `global_qrcode`, …), that SELECT materialises the whole graph just to write one column — a real perf regression and it
+  explodes in the minimal test schema. `findById`-then-`save` is even worse (two loads). For a genuine find-or-create on
+  an assigned-id entity, prefer `existsById` + a targeted bulk `@Modifying UPDATE` over `save()`/`merge`.
+- **Hibernate 7 will not bind a JPA entity to a native-query parameter** ("Could not resolve NativeQuery parameter type").
+  Native `@Query` methods that took `Asset`/`Device` entity params (to land in FK columns) must take scalar id params
+  instead — the columns are plain FKs anyway. Safe to change the signature when the method has no callers.
+- **`m.asset.id` path reads are cheap; `findById(entity)` is not.** Selecting an association's id (`SELECT m.asset.id`)
+  resolves to the FK column with no join/materialisation. Use that in ITs instead of loading the owning entity.
+
 ## Pilot residuals / known follow-ups (non-blocking)
 - **`AssetRepository.getFilteredAssets`** keeps an unused `filter` param and applies no `ORDER BY`. The original was
   `ORDER BY ?1` — a *bind parameter*, i.e. SQL ordering by a constant literal (no-op, since a column name can't be a bind
