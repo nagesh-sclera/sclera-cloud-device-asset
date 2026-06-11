@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -221,7 +222,7 @@ class BuildingServiceTest {
     void getBatchBuildingsByPagination_returnsSingleBatchAndStops() {
         Set<String> ids = Set.of("b1");
         List<BuildingDTO> batch = List.of(mock(BuildingDTO.class)); // size < pageSize -> stop
-        when(buildingRepository.getBatchBuildingsByPagination(ids, 500, 0)).thenReturn(batch);
+        when(buildingRepository.getBatchBuildingsByPagination(ids, PageRequest.of(0, 500))).thenReturn(batch);
 
         assertThat(service.getBatchBuildingsByPagination(ids)).hasSize(1);
     }
@@ -245,7 +246,7 @@ class BuildingServiceTest {
     @Test
     void deleteBuildingsByIdsSync_noBuildings_returnsEarly() {
         Set<String> ids = Set.of("b1");
-        when(buildingRepository.getBatchBuildingsByPagination(ids, 500, 0)).thenReturn(List.of());
+        when(buildingRepository.getBatchBuildingsByPagination(ids, PageRequest.of(0, 500))).thenReturn(List.of());
 
         service.deleteBuildingsByIdsSync("u", "v1", ids);
 
@@ -255,7 +256,7 @@ class BuildingServiceTest {
     @Test
     void deleteBuildingsByIdsSync_withBuildings_deletesFloorsAndBuildings() {
         Set<String> ids = Set.of("b1");
-        when(buildingRepository.getBatchBuildingsByPagination(ids, 500, 0))
+        when(buildingRepository.getBatchBuildingsByPagination(ids, PageRequest.of(0, 500)))
                 .thenReturn(List.of(mock(BuildingDTO.class)));
         when(floorservice.getFloorsByBuildingIds(ids)).thenReturn(List.of());
 

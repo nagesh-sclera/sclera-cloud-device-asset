@@ -19,6 +19,7 @@ import io.sclera.Repository.BuildingRepository;
 import io.sclera.dto.BuildingDTO;
 import io.sclera.interfaces.BuildingServiceInterface;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.data.domain.PageRequest;
 
 /**
  * Manages buildings within a VDMS, including create/update/delete operations, cascading
@@ -301,8 +302,7 @@ public class BuildingService implements BuildingServiceInterface {
         int pageNo = 1;
         int pageSize = 500;
         while (true) {
-            int offset = pageSize * (pageNo - 1);
-            List<BuildingDTO> batchResults = buildingRepository.getBatchBuildingsByPagination(buildingIds, pageSize, offset);
+            List<BuildingDTO> batchResults = buildingRepository.getBatchBuildingsByPagination(buildingIds, PageRequest.of(pageNo - 1, pageSize));
             if (batchResults == null || batchResults.isEmpty()) {
                 break;
             }
