@@ -362,36 +362,6 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
     void updateSetOfSubsystemParentId(Set<String> subsystem_assets, String subsystem_parent_id);
 
     /**
-     * Inserts an asset, updating its display name, description and type if the id already exists.
-     *
-     * @param id                  the asset identifier
-     * @param display_name        the asset display name
-     * @param description         the asset description
-     * @param type                the asset type
-     * @param mac_address         the asset MAC address
-     * @param model               the asset model
-     * @param vendor              the asset vendor
-     * @param ip_address          the asset IP address
-     * @param network_layer       the asset network layer
-     * @param serial_number       the asset serial number
-     * @param warranty            the asset warranty
-     * @param original_keys       the asset original keys
-     * @param custom_fields       the asset custom fields
-     * @param subsystem_parent_id the sub-system parent id
-     * @param is_matched          whether the asset is matched
-     * @param matched_products    the matched products
-     * @param vdms                the VDMS identifier
-     * @param subsystem_count     the sub-system count
-     * @param import_type         the import type
-     */
-    @Modifying
-    @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
-    @Query(value = "INSERT INTO asset(id,display_name,description,type,mac_address,model,vendor,ip_address,network_layer,serial_number,warranty,original_keys,custom_fields,subsystem_parent_id,is_matched,matched_products,vdms_id,subsystem_count,import_type) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19) ON CONFLICT (id) DO UPDATE SET display_name=EXCLUDED.display_name, description=EXCLUDED.description, type=EXCLUDED.type", nativeQuery = true)
-    void assetUpsert(String id, String display_name, String description, String type, String mac_address, String model, String vendor, String ip_address, int network_layer, String serial_number, String warranty, String original_keys, String custom_fields, String subsystem_parent_id, boolean is_matched, String matched_products, String vdms, int subsystem_count, String import_type);
-
-
-    /**
      * Counts the assets of the given import type optionally matching the search key.
      *
      * @param parent_asset_id the import type to filter by

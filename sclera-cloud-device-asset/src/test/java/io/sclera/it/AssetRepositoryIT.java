@@ -224,4 +224,28 @@ class AssetRepositoryIT extends PostgresJpaIT {
         assetRepository.setTypeGeneric();
         assertThat(assetRepository.getUniqueDeviceTypes()).contains("generic");
     }
+
+    // ── Task 4: find-or-create save() primitives ─────────────────────────────
+
+    @Test
+    void save_insertPath_persistsFullRow() {
+        io.sclera.models.Asset a = new io.sclera.models.Asset();
+        a.setId("a-new"); a.setDisplay_name("New"); a.setDescription("d"); a.setType("pump");
+        a.setNetwork_layer(7); a.setOriginalKeys(""); a.setImport_type("corrigo");
+        a.setIsMatched(false); a.setSubsystem_count(0);
+        assetRepository.saveAndFlush(a);
+        assertThat(assetRepository.findById("a-new")).get()
+            .extracting(io.sclera.models.Asset::getDisplay_name).isEqualTo("New");
+    }
+
+    @Test
+    void save_conflictPath_updatesOnlyThreeFieldsWhenServiceSemanticsApplied() {
+        io.sclera.models.Asset existing = assetRepository.findById("a1").orElseThrow();
+        existing.setDisplay_name("Renamed"); existing.setDescription("d2"); existing.setType("t2");
+        assetRepository.saveAndFlush(existing);
+        io.sclera.models.Asset after = assetRepository.findById("a1").orElseThrow();
+        assertThat(after.getDisplay_name()).isEqualTo("Renamed");
+        assertThat(after.getNetwork_layer()).isEqualTo(7);       // seed value, untouched
+        assertThat(after.getImport_type()).isEqualTo("corrigo"); // seed value, untouched
+    }
 }

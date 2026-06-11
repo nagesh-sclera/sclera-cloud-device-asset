@@ -14,9 +14,12 @@ import io.sclera.dto.DeviceOnboardStatusDTO;
 import io.sclera.dto.SpecificationsDTO;
 import io.sclera.dto.touchscreen.settings.VdmsDTO;
 import io.sclera.interfaces.AssetOnboardServiceInterface;
+import io.sclera.models.Asset;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,6 +59,9 @@ public class AssetOnboardService implements AssetOnboardServiceInterface {
     CorrigoClient corrigoService;
     @Autowired
     VdmsRepository vdmsRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     /**
      * Builds devices from temporary product data and onboards them asynchronously.
@@ -143,7 +149,30 @@ public class AssetOnboardService implements AssetOnboardServiceInterface {
      * @param username        the requesting user
      */
     public void assetUpsert(DeviceDTO device, String vdmsid, String assetImportType, String username) {
-        assetRepository.assetUpsert(device.getId(), device.getUser_data_name(), device.getDescription(), device.getType(), null, null, null, null, 7, null, null, "", device.getCustom_fields(), null, false, null, vdmsid, 0, assetImportType);
+        Asset asset = assetRepository.findById(device.getId()).orElse(null);
+        if (asset != null) {
+            // CONFLICT path: original ON CONFLICT updated ONLY these three columns
+            asset.setDisplay_name(device.getUser_data_name());
+            asset.setDescription(device.getDescription());
+            asset.setType(device.getType());
+        } else {
+            // INSERT path: full row as the original VALUES(...) supplied
+            asset = new Asset();
+            asset.setId(device.getId());
+            asset.setDisplay_name(device.getUser_data_name());
+            asset.setDescription(device.getDescription());
+            asset.setType(device.getType());
+            asset.setNetwork_layer(7);
+            asset.setOriginalKeys("");
+            asset.setCustomFields(device.getCustom_fields());
+            asset.setIsMatched(false);
+            asset.setSubsystem_count(0);
+            asset.setImport_type(assetImportType);
+            if (vdmsid != null) {
+                asset.setVdms(entityManager.getReference(io.sclera.models.Vdms.class, vdmsid));
+            }
+        }
+        assetRepository.save(asset);
 //        deviceService.updateVirtualDeviceOnboardStatusByAssetMapper(device,username);
     }
 
