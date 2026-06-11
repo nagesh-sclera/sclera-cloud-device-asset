@@ -111,12 +111,23 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
     List<AssetDTO> getFilteredAssets(@Param("filter") String filter, Pageable pageable);
 
     /**
-     * Returns the original keys of all assets.
+     * Returns the original keys of the first asset (JPQL has no LIMIT; the wrapper takes the first row),
+     * preserving the original {@code SELECT original_keys FROM asset LIMIT 1} single-value contract.
      *
-     * @return the original keys
+     * @return the original keys of the first asset, or {@code null} if there are none
+     */
+    default String getOriginalKeys() {
+        List<String> keys = findAllOriginalKeys();
+        return keys.isEmpty() ? null : keys.get(0);
+    }
+
+    /**
+     * Backing query for {@link #getOriginalKeys()} — returns the original keys of every asset.
+     *
+     * @return the original keys of all assets
      */
     @Query("SELECT a.originalKeys FROM Asset a")
-    List<String> getOriginalKeys();
+    List<String> findAllOriginalKeys();
 
     /**
      * Removes the assets with the given ids.

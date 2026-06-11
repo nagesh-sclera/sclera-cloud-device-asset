@@ -94,6 +94,16 @@ MySQL→PostgreSQL move without per-query SQL translation, and gain compiler/Spr
   class: `.\mvnw.cmd -q -Dtest=<Class>IT test`. Logback `NumberFormatException`/appender WARN/ERROR at startup is
   pre-existing noise — judge by `Tests run: N, Failures: 0, Errors: 0` and exit 0.
 
+## Pilot residuals / known follow-ups (non-blocking)
+- **`AssetRepository.getFilteredAssets`** keeps an unused `filter` param and applies no `ORDER BY`. The original was
+  `ORDER BY ?1` — a *bind parameter*, i.e. SQL ordering by a constant literal (no-op, since a column name can't be a bind
+  param), so dropping it is behavior-preserving. If a real dynamic sort is ever wanted, pass a `Sort` via `Pageable` and
+  remove the dead `filter` param. No production caller today.
+- **IP-address insert** (`DeviceService.persistDeviceIpAddress`) is covered transitively, not by a direct `save()` IT.
+  A 1-line `repo.save(...)` + read-back IT would make it symmetric with the asset-upsert coverage.
+- **Uncalled converted methods:** most `AssetRepository` projection methods have no production call site in this
+  extracted seed module — their correctness rests entirely on the IT suite. Keep the ITs green; they are the only guard.
+
 ## What stays native (hand to the PG-translation track, not JPQL)
 JSON functions (`JSON_MERGE_PATCH`, `JSON_EXTRACT`/`JSON_SET`, `JSON_CONTAINS`), timezone math
 (`CONVERT_TZ`/`UNIX_TIMESTAMP`/`FROM_UNIXTIME`/`DATE_FORMAT`), `HAVING`-on-alias, and dynamically-assembled SQL
