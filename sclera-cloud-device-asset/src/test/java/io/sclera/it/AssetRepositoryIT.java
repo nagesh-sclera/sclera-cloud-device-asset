@@ -22,4 +22,35 @@ class AssetRepositoryIT extends PostgresJpaIT {
         assertThat(assetRepository).isNotNull();
         assertThat(assetRepository.count()).isEqualTo(3);
     }
+
+    @Test
+    void getTotalAssetCount_countsAllRows() {
+        assertThat(assetRepository.getTotalAssetCount()).isEqualTo(3);
+    }
+
+    @Test
+    void getParentAssetSubsystemCount_countsChildren() {
+        assertThat(assetRepository.getParentAssetSubsystemCount("a1")).isEqualTo(1);
+    }
+
+    @Test
+    void getSubsystemParentIdByAssetId_returnsParent() {
+        assertThat(assetRepository.getSubsystemParentIdByAssetId("a2")).isEqualTo("a1");
+    }
+
+    @Test
+    void getSubAssetIdByParentId_returnsChildIds() {
+        assertThat(assetRepository.getSubAssetIdByParentId("a1")).containsExactly("a2");
+    }
+
+    @Test
+    void getUniqueDeviceTypes_returnsDistinct() {
+        assertThat(assetRepository.getUniqueDeviceTypes())
+            .containsExactlyInAnyOrder("pump", "valve", "meter");
+    }
+
+    @Test
+    void checkImportExists_trueWhenRowsPresent() {
+        assertThat(assetRepository.checkImportExists()).isTrue();
+    }
 }

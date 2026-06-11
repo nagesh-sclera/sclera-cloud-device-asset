@@ -64,7 +64,7 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      *
      * @return the total number of assets
      */
-    @Query(value = "SELECT COUNT(a.id) FROM asset a", nativeQuery = true)
+    @Query("SELECT COUNT(a) FROM Asset a")
     Integer getTotalAssetCount();
 
     /**
@@ -90,12 +90,12 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
     List<AssetDTO> getFilteredAssets(String filter, Integer pageSize, Integer offset);
 
     /**
-     * Returns the original keys of the first asset.
+     * Returns the original keys of all assets.
      *
      * @return the original keys
      */
-    @Query(value = "SELECT original_keys FROM asset LIMIT 1", nativeQuery = true)
-    String getOriginalKeys();
+    @Query("SELECT a.originalKeys FROM Asset a")
+    List<String> getOriginalKeys();
 
     /**
      * Removes the assets with the given ids.
@@ -179,7 +179,7 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @return the number of sub-system assets
      */
     ////update parent device subsystem count
-    @Query(value = "SELECT COUNT(*) FROM asset where subsystem_parent_id = ?1", nativeQuery = true)
+    @Query("SELECT COUNT(a) FROM Asset a WHERE a.subsystem_parent_id = ?1")
     Integer getParentAssetSubsystemCount(String parent_asset_id);
 
     /**
@@ -276,7 +276,7 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @return the sub-system parent id
      */
     //update parent device subsystem count
-    @Query(value = "SELECT subsystem_parent_id FROM asset where id = ?1", nativeQuery = true)
+    @Query("SELECT a.subsystem_parent_id FROM Asset a WHERE a.id = ?1")
     String getSubsystemParentIdByAssetId(String asset_id);
 
     /**
@@ -286,7 +286,7 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @return the sub-asset ids
      */
     //get sub asset ids by parent device id
-    @Query(value = "SELECT id FROM asset where subsystem_parent_id = ?1", nativeQuery = true)
+    @Query("SELECT a.id FROM Asset a WHERE a.subsystem_parent_id = ?1")
     Set<String> getSubAssetIdByParentId(String parent_asset_id);
 
     /**
@@ -347,8 +347,7 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      *
      * @return the unique device types
      */
-    @Transactional
-    @Query(value = "SELECT DISTINCT(a.type) FROM asset a ", nativeQuery = true)
+    @Query("SELECT DISTINCT a.type FROM Asset a")
     List<String> getUniqueDeviceTypes();
 
     /**
@@ -367,7 +366,7 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      *
      * @return {@code true} if at least one asset exists, otherwise {@code false}
      */
-    @Query(value = "SELECT EXISTS (SELECT 1 FROM asset)", nativeQuery = true)
+    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM Asset a")
     Boolean checkImportExists();
 
     /**
