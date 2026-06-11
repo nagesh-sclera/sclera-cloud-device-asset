@@ -192,4 +192,36 @@ class AssetRepositoryIT extends PostgresJpaIT {
         List<AssetDTO> result = assetRepository.getPaginatedAssets("corrigo", "Zeta", PageRequest.of(0, 10));
         assertThat(result).extracting(AssetDTO::getId).containsExactly("a-null");
     }
+
+    // ── Task 3: @Modifying JPQL write tests ─────────────────────────────────
+
+    @Test
+    void setMatched_thenDeleteAllMatched_removesRows() {
+        assetRepository.setMatched(true, "a3");
+        assetRepository.deleteAllMatchedRecords(); // a2 (seed-matched) + a3 now matched; neither has a mapping
+        assertThat(assetRepository.findById("a2")).isEmpty();
+        assertThat(assetRepository.findById("a3")).isEmpty();
+        assertThat(assetRepository.findById("a1")).isPresent();
+    }
+
+    @Test
+    void updateSubsystemParentId_reparents() {
+        assetRepository.updateSubsystemParentId("a3", "a1");
+        assertThat(assetRepository.getSubAssetIdByParentId("a1")).contains("a2", "a3");
+    }
+
+    @Test
+    void getAssetCount_filtersAndCounts() {
+        assertThat(assetRepository.getAssetCount("corrigo", "null")).isEqualTo(2);
+        assertThat(assetRepository.getAssetCount("corrigo", "Alpha")).isEqualTo(1);
+    }
+
+    @Test
+    void setTypeGeneric_setsNullTypesToGeneric() {
+        assetRepository.setAllAssetsToUnMatched();
+        // set a1's type to null, then call setTypeGeneric to fill it with 'generic'
+        assetRepository.updateDeviceType("pump", null);
+        assetRepository.setTypeGeneric();
+        assertThat(assetRepository.getUniqueDeviceTypes()).contains("generic");
+    }
 }

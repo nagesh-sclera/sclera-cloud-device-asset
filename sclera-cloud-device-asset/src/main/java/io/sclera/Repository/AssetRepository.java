@@ -45,8 +45,8 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * Removes all asset records.
      */
     @Transactional
-    @Modifying
-    @Query(value = "DELETE FROM asset", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM Asset a")
     void deleteAllRecords();
 
     /**
@@ -91,9 +91,9 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @param id              the asset identifier
      * @param matchedProducts the matched products to store
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE asset SET matched_products=?2 WHERE id=?1", nativeQuery = true)
+    @Query("UPDATE Asset a SET a.matchedProductIds = ?2 WHERE a.id = ?1")
     void saveMatchedProductsById(String id, String matchedProducts);
 
     /**
@@ -123,9 +123,9 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      *
      * @param ids the identifiers of the assets to remove
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM asset WHERE id IN ?1", nativeQuery = true)
+    @Query("DELETE FROM Asset a WHERE a.id IN ?1")
     void deleteAllById(ArrayList<String> ids);
 
     /**
@@ -147,9 +147,9 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @param matched the matched state to set
      * @param id      the asset identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE asset SET is_matched=?1 WHERE id=?2", nativeQuery = true)
+    @Query("UPDATE Asset a SET a.isMatched = ?1 WHERE a.id = ?2")
     void setMatched(Boolean matched, String id);
 
     /**
@@ -168,9 +168,9 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
     /**
      * Removes all matched asset records.
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM asset WHERE is_matched=1", nativeQuery = true)
+    @Query("DELETE FROM Asset a WHERE a.isMatched = true")
     void deleteAllMatchedRecords();
 
     /**
@@ -206,9 +206,9 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @param toString the matched products to store
      * @param asset_id the asset identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE asset SET matched_products = ?1 WHERE id=?2", nativeQuery = true)
+    @Query("UPDATE Asset a SET a.matchedProductIds = ?1 WHERE a.id = ?2")
     void updateProductId(String toString, String asset_id);
 
     /**
@@ -227,9 +227,9 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @param parent_asset_id the parent asset identifier
      * @param subsystemCount  the sub-system count to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE asset SET subsystem_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Asset a SET a.subsystem_count = ?2 WHERE a.id = ?1")
     void updateParentAssetSubsystemCount(String parent_asset_id, Integer subsystemCount);
 
     /**
@@ -301,18 +301,18 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @param subsystem_parent_id the sub-system parent id to set
      */
     //update sub system parent id
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE asset SET subsystem_parent_id = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Asset a SET a.subsystem_parent_id = ?2 WHERE a.id = ?1")
     void updateSubsystemParentId(String asset_id, String subsystem_parent_id);
 
     /**
      * Marks every asset as unmatched.
      */
     //set all assets to unmatched
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE asset SET is_matched=0", nativeQuery = true)
+    @Query("UPDATE Asset a SET a.isMatched = false")
     void setAllAssetsToUnMatched();
 
     /**
@@ -356,9 +356,9 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @param subsystem_parent_id the sub-system parent id to set
      */
     //update set of subsystem device parent id
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE asset SET subsystem_parent_id = ?2 WHERE id IN ?1", nativeQuery = true)
+    @Query("UPDATE Asset a SET a.subsystem_parent_id = ?2 WHERE a.id IN ?1")
     void updateSetOfSubsystemParentId(Set<String> subsystem_assets, String subsystem_parent_id);
 
     /**
@@ -398,7 +398,7 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @param searchKey       the search key to match, or {@code "null"} to ignore
      * @return the number of matching assets
      */
-    @Query(value = "SELECT COUNT(*) FROM asset where import_type = ?1 AND ?2 = 'null' or CONCAT_WS('',display_name,description) LIKE CONCAT('%',?2,'%')", nativeQuery = true)
+    @Query("SELECT COUNT(a) FROM Asset a WHERE a.import_type = ?1 AND (?2 = 'null' OR CONCAT(COALESCE(a.display_name,''), COALESCE(a.description,'')) LIKE CONCAT('%', ?2, '%'))")
     Integer getAssetCount(String parent_asset_id, String searchKey);
 
 
@@ -416,9 +416,9 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @param type     the new type to set
      * @param idPrefix the type prefix to match
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE asset a SET a.type = ?1 WHERE a.type LIKE CONCAT(?2, '%') ", nativeQuery = true)
+    @Query("UPDATE Asset a SET a.type = ?1 WHERE a.type LIKE CONCAT(?2, '%')")
     void updateTypeByType(String type, String idPrefix);
 
     /**
@@ -432,9 +432,9 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
     /**
      * Sets the type to {@code generic} for assets with no type.
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE asset a SET a.type ='generic' WHERE a.type IS NULL ", nativeQuery = true)
+    @Query("UPDATE Asset a SET a.type = 'generic' WHERE a.type IS NULL")
     void setTypeGeneric();
 
     /**
@@ -443,8 +443,8 @@ public interface AssetRepository extends JpaRepository<Asset, String> {
      * @param type    the existing type to match
      * @param generic the new type to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE asset a SET a.type = ?2 WHERE a.type = ?1 ", nativeQuery = true)
+    @Query("UPDATE Asset a SET a.type = ?2 WHERE a.type = ?1")
     void updateDeviceType(String type, String generic);
 }
