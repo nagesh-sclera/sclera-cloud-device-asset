@@ -20,36 +20,23 @@ import io.sclera.models.Device_IP_Address;
 public interface DeviceIPAddressRepository extends JpaRepository<Device_IP_Address, String> {
 
 	/**
+	 * Returns the IP-address records for the given device.
+	 *
+	 * @param id the device identifier
+	 * @return the matching IP-address projections
+	 */
+	@Query("SELECT new io.sclera.dto.touchscreen.DeviceIPAddressDTO(d.ip_address, d.ip_conflict_status) " +
+	       "FROM Device_IP_Address d WHERE d.device.id = ?1")
+	List<DeviceIPAddressDTO> getIPAddressByDeviceId(String id);
+
+	/**
 	 * Deletes all IP-address records for the given device.
 	 *
 	 * @param id the device identifier
 	 */
 	@Modifying
 	@Transactional
-	@Query(value = "DELETE FROM device_ip_address WHERE device_id = ?1", nativeQuery = true)
+	@Query("DELETE FROM Device_IP_Address d WHERE d.device.id = ?1")
 	void deleteIPAddressByDeviceId(String id);
-
-	/**
-	 * Returns the IP-address records for the given device.
-	 *
-	 * @param id the device identifier
-	 * @return the matching IP-address projections
-	 */
-	@Query(nativeQuery = true)
-	List<DeviceIPAddressDTO> getIPAddressByDeviceId(String id);
-
-	/**
-	 * Inserts an IP-address record for a device.
-	 *
-	 * @param id                 the IP-address record identifier
-	 * @param ip_address         the IP address
-	 * @param ip_conflict_status the IP conflict status flag
-	 * @param device_id          the device identifier
-	 */
-	@Modifying
-	@Transactional
-	@Query(value = "INSERT INTO device_ip_address (id, ip_address, ip_conflict_status, device_id)"
-			+ " VALUES (?1, ?2, ?3, ?4)", nativeQuery = true)
-	void insertIPAddressByDeviceId(String id, String ip_address, Integer ip_conflict_status, String device_id);
 
 }

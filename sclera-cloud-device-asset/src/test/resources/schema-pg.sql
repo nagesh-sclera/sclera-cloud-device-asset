@@ -122,6 +122,14 @@ CREATE TABLE IF NOT EXISTS device (
     vdms_id       VARCHAR(64)  REFERENCES vdms(id)
 );
 
+-- device_ip_address: IP addresses assigned to a device (FK -> device)
+CREATE TABLE IF NOT EXISTS device_ip_address (
+    id                  VARCHAR(255) PRIMARY KEY,
+    ip_address          VARCHAR(64),
+    ip_conflict_status  INTEGER DEFAULT 0,
+    device_id           VARCHAR(255) REFERENCES device(id)
+);
+
 -- asset: the primary table under conversion
 CREATE TABLE IF NOT EXISTS asset (
     id                   VARCHAR(255)  PRIMARY KEY,

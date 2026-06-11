@@ -1,48 +1,15 @@
 package io.sclera.models;
 
-import java.math.BigInteger;
-
 import jakarta.persistence.Column;
-import jakarta.persistence.ColumnResult;
-import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.NamedNativeQueries;
-import jakarta.persistence.NamedNativeQuery;
-import jakarta.persistence.SqlResultSetMapping;
-
-// removed: unused import io.sclera.dto.HistoryDTO (AP-C6 history)
-import io.sclera.dto.touchscreen.DeviceIPAddressDTO;
 
 /**
  * Represents an IP address associated with a device, including its IP-conflict status. Used to track
  * device network addressing and to detect IP address conflicts across devices.
  */
 @Entity
-
-
-@SqlResultSetMapping(
-		name = "deviceipaddressmapping",
-		classes = {
-				@ConstructorResult(
-						targetClass = DeviceIPAddressDTO.class,
-						columns = {
-								@ColumnResult(name = "ip_address",type = String.class),
-								@ColumnResult(name = "ip_conflict_status",type = Integer.class)
-						})
-		})
-
-
-@NamedNativeQueries({
-    @NamedNativeQuery(name = "Device_IP_Address.getIPAddressByDeviceId", query = "SELECT ip_address, ip_conflict_status FROM device_ip_address WHERE device_id = ?1", resultSetMapping = "deviceipaddressmapping"),
-    @NamedNativeQuery(name = "Device_IP_Address.deleteIPAddressByDeviceId", query = "DELETE FROM device_ip_address WHERE device_id = ?1", resultClass = Device_IP_Address.class),
-    @NamedNativeQuery(name = "Device_IP_Address.insertIPAddressByDeviceId", query = "INSERT INTO device_ip_address (id, ip_address, ip_conflict_status, device_id) VALUES (?1, ?2, ?3, ?4)", resultClass = Device_IP_Address.class)
-})
-
-
-
-
 public class Device_IP_Address {
 
 	@Id
