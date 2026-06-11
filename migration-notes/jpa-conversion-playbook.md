@@ -132,6 +132,14 @@ MySQL→PostgreSQL move without per-query SQL translation, and gain compiler/Spr
 - **`m.asset.id` path reads are cheap; `findById(entity)` is not.** Selecting an association's id (`SELECT m.asset.id`)
   resolves to the FK column with no join/materialisation. Use that in ITs instead of loading the owning entity.
 
+## Lessons from the 10-repo batch (small/medium CRUD repos)
+- **`@Lob String` fields break full-entity loads on Hibernate 7 / PostgreSQL** (`ClobJdbcType` → "Bad value for type long"). Any method/derived-finder that materialises such an entity, or a JPQL scalar projection of the Lob column, fails. Keep those specific reads native (read the raw TEXT column) and in ITs null-seed the Lob columns / use scalar reads. (Seen in DeviceNetworkSpecification, DeviceSpecification.)
+- **Entity field type ≠ column type ⇒ keep native.** Several entities map a `String` field over a `BOOLEAN`/`INTEGER` column (e.g. `AiCallLog.isCompleted` is `String` over a `BOOLEAN` column). A JPQL `SET`/predicate with the mismatched Java type fails type resolution — leave those native and flag the entity mapping as the real bug to fix later (fixing the field type then unlocks the JPQL conversion).
+- **Scalar `@Column` FK vs relation FK.** `UPDATE ... SET device_id = ?` only stays native when `device` is a `@ManyToOne`/`@OneToOne` relation (JPQL can't set a relation from a bare id). If `device_id` is a plain scalar `@Column` field, it converts normally (`SET x.deviceId = ?`). Check the entity before assuming.
+- **Empty / derived-only repositories need nothing.** Some repos (e.g. AddressRepository) are pure `JpaRepository` with no `@Query` — already portable, skip them. Derived methods (`findByDeviceId`, `deleteByDeviceId`, `existsBy...`) are likewise left as-is everywhere.
+- **Conversion keeps surfacing pre-existing latent bugs** (queries referencing non-existent columns like `device_lifecycle_history.assigned_user_email`, stub DTOs with too-few ctor args like `CallStatusDTO`). When a method can't convert because the underlying query/DTO is already broken, leave it native with a `// NOT CONVERTED` note explaining the defect rather than papering over it.
+- **Shared test files are the serialization point.** Every repo adds itself to `JpaTestConfig`'s scoped `@EnableJpaRepositories` and appends its table(s) to `schema-pg.sql`. Run repo conversions that touch these **sequentially** (not parallel) to avoid edit races.
+
 ## Pilot residuals / known follow-ups (non-blocking)
 - **`AssetRepository.getFilteredAssets`** keeps an unused `filter` param and applies no `ORDER BY`. The original was
   `ORDER BY ?1` — a *bind parameter*, i.e. SQL ordering by a constant literal (no-op, since a column name can't be a bind
