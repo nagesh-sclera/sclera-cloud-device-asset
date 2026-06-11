@@ -49,22 +49,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
     @Query("SELECT l.id FROM Location l WHERE l.floor.id = ?1")
     Set<String> getLocationIdsByFloorId(String floor_id);
 
-    /**
-     * Inserts a new location on the given floor.
-     *
-     * @param location_id the location identifier
-     * @param name the location name
-     * @param position the location position
-     * @param floor_id the owning floor identifier
-     * @param area the location area
-     * @param type the location type
-     * @param updated_timestamp the update timestamp
-     * @return the number of rows inserted
-     */
-    @Modifying
-    @Transactional
-    @Query(value = "INSERT INTO location(id,name,position,floor_id, area, type, updated_timestamp ) VALUES(?1,?2,?3,?4,?5,?6,?7)", nativeQuery = true)
-    int addLocationByFloorId(String location_id, String name, String position, String floor_id, String area, String type, BigInteger updated_timestamp);
+    // addLocationByFloorId removed — replaced by find-or-create save() in LocationService.addLocationByFloorId
 
 
     /**
@@ -174,25 +159,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
 
     /****************************************************************************** new location changes ***************************************/
 
-    /**
-     * Inserts a location on the given floor, or updates its name, status, type, code, and timestamp on identifier conflict.
-     *
-     * @param id the location identifier
-     * @param name the location name
-     * @param position the location position
-     * @param area the location area
-     * @param floor_id the owning floor identifier
-     * @param status the location status
-     * @param type the location type
-     * @param code the location code
-     * @param updated_timestamp the update timestamp
-     * @return the number of rows affected
-     */
-    @Modifying
-    @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
-    @Query(value = "INSERT INTO location(id,name,position,area,floor_id, type, code,updated_timestamp ) VALUES(?1,?2,?3,?4,?5,?7,?8,?9) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, status=?6, type = EXCLUDED.type, code = EXCLUDED.code, updated_timestamp = EXCLUDED.updated_timestamp", nativeQuery = true)
-    int upsertLocationByFloorId(String id, String name, String position, String area, String floor_id, String status, String type, String code, BigInteger updated_timestamp);
+    // upsertLocationByFloorId removed — replaced by find-or-create save() in LocationService.upsertLocationByFloorId
 
     /**
      * Returns the locations belonging to the given VDMS.
@@ -323,12 +290,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param updated_timestamp the update timestamp
      * @return the number of rows affected
      */
-    //to be deleted after backend sync
-    @Modifying
-    @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
-    @Query(value = "INSERT INTO location(id,name,position,area,floor_id, type, updated_timestamp ) VALUES(?1,?2,?3,?4,?5, ?6, ?7 ) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, position = EXCLUDED.position, area = EXCLUDED.area, floor_id = EXCLUDED.floor_id, type = EXCLUDED.type, updated_timestamp = EXCLUDED.updated_timestamp", nativeQuery = true)
-    int upsertLocationByFloorIdBackendSync(String id, String name, String position, String area, String floor_id, String type, BigInteger updated_timestamp);
+    // upsertLocationByFloorIdBackendSync removed — replaced by find-or-create save() in LocationService.upsertLocationByFloorIdBackendSync
 
     /**
      * Returns the number of locations on the given floor matching the search key.
@@ -745,25 +707,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
     @Query("SELECT COUNT(l) FROM Location l WHERE l.status LIKE CONCAT('%', ?1, '%')")
     Integer getLocationsByStatusCountTs(String status);
 
-    /**
-     * Inserts a location, or updates its detail fields on identifier conflict.
-     *
-     * @param id the location identifier
-     * @param name the location name
-     * @param position the location position
-     * @param area the location area
-     * @param floor_id the owning floor identifier
-     * @param status the location status
-     * @param type the location type
-     * @param code the location code
-     * @param updated_timestamp the update timestamp
-     * @return the number of rows affected
-     */
-    @Modifying
-    @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
-    @Query(value = "INSERT INTO location(id,name,position,area,floor_id, type, code, updated_timestamp) VALUES(?1,?2,?3,?4,?5,?7,?8,?9) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, status=?6, type = EXCLUDED.type, code = EXCLUDED.code, area = EXCLUDED.area, position = EXCLUDED.position, updated_timestamp = EXCLUDED.updated_timestamp", nativeQuery = true)
-    int upsertlocationdetails(String id, String name, String position, String area, String floor_id, String status, String type, String code, BigInteger updated_timestamp);
+    // upsertlocationdetails removed — replaced by find-or-create save() in LocationService.upsertlocationdetails
 
 
     /**

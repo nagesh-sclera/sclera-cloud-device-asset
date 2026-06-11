@@ -47,7 +47,8 @@ import org.springframework.context.annotation.Configuration;
                 type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE,
                 classes = { io.sclera.Repository.AssetRepository.class,
                             io.sclera.Repository.DeviceIPAddressRepository.class,
-                            io.sclera.Repository.LocationRepository.class }))
+                            io.sclera.Repository.LocationRepository.class,
+                            io.sclera.Repository.FloorRepository.class }))
 public class JpaTestConfig {
     // Intentionally empty — all beans come from @ImportAutoConfiguration.
 }
