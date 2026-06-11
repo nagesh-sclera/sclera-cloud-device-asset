@@ -103,9 +103,13 @@ CREATE TABLE IF NOT EXISTS ai_call_log (
     technician_id VARCHAR(255) REFERENCES technician(id)
 );
 
--- ai_call_log_history: same reason as above
+-- ai_call_log_history: full column set required by AiCallLogHistoryRepository JPQL queries
 CREATE TABLE IF NOT EXISTS ai_call_log_history (
     id            VARCHAR(255) PRIMARY KEY,
+    created_at    BIGINT,
+    description   TEXT,
+    state         VARCHAR(255),
+    ai_call_log_id VARCHAR(255) REFERENCES ai_call_log(id),
     technician_id VARCHAR(255) REFERENCES technician(id)
 );
 
@@ -149,17 +153,19 @@ CREATE TABLE IF NOT EXISTS location (
 -- device: FK target for asset_device_mapping.device_id (and AssetDeviceMapping.device @ManyToOne)
 -- Only id is required for FK resolution; other columns added as nullable stubs.
 -- location_id added as FK to location table (needed for getUnlinkedLocationIds subquery).
+-- user_data_name added: referenced by AiCallLog native queries (getAllAiCallLog, getStatusInformation).
 CREATE TABLE IF NOT EXISTS device (
-    id            VARCHAR(255) PRIMARY KEY,
-    display_name  VARCHAR(255),
-    mac_address   VARCHAR(64),
-    type          VARCHAR(128),
-    ip_address    VARCHAR(64),
-    network_layer VARCHAR(64),
-    status        INTEGER,
-    onboard_status INTEGER,
-    vdms_id       VARCHAR(64)  REFERENCES vdms(id),
-    location_id   VARCHAR(255) REFERENCES location(id)
+    id              VARCHAR(255) PRIMARY KEY,
+    display_name    VARCHAR(255),
+    user_data_name  VARCHAR(255),
+    mac_address     VARCHAR(64),
+    type            VARCHAR(128),
+    ip_address      VARCHAR(64),
+    network_layer   VARCHAR(64),
+    status          INTEGER,
+    onboard_status  INTEGER,
+    vdms_id         VARCHAR(64)  REFERENCES vdms(id),
+    location_id     VARCHAR(255) REFERENCES location(id)
 );
 
 -- device_onboard_status: per-device onboarding progress (device is a @OneToOne -> device_id FK)
