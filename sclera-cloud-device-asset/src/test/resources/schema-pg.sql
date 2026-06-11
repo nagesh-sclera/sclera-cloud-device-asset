@@ -324,6 +324,77 @@ CREATE TABLE IF NOT EXISTS device_installed_apps (
     risk_status             INTEGER
 );
 
+-- conditions: alert conditions for sensors/instruments (ConditionsRepository)
+CREATE TABLE IF NOT EXISTS conditions (
+    id                                              VARCHAR(255) PRIMARY KEY,
+    name                                            VARCHAR(128),
+    value                                           VARCHAR(128),
+    second_value                                    VARCHAR(128),
+    alert_message                                   TEXT,
+    start_time                                      VARCHAR(64),
+    end_time                                        VARCHAR(64),
+    alert_condition                                 VARCHAR(64),
+    alert                                           BOOLEAN      DEFAULT false,
+    show_alert                                      BOOLEAN      DEFAULT false,
+    show_alert_message_as_value                     BOOLEAN      DEFAULT false,
+    schedule                                        INTEGER      DEFAULT 0,
+    schedule_conditions                             TEXT,
+    max_alert_count                                 INTEGER      DEFAULT 0,
+    alert_count                                     INTEGER      DEFAULT 0,
+    alert_count_enabled                             INTEGER      DEFAULT 0,
+    last_alerted_timestamp                          NUMERIC,
+    alert_time                                      INTEGER,
+    priority                                        VARCHAR(128),
+    last_alerted                                    BOOLEAN      DEFAULT false,
+    alert_count_time                                INTEGER,
+    enable_threshold_line_onchart                   INTEGER,
+    color_of_threshold_line_onchart                 VARCHAR(255),
+    daintree_device_id                              VARCHAR(255),
+    bacnet_object_bacnet_device_id                  VARCHAR(255),
+    bacnet_object_id                                VARCHAR(255),
+    lorawan_sensor_attributes_lorawan_sensor_id     VARCHAR(255),
+    lorawan_sensor_attributes_name                  VARCHAR(255),
+    snmp_device_id                                  VARCHAR(255),
+    disruptive_sensor_id                            VARCHAR(255),
+    my_devices_sensor_attributes_my_devices_sensor_id VARCHAR(255),
+    my_devices_sensor_attributes_name              VARCHAR(255),
+    monnit_sensor_id                                VARCHAR(255),
+    pelican_sensor_attributes_pelican_sensor_id     VARCHAR(255),
+    pelican_sensor_attributes_name                  VARCHAR(255),
+    knx_group_address                               VARCHAR(255),
+    knx_group_knx_device_address                    VARCHAR(255),
+    snmp_object_snmp_device_configuration_id        VARCHAR(255),
+    snmp_object_oid                                 VARCHAR(255),
+    measuring_instrument_id                         VARCHAR(255),
+    daintree_point_id                               VARCHAR(255),
+    alert_profile_id                                VARCHAR(255),
+    ecobee_sensor_attributes_ecobee_sensor_id       VARCHAR(255),
+    ecobee_sensor_attributes_name                   VARCHAR(255),
+    modbus_register_id                              VARCHAR(255)
+);
+
+-- device_conditions: device-level alert conditions (DeviceConditionsRepository)
+-- device_id FK -> device (device table already declared above)
+CREATE TABLE IF NOT EXISTS device_conditions (
+    id                  VARCHAR(255) PRIMARY KEY,
+    alert_condition     VARCHAR(64),
+    device_id           VARCHAR(255) REFERENCES device(id),
+    alert_profile_id    VARCHAR(128),
+    last_alerted_time   NUMERIC,
+    trigger_time        INTEGER,
+    priority            VARCHAR(128),
+    start_time          VARCHAR(64),
+    end_time            VARCHAR(64),
+    schedule            INTEGER      DEFAULT 0,
+    schedule_conditions TEXT,
+    max_alert_count     INTEGER      DEFAULT 0,
+    alert_count         INTEGER      DEFAULT 0,
+    alert_count_enabled INTEGER      DEFAULT 0,
+    alert_count_time    INTEGER,
+    last_alerted        BOOLEAN      DEFAULT false,
+    alert_message       TEXT
+);
+
 -- building: eagerly loaded via Asset -> vdms -> building when a full Asset entity is fetched
 CREATE TABLE IF NOT EXISTS building (
     id                 VARCHAR(255)  PRIMARY KEY,
