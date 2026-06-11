@@ -152,6 +152,12 @@ export const api = {
       method: 'POST', body: device,
     }),
 
+  // Persist a device's asset image (data URL) so it survives a reload — stored in asset_image_url.
+  setAssetImage: (deviceId, image, { docker = DEMO.docker, ...ctx } = {}) =>
+    request(asset(`/device/${encodeURIComponent(deviceId)}/setassetimage${qs(scope(ctx))}`), {
+      method: 'POST', body: { image: image || '' },
+    }),
+
   // Onboard / un-onboard a device (status 3 = onboarded, 0 = not onboarded).
   onboard: (deviceId, { docker = DEMO.docker, status = 3, ...ctx } = {}) =>
     request(asset(`/docker/${encodeURIComponent(docker)}/device/${encodeURIComponent(deviceId)}/onboard${qs({ ...scope(ctx), status })}`), {
@@ -161,6 +167,60 @@ export const api = {
   deleteDevices: (ids, { docker = DEMO.docker, ...ctx } = {}) =>
     request(asset(`/docker/${encodeURIComponent(docker)}/deletedevices${qs({ ...scope(ctx), assignee: 'all' })}`), {
       method: 'DELETE', body: ids,
+    }),
+
+  // ---- Import / Export / Multi-update (assets) — DeviceService endpoints ----
+  // Export: the real exportfiltereddevices (POST, streams .xlsx); fetch as blob and download.
+  exportAssets: async ({ docker = DEMO.docker, condition = 'all', ...ctx } = {}) => {
+    const url = asset(`/docker/${encodeURIComponent(docker)}/exportfiltereddevices${qs({ ...scope(ctx), condition, onboard_status: 123, template_name: 'simple_report', file_type: 'excel', email: '' })}`)
+    const res = await fetch(url, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`)
+    const blob = await res.blob()
+    const cd = res.headers.get('Content-Disposition') || ''
+    const m = cd.match(/filename="?([^"]+)"?/i)
+    const filename = (m && m[1]) || `assets_${ctx.vdmsId || DEMO.vdmsId}.xlsx`
+    const href = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = href
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(href)
+  },
+
+  // ---- Spreadsheet import wizard (real asset-mapper flow: upload -> stage -> saveAssets) ----
+  // Upload + stage a spreadsheet against a field mapping (multipart). Mirrors the real /upload.
+  uploadImport: async (file, fieldMapping, { vdmsId = DEMO.vdmsId } = {}) => {
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('fieldMapping', JSON.stringify(fieldMapping))
+    fd.append('vdms_id', vdmsId)
+    const res = await fetch(asset('/upload'), { method: 'POST', mode: 'cors', body: fd })
+    if (!res.ok) {
+      const t = await res.text().catch(() => '')
+      throw new Error(`Upload failed: HTTP ${res.status}${t ? ` — ${t.slice(0, 200)}` : ''}`)
+    }
+    return true
+  },
+
+  // Staged assets for the preview screen (img_16).
+  getImportParents: ({ pageNo = 1, pageSize = 200, importType = 'spreadsheet' } = {}) =>
+    request(asset(`/getSubSystemParentAssets${qs({ pageNo, pageSize, importType })}`)),
+
+  // Sclera asset fields available as mapping targets (img_14 right column).
+  getImportAssetFields: () => request(asset('/getAssetFields')),
+
+  // Commit the selected staged assets into real devices (img_17 saveAssets).
+  saveImportedAssets: (ids, { user = DEMO.user, vdmsId = DEMO.vdmsId, docker = DEMO.docker, importType = 'spreadsheet' } = {}) =>
+    request(asset(`/user/${encodeURIComponent(user)}/vdms/${encodeURIComponent(vdmsId)}/docker/${encodeURIComponent(docker)}/saveAssets${qs({ importType, assignee: 'all' })}`), {
+      method: 'POST', body: ids,
+    }),
+
+  // Multi-update: apply one set of field changes to many device ids. Returns {updated}.
+  multiUpdateAssets: (ids, changes, { docker = DEMO.docker, ...ctx } = {}) =>
+    request(asset(`/docker/${encodeURIComponent(docker)}/multiupdateassets${qs(scope(ctx))}`), {
+      method: 'POST', body: { ids, changes },
     }),
 
   // ---- Networks (gateways / dockers) ----

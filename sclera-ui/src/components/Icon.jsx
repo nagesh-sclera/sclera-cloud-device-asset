@@ -28,6 +28,7 @@ const paths = {
   import: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" {...P} /></>,
   sliders: <><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" {...P} /></>,
   filter: <><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" {...P} /></>,
+  'arrow-right': <><path d="M5 12h14M13 6l6 6-6 6" {...P} /></>,
 }
 
 export default function Icon({ name, size = 18, className = '', style }) {

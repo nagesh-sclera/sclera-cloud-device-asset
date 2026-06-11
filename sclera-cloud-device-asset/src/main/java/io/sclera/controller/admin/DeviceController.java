@@ -1007,6 +1007,15 @@ public class DeviceController {
     }
 
     /**
+     * Sets a device's asset image to the given value (data URL or hosted URL), persisting it so it
+     * survives a page reload. Body: { "image": "data:image/png;base64,..." }.
+     */
+    @RequestMapping(method = RequestMethod.POST, value = "/device/{device_id}/setassetimage")
+    public void setAssetImage(@PathVariable String device_id, @RequestBody java.util.Map<String, String> body) {
+        deviceService.setAssetImage(device_id, body != null ? body.get("image") : null);
+    }
+
+    /**
      * Deletes asset images for the given devices.
      *
      * @param username           owning user
@@ -1330,6 +1339,42 @@ public class DeviceController {
 
         } catch (Exception e) {
             log.error("exportFilteredDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Imports assets from an uploaded .xlsx (the same column layout produced by exportfiltereddevices),
+     * upserting by id. Returns {created, updated, failed, errors}.
+     */
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/importassets")
+    public java.util.Map<String, Object> importAssets(@RequestParam String username, @RequestParam String vdmsid,
+                                                      @PathVariable String dockername, @RequestParam("file") org.springframework.web.multipart.MultipartFile file) throws java.io.IOException {
+        log.info("importAssets username={} vdmsid={} dockername={} filename={}", username, vdmsid, dockername,
+                file != null ? file.getOriginalFilename() : null);
+        try {
+            return deviceService.importAssetsFromExcel(file, vdmsid, dockername);
+        } catch (Exception e) {
+            log.error("importAssets failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Applies one set of field changes to many assets at once. Body: {ids:[...], changes:{...}}.
+     */
+    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/multiupdateassets")
+    public java.util.Map<String, Object> multiUpdateAssets(@RequestParam String username, @RequestParam String vdmsid,
+                                                           @PathVariable String dockername, @RequestBody java.util.Map<String, Object> body) {
+        log.info("multiUpdateAssets username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            @SuppressWarnings("unchecked")
+            java.util.List<String> ids = (java.util.List<String>) body.get("ids");
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, Object> changes = (java.util.Map<String, Object>) body.get("changes");
+            return deviceService.multiUpdateAssets(ids, changes);
+        } catch (Exception e) {
+            log.error("multiUpdateAssets failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
             throw e;
         }
     }

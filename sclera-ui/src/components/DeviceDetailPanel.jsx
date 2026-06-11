@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { statusInfo } from '../config.js'
 import api from '../services/api.js'
+import { getLocalImage } from '../services/localImages.js'
 import { inspectionsFor, workOrdersFor, inventoryFor, alertsFor, documentsFor } from '../services/mock.js'
 
 const dash = (v) => (v === 0 ? '0' : v ? String(v) : '—')
@@ -39,9 +40,7 @@ const EDITABLE = [
   { key: 'ip_address', label: 'IP Address', type: 'text' },
   { key: 'mac_address', label: 'MAC Address', type: 'text' },
   { key: 'network_layer', label: 'Network Layer', type: 'text' },
-  { key: 'location', label: 'Location', type: 'text' },
-  { key: 'floor', label: 'Floor', type: 'text' },
-  { key: 'building', label: 'Building', type: 'text' },
+  // Building / Floor / Location are a cascade (rendered separately in EditForm) — device stores location_id.
   { key: 'latitude', label: 'Latitude', type: 'text' },
   { key: 'longitude', label: 'Longitude', type: 'text' },
   { key: 'description', label: 'Description', type: 'textarea' },
@@ -77,16 +76,28 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
   const [noteBusy, setNoteBusy] = useState(false)
   // networks (for moving the device between gateways during edit)
   const [networks, setNetworks] = useState([])
+  // Building -> Floor -> Location cascade options
+  const [buildings, setBuildings] = useState([])
+  const [floors, setFloors] = useState([])
+  const [locations, setLocations] = useState([])
   useEffect(() => {
     api.listNetworks({ vdmsId: ctx.vdmsId }).then((l) => setNetworks((Array.isArray(l) ? l : []).map((n) => n.name).filter(Boolean))).catch(() => {})
+    api.getBuildings(ctx).then((b) => setBuildings(Array.isArray(b) ? b : [])).catch(() => {})
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!deviceId) return
     let alive = true
     setLoading(true); setError(null); setSub('Info'); setEditing(false); setSensors(null); setNotes(null)
+    setFloors([]); setLocations([])
     api.getDevice(deviceId, ctx)
-      .then((d) => { if (alive) { setDevice(d); setForm(toForm(d)) } })
+      .then((d) => {
+        if (!alive) return
+        setDevice(d); setForm(toForm(d))
+        // Pre-load the cascade so Building/Floor/Location show selected when editing.
+        if (d.building_id) api.getFloorsByBuilding(d.building_id, ctx).then((f) => alive && setFloors(Array.isArray(f) ? f : [])).catch(() => {})
+        if (d.floor_id) api.getLocationsByFloor(d.floor_id, ctx).then((l) => alive && setLocations(Array.isArray(l) ? l : [])).catch(() => {})
+      })
       .catch((e) => { if (alive) setError(e) })
       .finally(() => { if (alive) setLoading(false) })
     return () => { alive = false }
@@ -100,7 +111,16 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
   }, [sub]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadSensors = () => api.listSensors(deviceId, ctx).then((s) => setSensors(Array.isArray(s) ? s : [])).catch(() => setSensors([]))
-  useEffect(() => { if (sub === 'Sensors' && sensors == null) loadSensors() }, [sub]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Eager-load sensors on open so the Sensors count/badge is correct without first opening the tab.
+  // Guarded so a slow fetch for a previous asset can't overwrite the newly-opened one's sensors.
+  useEffect(() => {
+    if (!deviceId) return
+    let alive = true
+    api.listSensors(deviceId, ctx)
+      .then((s) => { if (alive) setSensors(Array.isArray(s) ? s : []) })
+      .catch(() => { if (alive) setSensors([]) })
+    return () => { alive = false }
+  }, [deviceId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadNotes = () => api.listNotes(deviceId, ctx).then((n) => setNotes(Array.isArray(n) ? n : [])).catch(() => setNotes([]))
   useEffect(() => { if (sub === 'Notes' && notes == null) loadNotes() }, [sub]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -114,6 +134,9 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
   const inventory = useMemo(() => (device ? inventoryFor(device) : null), [device])
   const alerts = useMemo(() => (device ? alertsFor(device) : []), [device])
   const documents = useMemo(() => (device ? documentsFor(device) : []), [device])
+  const bldOptions = useMemo(() => buildings.map((b) => ({ id: b.id || b.building_id, name: b.name })), [buildings])
+  const floorOptions = useMemo(() => floors.map((f) => ({ id: f.id || f.floor_id, name: f.name || f.floor_name || f.id })), [floors])
+  const locOptions = useMemo(() => locations.map((l) => ({ id: l.id || l.location_id, name: l.name || l.location_name || l.id })), [locations])
 
   function toForm(d) {
     const f = {
@@ -131,10 +154,27 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
     })
     FLAGS.forEach((fl) => { f[fl.key] = fl.bool ? Boolean(d[fl.key]) : d[fl.key] === 1 })
     f.docker_name = d.docker_name || ''
+    f.building_id = d.building_id || ''
+    f.floor_id = d.floor_id || ''
+    f.location_id = d.location_id || ''
     return f
   }
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target?.value ?? e }))
   const setFlag = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.checked }))
+
+  // Building -> Floor -> Location cascade handlers.
+  const onBuilding = (e) => {
+    const building_id = e.target.value
+    setForm((f) => ({ ...f, building_id, floor_id: '', location_id: '' }))
+    setFloors([]); setLocations([])
+    if (building_id) api.getFloorsByBuilding(building_id, ctx).then((fl) => setFloors(Array.isArray(fl) ? fl : [])).catch(() => {})
+  }
+  const onFloor = (e) => {
+    const floor_id = e.target.value
+    setForm((f) => ({ ...f, floor_id, location_id: '' }))
+    setLocations([])
+    if (floor_id) api.getLocationsByFloor(floor_id, ctx).then((l) => setLocations(Array.isArray(l) ? l : [])).catch(() => {})
+  }
 
   const save = async () => {
     setBusy(true)
@@ -150,9 +190,11 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
       })
       payload.cost_value = form.cost_value === '' ? null : Number(form.cost_value)
       payload.cost_unit = form.cost_unit
+      payload.location_id = form.location_id || null // Building/Floor are derived from the location
       FLAGS.forEach((fl) => { payload[fl.key] = fl.bool ? Boolean(form[fl.key]) : (form[fl.key] ? 1 : 0) })
 
-      await api.editDevice(deviceId, payload, ctx)
+      // Edit targets the device's OWN network (backend WHERE matches docker_name).
+      await api.editDevice(deviceId, payload, { ...ctx, docker: device?.docker_name || ctx.docker })
       // network change is a separate call (edit doesn't move the device)
       if (form.docker_name && form.docker_name !== device.docker_name) {
         await api.moveDeviceNetwork(deviceId, form.docker_name, { vdmsId: ctx.vdmsId, user: ctx.user })
@@ -231,7 +273,7 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
       <aside className="detail-panel" role="dialog" aria-label="Asset details">
         <div className="dp-head">
           <div className="dp-title">
-            <div className="dp-avatar"><Icon name="device" size={18} /></div>
+            <div className="dp-avatar">{(device?.asset_image_url || getLocalImage(deviceId)) ? <img src={device?.asset_image_url || getLocalImage(deviceId)} alt="" className="avatar-img" /> : <Icon name="device" size={18} />}</div>
             <span className="dp-name" title={name}>{loading ? 'Loading…' : name}</span>
           </div>
           <div className="dp-head-actions">
@@ -269,7 +311,7 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
           ) : error ? (
             <div className="empty-state"><Icon name="info" size={24} /><p>Couldn't load asset</p><span className="muted">{error.message}</span></div>
           ) : sub === 'Info' ? (
-            editing ? <EditForm form={form} set={set} setFlag={setFlag} networks={networks} /> : <InfoView device={device} name={name} st={st} onboarded={onboarded} counts={counts} />
+            editing ? <EditForm form={form} set={set} setFlag={setFlag} networks={networks} bldOptions={bldOptions} floorOptions={floorOptions} locOptions={locOptions} onBuilding={onBuilding} onFloor={onFloor} /> : <InfoView device={device} name={name} st={st} onboarded={onboarded} counts={counts} />
           ) : sub === 'Sensors' ? (
             <SensorsView sensors={sensors} busy={sensorBusy} onAdd={addSensor} onRemove={removeSensor} onRefresh={loadSensors} />
           ) : sub === 'Notes' ? (
@@ -366,7 +408,7 @@ function InfoView({ device, name, st, onboarded, counts }) {
   )
 }
 
-function EditForm({ form, set, setFlag, networks = [] }) {
+function EditForm({ form, set, setFlag, networks = [], bldOptions = [], floorOptions = [], locOptions = [], onBuilding, onFloor }) {
   const netOptions = [...new Set([form.docker_name, ...networks].filter(Boolean))]
   return (
     <div className="dp-editform">
@@ -375,6 +417,27 @@ function EditForm({ form, set, setFlag, networks = [] }) {
         <select value={form.docker_name || ''} onChange={set('docker_name')}>
           {netOptions.length === 0 && <option value="">—</option>}
           {netOptions.map((n) => <option key={n} value={n}>{n}</option>)}
+        </select>
+      </div>
+      <div className="dp-editrow">
+        <label>Building</label>
+        <select value={form.building_id || ''} onChange={onBuilding}>
+          <option value="">Select...</option>
+          {bldOptions.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+        </select>
+      </div>
+      <div className="dp-editrow">
+        <label>Floor</label>
+        <select value={form.floor_id || ''} onChange={onFloor} disabled={!form.building_id}>
+          <option value="">{form.building_id ? 'Select...' : 'Select a building first'}</option>
+          {floorOptions.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+        </select>
+      </div>
+      <div className="dp-editrow">
+        <label>Location</label>
+        <select value={form.location_id || ''} onChange={set('location_id')} disabled={!form.floor_id}>
+          <option value="">{form.floor_id ? 'Select...' : 'Select a floor first'}</option>
+          {locOptions.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
         </select>
       </div>
       {EDITABLE.map((f) => (

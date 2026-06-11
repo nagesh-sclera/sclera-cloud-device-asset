@@ -53,13 +53,24 @@ services:
       SPRING_FLYWAY_ENABLED: "false"
       MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
       MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
+      # Expose the Micrometer/Prometheus scrape endpoint at /actuator/prometheus for Prometheus.
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
+      MANAGEMENT_METRICS_TAGS_APPLICATION: "sclera-cloud-device-asset"
       JAVA_TOOL_OPTIONS: "-javaagent:/otel/agent.jar"
       OTEL_SERVICE_NAME: "sclera-cloud-device-asset"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
       OTEL_TRACES_EXPORTER: "otlp"
-      OTEL_METRICS_EXPORTER: "none"
+      # Export JVM/HTTP/DB metrics to the collector (which re-exposes them in Prometheus format on :9464).
+      OTEL_METRICS_EXPORTER: "otlp"
       OTEL_LOGS_EXPORTER: "none"
       OTEL_PROPAGATORS: "tracecontext,baggage,b3"
+      # Capture "everything that comes in": request/response headers + full (un-sanitized) SQL on spans.
+      # Request/response BODIES are added by the app's PayloadTracingFilter (io.sclera.config).
+      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS: "content-type,accept,user-agent,host,authorization,x-forwarded-for,referer,x-request-id"
+      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS: "content-type,content-length,content-disposition"
+      OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_REQUEST_HEADERS: "content-type,accept"
+      OTEL_INSTRUMENTATION_HTTP_CLIENT_CAPTURE_RESPONSE_HEADERS: "content-type,content-length"
+      OTEL_INSTRUMENTATION_COMMON_DB_STATEMENT_SANITIZER_ENABLED: "false"
     volumes:
       - ./infra/otel/opentelemetry-javaagent.jar:/otel/agent.jar:ro
     ports:
@@ -613,6 +624,70 @@ services:
       - sclera-net
     restart: on-failure
 
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: sclera-prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=7d"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - sclera-net
+    restart: on-failure
+    depends_on:
+      - otel-collector
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: sclera-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3002:3000"
+    networks:
+      - sclera-net
+    restart: on-failure
+    depends_on:
+      - prometheus
+      - loki
+
+  loki:
+    image: grafana/loki:3.1.1
+    container_name: sclera-loki
+    command: ["-config.file=/etc/loki/config.yaml"]
+    volumes:
+      - ./infra/loki/loki-config.yaml:/etc/loki/config.yaml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - sclera-net
+    restart: on-failure
+
+  promtail:
+    image: grafana/promtail:3.1.1
+    container_name: sclera-promtail
+    command: ["-config.file=/etc/promtail/config.yaml"]
+    volumes:
+      - ./infra/promtail/promtail-config.yaml:/etc/promtail/config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - sclera-net
+    restart: on-failure
+    depends_on:
+      - loki
+
   httpbin:
     image: kennethreitz/httpbin:latest
     container_name: sclera-httpbin
@@ -639,3 +714,5 @@ networks:
 volumes:
   pgdata:
   scheduler-data:
+  grafana-data:
+  loki-data:

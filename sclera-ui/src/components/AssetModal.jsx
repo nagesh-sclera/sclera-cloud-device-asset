@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext.jsx'
 import { useApp } from '../context/AppContext.jsx'
 import { DEMO } from '../config.js'
 import api from '../services/api.js'
+import { setLocalImage } from '../services/localImages.js'
 
 const slug = (s) => (s || 'asset').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 24)
 // Unique MAC so the backend's mac-based dedup treats each new asset as an insert.
@@ -17,8 +18,8 @@ const TABS = ['IP Device', 'Power Sources', 'Other Device']
 
 const empty = {
   name: '', model: '', type: 'Generic', category: 'Generic', serial_number: '', cost_value: '',
-  cost_unit: 'USD', location_id: '', floor: '', networkName: '', vendor: '', asset_group: 'Generic',
-  sub_category: 'Generic', warranty: '', building: '', assignee_email: '', description: '',
+  cost_unit: 'USD', location_id: '', floor_id: '', building_id: '', networkName: '', vendor: '', asset_group: 'Generic',
+  sub_category: 'Generic', warranty: '', assignee_email: '', description: '',
 }
 
 // Maps a backend DeviceDTO into the modal's form shape.
@@ -34,14 +35,15 @@ function fromDevice(d) {
     cost_value: d.cost_value ?? '',
     cost_unit: d.cost_unit || 'USD',
     location_id: d.location_id || '',
-    floor: d.floor || '',
+    floor_id: d.floor_id || '',
+    building_id: d.building_id || '',
     vendor: d.user_data_vendor || d.vendor || '',
     asset_group: d.asset_group || 'Generic',
     sub_category: d.sub_category || 'Generic',
     warranty: d.warranty || '',
-    building: d.building || '',
     assignee_email: d.assignee_email || d.assigned_user_email || '',
     description: d.description || '',
+    networkName: d.docker_name || '',
   }
 }
 
@@ -54,7 +56,9 @@ export default function AssetModal({ open, onClose, onSaved, editing }) {
   const [saving, setSaving] = useState(false)
   const [images, setImages] = useState([])
   const [buildings, setBuildings] = useState([])
-  const [locations, setLocations] = useState([])
+  const [floors, setFloors] = useState([])     // floors for the selected building (cascade)
+  const [locations, setLocations] = useState([]) // locations for the selected floor (cascade)
+  const [networks, setNetworks] = useState([]) // real gateways for the Networks dropdown
 
   const isEdit = Boolean(editing)
 
@@ -65,10 +69,28 @@ export default function AssetModal({ open, onClose, onSaved, editing }) {
     setImages(editing?.asset_image_url ? [editing.asset_image_url] : [])
     // best-effort dropdown loads — never block the modal
     api.getBuildings(ctx).then((b) => setBuildings(Array.isArray(b) ? b : [])).catch(() => {})
-    api.getLocations(ctx).then((l) => setLocations(Array.isArray(l) ? l : [])).catch(() => {})
+    api.listNetworks(ctx).then((l) => setNetworks((Array.isArray(l) ? l : []).map((n) => n.name).filter(Boolean))).catch(() => {})
+    // Cascade: pre-load floors/locations for the editing device's building/floor so they show selected.
+    setFloors([]); setLocations([])
+    if (editing?.building_id) api.getFloorsByBuilding(editing.building_id, ctx).then((f) => setFloors(Array.isArray(f) ? f : [])).catch(() => {})
+    if (editing?.floor_id) api.getLocationsByFloor(editing.floor_id, ctx).then((l) => setLocations(Array.isArray(l) ? l : [])).catch(() => {})
   }, [open, editing]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target?.value ?? e }))
+
+  // Building -> Floor -> Location cascade: picking a parent resets and reloads its children.
+  const onBuilding = (e) => {
+    const building_id = e.target.value
+    setForm((f) => ({ ...f, building_id, floor_id: '', location_id: '' }))
+    setFloors([]); setLocations([])
+    if (building_id) api.getFloorsByBuilding(building_id, ctx).then((fl) => setFloors(Array.isArray(fl) ? fl : [])).catch(() => {})
+  }
+  const onFloor = (e) => {
+    const floor_id = e.target.value
+    setForm((f) => ({ ...f, floor_id, location_id: '' }))
+    setLocations([])
+    if (floor_id) api.getLocationsByFloor(floor_id, ctx).then((l) => setLocations(Array.isArray(l) ? l : [])).catch(() => {})
+  }
 
   const validate = () => {
     const er = {}
@@ -111,7 +133,7 @@ export default function AssetModal({ open, onClose, onSaved, editing }) {
       id: `${ctx.vdmsId}_${ctx.docker}_${slug(name)}_${Date.now()}`,
       vdms_id: ctx.vdmsId,
       docker_vdms_id: ctx.vdmsId,
-      docker_name: ctx.docker,
+      docker_name: form.networkName || ctx.docker,
       mac_address: randomMac(),
       virtual_device_type: 0,
       asset_match_status: 0,
@@ -124,11 +146,24 @@ export default function AssetModal({ open, onClose, onSaved, editing }) {
     setSaving(true)
     try {
       const payload = buildPayload()
+      const image = images[0] || ''
       if (isEdit) {
-        await api.editDevice(editing.id, payload, ctx)
+        // Edit must target the device's OWN network — the backend WHERE matches on docker_name,
+        // so using the default docker silently updates nothing for assets in another network.
+        await api.editDevice(editing.id, payload, { ...ctx, docker: editing.docker_name || ctx.docker })
+        // Network (gateway) change is a separate move call — editDevice doesn't relocate the device.
+        if (form.networkName && form.networkName !== editing.docker_name) {
+          await api.moveDeviceNetwork(editing.id, form.networkName, { vdmsId: ctx.vdmsId, user: ctx.user })
+        }
+        // Persist the image to the DB (asset_image_url) if it changed.
+        if (image !== (editing.asset_image_url || '')) await api.setAssetImage(editing.id, image, ctx).catch(() => {})
         toast.success('Asset updated')
       } else {
         await api.upsertDevices([payload], ctx)
+        // The insert path doesn't persist location_id — apply it via editDevice once the row exists.
+        if (form.location_id) await api.editDevice(payload.id, payload, { ...ctx, docker: payload.docker_name }).catch(() => {})
+        // Persist the image to the DB so it survives a reload; also stash it locally for instant display.
+        if (image) { await api.setAssetImage(payload.id, image, { ...ctx, docker: payload.docker_name }).catch(() => {}); setLocalImage(payload.id, image) }
         toast.success('Asset created')
       }
       onSaved?.()
@@ -141,8 +176,13 @@ export default function AssetModal({ open, onClose, onSaved, editing }) {
   }
 
   const onPickImages = (e) => {
-    const files = Array.from(e.target.files || [])
-    setImages((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))])
+    const file = (e.target.files || [])[0]
+    if (!file) return
+    // One image per asset (shown as the avatar). Read as a data URL so it can be persisted
+    // to the backend (asset_image_url) and survive a reload.
+    const reader = new FileReader()
+    reader.onload = () => setImages([reader.result])
+    reader.readAsDataURL(file)
   }
 
   const locOptions = useMemo(
@@ -152,6 +192,10 @@ export default function AssetModal({ open, onClose, onSaved, editing }) {
   const bldOptions = useMemo(
     () => buildings.map((b) => ({ id: b.id || b.building_id, name: b.name })),
     [buildings]
+  )
+  const floorOptions = useMemo(
+    () => floors.map((f) => ({ id: f.id || f.floor_id, name: f.name || f.floor_name || f.id })),
+    [floors]
   )
 
   if (!open) return null
@@ -188,8 +232,7 @@ export default function AssetModal({ open, onClose, onSaved, editing }) {
             <Field label="Networks">
               <select value={form.networkName} onChange={set('networkName')}>
                 <option value="">Select...</option>
-                <option value="default">default</option>
-                <option value="proxy">Proxy</option>
+                {[...new Set([form.networkName, ...networks].filter(Boolean))].map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             </Field>
 
@@ -221,20 +264,25 @@ export default function AssetModal({ open, onClose, onSaved, editing }) {
             <Field label="Serial Number"><input value={form.serial_number} onChange={set('serial_number')} placeholder="Serial Number" /></Field>
             <Field label="Warranty"><input value={form.warranty} onChange={set('warranty')} placeholder="e.g. 2026-12-31" /></Field>
 
-            <Field label="Location">
-              <select value={form.location_id} onChange={set('location_id')}>
+            <Field label="Building">
+              <select value={form.building_id} onChange={onBuilding}>
                 <option value="">Select...</option>
-                {locOptions.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                {bldOptions.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
             </Field>
-            <Field label="Building">
-              <select value={form.building} onChange={set('building')}>
-                <option value="">Select...</option>
-                {bldOptions.map((b) => <option key={b.id} value={b.name}>{b.name}</option>)}
+            <Field label="Floor">
+              <select value={form.floor_id} onChange={onFloor} disabled={!form.building_id}>
+                <option value="">{form.building_id ? 'Select...' : 'Select a building first'}</option>
+                {floorOptions.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
             </Field>
 
-            <Field label="Floor"><input value={form.floor} onChange={set('floor')} placeholder="Floor" /></Field>
+            <Field label="Location">
+              <select value={form.location_id} onChange={set('location_id')} disabled={!form.floor_id}>
+                <option value="">{form.floor_id ? 'Select...' : 'Select a floor first'}</option>
+                {locOptions.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+              </select>
+            </Field>
             <Field label="Assignee">
               <input value={form.assignee_email} onChange={set('assignee_email')} placeholder="Select User" />
             </Field>

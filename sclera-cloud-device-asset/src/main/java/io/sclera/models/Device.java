@@ -437,7 +437,7 @@ import java.util.Set;
                 + " LEFT JOIN floor f ON l.floor_id = f.id"
                 + " LEFT JOIN building b ON f.building_id = b.id"
                 + " WHERE (?1 = 'null' or d.docker_vdms_id = ?1) AND (?2 = 'all' or d.docker_name = ?2) "
-                + " AND (?3 = 'null' or CONCAT_WS('',d.ip_address,d.display_name ,d.user_data_name, d.vendor, d.user_data_vendor, d.mac_address, l.name) LIKE CONCAT('%',?3,'%'))"
+                + " AND (?3 = 'null' or LOWER(CONCAT_WS('',d.ip_address,d.display_name ,d.user_data_name, d.vendor, d.user_data_vendor, d.mac_address, l.name)) LIKE LOWER(CONCAT('%',?3,'%')))"
                 + " AND (?4 IS NULL or CASE WHEN ?4 = 123 THEN (d.virtual_device_type IS NOT NULL AND (d.virtual_device_type!= 0 AND d.virtual_device_type!= 1)) ELSE NULL END)"
                 + " AND (?5 IS NULL or ?5 = d.status) AND ( ?6 = 123 or CASE WHEN ?6=1 THEN ?6 = d.monitor ELSE d.monitor IS NULL  or ?6 = d.monitor END)"
                 + " AND (?10 IS NULL or CASE WHEN ?10 = 0 THEN (d.assigned_user_email IS NULL or d.assigned_user_email = 'null') ELSE ( d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null') END) "
@@ -3084,6 +3084,9 @@ public class Device {
     private Set<Notes> notes = new HashSet<>();
 
     // DB-per-service: product_details entity removed; product_id scalar FK kept on device table
+    // so ddl-auto recreates the device.product_id column the native queries SELECT (d.product_id).
+    @Column
+    private String product_id;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "device")
     private Set<RemoteAccessSession> remote_access_session = new HashSet<>();

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Icon from '../components/Icon.jsx'
 import { RowSkeleton, Spinner } from '../components/Skeleton.jsx'
 import ContextMenu from '../components/ContextMenu.jsx'
@@ -6,11 +6,14 @@ import AssetModal from '../components/AssetModal.jsx'
 import DeviceDetailPanel from '../components/DeviceDetailPanel.jsx'
 import LogsDrawer from '../components/LogsDrawer.jsx'
 import FilterModal from '../components/FilterModal.jsx'
+import MultiUpdateModal from '../components/MultiUpdateModal.jsx'
+import AssetImportModal from '../components/AssetImportModal.jsx'
 import { useDebounce } from '../hooks/useApi.js'
 import { useApp } from '../context/AppContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
-import { statusInfo } from '../config.js'
+import { statusInfo, DEMO } from '../config.js'
 import api from '../services/api.js'
+import { getLocalImage } from '../services/localImages.js'
 
 // Client-side refinement for facets the backend filter API doesn't cover
 // (features / onboarded-detail flags / source) — applied on top of the real
@@ -41,6 +44,9 @@ const TABS = [
   { key: 'unmonitored', label: 'Unmonitored', countKey: 'unmonitor_device_count' },
   { key: 'online', label: 'Online', countKey: 'online_device_count' },
   { key: 'offline', label: 'Offline', countKey: 'offline_device_count' },
+  // Onboarded / Not Onboarded are client-side refinements on onboard_status (counts come from getdevicecount).
+  { key: 'onboarded', label: 'Onboarded', countKey: 'onboarded_device_count', onboard: 'onboarded' },
+  { key: 'notonboarded', label: 'Not Onboarded', countKey: 'notonboarded_device_count', onboard: 'notonboarded' },
 ]
 const PAGE_SIZE = 12
 
@@ -64,6 +70,12 @@ export default function AssetPage({ search, onSearch }) {
   const [network, setNetwork] = useState('all') // selected gateway/network (docker)
   const [networks, setNetworks] = useState(['all'])
   const [counts, setCounts] = useState({})
+  const [onboardFilter, setOnboardFilter] = useState('all') // client-side onboard tab: all | onboarded | notonboarded
+  const [selected, setSelected] = useState(() => new Set()) // checked asset ids for multi-update
+  const [mu, setMu] = useState(false)        // multi-update modal open
+  const [muBusy, setMuBusy] = useState(false)
+  const [importFile, setImportFile] = useState(null) // file picked for the import wizard
+  const fileRef = useRef(null)
   const debounced = useDebounce(search, 400)
   const reqId = useRef(0)
 
@@ -126,6 +138,14 @@ export default function AssetPage({ search, onSearch }) {
 
   useEffect(() => { load() }, [load])
   useEffect(() => { setPage(1) }, [filter, debounced, adv, network])
+  // Clear the multi-update selection whenever the visible row set changes.
+  useEffect(() => { setSelected(new Set()) }, [filter, debounced, adv, network, page, onboardFilter])
+
+  // Onboarded / Not Onboarded are client-side refinements (the parent-list endpoint has no onboard condition).
+  const displayRows = useMemo(
+    () => rows.filter((d) => onboardFilter === 'all' || (onboardFilter === 'onboarded' ? d.onboard_status === 3 : d.onboard_status !== 3)),
+    [rows, onboardFilter]
+  )
 
   const remove = async (device) => {
     if (!confirm(`Delete asset "${device.user_data_name || device.display_name || device.id}"?`)) return
@@ -138,13 +158,66 @@ export default function AssetPage({ search, onSearch }) {
     finally { setBusyId(null) }
   }
 
+  // ---- selection (multi-update) ----
+  const toggleSelect = (id) => setSelected((s) => {
+    const n = new Set(s)
+    n.has(id) ? n.delete(id) : n.add(id)
+    return n
+  })
+  const allSelected = displayRows.length > 0 && displayRows.every((d) => selected.has(d.id))
+  const toggleSelectAll = () => setSelected((s) => {
+    const n = new Set(s)
+    if (displayRows.every((d) => n.has(d.id))) displayRows.forEach((d) => n.delete(d.id))
+    else displayRows.forEach((d) => n.add(d.id))
+    return n
+  })
+  const clearSelection = () => setSelected(new Set())
+
+  const openMultiUpdate = () => {
+    if (selected.size === 0) { toast.error('Select one or more assets first (checkboxes)'); return }
+    setMu(true)
+  }
+
+  const doMultiUpdate = async (changes) => {
+    const ids = [...selected]
+    setMuBusy(true)
+    try {
+      const res = await api.multiUpdateAssets(ids, changes, { ...ctx, docker: network })
+      const n = res?.updated ?? ids.length
+      toast.success(`Updated ${n} asset${n === 1 ? '' : 's'}`)
+      setMu(false); clearSelection(); load()
+    } catch (e) { toast.error(`Multi update failed: ${e.message}`) }
+    finally { setMuBusy(false) }
+  }
+
+  // ---- export / import ----
+  const doExport = async () => {
+    try { await api.exportAssets({ ...ctx, docker: network, condition: filter }); toast.success('Export downloaded') }
+    catch (e) { toast.error(`Export failed: ${e.message}`) }
+  }
+
+  // Picking a file opens the two-step wizard (preview -> field match); the actual
+  // POST happens on confirm, against the same importassets endpoint.
+  const onImportFile = (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-importing the same filename
+    if (file) setImportFile(file)
+  }
+
+  // Called by the wizard after /saveAssets succeeds — `saved` is the committed count.
+  const doImportConfirm = async (saved) => {
+    toast.success(`Import done — ${saved} asset${saved === 1 ? '' : 's'} saved`)
+    setImportFile(null)
+    load()
+  }
+
   const pageMenu = [
     { label: 'Settings', icon: 'settings' },
     { label: 'Add Asset', icon: 'plus', onClick: () => setModal({ open: true, editing: null }) },
-    { label: 'Multi Update', icon: 'sliders' },
+    { label: 'Multi Update', icon: 'sliders', onClick: openMultiUpdate },
     { divider: true },
-    { label: 'Import', icon: 'import' },
-    { label: 'Export', icon: 'upload' },
+    { label: 'Import', icon: 'import', onClick: () => fileRef.current?.click() },
+    { label: 'Export', icon: 'upload', onClick: doExport },
   ]
 
   return (
@@ -162,8 +235,10 @@ export default function AssetPage({ search, onSearch }) {
         <div className="filter-tabs">
           {TABS.map((t) => {
             const c = counts[t.countKey]
+            const active = t.onboard ? onboardFilter === t.onboard : (filter === t.key && onboardFilter === 'all')
+            const onTab = () => { if (t.onboard) { setFilter('all'); setOnboardFilter(t.onboard) } else { setFilter(t.key); setOnboardFilter('all') } }
             return (
-              <button key={t.key} className={`tab ${filter === t.key ? 'active' : ''}`} onClick={() => setFilter(t.key)}>
+              <button key={t.key} className={`tab ${active ? 'active' : ''}`} onClick={onTab}>
                 {t.label}{c != null && <span className="tab-count">{c}</span>}
               </button>
             )
@@ -171,10 +246,15 @@ export default function AssetPage({ search, onSearch }) {
         </div>
         <div className="asset-actions">
           <button className="btn btn-primary sm" onClick={() => setModal({ open: true, editing: null })}><Icon name="plus" size={15} /> Add Asset</button>
+          <button className="btn btn-ghost sm" onClick={() => fileRef.current?.click()} title="Import assets from .xlsx">
+            <Icon name="import" size={15} /> Import
+          </button>
+          <button className="btn btn-ghost sm" onClick={doExport} title="Export assets to .xlsx"><Icon name="upload" size={15} /> Export</button>
           <button className="btn btn-ghost sm" onClick={() => setShowLogs(true)} title="Activity logs"><Icon name="list" size={15} /> Logs</button>
           <button className="icon-btn" onClick={() => load()} title="Refresh"><Icon name="refresh" size={16} /></button>
           <button className={`icon-btn ${adv ? 'active' : ''}`} onClick={() => setShowFilter(true)} title="Filter"><Icon name="filter" size={16} /></button>
           <button className="icon-btn" onClick={(e) => setCtxMenu({ x: e.clientX, y: e.clientY })} title="More"><Icon name="more" size={16} /></button>
+          <input ref={fileRef} type="file" accept=".xlsx" hidden onChange={onImportFile} />
         </div>
       </div>
 
@@ -198,20 +278,35 @@ export default function AssetPage({ search, onSearch }) {
           <span className="muted">{error.message}</span>
           <button className="btn btn-primary sm" onClick={() => load()}>Retry</button>
         </div>
-      ) : rows.length === 0 ? (
+      ) : displayRows.length === 0 ? (
         <div className="empty-state">
-          <Icon name="device" size={28} /><p>No assets yet</p>
+          <Icon name="device" size={28} /><p>{rows.length > 0 ? 'No assets match this filter' : 'No assets yet'}</p>
           <span className="muted">Create one to see it persist through the real gateway.</span>
           <button className="btn btn-primary sm" onClick={() => setModal({ open: true, editing: null })}><Icon name="plus" size={15} /> Add Asset</button>
         </div>
       ) : (
         <div className="asset-list">
-          {rows.map((d) => {
+          <div className="selection-bar">
+            <label className="asset-check" onClick={(e) => e.stopPropagation()} title="Select all on this page">
+              <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} />
+            </label>
+            {selected.size > 0 ? (
+              <>
+                <span className="sel-count">{selected.size} selected</span>
+                <button className="btn btn-primary sm" onClick={openMultiUpdate}><Icon name="sliders" size={14} /> Multi Update</button>
+                <button className="btn btn-ghost sm" onClick={clearSelection}>Clear</button>
+              </>
+            ) : <span className="muted">Select assets to bulk-edit (Multi Update)</span>}
+          </div>
+          {displayRows.map((d) => {
             const st = statusInfo(d)
             const name = d.user_data_name || d.display_name || d.name || d.id
             return (
-              <div className={`asset-row clickable ${detailId === d.id ? 'selected' : ''}`} key={d.id} onClick={() => setDetailId(d.id)}>
-                <div className="asset-avatar"><Icon name="device" size={20} /></div>
+              <div className={`asset-row clickable ${detailId === d.id ? 'selected' : ''} ${selected.has(d.id) ? 'checked' : ''}`} key={d.id} onClick={() => setDetailId(d.id)}>
+                <label className="asset-check" onClick={(e) => e.stopPropagation()}>
+                  <input type="checkbox" checked={selected.has(d.id)} onChange={() => toggleSelect(d.id)} />
+                </label>
+                <div className="asset-avatar">{(d.asset_image_url || getLocalImage(d.id)) ? <img src={d.asset_image_url || getLocalImage(d.id)} alt="" className="avatar-img" /> : <Icon name="device" size={20} />}</div>
                 <div className="asset-main">
                   <div className="asset-name" title={name}>{name}</div>
                   <div className="asset-sub">
@@ -282,6 +377,21 @@ export default function AssetPage({ search, onSearch }) {
           onApply={(f) => { setAdv(f); setShowFilter(false) }}
         />
       )}
+
+      <MultiUpdateModal
+        open={mu}
+        count={selected.size}
+        busy={muBusy}
+        onClose={() => setMu(false)}
+        onApply={doMultiUpdate}
+      />
+
+      <AssetImportModal
+        open={!!importFile}
+        file={importFile}
+        onClose={() => setImportFile(null)}
+        onConfirm={doImportConfirm}
+      />
     </div>
   )
 }

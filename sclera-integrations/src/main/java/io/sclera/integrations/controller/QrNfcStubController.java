@@ -17,7 +17,16 @@ import java.util.List;
 @RestController
 public class QrNfcStubController {
 
-    @RequestMapping({ "/qrCode/**", "/clientQrCode/**", "/nfc/**", "/clientNfc/**" })
+    // Catch-all for endpoints the skeleton controllers don't implement. Spring
+    // routes a specific @GetMapping (e.g. /snmp/getDeviceSnmpObjects) to its real
+    // controller; only genuinely-missing methods fall through to this wildcard,
+    // so existing behaviour is unchanged — this just turns the 404s into empty 200s.
+    @RequestMapping({
+        "/qrCode/**", "/clientQrCode/**", "/nfc/**", "/clientNfc/**",
+        "/polyLens/**", "/mqtt/**", "/monnit/**", "/pelican/**", "/kNX/**",
+        "/lorawan/**", "/bacnet/**", "/modbus/**", "/snmp/**", "/daintree/**",
+        "/ecobee/**", "/disruptive/**", "/datahoist/**", "/myDevices/**"
+    })
     public List<Object> stub() {
         return Collections.emptyList();
     }
