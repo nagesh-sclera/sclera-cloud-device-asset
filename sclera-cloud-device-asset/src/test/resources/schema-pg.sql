@@ -395,6 +395,40 @@ CREATE TABLE IF NOT EXISTS device_conditions (
     alert_message       TEXT
 );
 
+-- location_history: audit trail for location status changes (LocationHistoryRepository)
+-- location_id FK -> location (location table declared above)
+CREATE TABLE IF NOT EXISTS location_history (
+    id                 VARCHAR(255) PRIMARY KEY,
+    status             VARCHAR(128),
+    type               VARCHAR(255),
+    description        TEXT,
+    updated_timestamp  BIGINT,
+    updated_email      VARCHAR(255),
+    location_id        VARCHAR(255) REFERENCES location(id)
+);
+
+-- device_types: device category definitions (DeviceTypesRepository)
+CREATE TABLE IF NOT EXISTS device_types (
+    id                 VARCHAR(255) PRIMARY KEY,
+    name               VARCHAR(255),
+    updated_timestamp  BIGINT,
+    old_name           VARCHAR(255)
+);
+
+-- asset_field: configurable custom/global asset fields (AssetFieldRepository)
+CREATE TABLE IF NOT EXISTS asset_field (
+    id               VARCHAR(255) PRIMARY KEY,
+    name             VARCHAR(255),
+    type             VARCHAR(128),
+    tool_tip         TEXT,
+    default_value    TEXT,
+    is_active        BOOLEAN      DEFAULT true,
+    options          TEXT,
+    is_deleted       BOOLEAN      DEFAULT false,
+    show_in_section  INTEGER      DEFAULT 0,
+    created_at       BIGINT
+);
+
 -- building: eagerly loaded via Asset -> vdms -> building when a full Asset entity is fetched
 CREATE TABLE IF NOT EXISTS building (
     id                 VARCHAR(255)  PRIMARY KEY,

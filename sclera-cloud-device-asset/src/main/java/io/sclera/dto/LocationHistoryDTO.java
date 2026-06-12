@@ -30,4 +30,15 @@ public class LocationHistoryDTO {
     public void setUpdated_email(String updated_email) { this.updated_email = updated_email; }
     public String getLocation_id() { return location_id; }
     public void setLocation_id(String location_id) { this.location_id = location_id; }
+
+    public LocationHistoryDTO(String id, String status, String type, String description,
+                              BigInteger updated_timestamp, String updated_email, String location_id) {
+        this.id = id;
+        this.status = status;
+        this.type = type;
+        this.description = description;
+        this.updated_timestamp = updated_timestamp;
+        this.updated_email = updated_email;
+        this.location_id = location_id;
+    }
 }

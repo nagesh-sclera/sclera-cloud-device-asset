@@ -23,7 +23,8 @@ public interface AssetFieldRepository extends JpaRepository<AssetField, String> 
      * @param globalAssetFieldNames the global asset field names to match
      * @return the matching global asset fields
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.AssetFieldDTO(af.id, af.name) " +
+           "FROM AssetField af WHERE af.name IN :globalAssetFieldNames")
     List<AssetFieldDTO> getGlobalAssetFields(List<String> globalAssetFieldNames);
 
     /**
@@ -31,9 +32,9 @@ public interface AssetFieldRepository extends JpaRepository<AssetField, String> 
      *
      * @param assetFieldIds the identifiers of the asset fields to flag as deleted
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE asset_field SET is_deleted = true WHERE id IN ?1", nativeQuery = true)
+    @Query("UPDATE AssetField af SET af.isDeleted = true WHERE af.id IN :assetFieldIds")
     void deleteAssetFieldsByIds(Set<String> assetFieldIds);
 
     /**
@@ -41,6 +42,9 @@ public interface AssetFieldRepository extends JpaRepository<AssetField, String> 
      *
      * @return the list of all asset fields
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.AssetFieldDTO(" +
+           "af.id, af.name, af.type, af.toolTip, af.defaultValue, " +
+           "af.isActive, af.options, af.isDeleted, af.showInSection, af.createdAt) " +
+           "FROM AssetField af WHERE af.isDeleted = false")
     List<AssetFieldDTO> getAllAssetFields();
 }
