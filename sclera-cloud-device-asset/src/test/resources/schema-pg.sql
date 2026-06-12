@@ -429,6 +429,38 @@ CREATE TABLE IF NOT EXISTS asset_field (
     created_at       BIGINT
 );
 
+-- system_interface: network interfaces tracked for discovery (SystemInterfaceRepository)
+CREATE TABLE IF NOT EXISTS system_interface (
+    interface_name  VARCHAR(255) PRIMARY KEY,
+    status          VARCHAR(255),
+    pid             VARCHAR(255),
+    timestamp       BIGINT
+);
+
+-- device_technician_ai_suggestion: AI-generated technician suggestions per device type (DeviceTechnicianAISuggestionRepository)
+CREATE TABLE IF NOT EXISTS device_technician_ai_suggestion (
+    id           VARCHAR(255) PRIMARY KEY,
+    device_type  VARCHAR(255) NOT NULL,
+    technicians  JSONB,
+    vdms_id      VARCHAR(64)  REFERENCES vdms(id)
+);
+
+-- vdms_details: per-VDMS presentation details (VdmsDetailsRepository)
+CREATE TABLE IF NOT EXISTS vdms_details (
+    id                   VARCHAR(255) PRIMARY KEY,
+    weather_city         VARCHAR(64),
+    weather_zip_code     VARCHAR(32),
+    weather_country_code VARCHAR(32),
+    weather_latitude     VARCHAR(32),
+    weather_longitude    VARCHAR(32),
+    weather_data         TEXT,
+    weather_units        VARCHAR(32),
+    layout_data          TEXT,
+    device_custom_fields TEXT,
+    corrigo_layout_data  TEXT,
+    vdms_id              VARCHAR(64)  REFERENCES vdms(id)
+);
+
 -- building: eagerly loaded via Asset -> vdms -> building when a full Asset entity is fetched
 CREATE TABLE IF NOT EXISTS building (
     id                 VARCHAR(255)  PRIMARY KEY,

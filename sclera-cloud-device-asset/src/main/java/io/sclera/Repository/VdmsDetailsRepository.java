@@ -28,10 +28,9 @@ public interface VdmsDetailsRepository extends JpaRepository<VdmsDetails, String
      * @param weather_units the configured weather units
      * @param vdmsid the associated VDMS identifier
      */
-    //update vdms details
     @Modifying
     @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED); VALUE->VALUES
+    // NOT CONVERTED — stays native: plain INSERT … ON CONFLICT upsert already valid PostgreSQL
     @Query(value = "INSERT INTO vdms_details (id, weather_city, weather_country_code,weather_latitude,weather_longitude,weather_data,weather_zip_code, weather_units, vdms_id) VALUES (?1, ?2, ?3, ?4,?5,?6,?7,?8,?9) " +
             "ON CONFLICT (id) DO UPDATE SET weather_city=EXCLUDED.weather_city, weather_country_code=EXCLUDED.weather_country_code, weather_latitude=EXCLUDED.weather_latitude, weather_longitude=EXCLUDED.weather_longitude, weather_data=EXCLUDED.weather_data, weather_zip_code=EXCLUDED.weather_zip_code, weather_units=EXCLUDED.weather_units", nativeQuery = true)
     void upsertWeatherData(String id, String weather_city, String weather_country_code, String weather_latitude, String weather_longitude, String weather_data,String weather_zip_code, String weather_units, String vdmsid);
@@ -41,8 +40,10 @@ public interface VdmsDetailsRepository extends JpaRepository<VdmsDetails, String
      *
      * @return the weather details projection
      */
-    //get weather details
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.touchscreen.VdmsDetailsDTO(" +
+            "vd.id, vd.weather_city, vd.weather_zip_code, vd.weather_country_code, " +
+            "vd.weather_latitude, vd.weather_longitude, vd.weather_data, vd.weather_units, vd.vdms.id) " +
+            "FROM VdmsDetails vd")
     VdmsDetailsDTO getWeatherData();
 
     /**
@@ -50,9 +51,8 @@ public interface VdmsDetailsRepository extends JpaRepository<VdmsDetails, String
      *
      * @return the VDMS details id
      */
-    //get vdms details id
     @Transactional
-    @Query(value = "SELECT id from vdms_details", nativeQuery = true)
+    @Query("SELECT vd.id FROM VdmsDetails vd")
     String getVdmsDetailsId();
 
     /**
@@ -62,10 +62,9 @@ public interface VdmsDetailsRepository extends JpaRepository<VdmsDetails, String
      * @param layout_data the layout payload to persist
      * @param vdmsid the associated VDMS identifier
      */
-    //update vdms details
     @Modifying
     @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED); VALUE->VALUES
+    // NOT CONVERTED — stays native: plain INSERT … ON CONFLICT upsert already valid PostgreSQL
     @Query(value = "INSERT INTO vdms_details (id, layout_data, vdms_id) VALUES (?1, ?2, ?3) " +
             "ON CONFLICT (id) DO UPDATE SET layout_data=EXCLUDED.layout_data", nativeQuery = true)
     void upsertVdmsLayoutData(String id, String layout_data, String vdmsid);
@@ -76,8 +75,9 @@ public interface VdmsDetailsRepository extends JpaRepository<VdmsDetails, String
      *
      * @return the VDMS layout data projection
      */
-    //get vdms layout data
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.touchscreen.VdmsDetailsDTO(" +
+            "vd.id, vd.layout_data, vd.vdms.id, vd.corrigo_layout_data) " +
+            "FROM VdmsDetails vd")
     VdmsDetailsDTO getVdmsLayoutData();
 
     /**
@@ -85,8 +85,8 @@ public interface VdmsDetailsRepository extends JpaRepository<VdmsDetails, String
      *
      * @return the device custom fields projection
      */
-    // get device custom fields data
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.touchscreen.VdmsDetailsDTO(vd.id, vd.device_custom_fields) " +
+            "FROM VdmsDetails vd")
     VdmsDetailsDTO getVdmsDeviceCustomFields();
 
     /**
@@ -98,7 +98,7 @@ public interface VdmsDetailsRepository extends JpaRepository<VdmsDetails, String
      */
     @Modifying
     @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED); VALUE->VALUES
+    // NOT CONVERTED — stays native: plain INSERT … ON CONFLICT upsert already valid PostgreSQL
     @Query(value = "INSERT INTO vdms_details (id, device_custom_fields, vdms_id) VALUES (?1, ?2, ?3) ON CONFLICT (id) DO UPDATE SET device_custom_fields = EXCLUDED.device_custom_fields", nativeQuery = true)
     void upsertVdmsDeviceCustomFields(String id, String device_custom_fields, String vdmsid);
 
@@ -109,10 +109,9 @@ public interface VdmsDetailsRepository extends JpaRepository<VdmsDetails, String
      * @param corrigo_layout_data the Corrigo layout payload to persist
      * @param vdmsid the associated VDMS identifier
      */
-    //update corrigo layout details
     @Modifying
     @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED); VALUE->VALUES
+    // NOT CONVERTED — stays native: plain INSERT … ON CONFLICT upsert already valid PostgreSQL
     @Query(value = "INSERT INTO vdms_details (id, corrigo_layout_data, vdms_id) VALUES (?1, ?2, ?3) " +
             "ON CONFLICT (id) DO UPDATE SET corrigo_layout_data = EXCLUDED.corrigo_layout_data", nativeQuery = true)
     void upsertCorrigoLayoutData(String id, String corrigo_layout_data, String vdmsid);
