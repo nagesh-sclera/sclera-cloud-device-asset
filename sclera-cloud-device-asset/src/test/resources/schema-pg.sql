@@ -526,6 +526,16 @@ CREATE TABLE IF NOT EXISTS device_document (
     PRIMARY KEY (device_id, document_id)
 );
 
+-- application_user: application users associated with managed software (ApplicationUserRepository)
+-- managed_software FK is nullable (users may be unassigned)
+CREATE TABLE IF NOT EXISTS application_user (
+    id                VARCHAR(255) PRIMARY KEY,
+    technician_id     VARCHAR(255),
+    email             VARCHAR(255),
+    type              VARCHAR(128),
+    managed_software  VARCHAR(255) REFERENCES managed_software(id)
+);
+
 -- building: eagerly loaded via Asset -> vdms -> building when a full Asset entity is fetched
 CREATE TABLE IF NOT EXISTS building (
     id                 VARCHAR(255)  PRIMARY KEY,

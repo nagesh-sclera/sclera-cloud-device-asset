@@ -3,6 +3,7 @@ package io.sclera.Repository;
 import io.sclera.dto.ManagedSoftwareDTO;
 import io.sclera.dto.ManagedSoftwareUsersDTO;
 import io.sclera.models.ManagedSoftware;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -40,7 +41,7 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      */
     @Modifying
     @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
+    // NOT CONVERTED — stays native: ON CONFLICT upsert already valid PostgreSQL; COALESCE(NULLIF(?2,''),managed_software.name) semantics not expressible in JPQL
     @Query(value =
         "INSERT INTO managed_software (" +
         "id, name, application_name, application_type, url, vendor, " +
@@ -74,21 +75,44 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
     /**
      * Returns a paginated, filtered list of managed software records.
      *
+     * <p>The {@code condition} parameter accepts {@code "all"}, {@code "active"},
+     * {@code "expired"}, or {@code "others"}. The {@code searchKey} parameter
+     * is matched case-insensitively against name, applicationName, vendor and
+     * subscriptionType; pass {@code "null"} (literal string) to skip filtering.
+     *
+     * <p>Pagination is handled via the trailing {@link Pageable} argument.
+     * Callers that previously computed {@code offset} and {@code pageSize} manually
+     * should switch to {@code PageRequest.of(pageNo - 1, pageSize)}.
+     *
      * @param condition the filter condition to apply
-     * @param searchKey the search key to match against
-     * @param offset the starting row offset
-     * @param pageSize the maximum number of rows to return
+     * @param searchKey the search key to match against, or {@code "null"} for none
+     * @param pageable pagination (page + size)
      * @return the matching managed software records
      */
-    @Query(nativeQuery = true)
-    List<ManagedSoftwareDTO> getAllManagedSoftwares(String condition, String searchKey, Integer offset, Integer pageSize);
+    @Query("SELECT new io.sclera.dto.ManagedSoftwareDTO(" +
+           "ms.id, ms.name, ms.applicationName, ms.applicationType, ms.url, " +
+           "ms.vendor, ms.subscriptionId, ms.subscriptionType, ms.unitPrice, ms.currency, " +
+           "ms.subscriptionStartDate, ms.subscriptionEndDate, ms.status, ms.applicationId) " +
+           "FROM ManagedSoftware ms " +
+           "WHERE (" +
+           "  ?1 = 'all' " +
+           "  OR (?1 = 'active' AND ms.status = 'active') " +
+           "  OR (?1 = 'expired' AND ms.status = 'expired') " +
+           "  OR (?1 = 'others' AND ms.status NOT IN ('active', 'expired')) " +
+           ") " +
+           "AND (?2 = 'null' OR " +
+           "  CONCAT(COALESCE(ms.name,''), COALESCE(ms.applicationName,''), COALESCE(ms.vendor,''), COALESCE(ms.subscriptionType,'')) " +
+           "  LIKE CONCAT('%', ?2, '%'))")
+    List<ManagedSoftwareDTO> getAllManagedSoftwares(String condition, String searchKey, Pageable pageable);
 
     /**
-     * Returns the managed software records matching the supplied identifiers.
+     * Returns the managed software records matching the supplied identifiers,
+     * ordered by their position in the input list.
      *
      * @param managedSoftwareIds the managed software identifiers
      * @return the set of matching managed software records
      */
+    // NOT CONVERTED — stays native: ORDER BY FIELD(ms.id, ?1) is MySQL-specific; no portable JPQL equivalent for list-order preservation
     @Query(nativeQuery = true)
     Set<ManagedSoftwareDTO> getManagedSoftwareByIdList(Set<String> managedSoftwareIds);
 
@@ -98,7 +122,7 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      * @param names the candidate names to check
      * @return the names found in the table
      */
-    @Query(value = "SELECT m.name FROM managed_software m WHERE m.name IN ?1 ", nativeQuery = true)
+    @Query("SELECT ms.name FROM ManagedSoftware ms WHERE ms.name IN ?1")
     List<String> findExistingNames(List<String> names);
 
     /**
@@ -107,7 +131,7 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      * @param applicationName the software name
      * @return the matching identifier, or empty if none exists
      */
-    @Query(value = "SELECT m.id FROM managed_software m WHERE m.name = ?1", nativeQuery = true)
+    @Query("SELECT ms.id FROM ManagedSoftware ms WHERE ms.name = ?1")
     Optional<String> getManagedSoftwareIdByName(String applicationName);
 
     /**
@@ -116,7 +140,11 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      * @param id the managed software identifier
      * @return the matching managed software record
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.ManagedSoftwareDTO(" +
+           "ms.id, ms.name, ms.applicationName, ms.applicationType, ms.url, " +
+           "ms.vendor, ms.subscriptionId, ms.subscriptionType, ms.unitPrice, ms.currency, " +
+           "ms.subscriptionStartDate, ms.subscriptionEndDate, ms.status, ms.applicationId) " +
+           "FROM ManagedSoftware ms WHERE ms.id = ?1")
     ManagedSoftwareDTO getManagedSoftwareById(String id);
 
     /**
@@ -125,7 +153,13 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      * @param managedsoftwareId the managed software identifier
      * @return the associated user records
      */
-    @Query(name = "ManagedSoftware.getManagedSoftwareUsers", nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.ManagedSoftwareUsersDTO(" +
+           "ds.username, ds.userUUID, ds.accountType, ds.email, dia.riskStatus, " +
+           "ds.deviceName, ds.model, ds.osType) " +
+           "FROM ManagedSoftware ms " +
+           "JOIN DeviceInstalledApps dia ON dia.managedSoftwareId = ms.id " +
+           "JOIN DeviceSpecification ds ON dia.deviceSpecificationId = ds.id " +
+           "WHERE ms.id = ?1")
     List<ManagedSoftwareUsersDTO> getManagedSoftwareUsers(String managedsoftwareId);
 
     /**
@@ -133,7 +167,7 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      *
      * @return the total count
      */
-    @Query(value = "SELECT COUNT(*) FROM managed_software", nativeQuery = true)
+    @Query("SELECT COUNT(ms) FROM ManagedSoftware ms")
     Integer getAllStatusCounts();
 
     /**
@@ -141,7 +175,7 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      *
      * @return the active count
      */
-    @Query(value = "SELECT COUNT(*) FROM managed_software WHERE LOWER(status) = 'active'", nativeQuery = true)
+    @Query("SELECT COUNT(ms) FROM ManagedSoftware ms WHERE LOWER(ms.status) = 'active'")
     Integer getActiveStatusCounts();
 
     /**
@@ -149,7 +183,7 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      *
      * @return the expired count
      */
-    @Query(value = "SELECT COUNT(*) FROM managed_software WHERE LOWER(status) = 'expired'", nativeQuery = true)
+    @Query("SELECT COUNT(ms) FROM ManagedSoftware ms WHERE LOWER(ms.status) = 'expired'")
     Integer getExpiredStatusCounts();
 
     /**
@@ -157,7 +191,7 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      *
      * @return the count of other statuses
      */
-    @Query(value = "SELECT COUNT(*) FROM managed_software WHERE LOWER(status) NOT IN ('active', 'expired')", nativeQuery = true)
+    @Query("SELECT COUNT(ms) FROM ManagedSoftware ms WHERE LOWER(ms.status) NOT IN ('active', 'expired')")
     Integer getOthersStatusCounts();
 
     /**
@@ -165,7 +199,7 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      *
      * @return the monthly subscription count
      */
-    @Query(value = "SELECT COUNT(*) FROM managed_software WHERE LOWER(subscription_type) = 'monthly_fees'", nativeQuery = true)
+    @Query("SELECT COUNT(ms) FROM ManagedSoftware ms WHERE LOWER(ms.subscriptionType) = 'monthly_fees'")
     Integer getMonthlySubscribedCount();
 
     /**
@@ -173,7 +207,7 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      *
      * @return the annual subscription count
      */
-    @Query(value = "SELECT COUNT(*) FROM managed_software WHERE LOWER(subscription_type) = 'annually'", nativeQuery = true)
+    @Query("SELECT COUNT(ms) FROM ManagedSoftware ms WHERE LOWER(ms.subscriptionType) = 'annually'")
     Integer getYearlySubscribedCount();
 
     /**
@@ -181,7 +215,7 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      *
      * @return the set of distinct application identifiers
      */
-    @Query(value = "SELECT DISTINCT application_id FROM managed_software WHERE application_id IS NOT NULL", nativeQuery = true)
+    @Query("SELECT DISTINCT ms.applicationId FROM ManagedSoftware ms WHERE ms.applicationId IS NOT NULL")
     Set<String> findDistinctApplicationIds();
 
     /**
@@ -190,7 +224,7 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      * @param managedsoftwareId the managed software identifier
      * @return the associated application identifier
      */
-    @Query(value = "SELECT application_id FROM managed_software WHERE id = ?1", nativeQuery = true)
+    @Query("SELECT ms.applicationId FROM ManagedSoftware ms WHERE ms.id = ?1")
     String getApplicationIdByManagedSoftwareId(String managedsoftwareId);
 
     /**
@@ -207,7 +241,7 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      * @param applicationId the application identifier
      * @return the matching managed software identifier
      */
-    @Query(value = "SELECT id FROM managed_software WHERE application_id = ?1", nativeQuery = true)
+    @Query("SELECT ms.id FROM ManagedSoftware ms WHERE ms.applicationId = ?1")
     String findIdByApplicationId(String applicationId);
 
     /**
@@ -224,9 +258,9 @@ public interface ManagedSoftwareRepository extends JpaRepository<ManagedSoftware
      * @param id the managed software identifier
      * @param status the new status value
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE managed_software SET status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE ManagedSoftware ms SET ms.status = ?2 WHERE ms.id = ?1")
     void updateStatusById(String id, String status);
 
 }
