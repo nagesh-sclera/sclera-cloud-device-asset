@@ -1,0 +1,12 @@
+DELETE FROM qr_code            WHERE id LIKE 'qrx%';
+DELETE FROM client_qr_code     WHERE id LIKE 'cqcx%';
+DELETE FROM client_bar_code    WHERE id LIKE 'cbcx%';
+DELETE FROM nfc                WHERE id LIKE 'nfcx%';
+DELETE FROM client_nfc         WHERE id LIKE 'cnfcx%';
+DELETE FROM device_specification WHERE id LIKE 'dspec%';
+DELETE FROM device_onboard_status_assignee WHERE id LIKE 'dosax%';
+DELETE FROM device_onboard_status WHERE id LIKE 'dosx%';
+DELETE FROM device             WHERE id LIKE 'dsx%';
+DELETE FROM location           WHERE id = 'loc1';
+DELETE FROM floor              WHERE id = 'flr1';
+DELETE FROM building           WHERE id = 'bldg1';

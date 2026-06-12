@@ -740,3 +740,32 @@ ALTER TABLE device ADD COLUMN IF NOT EXISTS local_vendor_id    VARCHAR(255);
 ALTER TABLE device ADD COLUMN IF NOT EXISTS other_vendor_1_id  VARCHAR(255);
 ALTER TABLE device ADD COLUMN IF NOT EXISTS other_vendor_2_id  VARCHAR(255);
 ALTER TABLE device ADD COLUMN IF NOT EXISTS other_vendor_3_id  VARCHAR(255);
+
+-- ============================================================
+-- Device search criteria conversion (DeviceSearchQueryBuilderIT)
+-- ============================================================
+-- qr/nfc tag tables: only existence is queried (EXISTS on device FK)
+CREATE TABLE IF NOT EXISTS qr_code (
+    id          VARCHAR(255) PRIMARY KEY,
+    device_id   VARCHAR(255) REFERENCES device(id),
+    location_id VARCHAR(255)
+);
+CREATE TABLE IF NOT EXISTS client_qr_code (
+    id          VARCHAR(255) PRIMARY KEY,
+    device_id   VARCHAR(255) REFERENCES device(id),
+    location_id VARCHAR(255)
+);
+CREATE TABLE IF NOT EXISTS nfc (
+    id          VARCHAR(255) PRIMARY KEY,
+    device_id   VARCHAR(255) REFERENCES device(id),
+    location_id VARCHAR(255)
+);
+CREATE TABLE IF NOT EXISTS client_nfc (
+    id          VARCHAR(255) PRIMARY KEY,
+    device_id   VARCHAR(255) REFERENCES device(id),
+    location_id VARCHAR(255)
+);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS source_type VARCHAR(64) DEFAULT 'vdms';
+ALTER TABLE device_specification ADD COLUMN IF NOT EXISTS username VARCHAR(255);
+ALTER TABLE device_specification ADD COLUMN IF NOT EXISTS email    VARCHAR(255);
+ALTER TABLE device_specification ADD COLUMN IF NOT EXISTS os_type  VARCHAR(64);
