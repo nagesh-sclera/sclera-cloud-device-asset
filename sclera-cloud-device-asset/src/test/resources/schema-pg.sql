@@ -461,6 +461,31 @@ CREATE TABLE IF NOT EXISTS vdms_details (
     vdms_id              VARCHAR(64)  REFERENCES vdms(id)
 );
 
+-- technician_certificate: owned by technician (FK -> technician)
+CREATE TABLE IF NOT EXISTS technician_certificate (
+    id            VARCHAR(255) PRIMARY KEY,
+    name          VARCHAR(255),
+    type          VARCHAR(255),
+    url           VARCHAR(255),
+    technician_id VARCHAR(255) REFERENCES technician(id)
+);
+
+-- client_bar_code: barcode tags associated with devices and/or locations
+-- device_id and location_id are nullable FKs (barcode can be unlinked, or linked to either)
+CREATE TABLE IF NOT EXISTS client_bar_code (
+    id                VARCHAR(255) PRIMARY KEY,
+    added_at          VARCHAR(255),
+    added_by          VARCHAR(255),
+    client_bar_code_id VARCHAR(255),
+    updated_at        NUMERIC,
+    updated_by        VARCHAR(255),
+    vdms_id           VARCHAR(255),
+    batch_id          VARCHAR(255),
+    device_id         VARCHAR(255) REFERENCES device(id),
+    location_id       VARCHAR(255) REFERENCES location(id),
+    is_deleted        BOOLEAN      DEFAULT false
+);
+
 -- building: eagerly loaded via Asset -> vdms -> building when a full Asset entity is fetched
 CREATE TABLE IF NOT EXISTS building (
     id                 VARCHAR(255)  PRIMARY KEY,
