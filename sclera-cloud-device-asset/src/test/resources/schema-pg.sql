@@ -536,6 +536,14 @@ CREATE TABLE IF NOT EXISTS application_user (
     managed_software  VARCHAR(255) REFERENCES managed_software(id)
 );
 
+-- device_technician: join table between device and technician (used by TechnicianRepository native tag/untag queries)
+-- device_id and technician_id are both VARCHARs; no FK constraints to avoid ordering issues in minimal schema
+CREATE TABLE IF NOT EXISTS device_technician (
+    device_id     VARCHAR(255) NOT NULL,
+    technician_id VARCHAR(255) NOT NULL,
+    PRIMARY KEY (device_id, technician_id)
+);
+
 -- building: eagerly loaded via Asset -> vdms -> building when a full Asset entity is fetched
 CREATE TABLE IF NOT EXISTS building (
     id                 VARCHAR(255)  PRIMARY KEY,
