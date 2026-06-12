@@ -62,6 +62,14 @@ class PgFunctionContributorIT extends PostgresJpaIT {
     }
 
     @Test
+    void stripSpecials_nullInput_isNull() {
+        String s = em.createQuery(
+                "SELECT strip_specials(d.warranty) FROM Device d WHERE d.id = 'dsx1'",
+                String.class).getSingleResult();
+        assertThat(s).isNull();   // dsx1 has no warranty value seeded -> NULL propagates
+    }
+
+    @Test
     void inetVal_castsForOrdering() {
         java.util.List<String> ips = em.createQuery(
                 "SELECT d.ip_address FROM Device d WHERE d.ip_address IS NOT NULL "

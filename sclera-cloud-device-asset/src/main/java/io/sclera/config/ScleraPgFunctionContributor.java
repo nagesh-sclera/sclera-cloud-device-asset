@@ -5,7 +5,6 @@ import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
-import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -31,8 +30,9 @@ import java.util.List;
  *  - strip_custom_specials: no range; double quotes survive so %"term"% patterns can match
  *
  * API note: registerPattern() rejects literal '?' in patterns (Hibernate 7.2 treats it as
- * a positional placeholder marker). The regexp functions are therefore implemented as
- * AbstractSqmSelfRenderingFunctionDescriptor subclasses which have full rendering control.
+ * a positional placeholder marker). The regexp functions are therefore implemented via a single
+ * parameterized AbstractSqmSelfRenderingFunctionDescriptor subclass which has full rendering
+ * control; the two strip functions are two instances differing only in their char-class string.
  */
 public class ScleraPgFunctionContributor implements FunctionContributor {
 
@@ -63,60 +63,53 @@ public class ScleraPgFunctionContributor implements FunctionContributor {
         // self-rendering function descriptors instead.
         fc.getFunctionRegistry().register(
                 "strip_specials",
-                new StripSpecialsFunction(stringType));
+                new StripFunction("strip_specials", HAYSTACK_SPECIALS, stringType));
 
         fc.getFunctionRegistry().register(
                 "strip_custom_specials",
-                new StripCustomSpecialsFunction(stringType));
+                new StripFunction("strip_custom_specials", CUSTOM_FIELD_SPECIALS, stringType));
     }
 
     /**
-     * strip_specials(?1):
+     * Char class for strip_specials(?1):
      *   REGEXP_REPLACE(?1, '[ -.!<TAB>_+#~`@$%^&*()=;:<>?,/{}|\\]', '', 'g')
      *
      * The leading "[ -." is a space-to-dot range (ASCII 32-46), covering:
      *   SPACE ! " # $ % & ' ( ) * + , - .
      * So double-quotes ARE stripped by this function.
      */
-    private static class StripSpecialsFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
-
-        StripSpecialsFunction(BasicType<String> stringType) {
-            super(
-                    "strip_specials",
-                    FunctionKind.NORMAL,
-                    StandardArgumentsValidators.exactly(1),
-                    StandardFunctionReturnTypeResolvers.invariant(stringType),
-                    null
-            );
-        }
-
-        @Override
-        public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments,
-                           ReturnableType<?> returnType, SqlAstTranslator<?> translator) {
-            sqlAppender.appendSql("REGEXP_REPLACE(");
-            sqlAstArguments.get(0).accept(translator);
-            sqlAppender.appendSql(", '[ -.!\t_+#~`@$%^&*()=;:<>?,/{}|\\\\]', '', 'g')");
-        }
-    }
+    private static final String HAYSTACK_SPECIALS = "[ -.!\t_+#~`@$%^&*()=;:<>?,/{}|\\\\]";
 
     /**
-     * strip_custom_specials(?1):
+     * Char class for strip_custom_specials(?1):
      *   REGEXP_REPLACE(?1, '[-.!<TAB>_+#~`@$%^&*()=;:<>?,/{}|\\' ]', '', 'g')
      *
      * NO leading range — the '-' at position 1 (after '[') is a literal hyphen.
      * Double-quotes are NOT in the class, so they survive (needed for %"term"% patterns).
      * The single-quote inside the char class is escaped as '' in SQL.
      */
-    private static class StripCustomSpecialsFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+    private static final String CUSTOM_FIELD_SPECIALS = "[-.!\t_+#~`@$%^&*()=;:<>?,/{}|\\\\'' ]";
 
-        StripCustomSpecialsFunction(BasicType<String> stringType) {
+    /**
+     * Single self-rendering descriptor shared by strip_specials and strip_custom_specials.
+     * Both emit REGEXP_REPLACE(<arg>, '<charClass>', '', 'g'); only the function name and the
+     * char-class string differ (haystack range strips quotes; custom-fields keeps quotes — see
+     * the HAYSTACK_SPECIALS / CUSTOM_FIELD_SPECIALS Javadoc). The 'g' flag is the documented PG
+     * port-bug fix: the earlier port omitted it and stripped only the FIRST special character.
+     */
+    private static class StripFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+
+        private final String charClass;
+
+        StripFunction(String name, String charClass, BasicType<String> stringType) {
             super(
-                    "strip_custom_specials",
+                    name,
                     FunctionKind.NORMAL,
                     StandardArgumentsValidators.exactly(1),
                     StandardFunctionReturnTypeResolvers.invariant(stringType),
                     null
             );
+            this.charClass = charClass;
         }
 
         @Override
@@ -124,7 +117,9 @@ public class ScleraPgFunctionContributor implements FunctionContributor {
                            ReturnableType<?> returnType, SqlAstTranslator<?> translator) {
             sqlAppender.appendSql("REGEXP_REPLACE(");
             sqlAstArguments.get(0).accept(translator);
-            sqlAppender.appendSql(", '[-.!\t_+#~`@$%^&*()=;:<>?,/{}|\\\\'' ]', '', 'g')");
+            sqlAppender.appendSql(", '");
+            sqlAppender.appendSql(charClass);
+            sqlAppender.appendSql("', '', 'g')");
         }
     }
 }
