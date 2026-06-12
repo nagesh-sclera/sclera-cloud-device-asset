@@ -140,6 +140,22 @@ MySQL→PostgreSQL move without per-query SQL translation, and gain compiler/Spr
 - **Conversion keeps surfacing pre-existing latent bugs** (queries referencing non-existent columns like `device_lifecycle_history.assigned_user_email`, stub DTOs with too-few ctor args like `CallStatusDTO`). When a method can't convert because the underlying query/DTO is already broken, leave it native with a `// NOT CONVERTED` note explaining the defect rather than papering over it.
 - **Shared test files are the serialization point.** Every repo adds itself to `JpaTestConfig`'s scoped `@EnableJpaRepositories` and appends its table(s) to `schema-pg.sql`. Run repo conversions that touch these **sequentially** (not parallel) to avoid edit races.
 
+## Consolidated "stays native" catalogue (from the full-repo sweep)
+A method stays native (already valid PostgreSQL, or no portable JPQL form) — add `// NOT CONVERTED — stays native (PG-translation track): <reason>` — for ANY of:
+- **Upserts / inserts:** `INSERT ... ON CONFLICT`, plain `INSERT ... VALUES`, MySQL `VALUE(` (already valid PG / no JPQL INSERT).
+- **jsonb / JSON:** `CAST(? AS jsonb)`, `JSON_EXTRACT`/`JSON_SET`/`JSON_MERGE_PATCH`, `->`/`->>`, `@>`, `jsonb_set`. Hibernate has no portable jsonb type here.
+- **`JSONArray` return type** (or any param/return with no relational mapping).
+- **Relation FK SET from a scalar id:** a JPQL bulk `UPDATE` cannot `SET x.relation = <id>` (`@ManyToOne`/`@OneToOne`/`@OneToOne` FK columns like `device_id`, `vdms_id`, `technician_id`, `location_id`). (Path-nav in WHERE/DELETE is fine: `WHERE x.relation.id = ?1`.)
+- **`@ManyToMany` / link tables with NO JPA entity:** `device_media`, `device_document`, `device_technician`, `measuring_instrument_location`, etc. JPQL can only address mapped entities.
+- **Columns with no entity field:** e.g. `product_id`, `is_virtual` on Device — the JPQL field path doesn't exist; native only.
+- **MySQL-only operators/functions:** `ORDER BY FIELD(...)`, `UNIX_TIMESTAMP`/`FROM_UNIXTIME`/`DATE_FORMAT`/`CONVERT_TZ`, `REGEXP_REPLACE` (POSIX-flag differences), `HAVING`-on-alias, backtick-quoted identifiers.
+- **Complex multi-join `@NamedNativeQuery` projections** (LIMIT/OFFSET + CASE + CONCAT_WS + 3-4 table joins): technically portable but high-risk as one constructor expression — default to native unless the join is simple (single `JOIN x.relation`).
+- **Entity field type ≠ column type** (e.g. `String` field over a `BOOLEAN`/`INTEGER` column): JPQL rejects the mismatch.
+
+What DOES convert cleanly: scalar `SELECT col`, `COUNT`/`EXISTS`/`DISTINCT`, simple bulk `UPDATE`/`DELETE` of scalar `@Column` fields, single-relation `JOIN x.rel` DTO projections, `IFNULL`→`COALESCE`, `IF(c,a,b)`→`CASE`, `CONCAT_WS`→`CONCAT(COALESCE(...))`, `LIMIT/OFFSET`→`Pageable`.
+
+Also: **Spring Data (Boot 4) rejects `Set<>` return on a `Pageable` method** — use `List<>` in the repo and wrap to `Set` in the service if the API needs it (update callers + their Mockito stubs).
+
 ## Pilot residuals / known follow-ups (non-blocking)
 - **`AssetRepository.getFilteredAssets`** keeps an unused `filter` param and applies no `ORDER BY`. The original was
   `ORDER BY ?1` — a *bind parameter*, i.e. SQL ordering by a constant literal (no-op, since a column name can't be a bind
