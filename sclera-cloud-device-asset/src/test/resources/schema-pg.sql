@@ -606,3 +606,137 @@ CREATE TABLE IF NOT EXISTS building (
     source_type        VARCHAR(255),
     vdms_id            VARCHAR(64)   REFERENCES vdms(id)
 );
+
+-- docker: FK target for device.docker (@ManyToOne; columns docker_name + docker_vdms_id reference docker.name + docker.vdms_id)
+-- vdms_id references vdms(id) but we declare without FK constraint to avoid ordering issues.
+CREATE TABLE IF NOT EXISTS docker (
+    name     VARCHAR(255) NOT NULL,
+    vdms_id  VARCHAR(64)  NOT NULL,
+    PRIMARY KEY (name, vdms_id)
+);
+
+-- users: FK target for device.user (@ManyToOne; @JoinColumn assigned_user_email references users.email)
+CREATE TABLE IF NOT EXISTS users (
+    email  VARCHAR(255) PRIMARY KEY,
+    name   VARCHAR(255)
+);
+
+-- Extend device table with all columns needed by converted JPQL queries.
+-- All columns added as nullable with no constraints to avoid seeding complexity.
+ALTER TABLE device ADD COLUMN IF NOT EXISTS snmp_count                    INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS snmp_status                   VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS interface_count               INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS notes_count                   INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS ticket_count                  INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS ticket_status                 VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS bacnet_count                  INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS bacnet_status                 VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS lorawan_count                 INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS lorawan_status                VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS disruptive_count              INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS disruptive_status             VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS my_devices_count              INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS my_devices_status             VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS monnit_count                  INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS monnit_status                 VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS pelican_count                 INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS pelican_status                VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS knx_count                     INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS knx_status                    VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS measuring_instrument_count    INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS measuring_instrument_status   VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS document_count                INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS media_count                   INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS checklist_template_count      INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS snmp_object_count             INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS snmp_object_status            VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS subsystem_count               INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS subsystem_parent_id           VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS asset_match_status            INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS virtual_device_type           INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS parent                        VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS snmp_parent                   VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS user_connection_type          VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS record_checklist_count        INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS record_checklist_status       VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS daintree_count                INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS daintree_status               VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS asset_image_url               VARCHAR(512);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS created_timestamp             BIGINT;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS ecobee_count                  INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS ecobee_status                 VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS modbus_count                  INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS modbus_status                 VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS created_email                 VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS asset_group                   VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS updated_email                 VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS updated_timestamp             BIGINT;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS category                      VARCHAR(128);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS sub_category                  VARCHAR(128);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS location_status               VARCHAR(128);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS digital_twin_image_url        VARCHAR(512);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS poly_lens_count               INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS mqtt_count                    INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS ai_call                       BOOLEAN;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS cost_value                    NUMERIC(19,2);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS cost_unit                     VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS is_dnd_enabled                BOOLEAN;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS operational_status            VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS dnd_timestamp                 NUMERIC;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS system_dnd_enabled            BOOLEAN;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS adc_json                      JSONB;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS matched_product_ids           TEXT;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS asset_ocr_image_url           VARCHAR(512);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS asset_tag_images_url          TEXT;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS reboot_status                 VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS qrcode_count                  INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS position                      VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS latitude                      VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS longitude                     VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS vendor                        VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS docker_name                   VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS docker_vdms_id                VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS assigned_user_email           VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS serial_number                 VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS last_seen_on                  BIGINT;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS user_data_name                VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS user_data_model               VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS user_data_vendor              VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS model                         VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS warranty                      VARCHAR(64);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS description                   TEXT;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS custom_fields                 TEXT;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS remote_access                 INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS email_alert                   INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS sms_alert                     INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS popup_notification            INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS local_vendor_email_alert      INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS local_vendor_sms_alert        INTEGER;
+ALTER TABLE device ADD COLUMN IF NOT EXISTS network_layer                 VARCHAR(64);
+
+-- phonebook: FK target for device.global_vendor / local_vendor / other_vendor_1/2/3 (@ManyToOne Phonebook)
+-- Minimal stub — only the columns referenced by the eager join from Device entity load.
+CREATE TABLE IF NOT EXISTS phonebook (
+    id            VARCHAR(255) PRIMARY KEY,
+    account_number VARCHAR(255),
+    vendor_name   VARCHAR(128),
+    email         VARCHAR(255),
+    phone         VARCHAR(32),
+    phone_type    VARCHAR(32),
+    value         VARCHAR(16),
+    company_name  VARCHAR(128),
+    website       VARCHAR(255),
+    address       VARCHAR(255),
+    city          VARCHAR(64),
+    country       VARCHAR(64),
+    state         VARCHAR(64),
+    street        VARCHAR(255),
+    zip           INTEGER
+);
+
+-- FK columns on device for Phonebook @ManyToOne relations
+ALTER TABLE device ADD COLUMN IF NOT EXISTS global_vendor_id   VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS local_vendor_id    VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS other_vendor_1_id  VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS other_vendor_2_id  VARCHAR(255);
+ALTER TABLE device ADD COLUMN IF NOT EXISTS other_vendor_3_id  VARCHAR(255);

@@ -32,6 +32,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param dockername the docker name
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> listAllDevicebyVdmsidAndDockerName(String vdmsid, String dockername);
 
@@ -51,6 +52,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param assigned_status the assigned status filter
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getfilterdevices(String vdmsid, String dockername, String searchKey, Integer virtual_device_type,
                                     Integer status, Integer monitor, Integer asset_match_status, Integer pageSize, Integer offset, Integer assigned_status);
@@ -62,6 +64,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @return the matching device projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     DeviceDTO getDeviceByDeviceId(String device_id);
 
@@ -73,6 +76,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param docker_name the docker name
      * @return the number of matching devices
      */
+    // NOT CONVERTED — stays native (PG-translation track): docker_name/docker_vdms_id are FK columns of the @ManyToOne Docker relation, not scalar @Column fields
     @Query(value = "SELECT COUNT(id) FROM device WHERE mac_address =?1  AND docker_vdms_id =?2  AND  docker_name =?3", nativeQuery = true)
     int checkDeviceByDeviceId(String mac_address, String vdms_id, String docker_name);
 
@@ -98,6 +102,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): plain INSERT
     @Query(value = "INSERT INTO device(id, docker_vdms_id, docker_name, ip_address, status, mac_address, last_seen_on, display_name, vendor, created_timestamp, user_data_name, type, description, custom_fields, created_email,asset_group) VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9,?10,?11,?12,?13,?14,?15,?16)", nativeQuery = true)
     void insertDevice(String id, String vdms_id, String docker_name, String ip_address, Integer status,
                       String mac_address, BigInteger last_seen_on, String display_name, String vendor, BigInteger created_timestamp,
@@ -119,6 +124,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): WHERE clause uses docker_vdms_id/docker_name (FK columns of @ManyToOne Docker)
     @Query(value = "UPDATE device SET ip_address =?1 , status =?2  , last_seen_on = ?3,  display_name = ?4, vendor = ?5, snmp_parent = ?6  WHERE docker_vdms_id = ?7 AND docker_name =?8 AND  mac_address = ?9 ", nativeQuery = true)
     void updateDevice(String ip_address, Integer status, BigInteger last_seen_on, String display_name, String vendor,
                       String snmp_parent, String vdms_id, String docker_name, String mac_address);
@@ -131,6 +137,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): sets adc_json (jsonb/JSON column) and location_id (@ManyToOne FK)
     // PG-port: IFNULL->COALESCE
     // PG-port: JSON_MERGE_PATCH -> jsonb || (shallow merge; flat-object patch assumed — top-level scalar fields only;
     //          if nested-object patches or null-to-remove semantics are ever needed, revisit with a jsonb_merge_patch() plpgsql function)
@@ -152,6 +159,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @return the product id, or {@code null} if none is set
      */
+    // NOT CONVERTED — stays native (PG-translation track): product_id column has no @Column field on Device entity (dropped in DB-per-service refactoring)
     @Query(value = "SELECT product_id FROM device WHERE id = ?1", nativeQuery = true)
     String getProductIdByDeviceId(String device_id);
 
@@ -168,6 +176,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): sets global_vendor_id/local_vendor_id/other_vendor_N_id which are @JoinColumn FK columns of @ManyToOne Phonebook relations
     // PG-port: IFNULL->COALESCE
     @Query(value = "UPDATE device SET global_vendor_id = COALESCE(?1 ,global_vendor_id) ,local_vendor_id = COALESCE(?2 ,local_vendor_id) ,"
             + "other_vendor_1_id = COALESCE(?3 ,other_vendor_1_id) , other_vendor_2_id = COALESCE(?4 ,other_vendor_2_id) ,"
@@ -184,6 +193,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): sets global_vendor_id/local_vendor_id/other_vendor_N_id which are @JoinColumn FK columns of @ManyToOne Phonebook relations
     @Query(value = "UPDATE device \n" + "	SET global_vendor_id = CASE\n"
             + "							WHEN ?1 = 'global' THEN ?2\n"
             + "							ELSE global_vendor_id\n" + "							END,\n" + "\n"
@@ -207,6 +217,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): sets @ManyToOne Phonebook FK columns; also 'THEN global_vendor_id = NULL' is broken MySQL syntax that must be corrected to 'THEN NULL' in PG migration
     @Query(value = "UPDATE device\n" + "	SET global_vendor_id = CASE\n"
             + "							WHEN global_vendor_id = ?1 AND ?2 = 'global' THEN global_vendor_id = NULL\n"
             + "							ELSE global_vendor_id\n" + "							END,\n" + "\n"
@@ -232,6 +243,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): sets location_id (@ManyToOne FK), global_vendor_id/local_vendor_id/other_vendor_N_id (@ManyToOne Phonebook FKs)
     // PG-port: IFNULL->COALESCE / IF->CASE WHEN
     @Query(value = "UPDATE device SET user_data_name = COALESCE(?2 ,user_data_name), user_data_model = COALESCE(?3 ,user_data_model) ,user_data_vendor = COALESCE(?4 ,user_data_vendor) ,"
             + "type = COALESCE(?5 ,type) ,warranty = COALESCE(?6 ,warranty) ,network_layer = COALESCE(?7 ,network_layer) ,"
@@ -257,6 +269,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param dockername the docker name
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getDeviceNamesByVdmsIdAndDockerName(String vdmsid, String dockername);
 
@@ -279,6 +292,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): plain INSERT
     @Query(value = "INSERT INTO device(id,ip_address,mac_address,user_data_name,user_data_model,user_data_vendor,type,"
             + "location_id,network_layer,parent,snmp_parent,monitor,docker_name,docker_vdms_id,last_seen_on,warranty,status,"
             + "email_alert, sms_alert, popup_notification, virtual_device_type, serial_number, local_vendor_email_alert,local_vendor_sms_alert, "
@@ -299,6 +313,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): sets adc_json (jsonb/JSON column) and location_id (@ManyToOne FK)
     // PG-port: IFNULL->COALESCE
     // PG-port: JSON_MERGE_PATCH -> jsonb || (shallow merge; flat-object patch assumed — top-level scalar fields only;
     //          if nested-object patches or null-to-remove semantics are ever needed, revisit with a jsonb_merge_patch() plpgsql function)
@@ -327,6 +342,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     // delete is done by cascade delete, if this query not required can be deleted
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): is_virtual column has no @Column field on Device entity
     @Query(value = "DELETE FROM device WHERE id = ?1 AND is_virtual = true", nativeQuery = true)
     void deleteVirtualDeviceByeviceId(String virtual_device_id);
 
@@ -337,6 +353,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): sets location_id (@ManyToOne FK), global_vendor_id/local_vendor_id/other_vendor_N_id (@ManyToOne Phonebook FKs)
     // PG-port: IFNULL->COALESCE / IF->CASE WHEN
     @Query(value = "UPDATE device SET user_data_name = ?2 ,user_data_model = ?3 ,user_data_vendor = ?4 ,type = ?5 ,"
             + "network_layer = ?6 ,location_id = ?7 ,parent = ?8 ,warranty = ?9 ,monitor = ?10 ,remote_access = ?11 ,"
@@ -362,8 +379,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param virtual_device_id the virtual device identifier
      */
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET status = ?1, last_seen_on = ?2 WHERE id = ?3", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.status = ?1, d.last_seen_on = ?2 WHERE d.id = ?3")
     void updateVirtualDeviceStatus(Integer status, BigInteger timestamp, String virtual_device_id);
 
     /**
@@ -371,6 +388,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the virtual device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> listAllVirtualdevices();
 
@@ -382,6 +400,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @return the alert projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     AlertDTO getDeviceAlertInfoByDeviceId(String device_id);
 
@@ -393,8 +412,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update snmp count
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET snmp_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.snmp_count = ?2 WHERE d.id = ?1")
     void updateDeviceSnmpCount(String device_id, Integer snmp_count);
 
     /**
@@ -405,8 +424,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update snmp status
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET snmp_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.snmp_status = ?2 WHERE d.id = ?1")
     void updateDeviceSnmpStatus(String device_id, String snmp_status);
 
     /**
@@ -417,8 +436,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update interface count
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET interface_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.interface_count = ?2 WHERE d.id = ?1")
     void updateDeviceInterfaceCount(String device_id, Integer interface_count);
 
     /**
@@ -429,8 +448,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update notes count
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET notes_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.notes_count = ?2 WHERE d.id = ?1")
     void updateDeviceNotesCount(String device_id, Integer notes_count);
 
     /**
@@ -441,8 +460,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update ticket count
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET ticket_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.ticket_count = ?2 WHERE d.id = ?1")
     void updateDeviceTicketCount(String device_id, Integer ticket_count);
 
     /**
@@ -453,8 +472,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update ticket status
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET ticket_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.ticket_status = ?2 WHERE d.id = ?1")
     void updateDeviceTicketStatus(String device_id, String ticket_status);
 
     /**
@@ -465,8 +484,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update bacnet count
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET bacnet_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.bacnet_count = ?2 WHERE d.id = ?1")
     void updateDeviceBacnetCount(String device_id, Integer bacnet_count);
 
     /**
@@ -477,8 +496,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update bacnet status
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET bacnet_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.bacnet_status = ?2 WHERE d.id = ?1")
     void updateDeviceBacnetStatus(String device_id, String bacnet_status);
 
     /**
@@ -489,8 +508,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update lorawan count
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET lorawan_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.lorawan_count = ?2 WHERE d.id = ?1")
     void updateDeviceLorawanCount(String device_id, Integer lorawan_count);
 
     /**
@@ -501,8 +520,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update lorawan status
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET lorawan_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.lorawan_status = ?2 WHERE d.id = ?1")
     void updateDeviceLorawanStatus(String device_id, String lorawan_status);
 
     /**
@@ -513,8 +532,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update disruptive count
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET disruptive_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.disruptive_count = ?2 WHERE d.id = ?1")
     void updateDeviceDisruptiveCount(String device_id, Integer disruptive_count);
 
     /**
@@ -525,8 +544,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update disruptive status
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET disruptive_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.disruptive_status = ?2 WHERE d.id = ?1")
     void updateDeviceDisruptiveStatus(String device_id, String disruptive_status);
 
     /**
@@ -536,9 +555,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param my_devices_count the myDevices count to set
      */
     // update my devices count
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET my_devices_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.my_devices_count = ?2 WHERE d.id = ?1")
     void updateDeviceMyDevicesCount(String device_id, Integer my_devices_count);
 
     /**
@@ -548,9 +567,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param my_devices_status the myDevices status to set
      */
     // update my devices status
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET my_devices_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.my_devices_status = ?2 WHERE d.id = ?1")
     void updateDeviceMyDevicesStatus(String device_id, String my_devices_status);
 
     /**
@@ -560,9 +579,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param monnit_count the Monnit count to set
      */
     // update monnit count
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET monnit_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.monnit_count = ?2 WHERE d.id = ?1")
     void updateDeviceMonnitCount(String device_id, Integer monnit_count);
 
     /**
@@ -572,9 +591,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param monnit_status the Monnit status to set
      */
     // update monnit status
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET monnit_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.monnit_status = ?2 WHERE d.id = ?1")
     void updateDeviceMonnitStatus(String device_id, String monnit_status);
 
     /**
@@ -584,9 +603,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param pelican_count the Pelican count to set
      */
     // update pelican count
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET pelican_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.pelican_count = ?2 WHERE d.id = ?1")
     void updateDevicePelicanCount(String device_id, Integer pelican_count);
 
     /**
@@ -596,9 +615,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param pelican_status the Pelican status to set
      */
     // update  pelican status
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET pelican_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.pelican_status = ?2 WHERE d.id = ?1")
     void updateDevicePelicanStatus(String device_id, String pelican_status);
 
     /**
@@ -609,8 +628,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update knx count
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET knx_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.knx_count = ?2 WHERE d.id = ?1")
     void updateDeviceKNXCount(String device_id, Integer knx_count);
 
     /**
@@ -620,9 +639,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param knx_status the KNX status to set
      */
     // update  knx status
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET knx_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.knx_status = ?2 WHERE d.id = ?1")
     void updateDeviceKNXStatus(String device_id, String knx_status);
 
     /**
@@ -633,8 +652,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update measure count
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET measuring_instrument_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.measuring_instrument_count = ?2 WHERE d.id = ?1")
     void updateDeviceMeasureCount(String device_id, Integer measuring_instrument_count);
 
     /**
@@ -645,8 +664,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update documents count
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET document_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.document_count = ?2 WHERE d.id = ?1")
     void updateDeviceDocumentsCount(String device_id, Integer document_count);
 
 
@@ -658,8 +677,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update media count
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET media_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.media_count = ?2 WHERE d.id = ?1")
     void updateDeviceMediaCount(String device_id, Integer media_count);
 
     /**
@@ -670,8 +689,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // update checklists count
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET checklist_template_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.checklist_template_count = ?2 WHERE d.id = ?1")
     void updateDeviceCheckListsCount(String device_id, Integer checklist_template_count);
 
     /**
@@ -682,8 +701,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     //update snmp object count
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET snmp_object_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.snmp_object_count = ?2 WHERE d.id = ?1")
     void updateDeviceSnmpObjectCount(String device_id, Integer snmp_object_count);
 
     /**
@@ -694,8 +713,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     //update snmp object status
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET snmp_object_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.snmp_object_status = ?2 WHERE d.id = ?1")
     void updateDeviceSnmpObjectStatus(String device_id, String snmp_object_status);
 
     //Get All Parent Device by Pagination
@@ -713,6 +732,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param virtual_device_types the virtual device types to match
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getNetworkParentDeviceByPagination(Set<String> dockernames, Set<String> types, String searchKey, Integer pagesize, Integer offset, Set<String> virtual_device_types);
 
@@ -726,6 +746,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching device projections
      */
     //Get Network Parent Device by Pagination
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getAllParentDeviceByPagination(String searchKey, Integer pagesize, Integer offset);
 
@@ -737,7 +758,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     //Get Parent Device Name by Id
     // PG-port: IF->CASE WHEN
-    @Query(value = "Select CASE WHEN (d.user_data_name IS NULL OR d.user_data_name = '') THEN d.display_name ELSE d.user_data_name END from device d where d.id = ?1", nativeQuery = true)
+    @Query("SELECT CASE WHEN (d.user_data_name IS NULL OR d.user_data_name = '') THEN d.display_name ELSE d.user_data_name END FROM Device d WHERE d.id = ?1")
     String getParentDeviceNameById(String parent_device_id);
 
     /**
@@ -746,6 +767,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching device projections
      */
     //new get method with subsystem parent devices get
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getSubsystemParentDevicesByPagination(String vdmsid, String dockername, Integer virtual_device_type,
                                                          Integer status, Integer monitor, Integer asset_match_status, Integer pagesize, Integer offset, Integer onboard_status, Integer assigned_status, String assignee);
@@ -755,6 +777,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getSubsystemParentDevices(String vdmsid, String dockername, Integer virtual_device_type, Integer status, Integer monitor, Integer asset_match_status, Integer onboard_status, Integer assigned_status);
 
@@ -768,6 +791,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching device projections
      */
     //new get method with subsystem devices get
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getSubsystemDevicesByPagination(String device_id, Integer pagesize, Integer offset, String assignee);
 
@@ -777,9 +801,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @param subsystem_count the subsystem count to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET subsystem_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.subsystem_count = ?2 WHERE d.id = ?1")
     void updateSubsystemCount(String device_id, Integer subsystem_count);
 
     /**
@@ -788,6 +812,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the parent device identifier
      * @return the number of subsystem devices
      */
+    // NOT CONVERTED — stays native (PG-translation track): JPQL COUNT returns Long, but signature is Integer; would need a default wrapper
     @Query(value = "SELECT COUNT(*) FROM device WHERE subsystem_parent_id= ?1", nativeQuery = true)
     Integer getSubsystemCount(String device_id);
 
@@ -798,7 +823,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the subsystem parent id, or {@code null} if none is set
      */
     //get sub system parent id
-    @Query(value = "SELECT subsystem_parent_id FROM device WHERE id = ?1 ", nativeQuery = true)
+    @Query("SELECT d.subsystem_parent_id FROM Device d WHERE d.id = ?1")
     String getSubsystemParentId(String id);
 
     /**
@@ -809,6 +834,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     //get devices by ids
     // PG-port: MySQL FIELD()->array_position; param must be a SQL array, not a Collection.
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getDevicesByIdList(String[] device_ids);
 
@@ -818,7 +844,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the parent device identifier
      * @return the matching device ids
      */
-    @Query(value = "SELECT id FROM device WHERE subsystem_parent_id = ?1", nativeQuery = true)
+    @Query("SELECT d.id FROM Device d WHERE d.subsystem_parent_id = ?1")
     List<String> getDevicesBySubSystemParentId(String device_id);
 
     /**
@@ -827,9 +853,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @param subsystem_parent_id the subsystem parent id to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET subsystem_parent_id = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.subsystem_parent_id = ?2 WHERE d.id = ?1")
     void updateSubsystemParentDevice(String device_id, String subsystem_parent_id);
     // Touchscreen
     // Repository*********************************************************************************************************************************************************************************8
@@ -840,6 +866,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching device list projections
      */
     //To be removed after new pagination api works
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceListDTO> listDevicesTs(String networkname, String buildingid, String floorid, String locationid,
                                      Integer devicestatus);
@@ -850,6 +877,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching device list projections
      */
     //Added Pagination for listDevices
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceListDTO> listDevicesByPaginationTs(String networkname, String buildingid, String floorid, String locationid, Integer status, Integer pagesize, Integer offset, Integer virtual_device_type);
 
@@ -861,10 +889,10 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param snmp_parent the SNMP parent reference
      * @param device_type the device type, or {@code null} to keep the current value
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
     // PG-port: IFNULL->COALESCE
-    @Query(value = "UPDATE device SET snmp_parent = ?3, type = COALESCE(?4, type) WHERE docker_name = ?1 AND id = ?2", nativeQuery = true)
+    @Query("UPDATE Device d SET d.snmp_parent = ?3, d.type = COALESCE(?4, d.type) WHERE d.docker.name = ?1 AND d.id = ?2")
     void updateSnmpParent(String dockername, String id, String snmp_parent, String device_type);
 
 
@@ -874,6 +902,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching device list projections
      */
     //to be removed after pagination api works
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceListDTO> listofflinedeviceByParentTs();
 
@@ -885,6 +914,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching device list projections
      */
     //Added pagination for listofflinedeviceByParentTs
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceListDTO> listofflinedeviceByParentByPaginationTs(Integer pagesize, Integer offset);
 
@@ -894,6 +924,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param deviceId the device identifier
      * @return the matching device list projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     DeviceListDTO DeviceInfoById(String deviceId);
 
@@ -905,6 +936,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param deviceid the device identifier
      * @return the matching device details projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     DeviceDetailsDTO getDeviceInfoById(String deviceid);
 
@@ -924,6 +956,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Transactional
     @Modifying
+    // NOT CONVERTED — stays native (PG-translation track): plain INSERT
     @Query(value = "INSERT INTO device (ip_address, mac_address , status, last_seen_on, docker_vdms_id, docker_name, id, vendor, created_timestamp, created_email ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)", nativeQuery = true)
     void insertDeviceStatus(String ip_address, String mac_address, Integer status, BigInteger last_seen_on,
                             String vdms_id, String docker_name, String id, String vendor, BigInteger created_timestamp, String created_email);
@@ -941,6 +974,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Transactional
     @Modifying
+    // NOT CONVERTED — stays native (PG-translation track): WHERE clause uses docker_vdms_id/docker_name (FK columns of @ManyToOne Docker with composite PK)
     // PG-port: IFNULL->COALESCE
     @Query(value = "UPDATE device SET ip_address = COALESCE(?1, ip_address), mac_address = ?2, status = COALESCE(?3, status), last_seen_on = COALESCE(?4, last_seen_on) WHERE docker_vdms_id = ?5 AND docker_name =?6 AND id = ?7 ", nativeQuery = true)
     void updateDeviceStatus(String ip_address, String mac_address, Integer status, BigInteger last_seen_on,
@@ -952,6 +986,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param dockername the docker name
      * @return the matching monitor projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceMonitorDTO> getDeviceListMonitor(String dockername);
 
@@ -961,6 +996,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param dockername the docker name
      * @return the matching monitor projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceMonitorDTO> getDeviceListMonitorIp(String dockername);
 
@@ -970,6 +1006,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param i the device status to match
      * @return the number of matching devices
      */
+    // NOT CONVERTED — stays native (PG-translation track): JPQL COUNT returns Long but return type is int; signature preservation requires wrapper complexity
     @Query(value = "SELECT COUNT(id) FROM device WHERE status = ?1 AND monitor = 1 AND asset_match_status != 3  AND (onboard_status IS NULL OR (onboard_status != 1 AND onboard_status != 2))", nativeQuery = true)
     int onlineOfflineCount(Integer i);
 
@@ -979,6 +1016,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param dockername the docker name
      * @return the matching SNMP value projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<SnmpValuesDTO> getDeviceListSnmp(String dockername);
 
@@ -990,6 +1028,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching SNMP value projection
      */
     // Get Single Device Info By Device Id for Snmp Sync
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     SnmpValuesDTO getDeviceSnmpByDeviceId(String dockername, String device_id);
 
@@ -1000,7 +1039,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the device status
      */
     @Transactional
-    @Query(value = "SELECT status FROM device WHERE id = ?1", nativeQuery = true)
+    @Query("SELECT d.status FROM Device d WHERE d.id = ?1")
     Integer getDeviceStatus(String deviceId);
 
     /**
@@ -1010,7 +1049,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the parent reference
      */
     @Transactional
-    @Query(value = "SELECT parent FROM device WHERE id = ?1", nativeQuery = true)
+    @Query("SELECT d.parent FROM Device d WHERE d.id = ?1")
     String getDeviceparent(String deviceId);
 
     /**
@@ -1020,7 +1059,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the SNMP parent reference
      */
     @Transactional
-    @Query(value = "SELECT snmp_parent FROM device WHERE id = ?1", nativeQuery = true)
+    @Query("SELECT d.snmp_parent FROM Device d WHERE d.id = ?1")
     String getDeviceSnmpparent(String deviceId);
 
     /**
@@ -1031,6 +1070,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): sets @ManyToOne Phonebook FK columns; 'THEN x = NULL' broken MySQL syntax to fix in PG migration
     @Query(value = "UPDATE device\n" + "	SET global_vendor_id = CASE\n"
             + "							WHEN global_vendor_id = ?1 THEN global_vendor_id = NULL\n"
             + "							ELSE global_vendor_id\n" + "							END,\n" + "\n"
@@ -1055,9 +1095,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param id the device identifier
      * @param display_name the display name to set, or {@code null} to default to {@code Generic}
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET display_name = COALESCE(?2, 'Generic') WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.display_name = COALESCE(?2, 'Generic') WHERE d.id = ?1")
     void updateDevicesDisplayNameById(String id, String display_name);
 
     /**
@@ -1066,9 +1106,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param id the device identifier
      * @param vendor the vendor to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET vendor = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.vendor = ?2 WHERE d.id = ?1")
     void updateDeviceVendorById(String id, String vendor);
 
     /**
@@ -1077,6 +1117,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the device projections
      */
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> listAlldevices();
 
@@ -1089,6 +1130,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the number of matching devices
      */
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): assigned_user_email is @ManyToOne User FK (@JoinColumn); JPQL navigation d.user.email would fail for null user rows; keep native
     // PG-port: IF->CASE WHEN
     @Query(value = "SELECT COUNT(id) FROM device WHERE status = ?2 AND monitor = 1 AND (?1 = 'all' or docker_name = ?1) AND asset_match_status != 3 AND CASE WHEN 'all' = ?3 THEN true ELSE assigned_user_email = ?3 END ", nativeQuery = true)
     Integer onlineOfflineCountByDocker(String dockername, int i, String assignee);
@@ -1101,6 +1143,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the number of matching devices
      */
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): assigned_user_email is @ManyToOne User FK (@JoinColumn); JPQL navigation d.user.email would fail for null user rows; keep native
     // PG-port: IF->CASE WHEN
     @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND (monitor = 0 OR monitor IS NULL) AND asset_match_status != 3 AND CASE WHEN 'all' = ?2 THEN true ELSE assigned_user_email = ?2 END ", nativeQuery = true)
     Integer unmonitorCountByDocker(String dockername, String assignee);
@@ -1113,6 +1156,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the number of matching devices
      */
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): assigned_user_email is @ManyToOne User FK (@JoinColumn); JPQL navigation d.user.email would fail for null user rows; keep native
     // PG-port: IF->CASE WHEN
     @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND monitor = 1  AND asset_match_status != 3 AND CASE WHEN 'all' = ?2 THEN true ELSE assigned_user_email = ?2 END ", nativeQuery = true)
     Integer monitorCountByDocker(String dockername, String assignee);
@@ -1125,6 +1169,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the number of matching devices
      */
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): assigned_user_email is @ManyToOne User FK (@JoinColumn); JPQL navigation d.user.email would fail for null user rows; keep native
     // PG-port: IF->CASE WHEN
     @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND (assigned_user_email IS NOT NULL or assigned_user_email != 'null')  AND asset_match_status != 3 AND CASE WHEN 'all' = ?2 THEN true ELSE assigned_user_email = ?2 END ", nativeQuery = true)
     Integer assignedCountByDocker(String dockername, String assignee);
@@ -1137,6 +1182,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param assignee the assignee email, or {@code all} for all assignees
      * @return the number of matching devices
      */
+    // NOT CONVERTED — stays native (PG-translation track): assigned_user_email is @ManyToOne User FK (@JoinColumn); JPQL navigation d.user.email would fail for null user rows; keep native
     // PG-port: IF->CASE WHEN
     @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND (assigned_user_email IS NULL or assigned_user_email = 'null')  AND asset_match_status != 3 AND CASE WHEN 'all' = ?2 THEN true ELSE assigned_user_email = ?2 END ", nativeQuery = true)
     Integer unAssignedCountByDocker(String dockername, String assignee);
@@ -1149,7 +1195,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // other device count
     @Transactional
-    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND monitor = 1 AND ( virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1 ) ) AND asset_match_status != 3 ", nativeQuery = true)
+    @Query("SELECT COUNT(d) FROM Device d WHERE ('all' = ?1 OR d.docker.name = ?1) AND d.monitor = 1 AND d.virtual_device_type IS NOT NULL AND d.virtual_device_type <> 0 AND d.virtual_device_type <> 1 AND d.asset_match_status <> 3")
     Integer otherDeviceCountByDocker(String dockername);
 
     /**
@@ -1161,6 +1207,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // other device count
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): assigned_user_email is @ManyToOne User FK (@JoinColumn); JPQL navigation d.user.email would fail for null user rows; keep native
     // PG-port: IF->CASE WHEN
     @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND monitor = 1 AND ( virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1 ) ) AND asset_match_status != 3 AND CASE WHEN 'all' = ?2 THEN true ELSE assigned_user_email = ?2 END ", nativeQuery = true)
     Integer otherDeviceCountByDockerAssignee(String dockername, String assignee);
@@ -1175,6 +1222,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // matched/unmatched device count
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): assigned_user_email is @ManyToOne User FK (@JoinColumn); JPQL navigation d.user.email would fail for null user rows; keep native
     // PG-port: IF->CASE WHEN
     @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND asset_match_status = ?2 AND CASE WHEN 'all' = ?3 THEN true ELSE assigned_user_email = ?3 END", nativeQuery = true)
     Integer getMatchedUnmatchedDeviceCountByDocker(String dockername, int i, String assignee);
@@ -1187,6 +1235,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the number of matching devices
      */
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): assigned_user_email is @ManyToOne User FK (@JoinColumn); JPQL navigation d.user.email would fail for null user rows; keep native
     // PG-port: IF->CASE WHEN
     @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1)  AND asset_match_status != 3 AND  (onboard_status != 3) AND CASE WHEN 'all' = ?2 THEN true ELSE assigned_user_email = ?2 END ", nativeQuery = true)
     Integer getNotOnboardedDeviceCountByDocker(String dockername, String assignee);
@@ -1199,6 +1248,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the number of matching devices
      */
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): assigned_user_email is @ManyToOne User FK (@JoinColumn); JPQL navigation d.user.email would fail for null user rows; keep native
     // PG-port: IF->CASE WHEN
     @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1)   AND asset_match_status != 3 AND (onboard_status = 3) AND CASE WHEN 'all' = ?2 THEN true ELSE assigned_user_email = ?2 END ", nativeQuery = true)
     Integer getOnboardedDeviceCountByDocker(String dockername, String assignee);
@@ -1212,7 +1262,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // get monitored device count
     @Transactional
-    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND monitor = 1 AND asset_match_status != 3", nativeQuery = true)
+    @Query("SELECT COUNT(d) FROM Device d WHERE ('all' = ?1 OR d.docker.name = ?1) AND d.monitor = 1 AND d.asset_match_status <> 3")
     Integer getMonitoredDeviceCountByDocker(String docker_name);
 
     /**
@@ -1223,7 +1273,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     //get all device count by docker
     @Transactional
-    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND asset_match_status != 3 ", nativeQuery = true)
+    @Query("SELECT COUNT(d) FROM Device d WHERE ('all' = ?1 OR d.docker.name = ?1) AND d.asset_match_status <> 3")
     Integer getAllDeviceCountByDocker(String docker_name);
 
     /**
@@ -1235,6 +1285,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     //get all device count by docker
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): assigned_user_email is @ManyToOne User FK (@JoinColumn); JPQL navigation d.user.email would fail for null user rows; keep native
     // PG-port: IF->CASE WHEN
     @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND asset_match_status != 3 AND CASE WHEN 'all' = ?2 THEN true ELSE assigned_user_email = ?2 END ", nativeQuery = true)
     Integer getAllDeviceCountByDockerAssignee(String docker_name, String assignee);
@@ -1247,6 +1298,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching device projections
      */
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> listTopologyDevicesByDockerName(String dockername, String device_id);
 
@@ -1258,6 +1310,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching topology projections
      */
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceTopologyDTO> listTopologyDevices(String dockername, String device_id);
 
@@ -1266,6 +1319,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the device data projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DevicedataDTO> getAllDevices();
 
@@ -1278,6 +1332,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     // get unique device types
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): multi-join COUNT/DISTINCT query
     @Query(value = "SELECT DISTINCT(d.type) FROM device d LEFT JOIN docker dk ON (dk.name = d.docker_name AND dk.vdms_id = d.docker_vdms_id) LEFT JOIN location l ON l.id = d.location_id LEFT JOIN floor f ON f.id = l.floor_id WHERE (?1 = 'all' or d.docker_name = ?1) AND (?2 = 'null' or f.id = ?2) AND d.type IS NOT NULL AND d.monitor = 1 AND d.asset_match_status != 3 ORDER BY d.type", nativeQuery = true)
     List<String> getUniqueDeviceTypes(String network_name, String floor_id);
 
@@ -1288,6 +1343,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the distinct asset groups
      */
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): multi-join COUNT/DISTINCT query
     @Query(value = "SELECT DISTINCT(d.asset_group) FROM device d LEFT JOIN docker dk ON (dk.name = d.docker_name AND dk.vdms_id = d.docker_vdms_id) WHERE (?1 = 'all' or d.docker_name = ?1) AND d.asset_group IS NOT NULL ORDER BY d.asset_group", nativeQuery = true)
     List<String> getUniqueAssetGroups(String network_name);
 
@@ -1298,6 +1354,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the distinct categories
      */
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): multi-join COUNT/DISTINCT query
     @Query(value = "SELECT DISTINCT(d.category) FROM device d LEFT JOIN docker dk ON (dk.name = d.docker_name AND dk.vdms_id = d.docker_vdms_id) WHERE (?1 = 'all' or d.docker_name = ?1) AND d.category IS NOT NULL ORDER BY d.category", nativeQuery = true)
     List<String> getUniqueCategory(String network_name);
 
@@ -1309,6 +1366,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the distinct sub-categories
      */
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): multi-join COUNT/DISTINCT query
     @Query(value = "SELECT DISTINCT(d.sub_category) FROM device d LEFT JOIN docker dk ON (dk.name = d.docker_name AND dk.vdms_id = d.docker_vdms_id) WHERE (?1 = 'all' or d.docker_name = ?1) AND d.category = ?2 AND d.sub_category IS NOT NULL ORDER BY d.sub_category", nativeQuery = true)
     List<String> getUniqueSubCategory(String network_name, String category);
 
@@ -1320,6 +1378,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the distinct assigned user emails
      */
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): multi-join COUNT/DISTINCT query
     @Query(value = "SELECT DISTINCT(d.assigned_user_email) FROM device d LEFT JOIN docker dk ON (dk.name = d.docker_name AND dk.vdms_id = d.docker_vdms_id) WHERE d.docker_vdms_id = ?1 AND (?2 = 'all' or d.docker_name = ?2) AND d.assigned_user_email IS NOT NULL ORDER BY d.assigned_user_email", nativeQuery = true)
     List<String> getUniqueAssignedUserEmail(String vdms_id, String network_name);
 
@@ -1332,6 +1391,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching sensor device projections
      */
     // Get Devices by types
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceSensorsDTO> getDevicesByType(String network_name, String floor_id, Set<String> types);
 
@@ -1345,6 +1405,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param offset the number of devices to skip
      * @return the matching sensor device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceSensorsDTO> getDevicesByTypePagination(String network_name, String floor_id, Set<String> types, Integer pagesize,
                                                       Integer offset);
@@ -1358,6 +1419,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param types the device types to match
      * @return the number of matching devices
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join COUNT/DISTINCT query
     @Query(value = "SELECT COUNT(*) FROM device d "
             + " LEFT JOIN docker dk ON (dk.name = d.docker_name AND dk.vdms_id = d.docker_vdms_id) "
             + " LEFT JOIN location l ON d.location_id = l.id "
@@ -1378,6 +1440,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): location_id is the FK column of the @ManyToOne Location relation, not a scalar @Column field
     @Query(value = "UPDATE device SET position = ?2, location_id = ?3 , latitude = ?4, longitude = ?5, asset_match_status = ?6 WHERE id = ?1", nativeQuery = true)
     void updateDevicePosition(String id, String position, String location_id, String latitude, String longitude, Integer asset_match_status);
 
@@ -1389,6 +1452,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> listDevicebyDockerIntegration(String dockername);
 
@@ -1400,10 +1464,10 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param parent the parent reference to set
      * @param user_connection_type the user connection type, or {@code null} to keep the current value
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
     // PG-port: IFNULL->COALESCE
-    @Query(value = "UPDATE device SET parent = ?2, user_connection_type = COALESCE(?3, user_connection_type) WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.parent = ?2, d.user_connection_type = COALESCE(?3, d.user_connection_type) WHERE d.id = ?1")
     void updateDeviceParent(String id, String parent, String user_connection_type);
 
     /**
@@ -1412,9 +1476,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param dockername the docker name
      * @param parent the parent reference to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET parent = ?2 WHERE docker_name = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.parent = ?2 WHERE d.docker.name = ?1")
     void resetDeviceParentByDockername(String dockername, String parent);
 
     /**
@@ -1424,6 +1488,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching device id
      */
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): multi-table JOIN with LIMIT; JPQL has no LIMIT keyword and would need Pageable
     @Query(value = "SELECT DISTINCT(d.id) FROM device d JOIN device_ip_address dip ON d.id = dip.device_id WHERE dip.ip_address = ?1 LIMIT 1", nativeQuery = true)
     String getGatewayIdFromGatewayIp(String gatewayip);
 
@@ -1436,8 +1501,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param updated_timestamp the update timestamp
      */
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET asset_match_status = ?1, updated_email = ?3, updated_timestamp = ?4  WHERE id = ?2", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.asset_match_status = ?1, d.updated_email = ?3, d.updated_timestamp = ?4 WHERE d.id = ?2")
     void updateDeviceAssetStatus(int assetMatchStatus, String deviceId, String updated_email, BigInteger updated_timestamp);
 
     /*****************************************Asset Mapper Queries*********************************************************/
@@ -1448,6 +1513,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param model the model to match
      * @return the matching asset-device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<AssetDeviceDTO> findByModel(String model);
 
@@ -1457,6 +1523,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param vendor the vendor to match
      * @return the matching asset-device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<AssetDeviceDTO> findByVendor(String vendor);
 
@@ -1466,6 +1533,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param display_name the display name to match
      * @return the matching asset-device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<AssetDeviceDTO> findByDisplayName(String display_name);
 
@@ -1476,6 +1544,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param offset the number of devices to skip
      * @return the matching asset-device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<AssetDeviceDTO> getPaginatedDevices(Integer pageSize, Integer offset);
 
@@ -1486,6 +1555,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): ON CONFLICT upsert
     // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED); IFNULL->COALESCE; VALUE->VALUES
     @Query(value = "INSERT INTO device (id, docker_name, docker_vdms_id, user_data_name, user_data_model, user_data_vendor, type, mac_address, ip_address,"
             + " network_layer, serial_number, warranty, custom_fields, subsystem_parent_id, virtual_device_type, monitor, subsystem_count,created_timestamp,  created_email) VALUES (?1, ?2, ?3, ?4,?5,?6,?7,?8,?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17,?18,?19)"
@@ -1515,6 +1585,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the number of untagged devices
      */
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): product_id column has no @Column field on Device entity
     @Query(value = "SELECT COUNT(*) FROM device d WHERE d.product_id IS NULL", nativeQuery = true)
     Integer getUntaggedProductDevicesCount();
 
@@ -1524,9 +1595,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @param matched_product_ids the matched product ids to store
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET matched_product_ids = ?2 where id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.matched_product_ids = ?2 WHERE d.id = ?1")
     void updateDeviceMatchedProductIds(String device_id, String matched_product_ids);
 
     /**
@@ -1536,6 +1607,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching asset projections
      */
     //get devices by device ids for asset mapper
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<AssetDTO> getAssetMapperDevicesByIdList(List<String> device_ids);
 
@@ -1546,6 +1618,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching asset projections
      */
     //get sub system devices by device id for asset mapper
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<AssetDTO> getAssetMapperSubSystemDevicesById(String device_id);
 
@@ -1562,6 +1635,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): product_id column has no @Column field on Device entity
     @Query(value = "UPDATE device SET product_id = ?2, user_data_model = ?3, user_data_name = ?4, user_data_vendor = ?5, type = ?6, network_layer = ?7 where id = ?1", nativeQuery = true)
     void updateDeviceProductDetails(String id, String product_id, String user_data_model, String user_data_name, String user_data_vendor, String type, String network_layer);
 
@@ -1572,6 +1646,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching asset projection
      */
     //get asset mapper device by id
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     AssetDTO getAssetMapperDeviceById(String device_id);
 
@@ -1588,6 +1663,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching device projections
      */
     //list devices for snmp discovery
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> getAllDeviceByVdmsIdAndDockerName(String vdmsid, String dockername, Integer pagesize, Integer offset);
 
@@ -1603,6 +1679,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the number of matching devices
      */
     //get device status count
+    // NOT CONVERTED — stays native (PG-translation track): multi-join COUNT/DISTINCT query
     @Query(value = "SELECT COUNT(d.id) FROM device d"
             + " Left JOIN location l ON d.location_id = l.id"
             + " Left JOIN floor f ON l.floor_id = f.id"
@@ -1621,6 +1698,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the number of matching devices
      */
     //get monitored device count
+    // NOT CONVERTED — stays native (PG-translation track): multi-join COUNT/DISTINCT query
     @Query(value = "SELECT COUNT(d.id) FROM device d"
             + " Left JOIN location l ON d.location_id = l.id"
             + " Left JOIN floor f ON l.floor_id = f.id"
@@ -1638,6 +1716,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param locationid the location identifier, or {@code null} for all locations
      * @return the number of matching devices
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join COUNT/DISTINCT query
     @Query(value = "SELECT COUNT(d.id) FROM device d"
             + " LEFT JOIN location l ON d.location_id = l.id"
             + " LEFT JOIN floor f ON l.floor_id = f.id"
@@ -1654,9 +1733,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param measuring_instrument_status the measuring instrument status to set
      */
     // update measuring instrument status
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET measuring_instrument_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.measuring_instrument_status = ?2 WHERE d.id = ?1")
     void updateDeviceMeasuringInstrumentStatus(String device_id, String measuring_instrument_status);
 
     /**
@@ -1667,9 +1746,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param longitude the longitude
      * @param position the position
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET latitude = ?2, longitude = ?3, position = ?4 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.latitude = ?2, d.longitude = ?3, d.position = ?4 WHERE d.id = ?1")
     void updateDeviceCoordinates(String device_id, String latitude, String longitude, String position);
 
     /**
@@ -1678,6 +1757,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param checklist_id the checklist identifier
      * @return the matching device projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     DeviceDTO getDeviceDetails(String checklist_id);
 
@@ -1687,9 +1767,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @param checklist_status the record-checklist status to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET record_checklist_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.record_checklist_status = ?2 WHERE d.id = ?1")
     void updateDeviceRecordChecklistStatus(String device_id, String checklist_status);
 
     /**
@@ -1698,9 +1778,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @param record_checklist_count the record-checklist count to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET record_checklist_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.record_checklist_count = ?2 WHERE d.id = ?1")
     void updateDeviceRecordChecklistCount(String device_id, Integer record_checklist_count);
 
 
@@ -1714,6 +1794,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): location_id is FK of the @ManyToOne Location relation
     @Query(value = "UPDATE device SET location_id = NULL, latitude = ?2, longitude = ?3, position = ?4 WHERE location_id = ?1", nativeQuery = true)
     void updateDeviceLocation(String location_id, String latitude, String longitude, String position);
 
@@ -1724,8 +1805,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      */
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET daintree_count = ?1 WHERE id = ?2", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.daintree_count = ?1 WHERE d.id = ?2")
     void updateDeviceDaintreeDevicesCount(Integer daintree_count, String device_id);
 
     /**
@@ -1735,9 +1816,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the matching device ids
      */
     @Transactional
-    @Modifying
-    @Query(value = "SELECT id from device WHERE (?1 = 'all' or docker_name = ?1) AND (bacnet_status = 'alert' or disruptive_status = 'alert' or lorawan_status = 'alert' or my_devices_status = 'alert' or "
-            + "monnit_status = 'alert' or pelican_status = 'alert' or knx_status = 'alert' or measuring_instrument_status = 'alert' or daintree_status = 'alert' or modbus_status = 'alert') ", nativeQuery = true)
+    @Query("SELECT d.id FROM Device d WHERE ('all' = ?1 OR d.docker.name = ?1) AND (d.bacnet_status = 'alert' OR d.disruptive_status = 'alert' OR d.lorawan_status = 'alert' OR d.my_devices_status = 'alert' OR d.monnit_status = 'alert' OR d.pelican_status = 'alert' OR d.knx_status = 'alert' OR d.measuring_instrument_status = 'alert' OR d.daintree_status = 'alert' OR d.modbus_status = 'alert')")
     List<String> listDevicesByAlertStatus(String dockername);
 
     /**
@@ -1747,8 +1826,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param daintree_status the Daintree status to set
      */
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET daintree_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.daintree_status = ?2 WHERE d.id = ?1")
     void updateDeviceDaintreeStatus(String device_id, String daintree_status);
 
     /**
@@ -1758,6 +1837,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Transactional
     @Modifying
+    // NOT CONVERTED — stays native (PG-translation track): product_id column has no @Column field on Device entity; also docker_name is FK column of @ManyToOne Docker
     @Query(value = "UPDATE device SET model = NULL, user_data_model = NULL, user_data_vendor = NULL, product_id = NULL WHERE docker_name = ?1", nativeQuery = true)
     void modelResetbyDockerName(String docker_name);
 
@@ -1767,6 +1847,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @return the matching device alert projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     DeviceAlertDTO getDeviceAlertInfoById(String device_id);
 
@@ -1777,8 +1858,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      */
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET qrcode_count = ?1 WHERE id = ?2", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.qrcode_count = ?1 WHERE d.id = ?2")
     void updateDeviceQrcodeCount(Integer qrcode_count, String device_id);
 
     /**
@@ -1787,6 +1868,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param deviceid the device identifier
      * @return the matching room status projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     RoomStatusDTO getRoomStatusByDeviceId(String deviceid);
 
@@ -1796,6 +1878,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param locationid the location identifier
      * @return the matching room status projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceMonitorSpaceDTO> getRoomStatusByLocationId(String locationid);
 
@@ -1806,9 +1889,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param id the device identifier
      * @param asset_image_url the asset image URL to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET asset_image_url = ?2 where id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.asset_image_url = ?2 WHERE d.id = ?1")
     void updateAssetImage(String id, String asset_image_url);
 
     /**
@@ -1817,7 +1900,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @return the asset image URLs
      */
-    @Query(value = " SELECT asset_image_url FROM device WHERE id = ?1", nativeQuery = true)
+    @Query("SELECT d.asset_image_url FROM Device d WHERE d.id = ?1")
     String getAssetImageUrls(String device_id);
 
     /**
@@ -1825,6 +1908,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getAllChecklistDevicesPagination(String searchkey, Integer pagesize, Integer offset, JSONArray dockernames, JSONArray types, JSONArray global_checklist_ids, JSONArray virtual_device_types, Boolean isTaggedToQrCode, JSONArray deviceIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray deviceIdsTaggedToNfc, Boolean isTaggedToBarCode, JSONArray deviceIdsTaggedToClientBarCode);
 
@@ -1833,6 +1917,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getAllInspectionDevicesPagination(String searchkey, Integer pagesize, Integer offset, JSONArray dockernames, JSONArray types, JSONArray global_checklist_ids, String global_inspection_record_id, JSONArray virtual_device_types, Boolean isTaggedToQrCode, JSONArray deviceIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray deviceIdsTaggedToNfc, Boolean isTaggedToBarCode, JSONArray deviceIdsTaggedToClientBarCode);
 
@@ -1841,6 +1926,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getAllQrcodeDevicesPagination(String searchkey, Integer pagesize, Integer offset, JSONArray dockernames, JSONArray types, JSONArray virtual_device_types, Boolean isTaggedToQrCode, JSONArray deviceIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray deviceIdsTaggedToNfc, Boolean isTaggedToBarCode, JSONArray deviceIdsTaggedToClientBarCode);
 
@@ -1849,6 +1935,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getAllNetworkParentDeviceByPagination(JSONArray dockernames, JSONArray types, String searchkey, Integer pagesize, Integer offset, JSONArray virtual_device_types, Boolean isTaggedToQrCode, JSONArray deviceIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray deviceIdsTaggedToNfc, Boolean isTaggedToBarCode, JSONArray deviceIdsTaggedToClientBarCode);
 
@@ -1859,6 +1946,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @return the matching device alert projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     DeviceAlertDTO getDeviceConditionAlertInfoById(String device_id);
 
@@ -1868,6 +1956,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param vdms_id the VDMS identifier
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> listAllDeviceByVdmsId(String vdms_id);
 
@@ -1878,9 +1967,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param ecobee_count the ecobee count to set
      */
     // update ecobee count
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET ecobee_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.ecobee_count = ?2 WHERE d.id = ?1")
     void updateDeviceEcobeeCount(String device_id, Integer ecobee_count);
 
     /**
@@ -1890,9 +1979,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param ecobee_status the ecobee status to set
      */
     // update  ecobee status
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET ecobee_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.ecobee_status = ?2 WHERE d.id = ?1")
     void updateDeviceEcobeeStatus(String device_id, String ecobee_status);
 
     /**
@@ -1900,6 +1989,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getFilterVirtualDevicesByPagination(String searchKey, Integer pageSize, Integer offset, Set<String> dockernames, Set<String> types, Set<String> virtual_device_types);
 
@@ -1909,6 +1999,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_ids the device identifiers to match
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> getDeviceDetailsByDeviceIdList(Set<String> device_ids);
 
@@ -1919,8 +2010,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param modbus_count the Modbus count to set
      */
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET modbus_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.modbus_count = ?2 WHERE d.id = ?1")
     void updateDeviceModbusCount(String device_id, Integer modbus_count);
 
     /**
@@ -1930,8 +2021,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param modbus_status the Modbus status to set
      */
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET modbus_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.modbus_status = ?2 WHERE d.id = ?1")
     void updateDeviceModbusStatus(String device_id, String modbus_status);
 
     /**
@@ -1942,6 +2033,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param offset the number of devices to skip
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getAssetsByLocationId(String location_id, Integer pagesize, Integer offset);
 
@@ -1952,8 +2044,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param status the reboot status to set
      */
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET reboot_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.reboot_status = ?2 WHERE d.id = ?1")
     void updateDeviceRebootStatus(String deviceId, String status);
 
     /**
@@ -1962,7 +2054,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param vdmsid the device identifier
      * @return the reboot status
      */
-    @Query(value = "SELECT reboot_status from device WHERE id = ?1", nativeQuery = true)
+    @Query("SELECT d.reboot_status FROM Device d WHERE d.id = ?1")
     String getDeviceRebootStatus(String vdmsid);
 
 
@@ -1971,6 +2063,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getAllChecklistDevices(String searchkey, JSONArray dockernames, JSONArray types, String global_checklist_id, JSONArray virtual_device_types, Boolean isTaggedToQrCode, JSONArray deviceIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray deviceIdsTaggedToNfc);
 
@@ -1979,6 +2072,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getAllInspectionDevices(String searchkey, JSONArray dockernames, JSONArray types, String global_checklist_id, String global_inspection_record_id, JSONArray virtual_device_types, Boolean isTaggedToQrCode, JSONArray deviceIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray deviceIdsTaggedToNfc);
 
@@ -1987,6 +2081,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getAllQrcodeDevices(String searchkey, JSONArray dockernames, JSONArray types, JSONArray virtual_device_types, Boolean isTaggedToQrCode, JSONArray deviceIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray deviceIdsTaggedToNfc);
 
@@ -1995,6 +2090,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getAllNetworkParentDevices(JSONArray dockernames, JSONArray types, String searchkey, JSONArray virtual_device_types, Boolean isTaggedToQrCode, JSONArray deviceIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray deviceIdsTaggedToNfc);
 
@@ -2003,6 +2099,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device ids
      */
+    // NOT CONVERTED — stays native (PG-translation track): CONCAT_WS-based search, CASE WHEN virtual_device_type filters, multi-join
     // PG-port: IF->CASE WHEN
     @Query(value = "SELECT d.id FROM device d LEFT JOIN location l ON l.id = d.location_id" +
             " LEFT JOIN floor f ON l.floor_id = f.id" +
@@ -2024,6 +2121,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> getDevicesByFilter(List<String> dockerNames, List<String> types, String searchKey, List<String> virtual_device_types, Boolean isTaggedToQrCode, List<String> deviceIdsTaggedToQrCode, Boolean isTaggedToNfc, List<String> deviceIdsTaggedToNfc, List<String> locationIds, List<String> deviceIds);
 
@@ -2034,6 +2132,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): plain INSERT
     @Query(value = "INSERT INTO device(id, location_id, model, vendor, description, docker_name, docker_vdms_id, asset_match_status, " +
             "created_timestamp, created_email, asset_group, virtual_device_type, monitor, user_data_name)" +
             "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)", nativeQuery = true)
@@ -2047,9 +2146,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param onboard_status the onboard status to set
      * @param updated_timestamp the update timestamp
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET onboard_status = ?2, updated_timestamp = ?3 WHERE id IN ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.onboard_status = ?2, d.updated_timestamp = ?3 WHERE d.id IN ?1")
     void updateOnboardAssetStatus(Set<String> device_ids, Integer onboard_status, BigInteger updated_timestamp);
 
     /**
@@ -2058,9 +2157,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @param asset_ocr_image_url the asset OCR image URL to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET asset_ocr_image_url = ?2 where id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.asset_ocr_image_url = ?2 WHERE d.id = ?1")
     void updateAssetOcrImage(String device_id, String asset_ocr_image_url);
 
     /**
@@ -2069,7 +2168,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @return the asset OCR image URLs
      */
-    @Query(value = " SELECT asset_ocr_image_url FROM device WHERE id = ?1", nativeQuery = true)
+    @Query("SELECT d.asset_ocr_image_url FROM Device d WHERE d.id = ?1")
     String getAssetOcrImageUrls(String device_id);
 
     /**
@@ -2080,7 +2179,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the number of matching devices
      */
     @Transactional
-    @Query(value = "SELECT COUNT(id) FROM device WHERE (?1 = 'all' or docker_name = ?1) AND monitor = 1 AND asset_match_status != 3 AND onboard_status = ?2", nativeQuery = true)
+    @Query("SELECT COUNT(d) FROM Device d WHERE ('all' = ?1 OR d.docker.name = ?1) AND d.monitor = 1 AND d.asset_match_status <> 3 AND d.onboard_status = ?2")
     Integer getAssetOnboardCount(String dockername, int onboard_status);
 
     /**
@@ -2090,6 +2189,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): plain INSERT
     @Query(value = "INSERT INTO device(id, docker_vdms_id, docker_name, ip_address, status, mac_address, last_seen_on, display_name, vendor, created_timestamp, user_data_name, type, description, "
             + " custom_fields, created_email,asset_group,onboard_status, monitor, virtual_device_type) VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9,?10,?11,?12,?13,?14,?15,?16,?17,?18, ?19)", nativeQuery = true)
     void addDevice(String id, String vdms_id, String docker_name, String ip_address, Integer status,
@@ -2102,6 +2202,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param location_id the location identifier
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getDevicesByLocationId(String location_id);
 
@@ -2111,6 +2212,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @return the matching device projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     DeviceDTO getDeviceByDeviceIdNew(String device_id);
 
@@ -2125,6 +2227,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): location_id is FK of @ManyToOne Location relation
     @Query(value = "UPDATE device SET latitude = ?2, longitude = ?3, position = ?4, location_id = ?5 WHERE id = ?1", nativeQuery = true)
     void updateDeviceCoordinatesAndLocationId(String device_id, String latitude, String longitude, String position, String location_id);
 
@@ -2135,6 +2238,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param dockername the docker name
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> getAllDeviceByVdmsIdAndDockerNameWithoutPagination(String vdmsid, String dockername);
 
@@ -2144,9 +2248,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param digital_twin_image_url the digital twin image URL to set
      * @param device_id the device identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET digital_twin_image_url = ?1 WHERE id = ?2", nativeQuery = true)
+    @Query("UPDATE Device d SET d.digital_twin_image_url = ?1 WHERE d.id = ?2")
     void updateDigitalTwinImageUrlById(String digital_twin_image_url, String device_id);
 
     /**
@@ -2154,9 +2258,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @param device_id the device identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET digital_twin_image_url = NULL WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.digital_twin_image_url = NULL WHERE d.id = ?1")
     void deleteDigitalTwinImageUrl(String device_id);
 
     /**
@@ -2165,7 +2269,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @return the digital twin image URL
      */
-    @Query(value = " SELECT digital_twin_image_url FROM device WHERE id = ?1", nativeQuery = true)
+    @Query("SELECT d.digital_twin_image_url FROM Device d WHERE d.id = ?1")
     String getDigitalTwinImageUrl(String device_id);
 
 
@@ -2175,9 +2279,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param deviceId the device identifier
      * @param polyLensDeviceCount the Poly Lens device count to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET poly_lens_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.poly_lens_count = ?2 WHERE d.id = ?1")
     void updatePolyLensDeviceCount(String deviceId, Integer polyLensDeviceCount);
 
 
@@ -2187,9 +2291,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param deviceId the device identifier
      * @param mqttDeviceCount the MQTT device count to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET mqtt_device_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.mqtt_count = ?2 WHERE d.id = ?1")
     void updateMqttDeviceDeviceCount(String deviceId, Integer mqttDeviceCount);
 
 
@@ -2198,6 +2302,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getAllRecordChecklistDevicesPagination(String searchkey, Integer pagesize, Integer offset, JSONArray dockernames, JSONArray types, JSONArray global_checklist_ids, String inspection_record_id, JSONArray virtual_device_types, Boolean isTaggedToQrCode, JSONArray deviceIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray deviceIdsTaggedToNfc, Boolean isTaggedToBarCode, JSONArray deviceIdsTaggedToClientBarCode);
 
@@ -2207,6 +2312,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_ids the device identifiers to match
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getDeviceDetailsByIdList(Set<String> device_ids);
 
@@ -2215,7 +2321,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the total number of devices
      */
-    @Query(value = "SELECT COUNT(*) FROM device", nativeQuery = true)
+    @Query("SELECT COUNT(d) FROM Device d")
     Integer getAllDeviceCount();
 
 
@@ -2224,7 +2330,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device ids
      */
-    @Query(value = "SELECT id FROM device WHERE digital_twin_image_url IS NOT NULL", nativeQuery = true)
+    @Query("SELECT d.id FROM Device d WHERE d.digital_twin_image_url IS NOT NULL")
     List<String> getDeviceIdsWithDigitalTwinImageUrl();
 
 
@@ -2234,7 +2340,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the distinct device types
      */
     @Transactional
-    @Query(value = "SELECT DISTINCT(d.type) FROM device d ", nativeQuery = true)
+    @Query("SELECT DISTINCT d.type FROM Device d")
     List<String> getAllUniqueDeviceTypes();
 
     /**
@@ -2243,9 +2349,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param type the new type to set
      * @param idPrefix the type prefix to match
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device d SET d.type = ?1 WHERE d.type LIKE CONCAT(?2, '%') ", nativeQuery = true)
+    @Query("UPDATE Device d SET d.type = ?1 WHERE d.type LIKE CONCAT(?2, '%')")
     void updateTypeByType(String type, String idPrefix);
 
     /**
@@ -2253,9 +2359,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the number of rows affected
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device d SET d.type ='generic' WHERE d.type IS NULL ", nativeQuery = true)
+    @Query("UPDATE Device d SET d.type = 'generic' WHERE d.type IS NULL")
     Integer setTypeGeneric();
 
     /**
@@ -2264,9 +2370,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param type the existing type to match
      * @param updateType the new type to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device d SET d.type = ?2 WHERE d.type = ?1 ", nativeQuery = true)
+    @Query("UPDATE Device d SET d.type = ?2 WHERE d.type = ?1")
     void updateDeviceType(String type, String updateType);
 
     /**
@@ -2275,6 +2381,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param measuringInstrumentId the measuring instrument identifier
      * @return the matching device projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     DeviceDTO getDeviceByMeasuringInstrumentId(String measuringInstrumentId);
 
@@ -2289,6 +2396,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param sanitizedSearchKey the sanitized search filter term
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> browseAiCallFlowDevicesWithSearch(String vdmsid, String dockername, Integer offset, Integer pagesize, String sanitizedSearchKey);
 
@@ -2299,9 +2407,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @param is_dnd_enabled the do-not-disturb flag to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET is_dnd_enabled = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.is_dnd_enabled = ?2 WHERE d.id = ?1")
     void toggleDndStatus(String device_id, Boolean is_dnd_enabled);
 
     /**
@@ -2311,7 +2419,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the resolved device name
      */
     // PG-port: IF->CASE WHEN
-    @Query(value = "SELECT  CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as name FROM device d WHERE d.id = ?1", nativeQuery = true)
+    @Query("SELECT CASE WHEN (d.user_data_name IS NULL OR d.user_data_name = '') THEN d.display_name ELSE d.user_data_name END FROM Device d WHERE d.id = ?1")
     String getDeviceNameById(String deviceId);
 
     /**
@@ -2320,6 +2428,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param deviceId the device identifier
      * @return the matching device projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     DeviceDTO getDeviceById(String deviceId);
 
@@ -2331,6 +2440,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     // HAM Asset import //
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): plain INSERT
     @Query(value = "INSERT INTO device(id,ip_address,mac_address,user_data_name,user_data_model,user_data_vendor,type,"
             + "location_id,network_layer,parent,snmp_parent,monitor,docker_name,docker_vdms_id,last_seen_on,warranty,status,"
             + "email_alert, sms_alert, popup_notification, virtual_device_type, serial_number, local_vendor_email_alert,local_vendor_sms_alert, "
@@ -2352,8 +2462,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param operationalStatus the operational status to set
      */
     @Transactional
-    @Modifying
-    @Query(value = "UPDATE device SET operational_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Device d SET d.operational_status = ?2 WHERE d.id = ?1")
     void updateDeviceOperationalStatus(String device_id, String operationalStatus);
 
     /**
@@ -2364,6 +2474,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Transactional
     @Modifying
+    // NOT CONVERTED — stays native (PG-translation track): assigned_user_email is @JoinColumn FK of @ManyToOne User relation; JPQL cannot SET a relation from a bare email string
     @Query(value = "UPDATE device SET assigned_user_email = ?2 WHERE id = ?1", nativeQuery = true)
     void updateAssignedUserEmail(String deviceId, String assignedUserEmail);
 
@@ -2374,6 +2485,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param deviceId the device identifier
      * @return the matching device projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     DeviceDTO getDeviceInfoFromDb(String deviceId);
 
@@ -2385,6 +2497,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): plain INSERT
     @Query(value = "INSERT INTO device(id, user_data_name, monitor, docker_name, docker_vdms_id, warranty, virtual_device_type, serial_number, " +
             " asset_match_status,created_timestamp, created_email,asset_group,assigned_user_email,mac_address, ip_address, status,last_seen_on, user_data_model, subsystem_parent_id) VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9,?10,?11,?12,?13,?14,?15, ?16,?17, ?18, ?19)", nativeQuery = true)
     void addVirtualDeviceFromInventory(String finalDeviceId, String userDataName, Integer monitor, String dockerName,
@@ -2400,6 +2513,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): plain INSERT
     @Query(value = "INSERT INTO inventory_device(device_id, tracking_id) VALUES(?1, ?2)", nativeQuery = true)
     void tagInventoryDevices(String deviceId, String inventoryTrackingId);
 
@@ -2409,6 +2523,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param serialNumber the serial number
      * @return the matching device, or {@code null} if none exists
      */
+    // NOT CONVERTED — stays native (PG-translation track): full Device entity load would drag in huge eager graph (docker, location, global_qrcode, device_onboard_status, etc.) via SELECT *; LIMIT has no JPQL equivalent
     @Query(value = "SELECT * FROM device WHERE serial_number = ?1 LIMIT 1", nativeQuery = true)
     Device findDeviceIdBySerialNumber(String serialNumber);
 
@@ -2419,6 +2534,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param sanitizedSearchKey the sanitized search filter term, or {@code null} for no filter
      * @return the matching docker names
      */
+    // NOT CONVERTED — stays native (PG-translation track): REGEXP_REPLACE-based search normalization
     @Query(value = "SELECT DISTINCT docker_name FROM device d WHERE d.docker_vdms_id = ?1 AND d.ai_call = true AND d.docker_name IS NOT NULL AND (?2 = 'null'  or LOWER(REGEXP_REPLACE(CONCAT_WS('', d.docker_name), '[ -.!\t_+#~`@$%^&*()=;:<>?,/{}|\\\\ ]' , '')) LIKE CONCAT('%',?2,'%'))", nativeQuery = true)
     Set<String> listAiEnabledDockers(String vdmsid, String sanitizedSearchKey);
 
@@ -2429,7 +2545,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param id the device identifier
      * @return the AI-call enabled flag
      */
-    @Query(value = "SELECT ai_call FROM device WHERE id = ?1", nativeQuery = true)
+    @Query("SELECT d.ai_call FROM Device d WHERE d.id = ?1")
     Boolean checkAiCallEnableStatus(String id);
 
     /**
@@ -2438,7 +2554,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param id the device identifier
      * @return the do-not-disturb flag
      */
-    @Query(value = "SELECT is_dnd_enabled FROM device WHERE id = ?1", nativeQuery = true)
+    @Query("SELECT d.is_dnd_enabled FROM Device d WHERE d.id = ?1")
     Boolean checkAiCallDndEnabled(String id);
 
     /**
@@ -2446,9 +2562,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @param id the device identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device d SET d.is_dnd_enabled=1 WHERE d.id=?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.is_dnd_enabled = true WHERE d.id = ?1")
     void updateDeviceDndEnabledStatus(String id);
 
     /**
@@ -2457,10 +2573,10 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param id the device identifier
      * @param dndTimestamp the do-not-disturb timestamp to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device d SET d.dnd_timestamp=?2 WHERE d.id=?1", nativeQuery = true)
-    void updateDeviceDndTimestamp(String id,BigInteger dndTimestamp);
+    @Query("UPDATE Device d SET d.dnd_timestamp = ?2 WHERE d.id = ?1")
+    void updateDeviceDndTimestamp(String id, BigInteger dndTimestamp);
 
     /**
      * Returns the AI-call and status information for the given device.
@@ -2468,6 +2584,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param deviceId the device identifier
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> getAiCallAndDeviceStatus(String deviceId);
 
@@ -2477,6 +2594,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param b the do-not-disturb flag to match
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> getDndDevices(boolean b);
 
@@ -2486,9 +2604,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param id the device identifier
      * @param b the do-not-disturb flag to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET is_dnd_enabled = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.is_dnd_enabled = ?2 WHERE d.id = ?1")
     void updateDndStatus(String id, boolean b);
 
     /**
@@ -2496,9 +2614,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @param id the device identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET system_dnd_enabled = 1 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.system_dnd_enabled = true WHERE d.id = ?1")
     void updateSystemDndEnabled(String id);
 
     /**
@@ -2507,9 +2625,9 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param id the device identifier
      * @param b the system do-not-disturb flag to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET system_dnd_enabled = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.system_dnd_enabled = ?2 WHERE d.id = ?1")
     void updateSystemDndDisabled(String id, boolean b);
 
     /**
@@ -2519,6 +2637,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param isDndEnabled the do-not-disturb flag to match
      * @return the matching device projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     DeviceDTO getDeviceDndAndSystemDndStatus(String deviceId, Boolean isDndEnabled);
 
@@ -2529,7 +2648,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @return the resolved model
      */
     // PG-port: IF->CASE WHEN
-    @Query(value = "SELECT CASE WHEN d.user_data_model IS NULL OR d.user_data_model = '' THEN d.model ELSE d.user_data_model END as model FROM device d WHERE d.id = ?1", nativeQuery = true)
+    @Query("SELECT CASE WHEN (d.user_data_model IS NULL OR d.user_data_model = '') THEN d.model ELSE d.user_data_model END FROM Device d WHERE d.id = ?1")
     String getModelById(String deviceId);
 
     /**
@@ -2547,6 +2666,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param parentId the subsystem parent identifier
      * @return the matching device, if present
      */
+    // NOT CONVERTED — stays native (PG-translation track): SELECT * loads full Device entity eager graph; use derived method or scalar projection instead
     @Query(value = "SELECT * FROM device WHERE user_data_name = ?1 AND subsystem_parent_id = ?2", nativeQuery = true)
     Optional<Device> findByDisplayNameAndSubsystemParentId(String displayName, String parentId);
 
@@ -2556,6 +2676,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> getAllDeviceCustomDetailsPaginated(String searchKey, Integer pageSize, Integer offset, List<String> excludeDeviceIds, String dockerName);
 
@@ -2564,6 +2685,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> getAllDeviceCustomDetails(String searchKey, List<String> excludeDeviceIds, String dockerName);
 
@@ -2572,6 +2694,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> getDeviceCustomDetailsPaginated(String searchKey, Integer pageSize, Integer offset, List<String> deviceIds);
 
@@ -2580,6 +2703,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> getDeviceCustomDetails(String searchKey, List<String> deviceIds);
 
@@ -2588,6 +2712,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> getDeviceCustomDetailsByIds(String searchKey, List<String> deviceIds, List<String> models, List<String> assetCategory);
 
@@ -2596,6 +2721,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     List<DeviceDTO> getDeviceCustomDetailsByIdsPaginated(String searchKey, Integer pageSize, Integer offset, List<String> deviceIds, List<String> models, List<String> assetCategory);
 
@@ -2607,6 +2733,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param dockerName the docker name, or {@code all} for all dockers
      * @return the matching device ids
      */
+    // NOT CONVERTED — stays native (PG-translation track): CONCAT_WS-based search normalization
     @Query(value = "SELECT d.id " +
             "FROM device d " +
             "WHERE ( ?2 = 'all' OR d.docker_name = ?2 ) " +
@@ -2623,11 +2750,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param dockerName the docker name, or {@code all} for all dockers
      * @return the matching device ids
      */
-    @Query(value = "SELECT d.id " +
-            "FROM device d " +
-            "WHERE ( ?1 = 'all' OR d.docker_name = ?1 ) " +
-            "AND (d.virtual_device_type IS NULL OR d.virtual_device_type = 0) ",
-            nativeQuery = true)
+    @Query("SELECT d.id FROM Device d WHERE ('all' = ?1 OR d.docker.name = ?1) AND (d.virtual_device_type IS NULL OR d.virtual_device_type = 0)")
     List<String> getAllDeviceIdsSelectAll(String dockerName);
 
 
@@ -2640,6 +2763,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param dockerName the docker name, or {@code all} for all dockers
      * @return the matching device ids
      */
+    // NOT CONVERTED — stays native (PG-translation track): CONCAT_WS search + LIMIT/OFFSET
     @Query(value = "SELECT d.id " +
             "FROM device d " +
             "WHERE ( ?4 = 'all' OR d.docker_name = ?4 ) " +
@@ -2659,6 +2783,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param dockerName the docker name, or {@code all} for all dockers
      * @return the matching device ids
      */
+    // NOT CONVERTED — stays native (PG-translation track): LIMIT/OFFSET requires Pageable in JPQL; signature change would break callers
     @Query(value = "SELECT d.id " +
             "FROM device d " +
             "WHERE ( ?3 = 'all' OR d.docker_name = ?3 ) " +
@@ -2673,6 +2798,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      *
      * @return the matching device projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     Set<DeviceDTO> getAllBarCodeDevicesPagination(String searchkey, Integer pagesize, Integer offset, JSONArray dockernames, JSONArray types, JSONArray virtualDeviceTypes, Boolean isTaggedToQrCode, JSONArray deviceIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray deviceIdsTaggedToNfc, Boolean isTaggedToBarCode, JSONArray deviceIdsTaggedToClientBarCode);
 
@@ -2682,6 +2808,7 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param deviceId the device identifier
      * @return the matching device projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
     @Query(nativeQuery = true)
     DeviceDTO getAllDeviceImages(String deviceId);
 
@@ -2691,15 +2818,16 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param id the device identifier
      * @param jsonString the asset tag images URL JSON to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device SET asset_tag_images_url = ?2 where id = ?1", nativeQuery = true)
+    @Query("UPDATE Device d SET d.asset_tag_images_url = ?2 WHERE d.id = ?1")
     void updateAssetTagImages(String id, String jsonString);
 
     /**
      * DB-per-service helper: returns (id, product_id) pairs for the given device ids,
      * used to map device -> product for InventoryClient enrichment of image URLs.
      */
+    // NOT CONVERTED — stays native (PG-translation track): product_id column has no @Column field on Device entity
     @Query(value = "SELECT id, product_id FROM device WHERE id IN (:ids)", nativeQuery = true)
     List<Object[]> findDeviceProductIdRows(@Param("ids") Set<String> ids);
 }

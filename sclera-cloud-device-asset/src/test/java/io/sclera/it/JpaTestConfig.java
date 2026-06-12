@@ -77,7 +77,8 @@ import org.springframework.context.annotation.Configuration;
                             io.sclera.Repository.ApplicationUserRepository.class,
                             io.sclera.Repository.TechnicianAvailabilityRepository.class,
                             io.sclera.Repository.TechnicianRepository.class,
-                            io.sclera.Repository.MeasuringInstrumentRepository.class }))
+                            io.sclera.Repository.MeasuringInstrumentRepository.class,
+                            io.sclera.Repository.DeviceRepository.class }))
 public class JpaTestConfig {
     // Intentionally empty — all beans come from @ImportAutoConfiguration.
 }
