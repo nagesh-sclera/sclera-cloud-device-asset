@@ -122,14 +122,25 @@ grep proves the three converted methods were their only callers. `updateDeviceSe
 
 ## Documented bug fixes (fix + javadoc note + migration-notes entry)
 
-1. **Custom-field `does_not_contain`** generated the same `LIKE` as `contains` (no `NOT`); same for
-   `not_equal_to` vs `equal_to`. Fixed to real negation.
-2. **Device-ids filter** emitted double-quoted literals — PostgreSQL identifier syntax, runtime error today.
-   Fixed by bound `IN` parameters.
-3. **SQL injection** throughout — fixed inherently by bind parameters + LIKE-escape.
-4. **To verify during implementation:** the earlier PG port left `REGEXP_REPLACE(x, '[...]', '')` without the
-   `'g'` flag — PostgreSQL then strips only the FIRST special character (MySQL stripped all). The new
-   `strip_specials` uses `'g'`; confirm the old MySQL intent and document as a port-bug fix.
+> CORRECTION (2026-06-12, plan-research): the originally-suspected "custom-field `does_not_contain` ==
+> `contains`" bug is NOT a bug. The inner custom-fields CASE deliberately uses the POSITIVE pattern — it
+> injects the search term into the search-all haystack when the custom fields match, and the OUTER
+> condition pattern applies the polarity (NOT LIKE for does_not_contain etc.). The conversion must
+> reproduce this inner-positive/outer-polarity structure faithfully.
+
+1. **Device-ids filter** emitted double-quoted literals (`d.id IN ("abc")`) — PostgreSQL identifier syntax,
+   runtime error today. Fixed by bound `IN` parameters.
+2. **SQL injection** throughout — fixed inherently by bind parameters.
+3. **`REGEXP_REPLACE` missing `'g'` flag** (PG port artifact): PostgreSQL strips only the FIRST special
+   character, while MySQL (and the paired Java `replaceAll`) strips ALL — so any search value/column text
+   with 2+ special characters mismatches today. The new `strip_specials` uses `'g'`.
+4. **Timestamp sort crash**: sorting by `created_timestamp`/`updated_timestamp` generates `bigint = ''`,
+   a PostgreSQL type error at runtime. The rewrite omits the `= ''` sort key for numeric columns.
+5. **Sort by `assignee_email`/`username`/`email` crash**: the generated outer query references `dos.`/`ds.`
+   aliases that the outer SELECT never joins — SQL error today. The rewrite joins what the sort needs.
+6. **Condition-set inconsistency**: the count method supports `onboardpending`/`onboardcompleted` but the
+   paged/export methods silently ignore them (count filtered, page unfiltered). Unified: all three accept
+   the full condition set via the shared `DeviceSearchCriteria.from`.
 
 Anything else found mid-implementation follows the same policy: obvious self-contradicting behavior is
 fixed and documented; questionable semantics are preserved and flagged.
@@ -147,7 +158,10 @@ in `DeviceSearchCriteria.from` surface as today (caught by the service wrapper).
   - each `condition` value (all/unmonitored/online/offline/other/matched/unmatched/verified/archived/
     onboarded/notonboarded/assigned/unassigned),
   - custom-field column filter present/absent (including the `'null'`-string arm),
-  - the fixed `does_not_contain` / `not_equal_to` (regression tests asserting the NEW correct behavior),
+  - the inner-positive/outer-polarity semantics of search-all over custom fields (`does_not_contain` /
+    `not_equal_to` exclude devices whose custom fields match — preserved behavior),
+  - regression tests for the documented fixes (multi-special-char search values, timestamp sort,
+    assignee_email/username sort),
   - search-all with special characters and `±` boundary semantics (`equal_to` vs `contains` vs
     `starts_with`/`ends_with`),
   - per-column and custom-field keyword search,
