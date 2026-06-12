@@ -164,6 +164,7 @@ CREATE TABLE IF NOT EXISTS device (
     network_layer   VARCHAR(64),
     status          INTEGER,
     onboard_status  INTEGER,
+    monitor         INTEGER      DEFAULT 1,
     vdms_id         VARCHAR(64)  REFERENCES vdms(id),
     location_id     VARCHAR(255) REFERENCES location(id)
 );
@@ -542,6 +543,58 @@ CREATE TABLE IF NOT EXISTS device_technician (
     device_id     VARCHAR(255) NOT NULL,
     technician_id VARCHAR(255) NOT NULL,
     PRIMARY KEY (device_id, technician_id)
+);
+
+-- measuring_instrument: sensors/instruments tied to devices (MeasuringInstrumentRepository)
+-- device_id is the FK column backing the @ManyToOne Device relation (LAZY); no FK constraint
+-- to device here because the minimal test schema has a sparse device table and we seed devices separately.
+CREATE TABLE IF NOT EXISTS measuring_instrument (
+    id                    VARCHAR(255) PRIMARY KEY,
+    type                  VARCHAR(255),
+    name                  VARCHAR(255),
+    description           TEXT,
+    calculation_type      VARCHAR(255),
+    scale_type            VARCHAR(64)  DEFAULT 'static',
+    attribute             TEXT,
+    parameter             TEXT,
+    category              VARCHAR(255) DEFAULT 'generic',
+    sub_category          VARCHAR(255) DEFAULT 'generic',
+    value                 VARCHAR(255),
+    unit                  VARCHAR(255),
+    tags                  TEXT,
+    timestamp             NUMERIC,
+    sensor_type           VARCHAR(255) DEFAULT 'generic',
+    alert                 BOOLEAN      DEFAULT false,
+    user_data_value       VARCHAR(64),
+    user_data_name        VARCHAR(128),
+    show_on_map           INTEGER      DEFAULT 1,
+    show_on_scan          INTEGER      DEFAULT 1,
+    measuring_entity      VARCHAR(128) DEFAULT 'device',
+    digital_twin_position TEXT,
+    device_id             VARCHAR(255) REFERENCES device(id)
+);
+
+-- measuring_instrument_location: @ManyToMany join table (instrument <-> location)
+CREATE TABLE IF NOT EXISTS measuring_instrument_location (
+    measuring_instrument_id VARCHAR(255) NOT NULL REFERENCES measuring_instrument(id),
+    location_id             VARCHAR(255) NOT NULL REFERENCES location(id),
+    PRIMARY KEY (measuring_instrument_id, location_id)
+);
+
+-- measuring_instrument_attributes: per-instrument protocol attributes (MeasuringInstrument_Attributes)
+CREATE TABLE IF NOT EXISTS measuring_instrument_attributes (
+    id                      VARCHAR(255) PRIMARY KEY,
+    name                    VARCHAR(255),
+    type                    VARCHAR(255),
+    unit                    VARCHAR(255),
+    value                   VARCHAR(255),
+    protocol                VARCHAR(255),
+    category                VARCHAR(255),
+    primary_id              VARCHAR(255),
+    secondary_id            VARCHAR(255),
+    tertiary_id             VARCHAR(255),
+    attribute_index         INTEGER,
+    measuring_instrument_id VARCHAR(255) REFERENCES measuring_instrument(id)
 );
 
 -- building: eagerly loaded via Asset -> vdms -> building when a full Asset entity is fetched
