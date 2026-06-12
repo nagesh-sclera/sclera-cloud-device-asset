@@ -3215,6 +3215,19 @@ public class Device {
     @ColumnDefault("'vdms'")
     private String source_type;
 
+    // Read-only shadow mappings of FK join columns (owned by the 'docker' and 'user'
+    // associations below). They give Criteria/JPQL direct typed access to the raw column
+    // values — including the legacy literal-'null' sentinel in assigned_user_email —
+    // without forcing joins. Never write through these.
+    @Column(name = "docker_vdms_id", insertable = false, updatable = false)
+    private String docker_vdms_id;
+
+    @Column(name = "docker_name", insertable = false, updatable = false)
+    private String docker_name;
+
+    @Column(name = "assigned_user_email", insertable = false, updatable = false)
+    private String assigned_user_email;
+
     @Column(columnDefinition = "TEXT")
     private String asset_tag_images_url;
 

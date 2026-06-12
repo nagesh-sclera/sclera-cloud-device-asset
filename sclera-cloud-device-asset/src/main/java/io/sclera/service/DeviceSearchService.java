@@ -20,7 +20,9 @@ import org.springframework.stereotype.Service;
 
 
 import io.sclera.dto.DeviceDTO;
+import io.sclera.dto.DeviceSearchCriteria;
 import io.sclera.interfaces.DeviceSearchServiceInterface;
+import io.sclera.queryrepository.DeviceSearchQueryBuilder;
 import me.xdrop.fuzzywuzzy.FuzzySearch;
 
 /**
@@ -38,6 +40,9 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
 
     @Autowired
     APICallClient apiCallService;
+
+    @Autowired
+    private DeviceSearchQueryBuilder deviceSearchQueryBuilder;
 
     /**************************************************Search Devices Method************************************************************/
     //sort method for now not used
@@ -1124,98 +1129,15 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                                                                  Integer pageno, Integer pagesize,
                                                                  com.alibaba.fastjson.JSONObject search_sort_filter_details, Integer onboard_status) {
         try {
-            Integer virtual_device_type = null;
-            Integer status = null;
-            Integer assgined_status = null;
-            int monitor = 123;
-            Integer asset_match_status = null;
-            switch (condition) {
-                case "all":
-                    System.out.println("inside all");
-                    break;
-                case "unmonitored":
-                    monitor = 0;
-                    break;
-                case "online":
-                    monitor = 1;
-                    status = 1;
-                    System.out.println("Inside Online" + monitor + status);
-                    break;
-                case "offline":
-                    monitor = 1;
-                    status = 0;
-                    break;
-                case "other":
-                    virtual_device_type = 123;
-                    break;
-                case "matched":
-                    asset_match_status = 1;
-                    break;
-                case "unmatched":
-                    asset_match_status = 0;
-                    break;
-                case "verified":
-                    asset_match_status = 2;
-                    break;
-                case "archived":
-                    asset_match_status = 3;
-                    break;
-                case "onboarded":
-                    onboard_status = 3;
-                    break;
-                case "notonboarded":
-                    onboard_status = 210;
-                    break;
-                case "assigned":
-                    assgined_status = 1;
-                    break;
-                case "unassigned":
-                    assgined_status = 0;
-                    break;
-
-            }
-            String searchAndFilterCustomQuery = this.generateMultipleKeywordSearchAndFilterCustomQuery(search_sort_filter_details, vdmsid);
-            String generateDeviceIdsFilterCustomQuery = this.generateDeviceIdsFilterCustomQuery(search_sort_filter_details);
-            int offset = pagesize * (pageno - 1);
-            Set<String> device_ids = new LinkedHashSet<>();
-            String sortQuery = generateSortQuery(search_sort_filter_details);
-            String query = "SELECT d.id FROM device d LEFT JOIN location l ON l.id = d.location_id LEFT JOIN floor f ON f.id = l.floor_id LEFT JOIN building b ON b.id = f.building_id where d.id IN "
-                    + " (SELECT  d.id FROM device d "
-                    + "LEFT JOIN device_onboard_status dos ON d.id = dos.device_id "
-                    + "LEFT JOIN device_onboard_status_assignee dosa ON dos.id = dosa.device_onboard_status_id "
-                    + "LEFT JOIN qr_code qc ON d.id = qc.device_id "
-                    + "LEFT JOIN client_qr_code cqc ON d.id = cqc.device_id "
-                    + "LEFT JOIN client_bar_code cbc ON d.id = cbc.device_id "
-                    + "LEFT JOIN nfc ON d.id = nfc.device_id "
-                    + "LEFT JOIN client_nfc cnfc ON d.id = cnfc.device_id "
-                    + "LEFT JOIN location l ON l.id = d.location_id "
-                    + "LEFT JOIN floor f ON f.id = l.floor_id "
-                    + "LEFT JOIN building b ON b.id = f.building_id "
-                    + "LEFT JOIN device_specification ds ON ds.device_id = d.id "
-                    + "WHERE ('" + vdmsid + "' = 'null' or d.docker_vdms_id = '" + vdmsid
-                    + "') AND ('" + dockername + "' = 'all' or  d.docker_name = '" + dockername + "') "
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "AND ((" + onboard_status + " = 123) or CASE WHEN " + onboard_status + " = 210 THEN d.onboard_status != 3 ELSE " + onboard_status + " = d.onboard_status END) "
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
-                    + "AND (" + status + " IS NULL or d.status = " + status + ") "
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = monitor ELSE monitor IS NULL or " + monitor + " = monitor END) "
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "AND (" + assgined_status + " IS NULL or CASE WHEN " + assgined_status + " = 0 THEN (d.assigned_user_email IS NULL or d.assigned_user_email = 'null') ELSE ( d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null') END)"
-                    + "AND ((" + asset_match_status + " IS NULL and asset_match_status != 3) or "
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "CASE WHEN " + asset_match_status + " = 3 THEN asset_match_status = " + asset_match_status + " ELSE "
-                    + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3) END) "
-                    + generateDeviceIdsFilterCustomQuery
-                    + searchAndFilterCustomQuery
-                    + ") " + sortQuery
-                    + " LIMIT " + pagesize + " OFFSET " + offset;
-            System.out.println("CONSTRUCTED QUERY: " + query);
-            var queryResult = jdbcTemplate.queryForList(query);
-            for (Map<String, Object> stringObjectMap : queryResult) {
-                device_ids.add(String.valueOf(stringObjectMap.get("id")));
-            }
+            // PG-port/Criteria (2026-06-12): dynamic SQL replaced by type-safe DeviceSearchQueryBuilder.
+            // Documented fixes vs the old string SQL: bound params (no injection / no device_ids
+            // double-quote PG error), REGEXP_REPLACE 'g' flag, timestamp-sort bigint='' crash gone,
+            // assignee/username sort joins what it references, onboardpending/onboardcompleted now
+            // honoured here too. The id-fetch -> getDevicesByIdList -> fuzzy re-rank workflow is unchanged.
+            DeviceSearchCriteria criteria = DeviceSearchCriteria.from(
+                    vdmsid, dockername, condition, search_sort_filter_details, onboard_status);
+            Set<String> device_ids = new LinkedHashSet<>(
+                    deviceSearchQueryBuilder.findIds(criteria, pageno, pagesize));
             Set<DeviceDTO> searchSortFilteredDevices = deviceService.getDevicesByIdList(vdmsid, device_ids);
             if (search_sort_filter_details.getJSONObject("sort_details") != null) {
                 return searchSortFilteredDevices;
@@ -1755,82 +1677,10 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
     public Set<DeviceDTO> multipleKeywordSearchSortFilterDevicesForAssetExport(String username, String vdmsid, String dockername, String condition,
                                                                                com.alibaba.fastjson.JSONObject search_sort_filter_details, Integer onboard_status) {
         try {
-            Integer virtual_device_type = null;
-            Integer status = null;
-            Integer monitor = 123;
-            Integer asset_match_status = null;
-            Integer assigned_status = null;
-            if (condition.equals("all")) {
-                System.out.println("inside all");
-            } else if (condition.equals("unmonitored")) {
-                monitor = 0;
-            } else if (condition.equals("online")) {
-                monitor = 1;
-                status = 1;
-                System.out.println("Inside Online" + monitor + status);
-
-            } else if (condition.equals("offline")) {
-                monitor = 1;
-                status = 0;
-            } else if (condition.equals("other")) {
-                virtual_device_type = 123;
-            } else if (condition.equals("matched")) {
-                asset_match_status = 1;
-            } else if (condition.equals("unmatched")) {
-                asset_match_status = 0;
-            } else if (condition.equals("verified")) {
-                asset_match_status = 2;
-            } else if (condition.equals("archived")) {
-                asset_match_status = 3;
-            } else if (condition.equals("onboarded")) {
-                onboard_status = 3;
-            } else if (condition.equals("notonboarded")) {
-                onboard_status = 210;
-            } else if (condition.equals("assigned")) {
-                assigned_status =1;
-            } else if (condition.equals("unassigned")) {
-                assigned_status =0;
-            }
-            String searchAndFilterCustomQuery = this.generateMultipleKeywordSearchAndFilterCustomQuery(search_sort_filter_details, vdmsid);
-            String generateDeviceIdsFilterCustomQuery = this.generateDeviceIdsFilterCustomQuery(search_sort_filter_details);
-            Set<String> device_ids = new LinkedHashSet<>();
-            String sortQuery = generateSortQuery(search_sort_filter_details);
-            String query = "SELECT d.id FROM device d LEFT JOIN location l ON l.id = d.location_id LEFT JOIN floor f ON f.id = l.floor_id LEFT JOIN building b ON b.id = f.building_id where d.id IN "
-                    + "  (SELECT  d.id FROM device d "
-                    + "LEFT JOIN device_onboard_status dos ON d.id = dos.device_id "
-                    + "LEFT JOIN device_onboard_status_assignee dosa ON dos.id = dosa.device_onboard_status_id "
-                    + "LEFT JOIN qr_code qc ON d.id = qc.device_id "
-                    + "LEFT JOIN client_qr_code cqc ON d.id = cqc.device_id "
-                    + "LEFT JOIN client_bar_code cbc ON d.id = cbc.device_id "
-                    + "LEFT JOIN nfc ON d.id = nfc.device_id "
-                    + "LEFT JOIN client_nfc cnfc ON d.id = cnfc.device_id "
-                    + "LEFT JOIN location l ON l.id = d.location_id "
-                    + "LEFT JOIN floor f ON f.id = l.floor_id "
-                    + "LEFT JOIN building b ON b.id = f.building_id "
-                    + "LEFT JOIN device_specification ds ON ds.device_id = d.id "
-                    + "WHERE ('" + vdmsid + "' = 'null' or d.docker_vdms_id = '" + vdmsid
-                    + "') AND ('" + dockername + "' = 'all' or  d.docker_name = '" + dockername + "') "
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "AND ((" + onboard_status + " = 123) or CASE WHEN " + onboard_status + " = 210 THEN d.onboard_status != 3 ELSE " + onboard_status + " = d.onboard_status END) "
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
-                    + "AND (" + status + " IS NULL or d.status = " + status + ") "
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "AND (" + assigned_status + " IS NULL or CASE WHEN " + assigned_status + " = 0 THEN (d.assigned_user_email IS NULL or d.assigned_user_email = 'null') ELSE ( d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null') END)"
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = monitor ELSE monitor IS NULL or " + monitor + " = monitor END) "
-                    + "AND ((" + asset_match_status + " IS NULL and asset_match_status != 3) or "
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "CASE WHEN " + asset_match_status + " = 3 THEN asset_match_status = " + asset_match_status + " ELSE "
-                    + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3) END) "
-                    + generateDeviceIdsFilterCustomQuery
-                    + searchAndFilterCustomQuery
-                    + ") " + sortQuery;
-            System.out.println("CONSTRUCTED QUERY: " + query);
-            var queryResult = jdbcTemplate.queryForList(query);
-            for (Map<String, Object> stringObjectMap : queryResult) {
-                device_ids.add(String.valueOf(stringObjectMap.get("id")));
-            }
+            // PG-port/Criteria (2026-06-12): same builder as the paged variant, without pagination.
+            DeviceSearchCriteria criteria = DeviceSearchCriteria.from(
+                    vdmsid, dockername, condition, search_sort_filter_details, onboard_status);
+            Set<String> device_ids = new LinkedHashSet<>(deviceSearchQueryBuilder.findAllIds(criteria));
             Set<DeviceDTO> searchSortFilteredDevices = deviceService.getDevicesByIdList(vdmsid, device_ids);
             if (search_sort_filter_details.getJSONObject("sort_details") != null) {
                 return searchSortFilteredDevices;
@@ -1867,94 +1717,10 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
     public String multipleKeywordSearchSortFilterDevicesCount(String username, String vdmsid, String dockername, String condition,
                                                               com.alibaba.fastjson.JSONObject search_sort_filter_details, Integer onboard_status) {
         try {
-            Integer virtual_device_type = null;
-            Integer status = null;
-            Integer monitor = 123;
-            Integer asset_match_status = null;
-            Integer assigned_status = null;
-
-            if (condition.equals("all")) {
-                System.out.println("inside all");
-            } else if (condition.equals("unmonitored")) {
-                monitor = 0;
-            } else if (condition.equals("online")) {
-
-                monitor = 1;
-                status = 1;
-                System.out.println("Inside Online" + monitor + status);
-
-            } else if (condition.equals("offline")) {
-                monitor = 1;
-                status = 0;
-            } else if (condition.equals("other")) {
-                virtual_device_type = 123;
-            } else if (condition.equals("matched")) {
-                asset_match_status = 1;
-            } else if (condition.equals("unmatched")) {
-                asset_match_status = 0;
-            } else if (condition.equals("verified")) {
-                asset_match_status = 2;
-            } else if (condition.equals("archived")) {
-                asset_match_status = 3;
-            } else if (condition.equals("onboarded")) {
-                onboard_status = 3;
-            } else if (condition.equals("notonboarded")) {
-                onboard_status = 210;
-            } else if (condition.equals("onboardpending")) {
-                onboard_status = 1;
-            } else if (condition.equals("onboardcompleted")) {
-                onboard_status = 2;
-            } else if (condition.equals("assigned")) {
-                assigned_status =1;
-            } else if (condition.equals("unassigned")) {
-                assigned_status =0;
-            }
-
-            String searchAndFilterCustomQuery = this.generateMultipleKeywordSearchAndFilterCustomQuery(search_sort_filter_details, vdmsid);
-            String generateDeviceIdsFilterCustomQuery = this.generateDeviceIdsFilterCustomQuery(search_sort_filter_details);
-
-
-            if (searchAndFilterCustomQuery == null) {
-                searchAndFilterCustomQuery = "";
-            }
-
-            String query = "SELECT COUNT(DISTINCT d.id) AS count FROM device d "
-                    + "LEFT JOIN device_onboard_status dos ON d.id = dos.device_id "
-                    + "LEFT JOIN device_onboard_status_assignee dosa ON dos.id = dosa.device_onboard_status_id "
-                    + "LEFT JOIN qr_code qc ON d.id = qc.device_id "
-                    + "LEFT JOIN client_qr_code cqc ON d.id = cqc.device_id "
-                    + "LEFT JOIN client_bar_code cbc ON d.id = cbc.device_id "
-                    + "LEFT JOIN nfc  ON d.id = nfc.device_id "
-                    + "LEFT JOIN client_nfc cnfc ON d.id = cnfc.device_id "
-                    + "LEFT JOIN location l ON l.id = d.location_id "
-                    + "LEFT JOIN floor f ON f.id = l.floor_id "
-                    + "LEFT JOIN building b ON b.id = f.building_id "
-                    + "LEFT JOIN device_specification ds ON ds.device_id = d.id "
-                    + "WHERE ('" + vdmsid + "' = 'null' or d.docker_vdms_id = '" + vdmsid
-                    + "') AND ('" + dockername + "' = 'all' or  d.docker_name = '" + dockername + "') "
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "AND ((" + onboard_status + " = 123) or CASE WHEN " + onboard_status + " = 210 THEN d.onboard_status != 3 ELSE " + onboard_status + " = d.onboard_status END) "
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
-                    + "AND (" + status + " IS NULL or d.status = " + status + ") "
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "AND (" + assigned_status + " IS NULL or CASE WHEN " + assigned_status + " = 0 THEN (d.assigned_user_email IS NULL or d.assigned_user_email = 'null') ELSE ( d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null') END)"
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = monitor ELSE monitor IS NULL or " + monitor + " = monitor END) "
-                    + "AND ((" + asset_match_status + " IS NULL and asset_match_status != 3) or "
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "CASE WHEN " + asset_match_status + " = 3 THEN asset_match_status = " + asset_match_status + " ELSE "
-                    + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3) END) "
-                    + generateDeviceIdsFilterCustomQuery
-                    + searchAndFilterCustomQuery;
-
-            System.out.println("CONSTRUCTED COUNT QUERY: " + query);
-
-            var queryResult = jdbcTemplate.queryForList(query);
-
-            for (Map<String, Object> stringObjectMap : queryResult) {
-                return String.valueOf(stringObjectMap.get("count"));
-            }
+            // PG-port/Criteria (2026-06-12): COUNT of the same builder subquery.
+            DeviceSearchCriteria criteria = DeviceSearchCriteria.from(
+                    vdmsid, dockername, condition, search_sort_filter_details, onboard_status);
+            return String.valueOf(deviceSearchQueryBuilder.count(criteria));
         } catch (Exception e) {
             System.out.println(e);
         }
