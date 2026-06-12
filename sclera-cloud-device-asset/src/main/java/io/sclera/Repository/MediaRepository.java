@@ -6,6 +6,7 @@ import java.util.Set;
 
 import jakarta.transaction.Transactional;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -35,7 +36,7 @@ public interface MediaRepository extends JpaRepository<Media, String> {
      */
     @Modifying
     @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
+    // NOT CONVERTED — stays native: plain INSERT ON CONFLICT already valid PostgreSQL
     @Query(value = "INSERT INTO media (id , name, category , description, link, created_email, created_timestamp, extension) VALUES (?1,?2,?3,?4,?5,?6,?7,?8) "
             + "ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, category = EXCLUDED.category, description = EXCLUDED.description, link = EXCLUDED.link", nativeQuery = true)
     void upsertMedia(String id, String name, String category, String description, String link, String username,
@@ -48,7 +49,7 @@ public interface MediaRepository extends JpaRepository<Media, String> {
      * @param mediaid media identifier
      * @return the media file extension
      */
-    @Query(value = "SELECT extension from media WHERE id = ?1", nativeQuery = true)
+    @Query("SELECT m.extension FROM Media m WHERE m.id = ?1")
     String getExtensionById(String mediaid);
 
     /**
@@ -56,33 +57,35 @@ public interface MediaRepository extends JpaRepository<Media, String> {
      *
      * @param mediaid media identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM media WHERE id = ?1", nativeQuery = true)
+    @Query("DELETE FROM Media m WHERE m.id = ?1")
     void deleteMediaById(String mediaid);
 
 
     /**
      * Returns a paginated, optionally filtered set of media documents.
      *
-     * @param pagesize maximum number of results to return
-     * @param offset number of results to skip
-     * @param searchkey search term used to filter media
+     * @param searchkey search term used to filter media; pass the literal string {@code 'null'} to skip filtering
+     * @param pageable pagination descriptor (replaces former pagesize/offset params)
      * @return matching media documents
      */
-    @Query(nativeQuery = true)
-    Set<DocumentMediaDTO> getMedias(Integer pagesize, Integer offset, String searchkey);
+    @Query("SELECT new io.sclera.dto.DocumentMediaDTO(m.id, m.name, m.category, m.link, m.description, m.created_email, m.created_timestamp) "
+            + "FROM Media m "
+            + "WHERE (?1 = 'null' OR CONCAT(COALESCE(m.name,''), COALESCE(m.category,''), COALESCE(m.description,'')) LIKE CONCAT('%', ?1, '%'))")
+    List<DocumentMediaDTO> getMedias(String searchkey, Pageable pageable);
 
     /**
      * Returns a paginated set of media documents tagged to the given device.
      *
      * @param deviceid device identifier
-     * @param pagesize maximum number of results to return
-     * @param offset number of results to skip
+     * @param pageable pagination descriptor (replaces former pagesize/offset params)
      * @return media documents tagged to the device
      */
-    @Query(nativeQuery = true)
-    Set<DocumentMediaDTO> getMediasByDeviceIdByPagination(String deviceid, Integer pagesize, Integer offset);
+    @Query("SELECT new io.sclera.dto.DocumentMediaDTO(m.id, m.name, m.category, m.link, m.description, m.created_email, m.created_timestamp, d.id) "
+            + "FROM Media m JOIN m.device d "
+            + "WHERE d.id = ?1")
+    List<DocumentMediaDTO> getMediasByDeviceIdByPagination(String deviceid, Pageable pageable);
 
     /**
      * Returns all media documents tagged to the given device.
@@ -90,7 +93,9 @@ public interface MediaRepository extends JpaRepository<Media, String> {
      * @param deviceid device identifier
      * @return media documents tagged to the device
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.DocumentMediaDTO(m.id, m.name, m.category, m.link, m.description, m.created_email, m.created_timestamp, d.id) "
+            + "FROM Media m JOIN m.device d "
+            + "WHERE d.id = ?1")
     Set<DocumentMediaDTO> getMediasByDeviceId(String deviceid);
 
     /**
@@ -101,6 +106,7 @@ public interface MediaRepository extends JpaRepository<Media, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native: plain INSERT into device_media join table (no entity)
     @Query(value = "INSERT INTO device_media (media_id , device_id) VALUES (?1,?2)", nativeQuery = true)
     void tagMediaToDevice(String id, String device_id);
 
@@ -112,6 +118,7 @@ public interface MediaRepository extends JpaRepository<Media, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native: DELETE on device_media join table (no entity)
     @Query(value = "DELETE FROM device_media WHERE media_id = ?1 AND device_id = ?2", nativeQuery = true)
     void untagMediaToDevice(String id, String device_id);
 
@@ -122,6 +129,7 @@ public interface MediaRepository extends JpaRepository<Media, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native: DELETE on device_media join table (no entity)
     @Query(value = "DELETE FROM device_media WHERE media_id = ?1", nativeQuery = true)
     void deleteTagRecordByMediaId(String mediaid);
 
@@ -131,6 +139,7 @@ public interface MediaRepository extends JpaRepository<Media, String> {
      * @param device_id device identifier
      * @return count of tagged media items
      */
+    // NOT CONVERTED — stays native: COUNT on device_media join table (no entity)
     @Query(value = "SELECT COUNT(*) FROM device_media WHERE device_id = ?1", nativeQuery = true)
     Integer getMediasCountByDeviceId(String device_id);
 
@@ -140,6 +149,7 @@ public interface MediaRepository extends JpaRepository<Media, String> {
      * @param mediaid media identifier
      * @return device identifiers tagged to the media item
      */
+    // NOT CONVERTED — stays native: SELECT from device_media join table (no entity)
     @Query(value = "SELECT device_id FROM device_media WHERE media_id = ?1", nativeQuery = true)
     List<String> getMediaByDeviceId(String mediaid);
 
@@ -151,6 +161,7 @@ public interface MediaRepository extends JpaRepository<Media, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native: UPDATE sets a relation FK column on device_media join table (no entity)
     @Query(value = "UPDATE device_media SET device_id = ?1 WHERE (device_id IS NOT NULL) AND device_id =?2 ", nativeQuery = true)
     void updateMediaDeviceId(String device_id, String existing_device_id);
 }

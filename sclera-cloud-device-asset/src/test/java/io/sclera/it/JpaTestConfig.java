@@ -70,7 +70,9 @@ import org.springframework.context.annotation.Configuration;
                             io.sclera.Repository.VdmsDetailsRepository.class,
                             io.sclera.Repository.ClientBarCodeRepository.class,
                             io.sclera.Repository.TechnicianCertificateRepository.class,
-                            io.sclera.Repository.TechnicianSkillRepository.class }))
+                            io.sclera.Repository.TechnicianSkillRepository.class,
+                            io.sclera.Repository.MediaRepository.class,
+                            io.sclera.Repository.DocumentRepository.class }))
 public class JpaTestConfig {
     // Intentionally empty — all beans come from @ImportAutoConfiguration.
 }

@@ -486,6 +486,46 @@ CREATE TABLE IF NOT EXISTS client_bar_code (
     is_deleted        BOOLEAN      DEFAULT false
 );
 
+-- media: media files (images, manuals, etc.) that can be tagged to devices
+CREATE TABLE IF NOT EXISTS media (
+    id                 VARCHAR(255) PRIMARY KEY,
+    name               VARCHAR(255),
+    description        TEXT,
+    category           VARCHAR(128),
+    link               VARCHAR(512),
+    created_email      VARCHAR(255),
+    created_timestamp  BIGINT,
+    extension          VARCHAR(32),
+    source_type        VARCHAR(64) DEFAULT 'vdms'
+);
+
+-- device_media: @ManyToMany join table between device and media
+CREATE TABLE IF NOT EXISTS device_media (
+    device_id  VARCHAR(255) NOT NULL REFERENCES device(id),
+    media_id   VARCHAR(255) NOT NULL REFERENCES media(id),
+    PRIMARY KEY (device_id, media_id)
+);
+
+-- document: documents (PDFs, etc.) that can be tagged to devices
+CREATE TABLE IF NOT EXISTS document (
+    id                 VARCHAR(255) PRIMARY KEY,
+    name               VARCHAR(255),
+    description        TEXT,
+    category           VARCHAR(128),
+    link               VARCHAR(512),
+    created_email      VARCHAR(255),
+    created_timestamp  BIGINT,
+    encrypted_type     INTEGER,
+    source_type        VARCHAR(64) DEFAULT 'vdms'
+);
+
+-- device_document: @ManyToMany join table between device and document
+CREATE TABLE IF NOT EXISTS device_document (
+    device_id    VARCHAR(255) NOT NULL REFERENCES device(id),
+    document_id  VARCHAR(255) NOT NULL REFERENCES document(id),
+    PRIMARY KEY (device_id, document_id)
+);
+
 -- building: eagerly loaded via Asset -> vdms -> building when a full Asset entity is fetched
 CREATE TABLE IF NOT EXISTS building (
     id                 VARCHAR(255)  PRIMARY KEY,

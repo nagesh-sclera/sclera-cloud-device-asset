@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.uuid.Generators;
@@ -115,8 +116,7 @@ public class MediaService implements MediaServiceInterface {
 	 */
 	public Set<DocumentMediaDTO> getMedias(String username, String vdmsid, Integer pageno, Integer pagesize, String searchkey) {
 		// TODO Auto-generated method stub
-		Integer offset = pagesize * (pageno - 1);
-		return mediaRepository.getMedias(pagesize, offset, searchkey);
+		return new java.util.HashSet<>(mediaRepository.getMedias(searchkey, PageRequest.of(pageno - 1, pagesize)));
 	}
 
 	/**
@@ -131,8 +131,7 @@ public class MediaService implements MediaServiceInterface {
 	 */
 	public Set<DocumentMediaDTO> getMediasByDeviceId(String username, String vdmsid, String deviceid, Integer pageno, Integer pagesize) {
 		// TODO Auto-generated method stub
-		Integer offset = pagesize * (pageno - 1);
-		return mediaRepository.getMediasByDeviceIdByPagination(deviceid, pagesize, offset);
+		return new java.util.HashSet<>(mediaRepository.getMediasByDeviceIdByPagination(deviceid, PageRequest.of(pageno - 1, pagesize)));
 	}
 
 	/**
