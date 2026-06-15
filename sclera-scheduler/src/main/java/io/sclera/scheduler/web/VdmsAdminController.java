@@ -72,4 +72,15 @@ public class VdmsAdminController {
         return org.springframework.http.ResponseEntity.status(HttpStatus.CREATED)
                 .body(toView(registry.findById(vdmsId).orElseThrow()));
     }
+
+    public record TimezoneRequest(String timezone) {}
+
+    @PutMapping("/{vdmsId}/timezone")
+    public VdmsRegistryView editTimezone(@PathVariable String vdmsId, @RequestBody TimezoneRequest req) {
+        if (registry.findById(vdmsId).isEmpty())
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "no such VDMS: " + vdmsId);
+        String tz = validTimezone(req.timezone());
+        registrar.reregister(vdmsId, tz);
+        return toView(registry.findById(vdmsId).orElseThrow());
+    }
 }

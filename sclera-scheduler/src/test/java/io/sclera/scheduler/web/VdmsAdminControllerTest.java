@@ -92,4 +92,36 @@ class VdmsAdminControllerTest extends AbstractPostgresTest {
                 .content("{\"vdmsId\":\"  \",\"timezone\":\"UTC\"}"))
             .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void editTimezoneUpdatesRegistryAndReregisters() throws Exception {
+        registry.save(new VdmsRegistryEntity("vdms-1", "UTC", true));
+        seedPerVdmsJob();
+        instances.save(new JobInstanceEntity("vdmsSystemHealth", "vdms-1", "vdmsSystemHealth::vdms-1"));
+
+        mvc().perform(put("/api/vdms/vdms-1/timezone").contentType("application/json")
+                .content("{\"timezone\":\"Asia/Kolkata\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.timezone").value("Asia/Kolkata"));
+        assertEquals("Asia/Kolkata", registry.findById("vdms-1").orElseThrow().getTimezone());
+        org.mockito.ArgumentCaptor<io.sclera.scheduler.client.JobSchedule> cap =
+            org.mockito.ArgumentCaptor.forClass(io.sclera.scheduler.client.JobSchedule.class);
+        org.mockito.Mockito.verify(schedulerClient, org.mockito.Mockito.atLeastOnce()).schedule(cap.capture());
+        assertTrue(cap.getAllValues().stream().anyMatch(s -> "Asia/Kolkata".equals(s.timezone())));
+    }
+
+    @Test
+    void editTimezoneRejectsUnknownVdms() throws Exception {
+        mvc().perform(put("/api/vdms/nope/timezone").contentType("application/json")
+                .content("{\"timezone\":\"UTC\"}"))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void editTimezoneRejectsInvalidZone() throws Exception {
+        registry.save(new VdmsRegistryEntity("vdms-1", "UTC", true));
+        mvc().perform(put("/api/vdms/vdms-1/timezone").contentType("application/json")
+                .content("{\"timezone\":\"Bogus/Zone\"}"))
+            .andExpect(status().isBadRequest());
+    }
 }
