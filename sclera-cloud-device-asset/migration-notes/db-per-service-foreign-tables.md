@@ -17,7 +17,7 @@ serve cross-module reads via Dapr-shaped stub clients (`io.sclera.stubs`).
 | 2 | `customer_organisation` | identity | `models/CustomerOrganisation.java` (deleted) | `User.customer_org_id` | DONE (Task 3) |
 | 3 | `alert_profile` | alerts | `models/AlertProfile.java` (deleted) | `Conditions.alert_profile_id`, `device_conditions.alert_profile_id` | DONE (Task 4) |
 | 4 | `report_attributes` | reports | `models/ReportAttributes.java` (deleted) | none on MI (link is `report_attributes.primary_id`) | DONE (Task 5) |
-| 5 | `location_global_checklist` | inspection | `models/LocationGlobalChecklist.java` (+ `LocationGlobalChecklistId.java`) | checklist id in `Location` | pending |
+| 5 | `location_global_checklist` | inspection | `models/LocationGlobalChecklist.java` (+ `LocationGlobalChecklistId.java`) (deleted) | none (queries gapped) | DONE (Task 6) |
 | 6 | `vendor` | integrations | `models/Vendor.java` | `Device.vendor_org_id` | pending |
 | 7 | sensor-attributes family (`lorawan_sensor_attributes`, `my_devices_sensor_attributes`, `pelican_sensor_attributes`, `ecobee_sensor_attributes`, `snmp_object`, `disruptive_sensor`, `monnit_sensor`, `knx_group`, `daintree_point`, `modbus_register`) | integrations (sensor) | mixed — see note | `Conditions.*_id` scalars | deferred / documentation |
 
@@ -55,6 +55,25 @@ sclera-reports query API is needed.
 - **Tests:** updated `MeasuringInstrumentServiceTest.getAnalyticsMeasuringInstruments_computesOffsetAndDelegates`
   stub to the 4-arg repo signature; class green. Both queries EXPLAIN-clean on live PG; module compiles.
 - **// PG-gap (deferred):** computing `is_added` (whether an MI is in a given report template) needs a sclera-reports query API; currently always 0 / report_attribute_id null.
+
+## Task 6 — `location_global_checklist` → inspection: DONE (2026-06-15, approach: gap all + delete entity)
+
+User decision 2026-06-15: **gap all three queries** rather than project defaults, because this whole
+feature cluster (checklist / reactive-service location listings) is inspection-domain and depends on
+tables that are ALREADY non-local here.
+
+- **Owner has no local seam:** there is an `InspectionRecordClient` but no checklist-DTO client; **no client created**.
+- **No local entities** for `global_checklist` / `global_inspection_relation` (only `GlobalQrcode` is local) — so the
+  reactive-service query was already runtime-gapped before this task.
+- **Three `@NamedNativeQuery` in `models/Location.java` marked `// PG-gap`, SQL left VERBATIM** (no edits to query text):
+  - `getAllChecklistLocationsPagination` (L~443) — `lgc` used only for `CASE WHEN lgc.location_id=l.id THEN 1 ELSE 0 END as is_added`.
+  - `getAllChecklistLocations` (L~494) — same is_added pattern.
+  - `getAllReactiveServiceLocationsPagination` (L~544) — `location_global_checklist` is a structural INNER-JOIN bridge from inspection-owned `global_checklist` to `location`; is_added already hardcoded 0.
+  - These will fail at runtime once the table is dropped (schema regen) until sclera-inspection exposes a query API. Acceptable & documented per the plan's hard-case rule.
+- **Why not project defaults (is_added=0):** the dead `global_checklist_id(s)` param sits MID positional-list (`?4`/`?2` with `?5–?11` after), so a clean drop needs a risky ~7-param renumber in the query carrying the pre-existing `?8`-as-condition / duplicate-JOIN oddities — not result-validatable on greenfield. Gapping avoids that.
+- **Entity deleted:** `models/LocationGlobalChecklist.java` + `models/LocationGlobalChecklistId.java` (`@IdClass`) — no repo, no Java references outside themselves.
+- **Pre-existing `// PG-gap` oddities in Location.java PRESERVED** (the `?8`-as-condition in `getAllInspectionLocations`, the duplicate `LEFT JOIN global_qrcode` in `getAllQrcodeLocations`) — untouched. Module compiles (exit 0).
+- **No EXPLAIN / no test changes:** SQL unchanged; no repo/service signatures changed (the 3 query methods are byte-identical), only comments added + unreferenced entities deleted.
 
 ## Filter/sort dependencies (hard cases — fill as found)
 _(queries where a foreign column is used in WHERE/ORDER BY/GROUP BY, not just SELECT)_

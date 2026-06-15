@@ -441,6 +441,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 @NamedNativeQuery(
         name = "Location.getAllChecklistLocationsPagination",
+        // PG-gap (db-per-service): JOINs location_global_checklist (owner sclera-inspection). Left verbatim; that table leaves this schema, so this query will fail at runtime until sclera-inspection exposes a query API for is_added (location-in-checklist membership).
         // PG-port: IF(join.col=l.id,1,0)->CASE WHEN; IF(bool,a,b)->CASE WHEN
         query = "SELECT l.id AS location_id ,l.name ,  b.name as building_name, f.name as floor_name, CASE WHEN lgc.location_id = l.id THEN 1 ELSE 0 END as is_added, l.type"
                 + " FROM location l "
@@ -492,6 +493,7 @@ import org.hibernate.annotations.ColumnDefault;
 )
 @NamedNativeQuery(
         name = "Location.getAllChecklistLocations",
+        // PG-gap (db-per-service): JOINs location_global_checklist (owner sclera-inspection). Left verbatim; that table leaves this schema, so this query will fail at runtime until sclera-inspection exposes a query API for is_added (location-in-checklist membership).
         // PG-port: IF(join.col=l.id,1,0)->CASE WHEN; IF(bool,a,b)->CASE WHEN
         query = "SELECT l.id AS location_id ,l.name ,  b.name as building_name, f.name as floor_name, CASE WHEN lgc.location_id = l.id THEN 1 ELSE 0 END as is_added, l.type"
                 + " FROM location l"
@@ -542,6 +544,7 @@ import org.hibernate.annotations.ColumnDefault;
 // is_added field is not required for Reactive Service flow, so it is hardcoded to 0
 @NamedNativeQuery(
         name = "Location.getAllReactiveServiceLocationsPagination",
+        // PG-gap (db-per-service): structurally depends on inspection-owned global_checklist + location_global_checklist (neither is local — already non-functional here). Left verbatim; needs a sclera-inspection query API.
         query ="SELECT l.id AS location_id, l.name, b.name AS building_name, f.name AS floor_name, 0 AS is_added, l.type " +
                         "FROM global_checklist gc " +
                         " JOIN location_global_checklist lgc ON lgc.global_checklist_id = gc.id  JOIN location l " +
