@@ -183,7 +183,23 @@
   </div>
 
   <div class="body">
-    <div class="main" id="groups"></div>
+    <div class="main">
+      <section id="vdms-panel" style="border:1px solid var(--line);border-radius:10px;margin-bottom:.8rem;padding:.7rem .9rem;background:var(--panel)">
+        <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem">
+          <strong style="font-size:.9rem">VDMS</strong>
+          <span class="pill" id="vdms-count">0</span>
+        </div>
+        <div id="vdms-add" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.5rem">
+          <input id="vdms-id" class="search" style="width:160px" placeholder="vdms id…" autocomplete="off"/>
+          <select id="vdms-tz" class="search" style="width:200px"></select>
+          <button class="btn" id="vdms-add-btn">Add VDMS</button>
+          <span class="d" style="color:var(--muted2)">id is not verified against the fleet — must match the id the owning services use</span>
+        </div>
+        <div id="vdms-msg" style="font-size:.74rem;min-height:1em;margin-bottom:.4rem"></div>
+        <table style="width:100%;border-collapse:collapse;font-size:.8rem"><tbody id="vdms-rows"></tbody></table>
+      </section>
+      <div id="groups"></div>
+    </div>
     <aside class="feed">
       <div class="fhead">
         <b>Live Feed</b>
@@ -535,6 +551,61 @@ document.getElementById('collapse').addEventListener('click', ()=>{
 
 fetchData();
 setInterval(fetchData, 5000);
+
+let vdmsZones = null;
+async function loadVdms(){
+  try{
+    if(!vdmsZones){
+      vdmsZones = await fetch('/api/vdms/timezones').then(x=>x.json());
+      const sel = document.getElementById('vdms-tz');
+      sel.innerHTML = vdmsZones.map(z=>`<option>${z}</option>`).join('');
+      sel.value = 'UTC';
+    }
+    const rows = await fetch('/api/vdms').then(x=>x.json());
+    document.getElementById('vdms-count').textContent = rows.length;
+    document.getElementById('vdms-rows').innerHTML = rows.map(v=>`
+      <tr data-vdms="${v.vdmsId}" style="border-top:1px solid var(--line)">
+        <td style="padding:.35rem 0">${v.vdmsId}</td>
+        <td><select class="search vtz" style="width:180px"></select></td>
+        <td>${v.active?'<span class="sw ok"></span> active':'<span class="sw fail"></span> removed'}</td>
+        <td>${v.jobCount} jobs</td>
+        <td style="text-align:right">
+          <button class="btn vsave">Save tz</button>
+          <button class="btn vdel">Remove</button>
+        </td>
+      </tr>`).join('');
+    document.querySelectorAll('#vdms-rows tr').forEach(tr=>{
+      const sel = tr.querySelector('.vtz');
+      sel.innerHTML = vdmsZones.map(z=>`<option>${z}</option>`).join('');
+      sel.value = rows.find(r=>r.vdmsId===tr.dataset.vdms).timezone || 'UTC';
+    });
+  }catch(e){ vmsg('load failed: '+e, true); }
+}
+function vmsg(t, err){ const m=document.getElementById('vdms-msg'); m.textContent=t; m.style.color= err?'var(--red)':'var(--green)'; }
+document.getElementById('vdms-add-btn').addEventListener('click', async ()=>{
+  const vdmsId = document.getElementById('vdms-id').value.trim();
+  const timezone = document.getElementById('vdms-tz').value;
+  const r = await fetch('/api/vdms',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({vdmsId,timezone})});
+  if(r.ok){ vmsg('added '+vdmsId); document.getElementById('vdms-id').value=''; await loadVdms(); await fetchData(); }
+  else { vmsg('add failed: '+(await r.text()), true); }
+});
+document.getElementById('vdms-rows').addEventListener('click', async e=>{
+  const tr = e.target.closest('tr'); if(!tr) return; const id = tr.dataset.vdms;
+  if(e.target.classList.contains('vsave')){
+    const timezone = tr.querySelector('.vtz').value;
+    const r = await fetch(`/api/vdms/${encodeURIComponent(id)}/timezone`,{method:'PUT',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify({timezone})});
+    vmsg(r.ok?`${id} → ${timezone}`:'save failed: '+(await r.text()), !r.ok);
+    if(r.ok){ await loadVdms(); await fetchData(); }
+  } else if(e.target.classList.contains('vdel')){
+    if(!confirm(`Remove VDMS ${id}? Its scheduled jobs will be torn down.`)) return;
+    const r = await fetch(`/api/vdms/${encodeURIComponent(id)}`,{method:'DELETE'});
+    vmsg(r.ok?`removed ${id}`:'remove failed: '+(await r.text()), !r.ok);
+    if(r.ok){ await loadVdms(); await fetchData(); }
+  }
+});
+loadVdms();
 </script>
 </body>
 </html>
