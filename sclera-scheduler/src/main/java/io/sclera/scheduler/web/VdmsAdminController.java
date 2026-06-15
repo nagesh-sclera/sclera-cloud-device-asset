@@ -57,4 +57,19 @@ public class VdmsAdminController {
         if (v.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "vdmsId must not be blank");
         return v;
     }
+
+    public record AddVdmsRequest(String vdmsId, String timezone) {}
+
+    @PostMapping
+    public org.springframework.http.ResponseEntity<VdmsRegistryView> add(@RequestBody AddVdmsRequest req) {
+        String vdmsId = requireVdmsId(req.vdmsId());
+        String tz = validTimezone(req.timezone());
+        registry.findById(vdmsId).ifPresent(v -> {
+            if (v.isActive())
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "VDMS already active: " + vdmsId);
+        });
+        registrar.onVdmsActivated(vdmsId, tz);
+        return org.springframework.http.ResponseEntity.status(HttpStatus.CREATED)
+                .body(toView(registry.findById(vdmsId).orElseThrow()));
+    }
 }
