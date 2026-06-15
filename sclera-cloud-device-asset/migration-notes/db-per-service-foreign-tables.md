@@ -114,6 +114,35 @@ The other family entities (`Lorawan_Sensor`, `Monnit_Sensor`, `ModbusRegister`, 
 **Conclusion: no foreign table to remove, no entity to delete, no SensorClient needed.** The plan's
 "thin client for any live path" is moot — there is no live cross-service sensor read path in this service.
 
+## Task 9 — schema regen + verification: DONE (2026-06-15)
+
+Ran the destructive regen on the live Docker stack and verified. **App DB on this branch is `vdms`**
+(POSTGRES_DB=vdms), user `root` — NOT `sclera_assets` (that was a stale pre-`down` container).
+
+- **Build:** this branch's app `Dockerfile` is RUNTIME-ONLY (`COPY target/sclera.jar app.jar`) — NOT the
+  self-contained multi-stage build (that's on the JPA/scheduler line). So: host `mvnw -DskipTests clean package`
+  FIRST (the existing jar was stale, Jun 8), THEN `docker compose build app`. Don't trust a cached COPY layer.
+- **Regen:** `docker compose down -v` (wiped pgdata) + `up -d postgres redis app app-dapr`.
+- **App health = 200** — boots clean with all 5 foreign entities deleted (Hibernate doesn't validate native
+  queries at boot, so the gapped `@NamedNativeQuery` don't block startup).
+- **Schema correct:** the 5 removed tables (`customer_organisation`, `alert_profile`, `report_attributes`,
+  `location_global_checklist`, `vendor`) are ABSENT; `vendor_organisation` + core tables present; 66 public tables.
+- **Live (modified) queries validated** against the regenerated schema via EXPLAIN: Task 4 (alert_profile JOIN
+  removed) and Task 5 (report_attributes JOIN removed) both produce clean plans.
+- **Gapped query confirmed gapped:** `SELECT ... FROM vendor v ...` → `relation "vendor" does not exist` (fails at
+  call-time as documented, not silently wrong).
+- **Test suite: 615/619 pass.** The 4 failures are **pre-existing and unrelated** — all in
+  `io.sclera.client.MyDevicesClientTest`, a Mockito app-id assertion mismatch (`MyDevicesClient.APP_ID =
+  "sclera-integrations"` but the test asserts `"sclera-workorders"`). My commits touch NONE of the
+  MyDevices/sensor/client code (`git diff --name-only base..HEAD` → no MyDevices), so those files are byte-identical
+  to the base branch → the failures exist on base too. **Flagged as a separate pre-existing bug, NOT fixed here**
+  (out of db-per-service scope). All tests in the areas I changed (ConditionsServiceTest, MeasuringInstrumentServiceTest,
+  InventoryClientStubTest, …) pass.
+
+**Tasks 3–9 COMPLETE.** The DB-per-service separation of cloud-device-asset is done: 6 foreign tables removed from
+this service's schema (product_details in Task 2 + the 5 here), sensor family confirmed already-decoupled, cross-module
+reads served by Dapr clients (existing) or `// PG-gap` seams (where no owner/endpoint exists yet).
+
 ## Filter/sort dependencies (hard cases — fill as found)
 _(queries where a foreign column is used in WHERE/ORDER BY/GROUP BY, not just SELECT)_
 
