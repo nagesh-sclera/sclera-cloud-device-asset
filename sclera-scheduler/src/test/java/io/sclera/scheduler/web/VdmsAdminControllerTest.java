@@ -124,4 +124,22 @@ class VdmsAdminControllerTest extends AbstractPostgresTest {
                 .content("{\"timezone\":\"Bogus/Zone\"}"))
             .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void removeDeactivatesVdmsAndDisablesInstances() throws Exception {
+        registry.save(new VdmsRegistryEntity("vdms-1", "UTC", true));
+        seedPerVdmsJob();
+        instances.save(new JobInstanceEntity("vdmsSystemHealth", "vdms-1", "vdmsSystemHealth::vdms-1"));
+
+        mvc().perform(delete("/api/vdms/vdms-1")).andExpect(status().isNoContent());
+
+        assertFalse(registry.findById("vdms-1").orElseThrow().isActive());
+        assertEquals(JobInstanceState.DISABLED,
+            instances.findByVdmsId("vdms-1").get(0).getState());
+    }
+
+    @Test
+    void removeRejectsUnknownVdms() throws Exception {
+        mvc().perform(delete("/api/vdms/nope")).andExpect(status().isNotFound());
+    }
 }

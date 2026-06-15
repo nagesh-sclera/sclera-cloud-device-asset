@@ -83,4 +83,12 @@ public class VdmsAdminController {
         registrar.reregister(vdmsId, tz);
         return toView(registry.findById(vdmsId).orElseThrow());
     }
+
+    @DeleteMapping("/{vdmsId}")
+    public org.springframework.http.ResponseEntity<Void> remove(@PathVariable String vdmsId) {
+        if (registry.findById(vdmsId).isEmpty())
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "no such VDMS: " + vdmsId);
+        registrar.onVdmsDeactivated(vdmsId);
+        return org.springframework.http.ResponseEntity.noContent().build();
+    }
 }
