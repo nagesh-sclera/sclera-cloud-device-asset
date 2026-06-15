@@ -5,7 +5,9 @@ import { useApp } from '../context/AppContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { statusInfo } from '../config.js'
 import api from '../services/api.js'
-import { getLocalImage } from '../services/localImages.js'
+import { getLocalImage, setLocalImage } from '../services/localImages.js'
+import { firstAssetImage } from '../services/assetImage.js'
+import ImagePreview from './ImagePreview.jsx'
 import { inspectionsFor, workOrdersFor, inventoryFor, alertsFor, documentsFor } from '../services/mock.js'
 
 const dash = (v) => (v === 0 ? '0' : v ? String(v) : '—')
@@ -67,6 +69,8 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
   const [busy, setBusy] = useState(false)
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({})
+  const [preview, setPreview] = useState(false)   // asset-image lightbox
+  const [imgBusy, setImgBusy] = useState(false)
 
   // real sensors (called directly on the main service via the gateway)
   const [sensors, setSensors] = useState(null)
@@ -128,6 +132,9 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
   const name = device?.user_data_name || device?.display_name || device?.name || deviceId
   const st = device ? statusInfo(device) : null
   const onboarded = device?.onboard_status === 3
+  // Stored (backend) image vs a session-only local one added at create time.
+  const storedImg = firstAssetImage(device?.asset_image_url)
+  const assetImg = storedImg || getLocalImage(deviceId)
 
   const inspections = useMemo(() => (device ? inspectionsFor(device) : []), [device])
   const workorders = useMemo(() => (device ? workOrdersFor(device) : []), [device])
@@ -209,6 +216,24 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
     finally { setBusy(false) }
   }
 
+  // Delete the asset image: removes the file from disk + clears asset_image_url (backend),
+  // and drops the session-local copy. Closes the preview and refreshes the device.
+  const deleteImage = async () => {
+    setImgBusy(true)
+    try {
+      if (storedImg) await api.deleteAssetImages(deviceId, [storedImg], ctx)
+      setLocalImage(deviceId, '')
+      toast.success('Image deleted')
+      if (storedImg) {
+        const fresh = await api.getDevice(deviceId, ctx)
+        setDevice(fresh); setForm(toForm(fresh))
+      }
+      setPreview(false)
+      onChanged?.()
+    } catch (e) { toast.error(`Delete image failed: ${e.message}`) }
+    finally { setImgBusy(false) }
+  }
+
   const doOnboard = async () => {
     setBusy(true)
     try {
@@ -273,7 +298,11 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
       <aside className="detail-panel" role="dialog" aria-label="Asset details">
         <div className="dp-head">
           <div className="dp-title">
-            <div className="dp-avatar">{(device?.asset_image_url || getLocalImage(deviceId)) ? <img src={device?.asset_image_url || getLocalImage(deviceId)} alt="" className="avatar-img" /> : <Icon name="device" size={18} />}</div>
+            <div className="dp-avatar">{assetImg ? (
+              <button type="button" className="dp-avatar-btn" onClick={() => setPreview(true)} title="Preview image">
+                <img src={assetImg} alt="" className="avatar-img" />
+              </button>
+            ) : <Icon name="device" size={18} />}</div>
             <span className="dp-name" title={name}>{loading ? 'Loading…' : name}</span>
           </div>
           <div className="dp-head-actions">
@@ -337,12 +366,44 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
           )}
         </div>
       </aside>
+      <ImagePreview
+        open={preview}
+        src={assetImg}
+        alt={name}
+        onClose={() => setPreview(false)}
+        onDelete={assetImg ? deleteImage : undefined}
+        deleting={imgBusy}
+      />
     </>
   )
 }
 
+// Device custom_fields is stored as a JSON array of single-key {label:value} objects
+// (asset-mapper import) or a plain {label:value} object. Flatten to [label, value] pairs.
+function parseCustomFields(raw) {
+  if (Array.isArray(raw)) return flattenCustomFields(raw)
+  if (raw && typeof raw === 'object') return Object.entries(raw)
+  if (typeof raw !== 'string') return []
+  const s = raw.trim()
+  if (!s || s === '[]' || s === '{}' || s === 'null') return []
+  try {
+    const parsed = JSON.parse(s)
+    if (Array.isArray(parsed)) return flattenCustomFields(parsed)
+    if (parsed && typeof parsed === 'object') return Object.entries(parsed)
+  } catch { /* not JSON — ignore */ }
+  return []
+}
+function flattenCustomFields(arr) {
+  const out = []
+  for (const item of arr) {
+    if (item && typeof item === 'object') for (const [k, v] of Object.entries(item)) out.push([k, v])
+  }
+  return out
+}
+
 function InfoView({ device, name, st, onboarded, counts }) {
   const d = device
+  const customFields = parseCustomFields(d.custom_fields)
   return (
     <>
       <div className="dp-countbar">
@@ -368,6 +429,12 @@ function InfoView({ device, name, st, onboarded, counts }) {
         <Row k="Warranty" v={dash(d.warranty)} />
         <Row k="Description" v={dash(d.description)} />
       </div>
+
+      {customFields.length > 0 && (
+        <Section title="Custom Fields">
+          {customFields.map(([k, v]) => <Row key={k} k={k} v={dash(v)} accent />)}
+        </Section>
+      )}
 
       <Section title="Identity & Network">
         <Row k="Device ID" v={dash(d.id)} />

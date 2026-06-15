@@ -68,11 +68,11 @@ public class Technician {
     private String phone;
     private String countryCode;
     private String name;
-    @Column(columnDefinition = "varchar(32) default 'generic'")
+    @Column(length = 32, columnDefinition = "varchar(32) default 'generic'")
     private String department = "generic";
-    @Column(columnDefinition = "varchar(32) default 'generic'")
+    @Column(length = 32, columnDefinition = "varchar(32) default 'generic'")
     private String designation = "generic";
-    @Column(columnDefinition = "varchar(50) default 'UTC'")
+    @Column(length = 50, columnDefinition = "varchar(50) default 'UTC'")
     private String timeZone = "UTC";
     private String createdBy;
     private Long createdAt;

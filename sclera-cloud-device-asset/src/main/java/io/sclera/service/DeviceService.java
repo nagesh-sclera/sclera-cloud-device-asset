@@ -7248,11 +7248,88 @@ public class DeviceService implements DeviceServiceInterface {
         return java.util.Map.of("updated", updated);
     }
 
-    /** Persists the asset image (a data URL or hosted URL) for a device so it survives a reload. */
+    /**
+     * Persists a device's asset image so it survives a reload, storing it the same way the root
+     * project does: an inline {@code data:image/...;base64,...} payload is decoded and written to
+     * disk under {@code server-asset-images-absolute-path}, and only the hosted URL
+     * ({@code server-asset-images-url} + filename) is saved — as a JSON array, e.g.
+     * {@code ["http://localhost:8085/images/assets/<deviceId>_<ts>.png"]}. A value that is already a
+     * hosted URL (or JSON array) is stored as-is; an empty value clears the image.
+     */
     @org.springframework.transaction.annotation.Transactional
     public void setAssetImage(String deviceId, String imageUrl) {
-        deviceRepository.updateAssetImage(deviceId, imageUrl == null ? "" : imageUrl);
-        log.info("setAssetImage device={} len={}", deviceId, imageUrl == null ? 0 : imageUrl.length());
+        if (imageUrl == null || imageUrl.isBlank()) {
+            deviceRepository.updateAssetImage(deviceId, "");
+            log.info("setAssetImage device={} cleared", deviceId);
+            return;
+        }
+        String stored;
+        try {
+            if (imageUrl.startsWith("data:")) {
+                int comma = imageUrl.indexOf(',');
+                String meta = comma > 0 ? imageUrl.substring("data:".length(), comma) : "";
+                String base64 = comma > 0 ? imageUrl.substring(comma + 1) : "";
+                byte[] bytes = java.util.Base64.getDecoder().decode(base64);
+                String extension = imageExtensionForMime(meta);
+                String url = utils.addFileToServer(bytes, server_asset_images_absolute_path, deviceId, extension, server_asset_images_url);
+                JSONArray arr = new JSONArray();
+                if (url != null) {
+                    arr.add(url);
+                }
+                stored = arr.toJSONString();
+            } else if (imageUrl.trim().startsWith("[")) {
+                stored = imageUrl;
+            } else {
+                JSONArray arr = new JSONArray();
+                arr.add(imageUrl);
+                stored = arr.toJSONString();
+            }
+        } catch (Exception e) {
+            log.error("setAssetImage failed to persist image for device={}", deviceId, e);
+            throw new RuntimeException(e);
+        }
+        deviceRepository.updateAssetImage(deviceId, stored);
+        log.info("setAssetImage device={} stored={}", deviceId, stored);
+    }
+
+    /** Maps a data-URL mime type (e.g. {@code image/png;base64}) to a file extension for storage. */
+    private String imageExtensionForMime(String meta) {
+        String m = meta == null ? "" : meta.toLowerCase();
+        if (m.contains("jpeg") || m.contains("jpg")) return "jpg";
+        if (m.contains("webp")) return "webp";
+        if (m.contains("gif")) return "gif";
+        if (m.contains("svg")) return "svg";
+        return "png";
+    }
+
+    /**
+     * Deletes a device's asset image: removes the underlying file(s) from disk (under
+     * {@code server-asset-images-absolute-path}) and clears the {@code asset_image_url} column —
+     * the same effect as the root project's deleteAssetImages for this device. File removal is
+     * best-effort (a legacy base64/data-URL value has no file); the column is always cleared.
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteAssetImage(String deviceId) {
+        try {
+            DeviceDTO deviceDTO = this.getDeviceAndOnboardStatusByDeviceId(deviceId);
+            String current = deviceDTO != null ? deviceDTO.getAsset_image_url() : null;
+            if (current != null && !current.isBlank()) {
+                java.util.List<String> urls = current.trim().startsWith("[")
+                        ? utils.getJSONArrayFromJSONString(current, String.class)
+                        : java.util.Collections.singletonList(current);
+                if (urls != null) {
+                    for (String url : urls) {
+                        if (url != null && url.startsWith("http")) {
+                            utils.removeFileFromServerByImageURL(url, server_asset_images_absolute_path);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("deleteAssetImage cleanup failed for device={}: {}", deviceId, e.getMessage());
+        }
+        deviceRepository.updateAssetImage(deviceId, "");
+        log.info("deleteAssetImage device={} cleared", deviceId);
     }
 
     private void assetUpdateRow(String id, java.util.Map<String, String> values) {

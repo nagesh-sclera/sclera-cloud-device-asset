@@ -486,10 +486,11 @@
                     <includeSystemScope>true</includeSystemScope>
                 </configuration>
             </plugin>
-            <!-- Generates browsable HTML JavaDoc on demand via `mvnw javadoc:javadoc`.
-                 Not bound to the build lifecycle (no executions), so it never runs during
-                 compile/package. doclint is disabled so generation does not fail on the
-                 many classes that are not yet documented, or on minor tag issues. -->
+            <!-- Generates browsable HTML JavaDoc into target/classes/static/javadoc during
+                 the build, so it is packaged inside the jar and served by the app itself at
+                 /javadoc/ (see ResourceConfigs) - same model as Swagger UI, no external service.
+                 doclint is disabled and failOnError=false so generation never fails the build on
+                 the many undocumented classes or minor tag issues. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -498,6 +499,20 @@
                     <failOnError>false</failOnError>
                     <quiet>true</quiet>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>generate-static-javadoc</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>javadoc</goal>
+                        </goals>
+                        <configuration>
+                            <!-- The javadoc:javadoc goal uses <outputDirectory> (not reportOutputDirectory).
+                                 Write straight into the packaged classes dir so it ships in the jar. -->
+                            <outputDirectory>${project.build.outputDirectory}/static/javadoc</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
         <finalName>sclera</finalName>

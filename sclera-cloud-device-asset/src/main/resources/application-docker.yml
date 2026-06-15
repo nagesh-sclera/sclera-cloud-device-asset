@@ -82,9 +82,9 @@ sclera:
   server-checklist-images-url: http://localhost:8085/images/checklist/
   server-checklist-images-absolute-path: /tmp/sclera/images/checklist/
   server-asset-images-url: http://localhost:8085/images/assets/
-  server-asset-images-absolute-path: /tmp/sclera/images/assets/
+  server-asset-images-absolute-path: /home/sclera/images/assets/
   server-asset-ocr-images-url: http://localhost:8085/images/assets/ocr/
-  server-asset-ocr-images-absolute-path: /tmp/sclera/images/assets/ocr/
+  server-asset-ocr-images-absolute-path: /home/sclera/images/assets/ocr/
   server-app-url: http://localhost/
   auth-server-app-url: http://localhost/auth
   backup-path: /tmp/sclera/backup

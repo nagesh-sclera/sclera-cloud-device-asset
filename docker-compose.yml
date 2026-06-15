@@ -73,6 +73,9 @@ services:
       OTEL_INSTRUMENTATION_COMMON_DB_STATEMENT_SANITIZER_ENABLED: "false"
     volumes:
       - ./infra/otel/opentelemetry-javaagent.jar:/otel/agent.jar:ro
+      # Persist uploaded asset images (served back at /images/** by ResourceConfigs) so they
+      # survive container rebuilds/recreates, same store layout as the root project.
+      - sclera-images:/home/sclera/images
     ports:
       - "8085:8085"
       - "3500:3500"
@@ -716,3 +719,4 @@ volumes:
   scheduler-data:
   grafana-data:
   loki-data:
+  sclera-images:

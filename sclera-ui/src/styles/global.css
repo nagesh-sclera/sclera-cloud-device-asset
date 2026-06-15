@@ -207,6 +207,17 @@ input, select, textarea { font-family: inherit; }
 .image-upload { display: flex; justify-content: center; margin-bottom: 18px; }
 .image-strip { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
 .thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+.thumb { cursor: zoom-in; }
+.thumb-wrap { position: relative; display: inline-flex; }
+.thumb-remove { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; padding: 0; border: none; border-radius: 50%; background: #e5484d; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+.thumb-remove:hover { filter: brightness(1.1); }
+/* Image preview lightbox (shared by AssetModal thumbnails + DeviceDetailPanel avatar) */
+.img-preview-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 24px; }
+.img-preview { display: flex; flex-direction: column; max-width: 92vw; max-height: 92vh; background: var(--bg-elev); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+.img-preview-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.img-preview-stage { display: flex; align-items: center; justify-content: center; padding: 16px; overflow: auto; }
+.img-preview-stage img { max-width: 86vw; max-height: 76vh; object-fit: contain; border-radius: 6px; }
+.dp-avatar-btn { padding: 0; border: 0; background: transparent; cursor: zoom-in; display: inline-flex; border-radius: 50%; }
 .add-images { width: 90px; height: 64px; border: 1.5px dashed var(--border); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--text-2); font-size: 11px; cursor: pointer; }
 .add-images:hover { border-color: var(--accent); color: #fff; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }

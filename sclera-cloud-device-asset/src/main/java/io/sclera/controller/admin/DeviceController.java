@@ -10,6 +10,8 @@ import com.alibaba.fastjson.JSONObject;
 import io.sclera.dto.*;
 import io.sclera.service.touchscreen.DeviceMonitorService;
 import io.sclera.integration.dto.ResponseDTO;
+import io.sclera.utils.PageUtils;
+import org.springframework.data.domain.Page;
 import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,11 +97,11 @@ public class DeviceController {
      * @return matching page of devices
      */
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/getfilterdevice")
-    public Set<DeviceDTO> getfilterdevice(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition, @RequestParam(defaultValue = "null") String searchKey,
+    public Page<DeviceDTO> getfilterdevice(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition, @RequestParam(defaultValue = "null") String searchKey,
                                           @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize) {
         log.info("getfilterdevice username={} vdmsid={} dockername={}", username, vdmsid, dockername);
         try {
-            return deviceService.getfilterdevices(username, vdmsid, dockername, condition, searchKey, pageno, pagesize);
+            return PageUtils.toPage(deviceService.getfilterdevices(username, vdmsid, dockername, condition, searchKey, pageno, pagesize), pageno, pagesize);
         } catch (Exception e) {
             log.error("getfilterdevice failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
             throw e;
@@ -120,11 +122,11 @@ public class DeviceController {
      * @return matching page of subsystem parent devices
      */
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/getsubsystemparentdevicesbypagination")
-    public Set<DeviceDTO> getSubsystemParentDevicesByPagination(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
+    public Page<DeviceDTO> getSubsystemParentDevicesByPagination(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                                                 @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") String assignee) {
         log.info("getSubsystemParentDevicesByPagination username={} vdmsid={} dockername={}", username, vdmsid, dockername);
         try {
-            return deviceService.getSubsystemParentDevicesByPagination(username, vdmsid, dockername, condition, pageno, pagesize, assignee);
+            return PageUtils.toPage(deviceService.getSubsystemParentDevicesByPagination(username, vdmsid, dockername, condition, pageno, pagesize, assignee), pageno, pagesize);
         } catch (Exception e) {
             log.error("getSubsystemParentDevicesByPagination failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
             throw e;
@@ -146,11 +148,11 @@ public class DeviceController {
      * @return matching page of subsystem devices
      */
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/{device_id}/getsubsystemdevicesbypagination")
-    public Set<DeviceDTO> getSubsystemDevicesByPagination(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String device_id, @RequestParam(defaultValue = "all") String condition,
+    public Page<DeviceDTO> getSubsystemDevicesByPagination(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String device_id, @RequestParam(defaultValue = "all") String condition,
                                                           @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") String assignee) {
         log.info("getSubsystemDevicesByPagination username={} vdmsid={} dockername={} device_id={}", username, vdmsid, dockername, device_id);
         try {
-            return deviceService.getSubsystemDevicesByPagination(username, vdmsid, dockername, device_id, condition, pageno, pagesize, assignee);
+            return PageUtils.toPage(deviceService.getSubsystemDevicesByPagination(username, vdmsid, dockername, device_id, condition, pageno, pagesize, assignee), pageno, pagesize);
         } catch (Exception e) {
             log.error("getSubsystemDevicesByPagination failed username={} vdmsid={} dockername={} device_id={}: {}", username, vdmsid, dockername, device_id, e.getMessage(), e);
             throw e;
@@ -675,12 +677,12 @@ public class DeviceController {
      * @return matching page of parent devices
      */
     @RequestMapping(method = RequestMethod.POST, value = "/getparentdevicebypagination")
-    public Set<DeviceDTO> getParentDeviceByPagination(@RequestParam String username, @RequestParam String vdmsid,
+    public Page<DeviceDTO> getParentDeviceByPagination(@RequestParam String username, @RequestParam String vdmsid,
                                                       @RequestParam(defaultValue = "null") String searchKey, @RequestParam(defaultValue = "1") Integer pageno,
                                                       @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") Set<String> dockernames, @RequestParam(defaultValue = "all") Set<String> types, @RequestParam(defaultValue = "all") Set<String> virtual_device_types) {
         log.info("getParentDeviceByPagination username={} vdmsid={}", username, vdmsid);
         try {
-            return deviceService.getParentDeviceByPagination(username, vdmsid, searchKey, pageno, pagesize, dockernames, types, virtual_device_types);
+            return PageUtils.toPage(deviceService.getParentDeviceByPagination(username, vdmsid, searchKey, pageno, pagesize, dockernames, types, virtual_device_types), pageno, pagesize);
         } catch (Exception e) {
             log.error("getParentDeviceByPagination failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
             throw e;
@@ -769,13 +771,13 @@ public class DeviceController {
      * @return matching page of devices
      */
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/searchdevices")
-    public Set<DeviceDTO> searchDevices(@RequestParam String username, @RequestParam String vdmsid,
+    public Page<DeviceDTO> searchDevices(@RequestParam String username, @RequestParam String vdmsid,
                                         @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                         @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
                                         @RequestBody Map<String, Object> search_details) {
         log.info("searchDevices username={} vdmsid={} dockername={}", username, vdmsid, dockername);
         try {
-            return deviceSearchService.searchDevices(username, vdmsid, dockername, condition, pageno, pagesize, search_details);
+            return PageUtils.toPage(deviceSearchService.searchDevices(username, vdmsid, dockername, condition, pageno, pagesize, search_details), pageno, pagesize);
         } catch (Exception e) {
             log.error("searchDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
             throw e;
@@ -796,13 +798,13 @@ public class DeviceController {
      * @return matching page of sorted devices
      */
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/sortdevices")
-    public Set<DeviceDTO> sortDevices(@RequestParam String username, @RequestParam String vdmsid,
+    public Page<DeviceDTO> sortDevices(@RequestParam String username, @RequestParam String vdmsid,
                                       @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                       @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
                                       @RequestBody Map<String, Object> sort_details) {
         log.info("sortDevices username={} vdmsid={} dockername={}", username, vdmsid, dockername);
         try {
-            return deviceSearchService.sortDevices(username, vdmsid, dockername, condition, pageno, pagesize, sort_details);
+            return PageUtils.toPage(deviceSearchService.sortDevices(username, vdmsid, dockername, condition, pageno, pagesize, sort_details), pageno, pagesize);
         } catch (Exception e) {
             log.error("sortDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
             throw e;
@@ -823,13 +825,13 @@ public class DeviceController {
      * @return matching page of filtered devices
      */
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/filterdevices")
-    public Set<DeviceDTO> filterDevices(@RequestParam String username, @RequestParam String vdmsid,
+    public Page<DeviceDTO> filterDevices(@RequestParam String username, @RequestParam String vdmsid,
                                         @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                         @RequestParam(defaultValue = "1") Integer pageno,
                                         @RequestParam(defaultValue = "10") Integer pagesize, @RequestBody List<Map<String, Object>> filter_details) {
         log.info("filterDevices username={} vdmsid={} dockername={}", username, vdmsid, dockername);
         try {
-            return deviceSearchService.filterDevices(username, vdmsid, dockername, condition, pageno, pagesize, filter_details);
+            return PageUtils.toPage(deviceSearchService.filterDevices(username, vdmsid, dockername, condition, pageno, pagesize, filter_details), pageno, pagesize);
         } catch (Exception e) {
             log.error("filterDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
             throw e;
@@ -895,7 +897,7 @@ public class DeviceController {
      * @return matching page of devices
      */
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/searchsortfilterdevices")
-    public Set<DeviceDTO> multipleKeywordSearchSortFilterDevices(@RequestParam String username, @RequestParam String vdmsid,
+    public Page<DeviceDTO> multipleKeywordSearchSortFilterDevices(@RequestParam String username, @RequestParam String vdmsid,
                                                                  @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
                                                                  @RequestParam(defaultValue = "1") Integer pageno,
                                                                  @RequestParam(defaultValue = "10") Integer pagesize,
@@ -903,7 +905,7 @@ public class DeviceController {
                                                                  @RequestBody com.alibaba.fastjson.JSONObject search_sort_filter_details) {
         log.info("multipleKeywordSearchSortFilterDevices username={} vdmsid={} dockername={}", username, vdmsid, dockername);
         try {
-            return deviceSearchService.multipleKeywordSearchSortFilterDevices(username, vdmsid, dockername, condition, pageno, pagesize, search_sort_filter_details, onboard_status);
+            return PageUtils.toPage(deviceSearchService.multipleKeywordSearchSortFilterDevices(username, vdmsid, dockername, condition, pageno, pagesize, search_sort_filter_details, onboard_status), pageno, pagesize);
         } catch (Exception e) {
             log.error("multipleKeywordSearchSortFilterDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
             throw e;
@@ -1023,7 +1025,7 @@ public class DeviceController {
      * @param deviceDTOS         devices whose asset images should be deleted
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/deleteassetimages")
+@RequestMapping(method = RequestMethod.DELETE, value = "/deleteassetimages")
     public void deleteAssetImages(@RequestParam String username, @RequestParam String vdms_id, @RequestBody List<DeviceDTO> deviceDTOS, HttpServletRequest httpServletRequest) {
         log.info("deleteAssetImages username={} vdms_id={}", username, vdms_id);
         try {
@@ -1106,13 +1108,13 @@ public class DeviceController {
      * @return matching page of devices
      */
     @RequestMapping(method = RequestMethod.POST, value = "/group/{group}/getalldevicespagination")
-    public Set<DeviceDTO> getAllDevicesPagination(@RequestParam String username, @RequestParam String vdmsid,
+    public Page<DeviceDTO> getAllDevicesPagination(@RequestParam String username, @RequestParam String vdmsid,
                                                   @PathVariable String group, @RequestParam(defaultValue = "null") String searchkey,
                                                   @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
                                                   @RequestBody JSONObject filterObject) {
         log.info("getAllDevicesPagination username={} vdmsid={} group={}", username, vdmsid, group);
         try {
-            return deviceService.getAllDevicesPagination(username, vdmsid, group, searchkey, pageno, pagesize, filterObject);
+            return PageUtils.toPage(deviceService.getAllDevicesPagination(username, vdmsid, group, searchkey, pageno, pagesize, filterObject), pageno, pagesize);
         } catch (Exception e) {
             log.error("getAllDevicesPagination failed username={} vdmsid={} group={}: {}", username, vdmsid, group, e.getMessage(), e);
             throw e;
@@ -1134,11 +1136,11 @@ public class DeviceController {
      * @return matching page of virtual devices
      */
     @RequestMapping(method = RequestMethod.GET, value = "/getfiltervirtualdevicesbypagination")
-    public Set<DeviceDTO> getFilterVirtualDevicesByPagination(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "null") String searchKey,
+    public Page<DeviceDTO> getFilterVirtualDevicesByPagination(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "null") String searchKey,
                                                               @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") Set<String> dockernames, @RequestParam(defaultValue = "all") Set<String> types, @RequestParam(defaultValue = "all") Set<String> virtual_device_types) {
         log.info("getFilterVirtualDevicesByPagination username={} vdmsid={}", username, vdmsid);
         try {
-            return deviceService.getFilterVirtualDevicesByPagination(username, vdmsid, searchKey, pageno, pagesize, dockernames, types, virtual_device_types);
+            return PageUtils.toPage(deviceService.getFilterVirtualDevicesByPagination(username, vdmsid, searchKey, pageno, pagesize, dockernames, types, virtual_device_types), pageno, pagesize);
         } catch (Exception e) {
             log.error("getFilterVirtualDevicesByPagination failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
             throw e;
@@ -1195,11 +1197,11 @@ public class DeviceController {
      * @return matching page of devices at the location
      */
     @RequestMapping(method = RequestMethod.GET, value = "/location/{location_id}/getdevicesbylocationid")
-    public Set<DeviceDTO> getAssetsByLocationId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String location_id,
+    public Page<DeviceDTO> getAssetsByLocationId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String location_id,
                                                 @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize) {
         log.info("getAssetsByLocationId username={} vdmsid={} location_id={}", username, vdmsid, location_id);
         try {
-            return deviceService.getAssetsByLocationId(username, vdmsid, location_id, pageno, pagesize);
+            return PageUtils.toPage(deviceService.getAssetsByLocationId(username, vdmsid, location_id, pageno, pagesize), pageno, pagesize);
         } catch (Exception e) {
             log.error("getAssetsByLocationId failed username={} vdmsid={} location_id={}: {}", username, vdmsid, location_id, e.getMessage(), e);
             throw e;
@@ -1603,12 +1605,12 @@ public class DeviceController {
      * @throws IOException if downstream I/O fails
      */
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{docker_name}/getalldevicedetails")
-    public List<DeviceDTO> getAllDeviceCustomDetails(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String docker_name,
+    public Page<DeviceDTO> getAllDeviceCustomDetails(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String docker_name,
                                                      @RequestParam(defaultValue = "1") Integer page_no, @RequestParam(defaultValue = "10") Integer page_size,
                                                      @RequestParam(defaultValue = "null") String search_key, @RequestParam(defaultValue = "internal") String profile_type) throws IOException {
         log.info("getAllDeviceCustomDetails username={} vdmsid={} docker_name={}", username, vdmsid, docker_name);
         try {
-            return deviceService.getAllDeviceCustomDetails(username, vdmsid, docker_name, page_no, page_size, search_key, profile_type);
+            return PageUtils.toPage(deviceService.getAllDeviceCustomDetails(username, vdmsid, docker_name, page_no, page_size, search_key, profile_type), page_no, page_size);
         } catch (Exception e) {
             log.error("getAllDeviceCustomDetails failed username={} vdmsid={} docker_name={}: {}", username, vdmsid, docker_name, e.getMessage(), e);
             throw e;
@@ -1627,13 +1629,13 @@ public class DeviceController {
      * @throws IOException if downstream I/O fails
      */
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{docker_name}/getdevicedetailsbyids")
-    public List<DeviceDTO> getDeviceCustomDetails(@PathVariable String docker_name,
+    public Page<DeviceDTO> getDeviceCustomDetails(@PathVariable String docker_name,
                                                   @RequestParam(defaultValue = "1") Integer page_no, @RequestParam(defaultValue = "10") Integer page_size,
                                                   @RequestParam(defaultValue = "null") String search_key,
                                                   @RequestBody List<String> device_ids) throws IOException {
         log.info("getDeviceCustomDetails docker_name={}", docker_name);
         try {
-            return deviceService.getDeviceCustomDetails(docker_name, page_no, page_size, search_key, device_ids);
+            return PageUtils.toPage(deviceService.getDeviceCustomDetails(docker_name, page_no, page_size, search_key, device_ids), page_no, page_size);
         } catch (Exception e) {
             log.error("getDeviceCustomDetails failed docker_name={}: {}", docker_name, e.getMessage(), e);
             throw e;
@@ -1656,13 +1658,13 @@ public class DeviceController {
      * @throws IOException if downstream I/O fails
      */
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{docker_name}/getdevicecustomdetailsbyids")
-    public List<DeviceDTO> getDeviceCustomDetailsByIds(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String docker_name,
+    public Page<DeviceDTO> getDeviceCustomDetailsByIds(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String docker_name,
                                                        @RequestParam(defaultValue = "1") Integer page_no, @RequestParam(defaultValue = "10") Integer page_size,
                                                        @RequestParam(defaultValue = "null") String search_key, @RequestParam(defaultValue = "0") Integer has_pagination,
                                                        @RequestBody JSONObject requestBody) throws IOException {
         log.info("getDeviceCustomDetailsByIds username={} vdmsid={} docker_name={}", username, vdmsid, docker_name);
         try {
-            return deviceService.getDeviceCustomDetailsByIds(username, vdmsid, docker_name, has_pagination, page_no, page_size, search_key, requestBody);
+            return PageUtils.toPage(deviceService.getDeviceCustomDetailsByIds(username, vdmsid, docker_name, has_pagination, page_no, page_size, search_key, requestBody), page_no, page_size);
         } catch (Exception e) {
             log.error("getDeviceCustomDetailsByIds failed username={} vdmsid={} docker_name={}: {}", username, vdmsid, docker_name, e.getMessage(), e);
             throw e;

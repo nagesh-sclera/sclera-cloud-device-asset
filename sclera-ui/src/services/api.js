@@ -49,6 +49,11 @@ async function request(url, { method = 'GET', body, headers, retries = 1, timeou
   }
 }
 
+// Several backend list endpoints now return a Spring `Page<T>` envelope ({ content:[...], totalElements, ... })
+// instead of a bare array. Unwrap to the content array so callers keep receiving a plain list; tolerant of
+// either shape (passes a real array straight through).
+const unwrapPage = (p) => p.then((r) => (r && !Array.isArray(r) && Array.isArray(r.content)) ? r.content : r)
+
 const asset = (p) => `${BASE_URL}${ASSET_PREFIX}${p}`
 const vdms = (p) => `${BASE_URL}${VDMS_PREFIX}${p}`
 // Sensors are owned by the integrations service (gateway /integrations/** route).
@@ -67,17 +72,17 @@ export const api = {
   // ---- Assets ----
   // Browse: the real app's primary list call (top-level / parent devices).
   listParentDevices: ({ docker = DEMO.docker, condition = 'all', pageno = 1, pagesize = 12, ...ctx } = {}) =>
-    request(asset(`/docker/${encodeURIComponent(docker)}/getsubsystemparentdevicesbypagination${qs({ ...scope(ctx), condition, pageno, pagesize, assignee: 'all' })}`)),
+    unwrapPage(request(asset(`/docker/${encodeURIComponent(docker)}/getsubsystemparentdevicesbypagination${qs({ ...scope(ctx), condition, pageno, pagesize, assignee: 'all' })}`))),
 
   // Filtered/search list (supports searchKey + condition).
   listDevices: ({ docker = DEMO.docker, condition = 'all', searchKey = 'null', pageno = 1, pagesize = 12, ...ctx } = {}) =>
-    request(asset(`/docker/${encodeURIComponent(docker)}/getfilterdevice${qs({ ...scope(ctx), condition, searchKey, pageno, pagesize })}`)),
+    unwrapPage(request(asset(`/docker/${encodeURIComponent(docker)}/getfilterdevice${qs({ ...scope(ctx), condition, searchKey, pageno, pagesize })}`))),
 
   // Multi-keyword search/sort/filter (POST) — the dedicated filter API (img_9).
   searchSortFilter: (criteria = {}, { docker = DEMO.docker, condition = 'all', pageno = 1, pagesize = 50, onboard_status = 123, ...ctx } = {}) =>
-    request(asset(`/docker/${encodeURIComponent(docker)}/searchsortfilterdevices${qs({ ...scope(ctx), condition, pageno, pagesize, onboard_status })}`), {
+    unwrapPage(request(asset(`/docker/${encodeURIComponent(docker)}/searchsortfilterdevices${qs({ ...scope(ctx), condition, pageno, pagesize, onboard_status })}`), {
       method: 'POST', body: criteria,
-    }),
+    })),
 
   // Count for the same filter (img_9).
   searchSortFilterCount: (criteria = {}, { docker = DEMO.docker, condition = 'all', onboard_status = 123, ...ctx } = {}) =>
@@ -156,6 +161,16 @@ export const api = {
   setAssetImage: (deviceId, image, { docker = DEMO.docker, ...ctx } = {}) =>
     request(asset(`/device/${encodeURIComponent(deviceId)}/setassetimage${qs(scope(ctx))}`), {
       method: 'POST', body: { image: image || '' },
+    }),
+
+  // Delete a device's asset image(s): removes the file(s) from disk AND clears them from
+  // asset_image_url. Unlike setAssetImage('') (which only clears the column), this also frees
+  // the file on the server. Body is the real /deleteassetimages shape: a list of devices, each
+  // carrying the asset_image_url JSON array of the URLs to remove.
+  deleteAssetImages: (deviceId, imageUrls, ctx = {}) =>
+    request(asset(`/deleteassetimages${qs(scope(ctx))}`), {
+      method: 'DELETE',
+      body: [{ id: deviceId, asset_image_url: JSON.stringify(imageUrls || []) }],
     }),
 
   // Onboard / un-onboard a device (status 3 = onboarded, 0 = not onboarded).

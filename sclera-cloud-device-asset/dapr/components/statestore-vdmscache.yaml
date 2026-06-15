@@ -1,0 +1,20 @@
+# Dapr state store backing VdmsClient's read-through cache (CACHE_STORE = "statestore-vdmscache").
+# Without this component the sidecar has no state store, so Dapr/GetState + Dapr/SaveState fail.
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore-vdmscache
+spec:
+  type: state.redis
+  version: v1
+  metadata:
+    - name: redisHost
+      value: redis:6379
+    - name: redisPassword
+      value: ""
+    - name: enableTLS
+      value: "false"
+    - name: keyPrefix
+      value: vdms
+    - name: ttlInSeconds
+      value: "300"

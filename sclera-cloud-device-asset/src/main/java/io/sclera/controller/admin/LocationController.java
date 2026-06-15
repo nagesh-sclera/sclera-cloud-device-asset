@@ -4,9 +4,11 @@ import com.alibaba.fastjson.JSONObject;
 import io.sclera.dto.LocationDTO;
 import io.sclera.dto.TagDeviceOrLocationDTO;
 import io.sclera.service.LocationService;
+import io.sclera.utils.PageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -127,13 +129,13 @@ public class LocationController {
      * @return the matching page of locations
      */
     @RequestMapping(method = RequestMethod.POST, value = "/floor/{floor_id}/getlocationsbyflooridpagination")
-    public Set<LocationDTO> getLocationsByFloorByPagination(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String floor_id,
+    public Page<LocationDTO> getLocationsByFloorByPagination(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String floor_id,
                                                             @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
                                                             @RequestParam(defaultValue = "null") String searchKey, @RequestParam(required = false) String field, @RequestParam(required = false) String field_id,
                                                             @RequestBody JSONObject filterObject) {
         log.info("getLocationsByFloorByPagination username={} vdms_id={} floor_id={}", username, vdms_id, floor_id);
         try {
-            return locationService.getLocationsByFloorByPagination(username, vdms_id, floor_id, pageno, pagesize, searchKey, filterObject, field, field_id);
+            return PageUtils.toPage(locationService.getLocationsByFloorByPagination(username, vdms_id, floor_id, pageno, pagesize, searchKey, filterObject, field, field_id), pageno, pagesize);
         } catch (Exception e) {
             log.error("getLocationsByFloorByPagination failed username={} vdms_id={} floor_id={}: {}", username, vdms_id, floor_id, e.getMessage(), e);
             throw e;
@@ -187,13 +189,13 @@ public class LocationController {
      * @return the matching page of locations
      */
     @RequestMapping(method = RequestMethod.POST, value = "/group/{group}/getalllocationspagination")
-    public Set<LocationDTO> getAllLocationsPagination(@RequestParam String username, @RequestParam String vdmsid,
+    public Page<LocationDTO> getAllLocationsPagination(@RequestParam String username, @RequestParam String vdmsid,
                                                       @PathVariable String group, @RequestParam(defaultValue = "null") String searchkey,
                                                       @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
                                                       @RequestBody JSONObject filterObject) {
         log.info("getAllLocationsPagination username={} vdmsid={} group={}", username, vdmsid, group);
         try {
-            return locationService.getAllLocationsPagination(username, vdmsid, group, searchkey, pageno, pagesize, filterObject);
+            return PageUtils.toPage(locationService.getAllLocationsPagination(username, vdmsid, group, searchkey, pageno, pagesize, filterObject), pageno, pagesize);
         } catch (Exception e) {
             log.error("getAllLocationsPagination failed username={} vdmsid={} group={}: {}", username, vdmsid, group, e.getMessage(), e);
             throw e;
@@ -301,13 +303,13 @@ public class LocationController {
      * @return the matching page of locations
      */
     @RequestMapping(method = RequestMethod.POST, value = "/getalllocationsbyfilterbypagination")
-    public Set<LocationDTO> getAllLocationsByFilterByPagination(@RequestParam String username, @RequestParam String vdms_id,
+    public Page<LocationDTO> getAllLocationsByFilterByPagination(@RequestParam String username, @RequestParam String vdms_id,
                                                                 @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
                                                                 @RequestParam(defaultValue = "null") String searchKey, @RequestParam(required = false) String field, @RequestParam(required = false) String field_id,
                                                                 @RequestBody JSONObject filterObject) {
         log.info("getAllLocationsByFilterByPagination username={} vdms_id={}", username, vdms_id);
         try {
-            return locationService.getAllLocationsByFilterByPagination(username, vdms_id, pageno, pagesize, searchKey, filterObject, field, field_id);
+            return PageUtils.toPage(locationService.getAllLocationsByFilterByPagination(username, vdms_id, pageno, pagesize, searchKey, filterObject, field, field_id), pageno, pagesize);
         } catch (Exception e) {
             log.error("getAllLocationsByFilterByPagination failed username={} vdms_id={}: {}", username, vdms_id, e.getMessage(), e);
             throw e;

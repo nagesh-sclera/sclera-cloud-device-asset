@@ -133,11 +133,18 @@ public class RecordChecklistClient {
     /**
      * Mirrors {@code RecordChecklistService#getAllRecordChecklistByBuildings}.
      * Returns empty set on failure.
-     * NOTE: List bodies are lost under GET-only skeleton routing (needs POST upgrade).
+     *
+     * The inspection controller declares {@code @RequestBody List<String> buildingIds} (required),
+     * so the body must be a JSON array — sending {@code null} trips Spring's required-body check and
+     * comes back as HTTP 400. We send buildingIds as the body (empty list when null to stay valid).
+     * NOTE: floorIds/locationIds are {@code @RequestParam} on the controller; they still aren't
+     * forwarded (the skeleton ignores them and returns defaults). Add query-param wiring when the
+     * real inspection service replaces the walking skeleton.
      */
     public Set<RecordChecklistDTO> getAllRecordChecklistByBuildings(List<String> buildingIds, List<String> floorIds, List<String> locationIds) {
         try {
-            dapr.invokeMethod(APP_ID, "recordChecklist/getAllRecordChecklistByBuildings", null, HttpExtension.POST).block();
+            dapr.invokeMethod(APP_ID, "recordChecklist/getAllRecordChecklistByBuildings",
+                    buildingIds != null ? buildingIds : Collections.emptyList(), HttpExtension.POST).block();
             return new HashSet<>();
         } catch (Exception e) {
             log.warn("RecordChecklistClient.getAllRecordChecklistByBuildings failed; returning stub default: {}", e.getMessage());

@@ -5,6 +5,8 @@ import io.sclera.dto.CallFlowRuleDTO;
 import io.sclera.dto.DeviceDTO;
 import io.sclera.integration.dto.ResponseDTO;
 import io.sclera.service.AiCallService;
+import io.sclera.utils.PageUtils;
+import org.springframework.data.domain.Page;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -63,10 +65,10 @@ public class AiCallLogController {
      * @return list of call log entries for the requested page
      */
     @GetMapping("/getallcallstatus")
-    public List<AiCallLogDTO>  getallcallstatus(@RequestParam String username, @RequestParam String vdmsid,@RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey, @RequestParam(defaultValue = "false") boolean isCompleted) {
+    public Page<AiCallLogDTO>  getallcallstatus(@RequestParam String username, @RequestParam String vdmsid,@RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey, @RequestParam(defaultValue = "false") boolean isCompleted) {
         log.info("getallcallstatus username={} vdmsid={}", username, vdmsid);
         try {
-            return aiCallService.getallcallstatus(username, vdmsid, pageno, pagesize, searchkey, isCompleted);
+            return PageUtils.toPage(aiCallService.getallcallstatus(username, vdmsid, pageno, pagesize, searchkey, isCompleted), pageno, pagesize);
         } catch (Exception e) {
             log.error("getallcallstatus failed username={}: {}", username, e.getMessage(), e);
             throw e;
@@ -202,13 +204,13 @@ public class AiCallLogController {
      * @return list of call-flow rules for the matching devices
      */
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/browsedevices")
-    public List<CallFlowRuleDTO> browseCallFlowDevicesWithSearch(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
+    public Page<CallFlowRuleDTO> browseCallFlowDevicesWithSearch(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
                                                                     @RequestParam(defaultValue = "1") Integer pageno,
                                                                     @RequestParam(defaultValue = "10") Integer pagesize,
                                                                     @RequestParam(defaultValue = "null") String searchkey) {
         log.info("browseCallFlowDevicesWithSearch username={} vdmsid={} dockername={}", username, vdmsid, dockername);
         try {
-            return aiCallService.browseCallFlowDevicesWithSearch(username, vdmsid, dockername, pageno, pagesize, searchkey);
+            return PageUtils.toPage(aiCallService.browseCallFlowDevicesWithSearch(username, vdmsid, dockername, pageno, pagesize, searchkey), pageno, pagesize);
         } catch (Exception e) {
             log.error("browseCallFlowDevicesWithSearch failed username={}: {}", username, e.getMessage(), e);
             throw e;
@@ -226,11 +228,11 @@ public class AiCallLogController {
      * @return list of call-flow rules for the requested page
      */
     @RequestMapping(method = RequestMethod.GET, value = "/getcallflow")
-    public List<CallFlowRuleDTO> getCallFlow(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "1") Integer pageno,
+    public Page<CallFlowRuleDTO> getCallFlow(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "1") Integer pageno,
                                              @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey) {
         log.info("getCallFlow username={} vdmsid={}", username, vdmsid);
         try {
-            return aiCallService.getCallFlow(username, vdmsid, pageno, pagesize, searchkey);
+            return PageUtils.toPage(aiCallService.getCallFlow(username, vdmsid, pageno, pagesize, searchkey), pageno, pagesize);
         } catch (Exception e) {
             log.error("getCallFlow failed username={}: {}", username, e.getMessage(), e);
             throw e;

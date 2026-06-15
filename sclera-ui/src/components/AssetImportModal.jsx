@@ -11,6 +11,8 @@ import api from '../services/api.js'
 // file is uploaded as-is and parsed server-side using the field mapping.
 
 const IGNORE = '__ignore__'
+// Map a column as a custom field — its source header becomes the custom field key.
+const CUSTOM = '__custom__'
 
 // Fallback Sclera fields if /getAssetFields can't be reached (value = device column).
 const FALLBACK_FIELDS = [
@@ -101,7 +103,9 @@ export default function AssetImportModal({ open, file, onClose, onConfirm }) {
   const doUpload = async () => {
     const fieldMapping = columns
       .filter((c) => mapping[c.name] && mapping[c.name] !== IGNORE)
-      .map((c) => ({ originalKey: [c.name], deviceKey: mapping[c.name], index: [c.index] }))
+      .map((c) => (mapping[c.name] === CUSTOM
+        ? { originalKey: [c.name], deviceKey: c.name, index: [c.index], isCustom: true }
+        : { originalKey: [c.name], deviceKey: mapping[c.name], index: [c.index] }))
     setUploading(true); setError(null)
     try {
       await api.uploadImport(file, fieldMapping)
@@ -162,6 +166,7 @@ export default function AssetImportModal({ open, file, onClose, onConfirm }) {
                     <select value={mapping[c.name] ?? IGNORE} onChange={setMap(c.name)}>
                       <option value={IGNORE}>— Ignore —</option>
                       {fields.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
+                      <option value={CUSTOM}>Custom Field (use column name)</option>
                     </select>
                   </div>
                 ))}

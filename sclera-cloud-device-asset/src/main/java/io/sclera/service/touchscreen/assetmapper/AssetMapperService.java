@@ -5,7 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sclera.Repository.AssetRepository;
 import io.sclera.dto.DeviceDTO;
 import io.sclera.dto.touchscreen.assetmapper.AssetDTO;
+import io.sclera.models.Asset;
+import io.sclera.dto.touchscreen.VdmsDetailsDTO;
 import io.sclera.service.DeviceService;
+import io.sclera.service.touchscreen.VdmsService;
+import org.springframework.data.domain.PageRequest;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
@@ -42,11 +46,19 @@ public class AssetMapperService {
     private static final Logger log = LoggerFactory.getLogger(AssetMapperService.class);
     private static final String IMPORT_TYPE = "spreadsheet";
 
+    /** Asset entity columns a mapping can target directly; anything else is treated as a custom field. */
+    private static final Set<String> KNOWN_ASSET_KEYS = Set.of(
+            "id", "display_name", "description", "type", "mac_address", "model", "vendor",
+            "ip_address", "network_layer", "serial_number", "warranty", "subsystem_parent_id");
+
     @Autowired
     private AssetRepository assetRepository;
 
     @Autowired
     private DeviceService deviceService;
+
+    @Autowired
+    private VdmsService vdmsService;
 
     /** The Sclera asset fields a source column can be mapped to (right column of the matching screen). */
     private static final List<Map<String, String>> ASSET_FIELDS = List.of(
@@ -103,6 +115,9 @@ public class AssetMapperService {
                     Row row = sheet.getRow(r);
                     if (row == null) continue;
                     Map<String, String> values = new LinkedHashMap<>();
+                    List<Map<String, String>> customFields = new ArrayList<>();
+                    List<Map<String, Object>> originalKeys = new ArrayList<>();
+                    boolean anyValue = false;
                     for (Map<String, Object> mapping : mappings) {
                         String deviceKey = String.valueOf(mapping.get("deviceKey"));
                         if (deviceKey == null || deviceKey.isBlank()
@@ -112,9 +127,23 @@ public class AssetMapperService {
                         if (col == null) continue;
                         Cell cell = row.getCell(col);
                         String v = cell == null ? "" : fmt.formatCellValue(cell).trim();
-                        if (!v.isEmpty()) values.putIfAbsent(deviceKey, v);
+                        if (!v.isEmpty()) anyValue = true;
+                        // Custom field when the client flags it, or the target isn't a known Asset column.
+                        boolean custom = Boolean.TRUE.equals(mapping.get("isCustom")) || !KNOWN_ASSET_KEYS.contains(deviceKey);
+                        Map<String, Object> ok = new LinkedHashMap<>();
+                        ok.put("device", deviceKey);
+                        ok.put("custom", custom);
+                        originalKeys.add(ok);
+                        if (custom) {
+                            // custom_fields is a JSON array of single-key {column: value} objects.
+                            Map<String, String> cf = new LinkedHashMap<>();
+                            cf.put(deviceKey, v);
+                            customFields.add(cf);
+                        } else if (!v.isEmpty()) {
+                            values.putIfAbsent(deviceKey, v);
+                        }
                     }
-                    if (values.isEmpty()) continue;
+                    if (!anyValue) continue;
 
                     String id = values.getOrDefault("id", "");
                     if (id.isBlank()) id = UUID.randomUUID().toString();
@@ -126,34 +155,92 @@ public class AssetMapperService {
                     String parent = values.getOrDefault("subsystem_parent_id", "");
                     if (parent.isBlank() || parent.equals(id)) parent = null;
 
-                    assetRepository.assetUpsert(
-                            id,
-                            values.getOrDefault("display_name", ""),
-                            values.getOrDefault("description", ""),
-                            type,
-                            values.getOrDefault("mac_address", ""),
-                            values.getOrDefault("model", ""),
-                            values.getOrDefault("vendor", ""),
-                            values.getOrDefault("ip_address", ""),
-                            0,                              // network_layer
-                            values.getOrDefault("serial_number", ""),
-                            values.getOrDefault("warranty", ""),
-                            fieldMappingJson,               // original_keys
-                            "[]",                           // custom_fields
-                            parent,
-                            false,                          // is_matched
-                            "",                             // matched_products
-                            vdmsId,
-                            0,                              // subsystem_count
-                            IMPORT_TYPE);
+                    Asset asset = new Asset();
+                    asset.setId(id);
+                    asset.setDisplay_name(values.getOrDefault("display_name", ""));
+                    asset.setDescription(values.getOrDefault("description", ""));
+                    asset.setType(type);
+                    asset.setMac_address(values.getOrDefault("mac_address", ""));
+                    asset.setModel(values.getOrDefault("model", ""));
+                    asset.setVendor(values.getOrDefault("vendor", ""));
+                    asset.setIp_address(values.getOrDefault("ip_address", ""));
+                    asset.setNetwork_layer(0);
+                    asset.setSerial_number(values.getOrDefault("serial_number", ""));
+                    asset.setWarranty(values.getOrDefault("warranty", ""));
+                    asset.setOriginalKeys(objectMapper.writeValueAsString(originalKeys));
+                    asset.setCustomFields(objectMapper.writeValueAsString(customFields));
+                    asset.setSubsystem_parent_id(parent);
+                    asset.setIsMatched(false);
+                    asset.setMatchedProductIds("");
+                    asset.setSubsystem_count(0);
+                    asset.setImport_type(IMPORT_TYPE);
+                    // JPA upsert-by-id (save merges existing rows). NOTE: the vdms association is not
+                    // set here — vdmsId was the old native upsert's docker_vdms_id and no asset query
+                    // filters by vdms; revisit if vdms scoping becomes required.
+                    assetRepository.save(asset);
                     staged++;
                 }
             }
+            registerImportedCustomFields(mappings, vdmsId);
             log.info("asset upload vdms_id={} staged={}", vdmsId, staged);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
             log.error("asset upload failed vdms_id={}: {}", vdmsId, e.getMessage(), e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Registers the imported custom-field columns on the VDMS device-custom-fields list so they
+     * surface as configurable device fields/filters. Mirrors the asset-mapper "save custom keys"
+     * step from the full implementation; deduped by column. Best-effort — never fails the import.
+     */
+    private void registerImportedCustomFields(List<Map<String, Object>> mappings, String vdmsId) {
+        try {
+            List<Map<String, Object>> imported = new ArrayList<>();
+            for (Map<String, Object> mapping : mappings) {
+                String deviceKey = String.valueOf(mapping.get("deviceKey"));
+                if (deviceKey == null || deviceKey.isBlank()
+                        || "__ignore__".equals(deviceKey) || "null".equals(deviceKey)) continue;
+                boolean custom = Boolean.TRUE.equals(mapping.get("isCustom")) || !KNOWN_ASSET_KEYS.contains(deviceKey);
+                if (!custom) continue;
+                String key = deviceKey;
+                Object originalKey = mapping.get("originalKey");
+                if (originalKey instanceof List<?> l && !l.isEmpty() && l.get(0) != null) key = String.valueOf(l.get(0));
+                Map<String, Object> entry = new LinkedHashMap<>();
+                entry.put("key", key);
+                entry.put("column", deviceKey);
+                entry.put("custom", true);
+                imported.add(entry);
+            }
+            if (imported.isEmpty()) return;
+
+            ObjectMapper om = new ObjectMapper();
+            VdmsDetailsDTO details = vdmsService.getVdmsDeviceCustomFields();
+            if (details != null && details.getDevice_custom_fields() != null
+                    && !details.getDevice_custom_fields().isBlank()) {
+                List<Map<String, Object>> existing = om.readValue(details.getDevice_custom_fields(),
+                        new TypeReference<List<Map<String, Object>>>() {});
+                Set<String> existingCols = new HashSet<>();
+                for (Map<String, Object> f : existing) {
+                    Object c = f.get("column");
+                    if (c != null) existingCols.add(String.valueOf(c).trim().toLowerCase());
+                }
+                for (Map<String, Object> f : imported) {
+                    String col = String.valueOf(f.get("column")).trim().toLowerCase();
+                    if (existingCols.add(col)) existing.add(f);
+                }
+                details.setDevice_custom_fields(om.writeValueAsString(existing));
+                details.setVdms_id(vdmsId);
+                vdmsService.upsertVdmsDeviceCustomFields(details);
+            } else {
+                VdmsDetailsDTO d = details != null ? details : new VdmsDetailsDTO();
+                d.setVdms_id(vdmsId);
+                d.setDevice_custom_fields(om.writeValueAsString(imported));
+                vdmsService.upsertVdmsDeviceCustomFields(d);
+            }
+        } catch (Exception e) {
+            log.warn("registerImportedCustomFields failed vdms_id={}: {}", vdmsId, e.getMessage());
         }
     }
 
@@ -178,8 +265,7 @@ public class AssetMapperService {
 
     /** Returns a page of staged top-level (parent) assets for the preview screen. */
     public ResponseEntity<List<AssetDTO>> getSubSystemParentAssets(Integer pageNo, Integer pageSize, String importType) {
-        int offset = pageSize * (pageNo - 1);
-        List<AssetDTO> assets = assetRepository.getSubSystemParentAssets(pageSize, offset, importType);
+        List<AssetDTO> assets = assetRepository.getSubSystemParentAssets(importType, PageRequest.of(pageNo - 1, pageSize));
         for (AssetDTO asset : assets) asset.setSubsystems(new ArrayList<>());
         return new ResponseEntity<>(assets, HttpStatus.OK);
     }

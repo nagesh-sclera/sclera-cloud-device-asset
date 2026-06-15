@@ -19,6 +19,8 @@ import tools.jackson.databind.ObjectMapper;
 
 import io.sclera.dto.DocumentMediaDTO;
 import io.sclera.service.MediaService;
+import io.sclera.utils.PageUtils;
+import org.springframework.data.domain.Page;
 
 
 /**
@@ -87,10 +89,10 @@ public class MediaController {
      * @return the matching media items
      */
     @RequestMapping(method = RequestMethod.GET, value = "/getmedias")
-    public Set<DocumentMediaDTO> getMedias(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey) {
+    public Page<DocumentMediaDTO> getMedias(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey) {
         log.info("getMedias username={} vdmsid={}", username, vdmsid);
         try {
-            return mediaService.getMedias(username, vdmsid, pageno, pagesize, searchkey);
+            return PageUtils.toPage(mediaService.getMedias(username, vdmsid, pageno, pagesize, searchkey), pageno, pagesize);
         } catch (Exception e) {
             log.error("getMedias failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
             throw e;
@@ -108,10 +110,10 @@ public class MediaController {
      * @return the media items tagged to the device
      */
     @RequestMapping(method = RequestMethod.GET, value = "/device/{deviceid}/getmediabydeviceid")
-    public Set<DocumentMediaDTO> getMediasByDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String deviceid, @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize) {
+    public Page<DocumentMediaDTO> getMediasByDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String deviceid, @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize) {
         log.info("getMediasByDeviceId username={} vdmsid={} deviceid={}", username, vdmsid, deviceid);
         try {
-            return mediaService.getMediasByDeviceId(username, vdmsid, deviceid, pageno, pagesize);
+            return PageUtils.toPage(mediaService.getMediasByDeviceId(username, vdmsid, deviceid, pageno, pagesize), pageno, pagesize);
         } catch (Exception e) {
             log.error("getMediasByDeviceId failed username={} vdmsid={} deviceid={}: {}", username, vdmsid, deviceid, e.getMessage(), e);
             throw e;

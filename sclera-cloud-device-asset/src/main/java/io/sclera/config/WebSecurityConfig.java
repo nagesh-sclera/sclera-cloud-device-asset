@@ -199,6 +199,17 @@ public class WebSecurityConfig {
 
     private boolean allowAccess(HttpServletRequest request) {
 
+        // Browsable JavaDoc is public, served by the app itself at /javadoc/** (see ResourceConfigs).
+        if (request.getServletPath().startsWith("/javadoc")) {
+            return true;
+        }
+
+        // Asset/QR/floor images are public static files served by the app at /images/** (see
+        // ResourceConfigs), so an <img> tag can load them directly without an auth token.
+        if (request.getServletPath().startsWith("/images")) {
+            return true;
+        }
+
         String enableAuthHeader = request.getHeader("X-Enable-Auth");
         System.out.println("X-Enable-Auth " + enableAuthHeader);
         if ((!request.getServletPath().contains("/ws")) && "true".equalsIgnoreCase(enableAuthHeader)) {

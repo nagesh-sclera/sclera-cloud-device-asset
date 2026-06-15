@@ -6,9 +6,11 @@ import io.sclera.dto.ManagedSoftwareDTO;
 import io.sclera.dto.ManagedSoftwareUsersDTO;
 import io.sclera.service.ManagedSoftwareSearchService;
 import io.sclera.service.ManagedSoftwareService;
+import io.sclera.utils.PageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -45,11 +47,11 @@ public class ManagedSoftwareController {
      * @return the matching page of managed softwares
      */
     @GetMapping(value = "/docker/{dockername}/getallmanagedsoftwares")
-    public List<ManagedSoftwareDTO> getAllManagedSoftwares(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition, @RequestParam(defaultValue = "null") String searchKey,
+    public Page<ManagedSoftwareDTO> getAllManagedSoftwares(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition, @RequestParam(defaultValue = "null") String searchKey,
                                                            @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize) {
         log.info("getAllManagedSoftwares username={} vdmsid={} dockername={}", username, vdmsid, dockername);
         try {
-            return managedSoftwareService.getAllManagedSoftwares(username, vdmsid, dockername, condition, searchKey, pageno, pagesize);
+            return PageUtils.toPage(managedSoftwareService.getAllManagedSoftwares(username, vdmsid, dockername, condition, searchKey, pageno, pagesize), pageno, pagesize);
         } catch (Exception e) {
             log.error("getAllManagedSoftwares failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
             throw e;
@@ -210,7 +212,7 @@ public class ManagedSoftwareController {
      * @return the matching page of managed softwares
      */
     @PostMapping(value = "/docker/{dockername}/searchsortfiltermanagedsoftware")
-    public Set<ManagedSoftwareDTO> searchSortFilterManagedSoftware(@RequestParam String username,
+    public Page<ManagedSoftwareDTO> searchSortFilterManagedSoftware(@RequestParam String username,
                                                                    @RequestParam String vdmsid,
                                                                    @PathVariable String dockername,
                                                                    @RequestParam(defaultValue = "all") String condition,
@@ -219,7 +221,7 @@ public class ManagedSoftwareController {
                                                                    @RequestBody JSONObject search_sort_filter_details) {
         log.info("searchSortFilterManagedSoftware username={} vdmsid={} dockername={}", username, vdmsid, dockername);
         try {
-            return managedSoftwareSearchService.searchSortFilterManagedSoftware(username, vdmsid, dockername, condition, pageno, pagesize, search_sort_filter_details);
+            return PageUtils.toPage(managedSoftwareSearchService.searchSortFilterManagedSoftware(username, vdmsid, dockername, condition, pageno, pagesize, search_sort_filter_details), pageno, pagesize);
         } catch (Exception e) {
             log.error("searchSortFilterManagedSoftware failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
             throw e;

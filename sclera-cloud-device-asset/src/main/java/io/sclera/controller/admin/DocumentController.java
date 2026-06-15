@@ -5,6 +5,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,6 +20,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import io.sclera.dto.DocumentMediaDTO;
 import io.sclera.service.DocumentService;
+import io.sclera.utils.PageUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -104,10 +106,10 @@ public class DocumentController {
      * @return the matching documents
      */
     @RequestMapping(method = RequestMethod.GET, value = "/getdocuments")
-    public Set<DocumentMediaDTO> getDocuments(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey) {
+    public Page<DocumentMediaDTO> getDocuments(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey) {
         log.info("getDocuments username={} vdmsid={}", username, vdmsid);
         try {
-            return documentService.getDocuments(username, vdmsid, pageno, pagesize, searchkey);
+            return PageUtils.toPage(documentService.getDocuments(username, vdmsid, pageno, pagesize, searchkey), pageno, pagesize);
         } catch (Exception e) {
             log.error("getDocuments failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
             throw e;
@@ -126,11 +128,11 @@ public class DocumentController {
      * @return the documents tagged to the device
      */
     @RequestMapping(method = RequestMethod.GET, value = "/device/{deviceid}/getdocumentbydeviceid")
-    public Set<DocumentMediaDTO> getDocumentsByDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String deviceid
+    public Page<DocumentMediaDTO> getDocumentsByDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String deviceid
             , @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize) {
         log.info("getDocumentsByDeviceId username={} vdmsid={} deviceid={}", username, vdmsid, deviceid);
         try {
-            return documentService.getDocumentsByDeviceId(username, vdmsid, deviceid, pageno, pagesize);
+            return PageUtils.toPage(documentService.getDocumentsByDeviceId(username, vdmsid, deviceid, pageno, pagesize), pageno, pagesize);
         } catch (Exception e) {
             log.error("getDocumentsByDeviceId failed username={} vdmsid={} deviceid={}: {}", username, vdmsid, deviceid, e.getMessage(), e);
             throw e;

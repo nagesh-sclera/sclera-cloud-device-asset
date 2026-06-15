@@ -41,6 +41,14 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- OpenTelemetry API so the gateway can rename the server span the OTEL javaagent
+             created (route id -> the actual HTTP method + path that was hit). The agent
+             supplies the live SDK at runtime; this is just the compile-time API. -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+            <version>1.40.0</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

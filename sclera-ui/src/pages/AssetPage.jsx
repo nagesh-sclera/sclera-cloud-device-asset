@@ -14,6 +14,7 @@ import { useToast } from '../context/ToastContext.jsx'
 import { statusInfo, DEMO } from '../config.js'
 import api from '../services/api.js'
 import { getLocalImage } from '../services/localImages.js'
+import { firstAssetImage } from '../services/assetImage.js'
 
 // Client-side refinement for facets the backend filter API doesn't cover
 // (features / onboarded-detail flags / source) — applied on top of the real
@@ -306,7 +307,7 @@ export default function AssetPage({ search, onSearch }) {
                 <label className="asset-check" onClick={(e) => e.stopPropagation()}>
                   <input type="checkbox" checked={selected.has(d.id)} onChange={() => toggleSelect(d.id)} />
                 </label>
-                <div className="asset-avatar">{(d.asset_image_url || getLocalImage(d.id)) ? <img src={d.asset_image_url || getLocalImage(d.id)} alt="" className="avatar-img" /> : <Icon name="device" size={20} />}</div>
+                <div className="asset-avatar">{(firstAssetImage(d.asset_image_url) || getLocalImage(d.id)) ? <img src={firstAssetImage(d.asset_image_url) || getLocalImage(d.id)} alt="" className="avatar-img" /> : <Icon name="device" size={20} />}</div>
                 <div className="asset-main">
                   <div className="asset-name" title={name}>{name}</div>
                   <div className="asset-sub">

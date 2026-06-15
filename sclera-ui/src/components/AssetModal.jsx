@@ -6,6 +6,8 @@ import { useApp } from '../context/AppContext.jsx'
 import { DEMO } from '../config.js'
 import api from '../services/api.js'
 import { setLocalImage } from '../services/localImages.js'
+import { firstAssetImage } from '../services/assetImage.js'
+import ImagePreview from './ImagePreview.jsx'
 
 const slug = (s) => (s || 'asset').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 24)
 // Unique MAC so the backend's mac-based dedup treats each new asset as an insert.
@@ -55,6 +57,7 @@ export default function AssetModal({ open, onClose, onSaved, editing }) {
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
   const [images, setImages] = useState([])
+  const [preview, setPreview] = useState(null)   // src shown in the lightbox
   const [buildings, setBuildings] = useState([])
   const [floors, setFloors] = useState([])     // floors for the selected building (cascade)
   const [locations, setLocations] = useState([]) // locations for the selected floor (cascade)
@@ -66,7 +69,7 @@ export default function AssetModal({ open, onClose, onSaved, editing }) {
     if (!open) return
     setForm(fromDevice(editing))
     setErrors({})
-    setImages(editing?.asset_image_url ? [editing.asset_image_url] : [])
+    setImages(firstAssetImage(editing?.asset_image_url) ? [firstAssetImage(editing.asset_image_url)] : [])
     // best-effort dropdown loads — never block the modal
     api.getBuildings(ctx).then((b) => setBuildings(Array.isArray(b) ? b : [])).catch(() => {})
     api.listNetworks(ctx).then((l) => setNetworks((Array.isArray(l) ? l : []).map((n) => n.name).filter(Boolean))).catch(() => {})
@@ -156,7 +159,16 @@ export default function AssetModal({ open, onClose, onSaved, editing }) {
           await api.moveDeviceNetwork(editing.id, form.networkName, { vdmsId: ctx.vdmsId, user: ctx.user })
         }
         // Persist the image to the DB (asset_image_url) if it changed.
-        if (image !== (editing.asset_image_url || '')) await api.setAssetImage(editing.id, image, ctx).catch(() => {})
+        const prevImage = firstAssetImage(editing.asset_image_url)
+        if (image !== prevImage) {
+          if (!image && prevImage) {
+            // Image was removed: delete the file from disk AND clear asset_image_url.
+            await api.deleteAssetImages(editing.id, [prevImage], ctx).catch(() => {})
+            setLocalImage(editing.id, '')
+          } else {
+            await api.setAssetImage(editing.id, image, ctx).catch(() => {})
+          }
+        }
         toast.success('Asset updated')
       } else {
         await api.upsertDevices([payload], ctx)
@@ -185,6 +197,10 @@ export default function AssetModal({ open, onClose, onSaved, editing }) {
     reader.readAsDataURL(file)
   }
 
+  // Drop the image locally; the actual disk + asset_image_url delete happens on Save
+  // (see submit) so cancelling the modal leaves the stored image untouched.
+  const removeImage = (i) => setImages((imgs) => imgs.filter((_, idx) => idx !== i))
+
   const locOptions = useMemo(
     () => locations.map((l) => ({ id: l.id || l.location_id, name: l.name || l.location_name || l.id })),
     [locations]
@@ -201,6 +217,7 @@ export default function AssetModal({ open, onClose, onSaved, editing }) {
   if (!open) return null
 
   return (
+   <>
     <div className="modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div className="modal asset-modal" role="dialog" aria-modal="true">
         <div className="modal-head">
@@ -216,7 +233,14 @@ export default function AssetModal({ open, onClose, onSaved, editing }) {
         <div className="modal-body">
           <div className="image-upload">
             <div className="image-strip">
-              {images.map((src, i) => <img key={i} src={src} alt="" className="thumb" />)}
+              {images.map((src, i) => (
+                <div key={i} className="thumb-wrap">
+                  <img src={src} alt="" className="thumb" onClick={() => setPreview(src)} title="Preview image" />
+                  <button type="button" className="thumb-remove" onClick={() => removeImage(i)} aria-label="Remove image" title="Remove image">
+                    <Icon name="x" size={12} />
+                  </button>
+                </div>
+              ))}
               <label className="add-images">
                 <Icon name="plus" size={22} />
                 <span>Add Images</span>
@@ -312,6 +336,8 @@ export default function AssetModal({ open, onClose, onSaved, editing }) {
         </div>
       </div>
     </div>
+    <ImagePreview open={!!preview} src={preview} onClose={() => setPreview(null)} />
+   </>
   )
 }
 

@@ -5,7 +5,9 @@
 const localImages = new Map()
 
 export const setLocalImage = (id, dataUrl) => {
-  if (id && dataUrl) localImages.set(id, dataUrl)
+  if (!id) return
+  if (dataUrl) localImages.set(id, dataUrl)
+  else localImages.delete(id) // empty value clears the cached image (e.g. after a delete)
 }
 
 export const getLocalImage = (id) => (id ? localImages.get(id) : undefined)

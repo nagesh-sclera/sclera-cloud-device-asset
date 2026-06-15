@@ -140,7 +140,7 @@ public class User {
     private String image_url;
 
 
-    @Column(columnDefinition = "varchar(16) default 'EN'")
+    @Column(length = 16, columnDefinition = "varchar(16) default 'EN'")
     private String language;
 
 

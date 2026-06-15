@@ -5,6 +5,8 @@ import io.sclera.dto.DeviceDTO;
 import io.sclera.dto.LoadCalculationDTO;
 import io.sclera.dto.SpecificationsDTO;
 import io.sclera.service.SpecificationsService;
+import io.sclera.utils.PageUtils;
+import org.springframework.data.domain.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -154,10 +156,10 @@ public class SpecificationsController {
      */
     // API to get all tagged devices based on a given output port
     @RequestMapping(method = RequestMethod.POST, value = "/gettaggeddevices")
-    public List<DeviceDTO> getTaggedDevices(@RequestParam String username, @RequestParam String vdmsid, @RequestBody SpecificationsDTO specificationsDTO,  @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize) {
+    public Page<DeviceDTO> getTaggedDevices(@RequestParam String username, @RequestParam String vdmsid, @RequestBody SpecificationsDTO specificationsDTO,  @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize) {
         log.info("getTaggedDevices username={} vdmsid={}", username, vdmsid);
         try {
-            return specificationsService.getTaggedDevices(username,vdmsid,specificationsDTO,pageno,pagesize);
+            return PageUtils.toPage(specificationsService.getTaggedDevices(username,vdmsid,specificationsDTO,pageno,pagesize), pageno, pagesize);
         } catch (Exception e) {
             log.error("getTaggedDevices failed username={}: {}", username, e.getMessage(), e);
             throw e;
