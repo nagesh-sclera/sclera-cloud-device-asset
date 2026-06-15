@@ -19,7 +19,7 @@ serve cross-module reads via Dapr-shaped stub clients (`io.sclera.stubs`).
 | 4 | `report_attributes` | reports | `models/ReportAttributes.java` (deleted) | none on MI (link is `report_attributes.primary_id`) | DONE (Task 5) |
 | 5 | `location_global_checklist` | inspection | `models/LocationGlobalChecklist.java` (+ `LocationGlobalChecklistId.java`) (deleted) | none (queries gapped) | DONE (Task 6) |
 | 6 | `vendor` | integrations | `models/Vendor.java` (deleted) | `docker.vendor_org_id` (queries gapped) | DONE (Task 7) |
-| 7 | sensor-attributes family (`lorawan_sensor_attributes`, `my_devices_sensor_attributes`, `pelican_sensor_attributes`, `ecobee_sensor_attributes`, `snmp_object`, `disruptive_sensor`, `monnit_sensor`, `knx_group`, `daintree_point`, `modbus_register`) | integrations (sensor) | mixed — see note | `Conditions.*_id` scalars | deferred / documentation |
+| 7 | sensor-attributes family (`lorawan_sensor_attributes`, `my_devices_sensor_attributes`, `pelican_sensor_attributes`, `ecobee_sensor_attributes`, `snmp_object`, `disruptive_sensor`, `monnit_sensor`, `knx_group`, `daintree_point`, `modbus_register`) | integrations (sensor) | mixed — see note | `Conditions.*_id` scalars | DONE (Task 8, doc-only — already decoupled) |
 
 **Keep (this service's own — do NOT touch):** `vendor_organisation` (`models/Vendor_Organisation.java`).
 
@@ -90,6 +90,29 @@ client would return empty → the queries yield nothing either way. NO client cr
 - **Kept:** `dto/VendorDTO.java` (projection target for `vendorinfomapping` — a DTO, not the table) and `models/Vendor_Organisation.java` (this service's own table). Scalar `docker.vendor_org_id` stays.
 - **Entity deleted:** `models/Vendor.java` (no repo, no Java refs — only its own declaration).
 - **No EXPLAIN / no test changes:** SQL & all signatures unchanged; only comments added + the unreferenced entity deleted. Module compiles (exit 0).
+
+## Task 8 — sensor-attributes family → integrations: DONE (2026-06-15, doc-only — NO code change)
+
+Audited the 10 family tables (`lorawan_sensor_attributes`, `my_devices_sensor_attributes`,
+`pelican_sensor_attributes`, `ecobee_sensor_attributes`, `snmp_object`, `disruptive_sensor`,
+`monnit_sensor`, `knx_group`, `daintree_point`, `modbus_register`) across `io.sclera` main source.
+
+**Finding: the family is ALREADY fully decoupled in this service — zero JOIN/FROM to any of them.**
+`grep '(JOIN|FROM)\s+<table>'` → no matches. They appear only as:
+1. **Local scalar FK columns on `conditions`** (e.g. `lorawan_sensor_attributes_lorawan_sensor_id`,
+   `monnit_sensor_id`, `snmp_object_oid`, `modbus_register_id`, …) — the loose-coupling scalars restored
+   during the PG migration. The `Conditions.*` named queries are pure `FROM/INSERT INTO/UPDATE conditions`
+   (the local table); the sensor names are its own columns, NOT joins. Nothing to remove.
+2. **Local `device` columns** `snmp_object_count` / `snmp_object_status` (count/status on the device row).
+3. **`models/SnmpObject.java`** — wired as `Device`'s `@OneToMany Set<SnmpObject> snmp_object` and used in
+   `DeviceService` (1757/1880). It is a device-owned child collection HERE, not a foreign integrations read.
+   Per the Task-8 caveat (contested ownership, no guessing) it is LEFT IN PLACE — not deleted.
+
+The other family entities (`Lorawan_Sensor`, `Monnit_Sensor`, `ModbusRegister`, `KNXGroup`,
+`DisruptiveSensor`, …) live in the **`sclera-integrations` module**, not in cloud-device-asset.
+
+**Conclusion: no foreign table to remove, no entity to delete, no SensorClient needed.** The plan's
+"thin client for any live path" is moot — there is no live cross-service sensor read path in this service.
 
 ## Filter/sort dependencies (hard cases — fill as found)
 _(queries where a foreign column is used in WHERE/ORDER BY/GROUP BY, not just SELECT)_
