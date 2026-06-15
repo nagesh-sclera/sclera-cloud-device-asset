@@ -80,6 +80,21 @@ class VdmsAdminControllerTest extends AbstractPostgresTest {
     }
 
     @Test
+    void addReactivatesSoftRemovedVdms() throws Exception {
+        // A soft-removed (inactive) VDMS is re-added, not rejected: POST reactivates it (201, active=true).
+        seedPerVdmsJob();
+        registry.save(new VdmsRegistryEntity("vdms-1", "UTC", false));   // soft-removed
+        mvc().perform(post("/api/vdms").contentType("application/json")
+                .content("{\"vdmsId\":\"vdms-1\",\"timezone\":\"Europe/London\"}"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.active").value(true))
+            .andExpect(jsonPath("$.timezone").value("Europe/London"));
+        assertTrue(registry.findById("vdms-1").orElseThrow().isActive());
+        assertEquals("Europe/London", registry.findById("vdms-1").orElseThrow().getTimezone());
+        assertEquals(1, instances.countByVdmsId("vdms-1"));   // jobs re-registered on reactivate
+    }
+
+    @Test
     void addRejectsInvalidTimezone() throws Exception {
         mvc().perform(post("/api/vdms").contentType("application/json")
                 .content("{\"vdmsId\":\"vdms-9\",\"timezone\":\"Not/AZone\"}"))

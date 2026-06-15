@@ -564,8 +564,8 @@ async function loadVdms(){
     const rows = await fetch('/api/vdms').then(x=>x.json());
     document.getElementById('vdms-count').textContent = rows.length;
     document.getElementById('vdms-rows').innerHTML = rows.map(v=>`
-      <tr data-vdms="${v.vdmsId}" style="border-top:1px solid var(--line)">
-        <td style="padding:.35rem 0">${v.vdmsId}</td>
+      <tr data-vdms="${esc(v.vdmsId)}" style="border-top:1px solid var(--line)">
+        <td style="padding:.35rem 0">${esc(v.vdmsId)}</td>
         <td><select class="search vtz" style="width:180px"></select></td>
         <td>${v.active?'<span class="sw ok"></span> active':'<span class="sw fail"></span> removed'}</td>
         <td>${v.jobCount} jobs</td>
