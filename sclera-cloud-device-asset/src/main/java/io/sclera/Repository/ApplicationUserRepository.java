@@ -29,7 +29,7 @@ public interface ApplicationUserRepository extends JpaRepository<ApplicationUser
      */
     @Modifying
     @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
+    // NOT CONVERTED — stays native: ON CONFLICT upsert already valid PostgreSQL
     @Query(value = "INSERT INTO application_user (id, technician_id, email, type) " +
             "VALUES (?1, ?2, ?3, ?4) " +
             "ON CONFLICT (id) DO UPDATE SET " +
@@ -39,14 +39,15 @@ public interface ApplicationUserRepository extends JpaRepository<ApplicationUser
     /**
      * Clears the managed software reference for the given application users.
      *
+     * <p>{@code managedSoftwareId} is a plain scalar {@code @Column} field on
+     * {@link ApplicationUser} — no relation navigation required.
+     *
      * @param inventoryUserIds the application user identifiers
      * @return the number of updated rows
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE application_user " +
-            "SET managed_software = null " +
-            "WHERE id IN ?1", nativeQuery = true)
+    @Query("UPDATE ApplicationUser u SET u.managedSoftwareId = NULL WHERE u.id IN ?1")
     Integer clearManagedSoftwareId(Set<String> inventoryUserIds);
 
     /**
@@ -56,11 +57,9 @@ public interface ApplicationUserRepository extends JpaRepository<ApplicationUser
      * @param managedSoftwareId the managed software identifier to assign
      * @return the number of updated rows
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE application_user " +
-            "SET managed_software = ?2 " +
-            "WHERE id IN ?1", nativeQuery = true)
+    @Query("UPDATE ApplicationUser u SET u.managedSoftwareId = ?2 WHERE u.id IN ?1")
     Integer updateManagedSoftwareIdByUserIds(Set<String> inventoryUserIds, String managedSoftwareId);
 
     /**
@@ -70,11 +69,9 @@ public interface ApplicationUserRepository extends JpaRepository<ApplicationUser
      * @param managedSoftwareId the managed software identifier to assign
      * @return the number of updated rows
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE application_user " +
-            "SET managed_software = ?2 " +
-            "WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE ApplicationUser u SET u.managedSoftwareId = ?2 WHERE u.id = ?1")
     Integer updateManagedSoftwareIdByUserId(String inventoryUserId, String managedSoftwareId);
 
     /**
@@ -83,7 +80,7 @@ public interface ApplicationUserRepository extends JpaRepository<ApplicationUser
      * @param inventoryUserIds the application user identifiers
      * @return the matching email addresses
      */
-    @Query(value = "SELECT email FROM application_user WHERE id IN ?1", nativeQuery = true)
+    @Query("SELECT u.email FROM ApplicationUser u WHERE u.id IN ?1")
     Set<String> findEmailsByUserIds(List<String> inventoryUserIds);
 
     /**
@@ -92,7 +89,7 @@ public interface ApplicationUserRepository extends JpaRepository<ApplicationUser
      * @param userIds the candidate application user identifiers
      * @return the existing application user identifiers
      */
-    @Query(value = "SELECT id FROM application_user WHERE id IN ?1", nativeQuery = true)
+    @Query("SELECT u.id FROM ApplicationUser u WHERE u.id IN ?1")
     Set<String> findExistingUserIds(Set<String> userIds);
 
     /**
@@ -101,9 +98,9 @@ public interface ApplicationUserRepository extends JpaRepository<ApplicationUser
      * @param ids the application user identifiers
      * @return the number of deleted rows
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM application_user WHERE id IN ?1", nativeQuery = true)
+    @Query("DELETE FROM ApplicationUser u WHERE u.id IN ?1")
     Integer deleteApplicationUsersByIds(Set<String> ids);
 
     /**
@@ -112,20 +109,25 @@ public interface ApplicationUserRepository extends JpaRepository<ApplicationUser
      * @param ids the application user identifier
      * @return the number of deleted rows
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM application_user WHERE id = ?1", nativeQuery = true)
+    @Query("DELETE FROM ApplicationUser u WHERE u.id = ?1")
     Integer deleteApplicationUsersById(String ids);
 
     /**
      * Deletes the application users referencing the given managed software.
      *
+     * <p>{@code managedSoftwareId} is a plain scalar {@code @Column} field —
+     * {@code managedSoftware} is also a {@code @ManyToOne} relation, but since
+     * the DELETE target is the scalar column value, JPQL references
+     * {@code u.managedSoftwareId} directly.
+     *
      * @param managedSoftwareIds the managed software identifier
      * @return the number of deleted rows
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM application_user WHERE managed_software = ?1", nativeQuery = true)
+    @Query("DELETE FROM ApplicationUser u WHERE u.managedSoftwareId = ?1")
     Integer deleteByManagedSoftwareId(String managedSoftwareIds);
 
     /**
@@ -134,11 +136,9 @@ public interface ApplicationUserRepository extends JpaRepository<ApplicationUser
      * @param managedSoftwareIds the managed software identifiers
      * @return the number of updated rows
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE application_user " +
-            "SET managed_software = null " +
-            "WHERE managed_software IN ?1", nativeQuery = true)
+    @Query("UPDATE ApplicationUser u SET u.managedSoftwareId = NULL WHERE u.managedSoftwareId IN ?1")
     Integer clearManagedSoftwareByManagedSoftwareIds(List<String> managedSoftwareIds);
 
     /**
@@ -147,6 +147,6 @@ public interface ApplicationUserRepository extends JpaRepository<ApplicationUser
      * @param outUserIds the candidate application user identifiers
      * @return the existing application user identifiers
      */
-    @Query(value = "SELECT id FROM application_user WHERE id IN ?1", nativeQuery = true)
+    @Query("SELECT u.id FROM ApplicationUser u WHERE u.id IN ?1")
     Set<String> findUserIdsByIds(Set<String> outUserIds);
 }

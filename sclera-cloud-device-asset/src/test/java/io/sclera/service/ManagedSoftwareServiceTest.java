@@ -13,6 +13,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.data.domain.PageRequest;
+
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
@@ -187,8 +189,8 @@ class ManagedSoftwareServiceTest {
         when(dto.getSubscriptionStartDate()).thenReturn(BigInteger.ZERO);
         when(dto.getSubscriptionEndDate()).thenReturn(BigInteger.valueOf(Long.MAX_VALUE)); // now is within -> active
         when(dto.getStatus()).thenReturn("expired"); // differs from computed "active"
-        // pageNo=1, pageSize=10 -> offset 0
-        when(managedSoftwareRepository.getAllManagedSoftwares("cond", "key", 0, 10)).thenReturn(List.of(dto));
+        // pageNo=1, pageSize=10 -> PageRequest.of(0, 10)
+        when(managedSoftwareRepository.getAllManagedSoftwares("cond", "key", PageRequest.of(0, 10))).thenReturn(List.of(dto));
 
         service.getAllManagedSoftwares("u", "v", "dock", "cond", "key", 1, 10);
 

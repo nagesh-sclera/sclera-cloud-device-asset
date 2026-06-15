@@ -28,7 +28,7 @@ public interface DeviceSpecificationRepository extends JpaRepository<DeviceSpeci
      *
      * @return the list of distinct emails
      */
-    @Query(value = "SELECT DISTINCT email FROM device_specification WHERE email IS NOT NULL", nativeQuery = true)
+    @Query("SELECT DISTINCT ds.email FROM DeviceSpecification ds WHERE ds.email IS NOT NULL")
     List<String> findDistinctEmail();
 
     /**
@@ -36,7 +36,7 @@ public interface DeviceSpecificationRepository extends JpaRepository<DeviceSpeci
      *
      * @return the list of distinct OS types
      */
-    @Query(value = "SELECT DISTINCT os_type FROM device_specification WHERE os_type IS NOT NULL", nativeQuery = true)
+    @Query("SELECT DISTINCT ds.osType FROM DeviceSpecification ds WHERE ds.osType IS NOT NULL")
     List<String> findDistinctOsType();
 
     /**
@@ -53,6 +53,8 @@ public interface DeviceSpecificationRepository extends JpaRepository<DeviceSpeci
      * @param serialNumber the specification id (serial number) to update
      * @param deviceId the new device id to assign
      */
+    // NOT CONVERTED — stays native: sets the device_id FK column from a scalar String id;
+    // JPQL UPDATE cannot assign a @OneToOne relation column via a plain scalar value.
     @Modifying
     @Transactional
     @Query(value = "UPDATE device_specification SET device_id = ?2 WHERE id = ?1", nativeQuery = true)
@@ -64,6 +66,9 @@ public interface DeviceSpecificationRepository extends JpaRepository<DeviceSpeci
      * @param deviceId the device identifier
      * @return the child devices value
      */
+    // NOT CONVERTED — stays native: childDevices is @Lob String (ClobJdbcType in Hibernate 7/PG);
+    // a JPQL scalar projection of an @Lob column produces a type-mapping error on PostgreSQL.
+    // The native query reads the raw TEXT column directly without Lob conversion.
     @Query(value = "SELECT child_devices FROM device_specification WHERE device_id = ?1", nativeQuery = true)
     String getChildDeviceByDeviceId(String deviceId);
 

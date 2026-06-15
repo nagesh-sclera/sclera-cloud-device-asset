@@ -24,6 +24,7 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      * @param id technician identifier
      * @return the matching technician projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with @SqlResultSetMapping; plain SELECT already PG-compatible
     @Query(nativeQuery = true)
     TechnicianDTO getTechnicianById(String id);
 
@@ -32,6 +33,7 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      *
      * @return the list of technician projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with @SqlResultSetMapping; plain SELECT already PG-compatible
     @Query(nativeQuery = true)
     List<TechnicianDTO> getAllTechnician();
 
@@ -53,6 +55,7 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): JPA JPQL has no INSERT statement; plain INSERT already PG-compatible (no MySQL constructs)
     @Query(value = "INSERT INTO technician (id, email, phone, country_code, name, department, designation, time_zone, created_by, created_at, vdms_id) " +
             "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)", nativeQuery = true)
     Integer createTechnician(String id, String email, String phone, String countryCode, String name, String department, String designation, String timeZone, String createdBy, Long createdAt, String vdmsId);
@@ -73,8 +76,10 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      * @param vdmsId      associated VDMS identifier
      * @return the number of rows updated
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
+    // NOT CONVERTED (partial) — vdms_id is managed by @ManyToOne Vdms vdms; JPQL cannot SET an association FK via path navigation
+    // in a bulk UPDATE. All other columns are portable JPQL; vdms update left native via the upsertTechnician method.
     @Query(value = "UPDATE technician SET " +
             "email = ?2, phone = ?3, country_code = ?4, name = ?5, department = ?6, designation = ?7, " +
             "time_zone = ?8, created_by = ?9, created_at = ?10, vdms_id = ?11 WHERE id = ?1", nativeQuery = true)
@@ -95,10 +100,12 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      * @param phone       phone used to match the technician
      * @return the number of rows updated
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE technician " +
-            "SET country_code = ?1, name = ?2, department = ?3, designation = ?4, time_zone = ?5, created_by = ?6, created_at = ?7, vdms_id = ?8 " +
+    // NOT CONVERTED (partial) — vdms_id is managed by @ManyToOne Vdms vdms; JPQL cannot SET an association FK via path navigation
+    // in a bulk UPDATE. All other columns are portable JPQL; vdms update left native via the upsertTechnician method.
+    @Query(value = "UPDATE technician SET " +
+            "country_code = ?1, name = ?2, department = ?3, designation = ?4, time_zone = ?5, created_by = ?6, created_at = ?7, vdms_id = ?8 " +
             "WHERE email = ?9 AND phone = ?10", nativeQuery = true)
     Integer updateTechnicianByEmailAndPhone(String countryCode, String name, String department, String designation, String timeZone, String createdBy, Long aLong, String vdmsId, String email, String phone);
 
@@ -107,9 +114,9 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      *
      * @param id technician identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM technician WHERE id = ?1", nativeQuery = true)
+    @Query("DELETE FROM Technician t WHERE t.id = ?1")
     void deleteTechnicianById(String id);
 
     /**
@@ -117,6 +124,7 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      *
      * @return the list of technician emails
      */
+    // NOT CONVERTED — stays native (PG-translation track): query is syntactically broken (WHERE clause has no predicate — latent bug); keeping native preserves current runtime behaviour
     @Query(value = "SELECT email FROM technician WHERE ", nativeQuery = true)
     List<Set> getAllTechniciansEmail();
 
@@ -139,10 +147,9 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      * @param vdmsId      associated VDMS identifier
      * @return the number of rows affected
      */
-    // Upsert method to insert or update technician details
+    // NOT CONVERTED — stays native (PG-translation track): ON CONFLICT upsert already PG-portable; no portable JPQL equivalent for upsert semantics
     @Modifying
     @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
     @Query(value = "INSERT INTO technician (id, email, phone, country_code, name, department, designation, time_zone, created_by, created_at, cost, unit, type, vdms_id) " +
             "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14) " +
             "ON CONFLICT (id) DO UPDATE SET " +
@@ -157,6 +164,7 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      * @param formattedDateTime reference date-time used to evaluate availability
      * @return the matching technician projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): CONVERT_TZ/AT TIME ZONE/FROM_UNIXTIME/DATE_FORMAT/JSON_CONTAINS/jsonb operators; already PG-ported in @NamedNativeQuery
     @Query(name = "Technician.getTechnicianSkillProfileWithPrimarySkillAndAvailabilityById", nativeQuery = true)
     TechnicianDTO getTechnicianSkillProfileWithPrimarySkillAndAvailabilityById(String id, String formattedDateTime);
 
@@ -168,6 +176,7 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      * @param offset            row offset for pagination
      * @return the matching technician projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): CONVERT_TZ/AT TIME ZONE/FROM_UNIXTIME/DATE_FORMAT/JSON_CONTAINS/jsonb operators; already PG-ported in @NamedNativeQuery
     @Query(name = "Technician.getAllTechnicianSkillProfilesWithPrimarySkillAndAvailability", nativeQuery = true)
     List<TechnicianDTO> getAllTechnicianSkillProfilesWithPrimarySkillAndAvailability(String formattedDateTime, int size, int offset);
 
@@ -178,6 +187,7 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      * @param formattedDateTime reference date-time used to evaluate availability
      * @return the matching technician projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): CONVERT_TZ/AT TIME ZONE/FROM_UNIXTIME/DATE_FORMAT/JSON_CONTAINS/jsonb operators; already PG-ported in @NamedNativeQuery
     @Query(name = "Technician.getTechnicianWithCountryCodePhoneAndAvailabilityById", nativeQuery = true)
     TechnicianDTO getTechnicianWithCountryCodePhoneAndAvailabilityById(String id, String formattedDateTime);
 
@@ -192,6 +202,7 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      * @param availabilityFilter availability filter
      * @return the matching technician projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): CONVERT_TZ/AT TIME ZONE/FROM_UNIXTIME/DATE_FORMAT/JSON_CONTAINS/jsonb operators + HAVING-on-alias; already PG-ported in @NamedNativeQuery
     @Query(name = "Technician.getAllTechniciansByFilterByPagination", nativeQuery = true)
     List<TechnicianDTO> getAllTechniciansByFilterByPagination(String formattedDateTime, int size, int offset, String technicianIdFilter, String departmentFilter, String availabilityFilter);
 
@@ -203,6 +214,7 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): device_technician is not a JPA entity; JPA JPQL has no INSERT statement; plain INSERT already PG-compatible
     @Query(value = "INSERT INTO device_technician (technician_id, device_id) VALUES (?1, ?2)", nativeQuery = true)
     void tagTechniciansToDevice(String technicianId, String deviceId);
 
@@ -214,6 +226,7 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): device_technician is not a JPA entity; JPQL DELETE requires an entity; plain DELETE already PG-compatible
     @Query(value = "DELETE FROM device_technician WHERE technician_id = ?1 AND device_id = ?2", nativeQuery = true)
     void unTagTechniciansFromDevice(String technicianId, String deviceId);
 
@@ -223,6 +236,7 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      * @param deviceId device identifier
      * @return the tagged technician identifiers
      */
+    // NOT CONVERTED — stays native (PG-translation track): device_technician is not a JPA entity; plain SELECT already PG-compatible
     @Query(value = "SELECT technician_id FROM device_technician WHERE device_id = ?1", nativeQuery = true)
     List<String> getAllTaggedTechnicianIds(String deviceId);
 
@@ -232,7 +246,7 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      * @param technicianId technician identifier
      * @return the technician name
      */
-    @Query(value = "SELECT name FROM technician WHERE id = ?1", nativeQuery = true)
+    @Query("SELECT t.name FROM Technician t WHERE t.id = ?1")
     String getTechnicianNameById(String technicianId);
 
     /**
@@ -243,6 +257,7 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      * @param searchKey search term applied to technician names
      * @return the matching technician projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with @SqlResultSetMapping and LIMIT/OFFSET; CONCAT_WS already PG-compatible
     @Query(name = "Technician.getAllTechnicianNamesAndIds", nativeQuery = true)
     List<TechnicianDTO> getAllTechnicianNamesAndIds(int size, int offset, String searchKey);
 
@@ -251,7 +266,7 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      *
      * @return the list of unique departments
      */
-    @Query(value = "SELECT DISTINCT department FROM technician WHERE department IS NOT NULL", nativeQuery = true)
+    @Query("SELECT DISTINCT t.department FROM Technician t WHERE t.department IS NOT NULL")
     List<String> getUniqueTechnicianDepartments();
 
     /**
@@ -260,7 +275,7 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      * @param ids candidate technician identifiers
      * @return the identifiers found in the table
      */
-    @Query(value = "SELECT id FROM technician WHERE id IN ?1", nativeQuery = true)
+    @Query("SELECT t.id FROM Technician t WHERE t.id IN ?1")
     Set<String> findExistingTechniciansByIds(List<String> ids);
 
     /**
@@ -269,9 +284,9 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      * @param ids technician identifiers to delete
      * @return the number of rows deleted
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM technician WHERE id IN ?1", nativeQuery = true)
+    @Query("DELETE FROM Technician t WHERE t.id IN ?1")
     int deleteTechniciansByIds(Set<String> ids);
 
     /**
@@ -282,6 +297,7 @@ public interface TechnicianRepository extends JpaRepository<Technician,String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): device_technician is not a JPA entity; JPQL DELETE requires an entity; plain DELETE already PG-compatible
     @Query(value = "DELETE FROM device_technician WHERE technician_id IN ?1", nativeQuery = true)
     int deleteDeviceTechniciansByTechnicianIds(Set<String> technicianIds);
 }

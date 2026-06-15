@@ -2,6 +2,7 @@ package io.sclera.Repository;
 
 import io.sclera.dto.AiCallLogHistoryDTO;
 import io.sclera.models.AiCallLogHistory;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,12 +20,14 @@ import java.util.Set;
 public interface AiCallLogHistoryRepository extends JpaRepository<AiCallLogHistory, String> {
 
     /**
-     * Returns the history records associated with the given AI call log.
+     * Returns the history records associated with the given AI call log, ordered by creation time.
      *
      * @param id the AI call log identifier
      * @return the matching history records as DTOs
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.AiCallLogHistoryDTO(" +
+           "h.id, h.createdAt, h.description, h.technician.id, h.state, h.aiCallLog.id) " +
+           "FROM AiCallLogHistory h WHERE h.aiCallLog.id = ?1 ORDER BY h.createdAt ASC")
     List<AiCallLogHistoryDTO> getAiCallLogHistoryByAiCallLogId(String id);
 
     /**
@@ -37,6 +40,7 @@ public interface AiCallLogHistoryRepository extends JpaRepository<AiCallLogHisto
      * @param aiCallLogId the parent AI call log identifier
      * @param state the recorded state
      */
+    // NOT CONVERTED — stays native: plain INSERT, already PG-valid; no ON CONFLICT / MySQL-specific syntax
     @Modifying
     @Transactional
     @Query(value = "INSERT INTO ai_call_log_history (id, created_at, description, technician_id, ai_call_log_id, state) VALUES (?1, ?2, ?3, ?4, ?5, ?6)", nativeQuery = true)
@@ -48,9 +52,10 @@ public interface AiCallLogHistoryRepository extends JpaRepository<AiCallLogHisto
      * @param aiCallLogHistoryId the history record identifier
      * @return the matching history record as a DTO
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.AiCallLogHistoryDTO(" +
+           "h.id, h.createdAt, h.description, h.technician.id, h.state, h.aiCallLog.id) " +
+           "FROM AiCallLogHistory h WHERE h.id = ?1")
     AiCallLogHistoryDTO getAiCallLogHistoryById(String aiCallLogHistoryId);
-
 
     /**
      * Returns the distinct states recorded for the given history record identifier.
@@ -58,7 +63,7 @@ public interface AiCallLogHistoryRepository extends JpaRepository<AiCallLogHisto
      * @param aiCallLogId the history record identifier
      * @return the set of recorded states
      */
-    @Query(value = "SELECT state FROM ai_call_log_history a WHERE a.id = ?1", nativeQuery = true)
+    @Query("SELECT h.state FROM AiCallLogHistory h WHERE h.id = ?1")
     Set<String> findStatusesByAiCallLogId(String aiCallLogId);
 
     /**
@@ -67,18 +72,31 @@ public interface AiCallLogHistoryRepository extends JpaRepository<AiCallLogHisto
      * @param aiCallLogId the AI call log identifier
      * @return the number of matching history records
      */
-    @Query(value = "SELECT COUNT(*) FROM ai_call_log_history a WHERE a.ai_call_log_id = ?1", nativeQuery = true)
+    @Query("SELECT COUNT(h) FROM AiCallLogHistory h WHERE h.aiCallLog.id = ?1")
     int countByAiCallLogId(String aiCallLogId);
+
+    /**
+     * Backing query for {@link #getLatestCallStatus}: returns up to one state ordered by creation
+     * time descending.  Callers use the {@code default} wrapper below.
+     */
+    @Query("SELECT h.state FROM AiCallLogHistory h " +
+           "WHERE h.aiCallLog.id = ?1 AND h.technician.id = ?2 " +
+           "ORDER BY h.createdAt DESC")
+    List<String> findLatestCallStatusList(String aiCallLogId, String technicianId, Pageable pageable);
 
     /**
      * Returns the most recent state recorded for the given AI call log and technician.
      *
      * @param aiCallLogId the AI call log identifier
      * @param technicianId the technician identifier
-     * @return the latest recorded state
+     * @return the latest recorded state, or {@code null} if none
      */
-    @Query(value = "SELECT state FROM ai_call_log_history a WHERE a.ai_call_log_id = ?1 AND a.technician_id=?2 ORDER BY a.created_at DESC LIMIT 1", nativeQuery = true)
-    String getLatestCallStatus(String aiCallLogId,String technicianId);
+    default String getLatestCallStatus(String aiCallLogId, String technicianId) {
+        List<String> results = findLatestCallStatusList(
+                aiCallLogId, technicianId,
+                org.springframework.data.domain.PageRequest.of(0, 1));
+        return results.isEmpty() ? null : results.get(0);
+    }
 
     /**
      * Deletes all history records belonging to the given technicians.
@@ -86,8 +104,8 @@ public interface AiCallLogHistoryRepository extends JpaRepository<AiCallLogHisto
      * @param technicianIds the technician identifiers
      * @return the number of deleted records
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM ai_call_log_history WHERE technician_id IN ?1", nativeQuery = true)
+    @Query("DELETE FROM AiCallLogHistory h WHERE h.technician.id IN ?1")
     int deleteAICallLogsHistoryByTechnicianIds(Set<String> technicianIds);
 }

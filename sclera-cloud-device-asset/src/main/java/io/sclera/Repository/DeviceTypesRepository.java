@@ -29,6 +29,7 @@ public interface DeviceTypesRepository extends JpaRepository<DeviceTypes, String
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native: ON CONFLICT (id) DO UPDATE is already PG-portable; no JPQL equivalent for upsert
     // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
     @Query(value =
             "INSERT INTO device_types (id, name, updated_timestamp) " +
@@ -47,7 +48,8 @@ public interface DeviceTypesRepository extends JpaRepository<DeviceTypes, String
      *
      * @return the list of device type projections
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.DeviceTypesDTO(dt.id, dt.name, dt.updatedTimestamp) " +
+           "FROM DeviceTypes dt")
     List<DeviceTypesDTO> getAllDeviceTypes();
 
     /**
@@ -55,16 +57,19 @@ public interface DeviceTypesRepository extends JpaRepository<DeviceTypes, String
      *
      * @return the maximum updated timestamp
      */
-    @Query(value = "SELECT MAX(d.updated_timestamp) FROM device_types d",nativeQuery = true)
+    @Query("SELECT MAX(dt.updatedTimestamp) FROM DeviceTypes dt")
     BigInteger findMaxUpdatedTimestamp();
 
     /**
-     * Retrieves device type projections updated for the given VDMS.
+     * Retrieves device type projections where old_name is set (renamed types).
+     * Note: the vdmsId parameter is accepted for API compatibility but is not used
+     * as a filter — DeviceTypes has no vdms_id column.
      *
-     * @param vdmsId the owning VDMS identifier
+     * @param vdmsId the owning VDMS identifier (unused in query — no vdms_id column on DeviceTypes)
      * @return the list of updated device type projections
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.DeviceTypesDTO(dt.name, dt.oldName) " +
+           "FROM DeviceTypes dt WHERE dt.oldName IS NOT NULL")
     List<DeviceTypesDTO> getAllUpdatedDeviceTypes(String vdmsId);
 
     /**
@@ -72,10 +77,8 @@ public interface DeviceTypesRepository extends JpaRepository<DeviceTypes, String
      *
      * @param oldName the old name to clear
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device_types SET old_name = NULL WHERE old_name = ?1", nativeQuery = true)
+    @Query("UPDATE DeviceTypes dt SET dt.oldName = NULL WHERE dt.oldName = :oldName")
     void deleteOldName(String oldName);
 }
-
-

@@ -6,48 +6,6 @@ import org.hibernate.annotations.ColumnDefault;
 import jakarta.persistence.*;
 import java.math.BigInteger;
 
-@SqlResultSetMapping(
-        name = "assetFieldMapping",
-        classes = @ConstructorResult(
-                targetClass = AssetFieldDTO.class,
-                columns = {
-                        @ColumnResult(name = "id", type = String.class),
-                        @ColumnResult(name = "name", type = String.class)
-                }
-        )
-)
-@NamedNativeQuery(
-        name = "AssetField.getGlobalAssetFields",
-        query = "SELECT id, name " +
-                "FROM asset_field WHERE name IN ?1",
-        resultSetMapping = "assetFieldMapping"
-)
-
-@SqlResultSetMapping(
-        name = "assetFieldMappings",
-        classes = @ConstructorResult(
-                targetClass = AssetFieldDTO.class,
-                columns = {
-                        @ColumnResult(name = "id", type = String.class),
-                        @ColumnResult(name = "name", type = String.class),
-                        @ColumnResult(name = "type", type = String.class),
-                        @ColumnResult(name = "toolTip", type = String.class),
-                        @ColumnResult(name = "defaultValue", type = String.class),
-                        @ColumnResult(name = "isActive", type = Boolean.class),
-                        @ColumnResult(name = "options", type = String.class),
-                        @ColumnResult(name = "isDeleted", type = Boolean.class),
-                        @ColumnResult(name = "showInSection", type = Integer.class),
-                        @ColumnResult(name = "createdAt", type = BigInteger.class)
-
-                }
-        )
-)
-@NamedNativeQuery(
-        name = "AssetField.getAllAssetFields",
-        query = " SELECT id, name, type, tool_tip AS toolTip , default_value AS defaultValue, is_active AS isActive, options, is_deleted AS isDeleted, show_in_section AS showInSection, created_at AS createdAt " +
-                "FROM asset_field WHERE is_deleted = false ",
-        resultSetMapping = "assetFieldMappings"
-)
 /**
  * JPA entity defining a configurable asset field (custom or global), describing its name, type,
  * tooltip, default value, options, and display section. Used to drive dynamic asset metadata forms.

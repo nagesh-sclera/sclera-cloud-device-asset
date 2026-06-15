@@ -108,6 +108,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param device_id the device identifier
      * @return the set of matching instruments
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with multi-join (device/location/floor/building).
     @Query(nativeQuery = true)
     Set<MeasuringInstrumentDTO> getInstrumentByDeviceId(String device_id);
 
@@ -117,9 +118,9 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      *
      * @param instrument_id the instrument identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM measuring_instrument WHERE id = ?1", nativeQuery = true)
+    @Query("DELETE FROM MeasuringInstrument mi WHERE mi.id = ?1")
     void deleteInstrumentById(String instrument_id);
 
     /**
@@ -128,6 +129,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param id the instrument identifier
      * @return the matching instrument
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection (instrumentmapping — subset of fields).
     @Query(nativeQuery = true)
     MeasuringInstrumentDTO getInstrumentByInstrumentId(String id);
 
@@ -139,9 +141,9 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param value the new value
      * @param timestamp the new epoch timestamp
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE measuring_instrument SET value = ?2, timestamp = ?3 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE MeasuringInstrument mi SET mi.value = ?2, mi.timestamp = ?3 WHERE mi.id = ?1")
     void updateInstrumentValueById(String measuingInstrument_id, String value, BigInteger timestamp);
 
 
@@ -193,9 +195,9 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @return the number of rows updated
      */
     //used for backend syncing
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE measuring_instrument SET name = ?1, description = ?2, calculation_type=?3, attribute=?4, parameter=?5, category=?6, value=?7, unit=?8, tags=?9,timestamp=?10 WHERE type=?11 AND id=?12 ", nativeQuery = true)
+    @Query("UPDATE MeasuringInstrument mi SET mi.name = ?1, mi.description = ?2, mi.calculation_type = ?3, mi.attribute = ?4, mi.parameter = ?5, mi.category = ?6, mi.value = ?7, mi.unit = ?8, mi.tags = ?9, mi.timestamp = ?10 WHERE mi.type = ?11 AND mi.id = ?12")
     Integer syncMeasuringInstrument(String name, String description, String calculation_type, String attribute, String parameter, String category, String value, String unit, String tags, BigInteger timestamp, String type, String id);
 
     /**
@@ -211,9 +213,9 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @return the number of rows updated
      */
     //used for backend syncing
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE measuring_instrument SET calculation_type=?1, parameter=?2, category=?3, unit=?4, tags=?5 WHERE type=?6 AND id=?7 ", nativeQuery = true)
+    @Query("UPDATE MeasuringInstrument mi SET mi.calculation_type = ?1, mi.parameter = ?2, mi.category = ?3, mi.unit = ?4, mi.tags = ?5 WHERE mi.type = ?6 AND mi.id = ?7")
     Integer syncMeasuringInstrumentExceptAttributes(String calculation_type, String parameter, String category, String unit, String tags, String type, String id);
 
     /**
@@ -222,6 +224,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param floorid the floor identifier, or "all" for every floor
      * @return the set of distinct sensor types
      */
+    // NOT CONVERTED — stays native (PG-translation track): 4-table JOIN with DISTINCT(UPPER(...)) and integer-boolean mix (show_on_map=1, monitor=1); PG-compatible as-is.
     @Transactional
     @Query(value = "SELECT DISTINCT(UPPER(mi.sensor_type)) FROM measuring_instrument mi "
             + "JOIN device d ON mi.device_id = d.id AND d.monitor = 1 "
@@ -236,6 +239,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param category the sensor category
      * @return the set of matching sensors
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with CASE WHEN, COALESCE, multi-join.
     @Query(nativeQuery = true)
     Set<CategorySensorDTO> getSensorCategoryByFloor(String floorid, String category);
 
@@ -246,6 +250,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param category the sensor category
      * @return the matching sensor count
      */
+    // NOT CONVERTED — stays native (PG-translation track): 4-table JOIN COUNT with integer-boolean mix (show_on_map=1, monitor=1); PG-compatible as-is.
     @Query(value = " SELECT COUNT(*) FROM measuring_instrument mi "
             + " LEFT JOIN device d ON mi.device_id = d.id "
             + " LEFT JOIN location l ON d.location_id = l.id "
@@ -261,6 +266,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param offset the starting row offset
      * @return the matching sensors for the page
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with CASE WHEN, COALESCE, LIMIT/OFFSET.
     @Query(nativeQuery = true)
     List<CategorySensorDTO> getSensorCategoryByFloorPagination(String floorid, String category, Integer pagesize, Integer offset);
 
@@ -271,9 +277,9 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param newAlert the new alert flag value
      */
     //Update measuring instrument Sensor Alert
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE measuring_instrument SET alert = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE MeasuringInstrument mi SET mi.alert = ?2 WHERE mi.id = ?1")
     void updateMeasuringInstrumentSensorAlert(String measuring_instrument_id, Boolean newAlert);
 
     /**
@@ -283,8 +289,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @return the matching instrument count
      */
     //Get MeasuringInstrument count for touchscreen
-    @Query(value = "SELECT COUNT(*) FROM measuring_instrument mi LEFT JOIN device d ON mi.device_id = d.id WHERE"
-            + " mi.alert = ?1 AND mi.device_id IS NOT NULL AND d.monitor = 1", nativeQuery = true)
+    @Query("SELECT COUNT(mi) FROM MeasuringInstrument mi WHERE mi.alert = ?1 AND mi.device IS NOT NULL AND mi.device.monitor = 1")
     Integer getMeasuringInstrumentAlertSensorCount(boolean alert);
 
     /**
@@ -293,6 +298,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param measuring_instrument_id the instrument identifier
      * @return the instrument sensor details
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with complex multi-join, CASE WHEN x5, CAST(NULL AS varchar).
     //get measuring instrument sensor by id for all required platforms
     @Query(nativeQuery = true)
     MeasuringInstrumentDetailsDTO getMeasuringInstrumentSensorDetailsById(String measuring_instrument_id);
@@ -304,9 +310,9 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param user_data_value the new user data value
      */
     //Update measuring instrument Sensor User Data Value
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE measuring_instrument SET user_data_value = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE MeasuringInstrument mi SET mi.user_data_value = ?2 WHERE mi.id = ?1")
     void updateMeasuringinstrumentSensorUserDataValue(String measuring_instrument_id, String user_data_value);
 
     /**
@@ -316,7 +322,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @return the associated device identifier
      */
     // get device id by measuring instrument id
-    @Query(value = "SELECT device_id FROM measuring_instrument WHERE  id = ?1", nativeQuery = true)
+    @Query("SELECT mi.device.id FROM MeasuringInstrument mi WHERE mi.id = ?1")
     String getDeviceIdByMeasuringInstrumentSensorId(String measuring_instrument_id);
 
     /**
@@ -335,7 +341,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param measuring_instrument_id the instrument identifier
      * @return the current value
      */
-    @Query(value = "SELECT mi.value FROM measuring_instrument mi WHERE mi.id = ?1", nativeQuery = true)
+    @Query("SELECT mi.value FROM MeasuringInstrument mi WHERE mi.id = ?1")
     String getMeasuringInstrumentSensorCurrentValue(String measuring_instrument_id);
 
     /**
@@ -344,6 +350,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param measuring_instrument_id the instrument identifier
      * @return the matching instrument
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with CASE WHEN, multi-join.
     @Query(nativeQuery = true)
     MeasuringInstrumentDTO getMeasuringInstrumentSensorById(String measuring_instrument_id);
 
@@ -355,6 +362,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param offset the starting row offset
      * @return the matching instruments for the page
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with CONCAT_WS, CASE WHEN, LIMIT/OFFSET.
     @Query(nativeQuery = true)
     List<MeasuringInstrumentDTO> getAllMeasuringInstrumentDeviceByPagination(String searchkey, Integer pagesize, Integer offset);
 
@@ -364,6 +372,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param device_id the device identifier
      * @return the matching sensors
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with CASE WHEN x2, COALESCE, multi-join.
     @Query(nativeQuery = true)
     List<SensorDTO> getmeasuringInstrumentsByDeviceId(String device_id);
 
@@ -377,6 +386,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param report_template_id the report template identifier
      * @return the matching analytics sensors for the page
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with CONCAT_WS, CASE WHEN x3, LIMIT/OFFSET, multi-join.
     @Query(nativeQuery = true)
     Set<AnalyticSensorDTO> getAnalyticsMeasuringInstruments(String category, String searchkey, Integer pagesize, Integer offset, String report_template_id);
 
@@ -386,6 +396,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param ids the device identifiers
      * @return the matching alert message conditions
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection joining conditions table; already PG-ported (boolean col = true).
     @Query(nativeQuery = true)
     List<ConditionsDTO> listMeasuringIntrumentDevicesAlertMessagesByDevice(List<String> ids);
 
@@ -395,6 +406,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param measuring_instrument_id the instrument identifier
      * @return the instrument alert details
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with CASE WHEN, already PG-ported.
     @Query(nativeQuery = true)
     SensorAlertDTO getMeasuringInstrumentAlertDetails(String measuring_instrument_id);
 
@@ -404,6 +416,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param deviceid the device identifier
      * @return the set of matching sensors
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with CASE WHEN, COALESCE, already PG-ported.
     @Query(nativeQuery = true)
     Set<SensorDTO> getSensorByDeviceId(String deviceid);
 
@@ -413,6 +426,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param locationid the location identifier
      * @return the set of matching sensors
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with CASE WHEN, COALESCE, already PG-ported.
     @Query(nativeQuery = true)
     Set<SensorDTO> getSensorByLocationId(String locationid);
 
@@ -424,9 +438,9 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param timestamp the new epoch timestamp
      * @param attribute the new attribute JSON
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE measuring_instrument SET value = ?2, timestamp = ?3, attribute = ?4 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE MeasuringInstrument mi SET mi.value = ?2, mi.timestamp = ?3, mi.attribute = ?4 WHERE mi.id = ?1")
     void updateInstrumentValueAndAttributeById(String measuingInstrument_id, String value, BigInteger timestamp, String attribute);
 
 
@@ -435,6 +449,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      *
      * @return the Daintree instruments
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection joining measuring_instrument_attributes on protocol='daintree'.
     @Query(nativeQuery = true)
     List<MeasuringInstrumentDTO> getDaintreeMeasuringInstruments();
 
@@ -447,6 +462,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param offset the starting row offset
      * @return the matching sensors for the page
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with CASE WHEN, COALESCE, LIMIT/OFFSET.
     @Query(nativeQuery = true)
     List<CategorySensorDTO> getSensorCategoryByLocationPagination(String locationid, String category, Integer pagesize, Integer offset);
 
@@ -457,6 +473,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param category the sensor category
      * @return the matching sensor count
      */
+    // NOT CONVERTED — stays native (PG-translation track): 4-table JOIN COUNT with integer-boolean mix (show_on_map=1, monitor=1); PG-compatible as-is.
     @Query(value = " SELECT COUNT(*) FROM measuring_instrument mi "
             + " LEFT JOIN device d ON mi.device_id = d.id "
             + " LEFT JOIN location l ON d.location_id = l.id "
@@ -471,6 +488,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param report_attribute_id the report attribute identifier
      * @return the matching analytics sensor
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with CASE WHEN x2, CONCAT_WS, multi-join.
     @Query(nativeQuery = true)
     AnalyticSensorDTO getMeasuringInstrumentsByTemplateId(String measuring_instrument_id, String searchkey, String report_attribute_id);
 
@@ -481,6 +499,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param location_id the location identifier
      * @return the number of matching tag rows
      */
+    // NOT CONVERTED — stays native (PG-translation track): queries the @ManyToMany join table directly; no entity for the join row.
     @Query(value = "SELECT COUNT(*) FROM measuring_instrument_location WHERE measuring_instrument_id = ?1 AND location_id = ?2", nativeQuery = true)
     int checkMeasuringInstrumentsExists(String measuring_instrument_id, String location_id);
 
@@ -490,6 +509,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param measuring_instrument_id the instrument identifier
      * @param location_id the location identifier
      */
+    // NOT CONVERTED — stays native (PG-translation track): plain INSERT on @ManyToMany join table; no entity for the join row.
     @Modifying
     @Transactional
     @Query(value = "INSERT INTO measuring_instrument_location (measuring_instrument_id , location_id) VALUES (?1,?2)", nativeQuery = true)
@@ -501,6 +521,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param id the instrument identifier
      * @param location_id the location identifier
      */
+    // NOT CONVERTED — stays native (PG-translation track): plain DELETE on @ManyToMany join table; no entity for the join row.
     @Modifying
     @Transactional
     @Query(value = "DELETE FROM measuring_instrument_location WHERE measuring_instrument_id = ?1 AND location_id = ?2", nativeQuery = true)
@@ -511,6 +532,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      *
      * @param location_id the location identifier
      */
+    // NOT CONVERTED — stays native (PG-translation track): plain DELETE on @ManyToMany join table; no entity for the join row.
     @Modifying
     @Transactional
     @Query(value = "DELETE FROM measuring_instrument_location WHERE location_id = ?1", nativeQuery = true)
@@ -522,6 +544,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param locationid the location identifier
      * @return the set of matching integration sensors
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with CASE WHEN, already PG-ported.
     @Query(nativeQuery = true)
     Set<SensorDTO> getIntegrationSensorByLocationId(String locationid);
 
@@ -530,6 +553,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      *
      * @return the Siemens instruments
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection joining measuring_instrument_attributes on protocol='siemens'.
     @Query(nativeQuery = true)
     List<MeasuringInstrumentDTO> getSiemensMeasuringInstruments();
 
@@ -539,6 +563,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param deviceId the device identifier
      * @return the matching instruments
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection joining measuring_instrument_attributes on protocol='siemens'.
     @Query(nativeQuery = true)
     List<MeasuringInstrumentDTO> getMeasuringInstrumentsByDeviceId(String deviceId);
 
@@ -548,9 +573,11 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param device_id the new device identifier
      * @param existing_device_id the current device identifier to match
      */
+    // NOT CONVERTED — stays native (PG-translation track): device_id is the FK column backing
+    // the @ManyToOne Device relation; JPQL cannot SET a relation column from a scalar id.
     @Modifying
     @Transactional
-    @Query(value = "UPDATE measuring_instrument SET device_id = ?1 WHERE (device_id IS NOT NULL) AND device_id =?2 ", nativeQuery = true)
+    @Query(value = "UPDATE measuring_instrument SET device_id = ?1 WHERE (device_id IS NOT NULL) AND device_id = ?2", nativeQuery = true)
     void updateMeasuringInstrumentDeviceId(String device_id, String existing_device_id);
 
     /**
@@ -559,9 +586,9 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param measuingInstrument_id the instrument identifier
      * @param attribute the new attribute JSON
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE measuring_instrument SET attribute = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE MeasuringInstrument mi SET mi.attribute = ?2 WHERE mi.id = ?1")
     void updateInstrumentAttributeById(String measuingInstrument_id, String attribute);
 
 
@@ -590,9 +617,9 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      *
      * @param device_id the device identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE measuring_instrument SET digital_twin_position = NULL WHERE device_id = ?1", nativeQuery = true)
+    @Query("UPDATE MeasuringInstrument mi SET mi.digital_twin_position = NULL WHERE mi.device.id = ?1")
     void deleteDigitalTwinPositions(String device_id);
 
 
@@ -628,6 +655,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      *
      * @return the set of all instruments
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection (measuringInstrumentAttributeMapping — attribute/scale_type/sensor_type/sub_category subset).
     @Query(nativeQuery = true)
     Set<MeasuringInstrumentDTO> getAllInstrument();
 
@@ -639,9 +667,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param primaryIds the candidate primary identifiers
      * @return the matching instrument identifiers
      */
-    @Query(value = "SELECT mi.id FROM measuring_instrument mi" +
-            " LEFT JOIN measuring_instrument_attributes mia ON mia.measuring_instrument_id = mi.id" +
-            " WHERE mia.protocol = ?1 AND mia.primary_id IN ?2", nativeQuery = true)
+    @Query("SELECT mi.id FROM MeasuringInstrument_Attributes mia JOIN mia.measuring_instrument mi WHERE mia.protocol = ?1 AND mia.primary_id IN ?2")
     Set<String> getMeasuringInstrumentIdsByProtocolAndPrimaryIds(String protocol, Set<String> primaryIds);
 
 
@@ -653,9 +679,9 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param subCategory the new sub-category
      * @param id the instrument identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE measuring_instrument SET scale_type=?1 ,sensor_type= ?2 ,sub_category=?3 WHERE id=?4", nativeQuery = true)
+    @Query("UPDATE MeasuringInstrument mi SET mi.scale_type = ?1, mi.sensor_type = ?2, mi.sub_category = ?3 WHERE mi.id = ?4")
     void updateScaleTypeAndSensorTypeById(String ScaleType, String SensorType, String subCategory, String id);
 
 
@@ -665,7 +691,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param type the instrument type to match, or "all" for every type
      * @return the matching instrument count
      */
-    @Query(value = "SELECT COUNT(*) FROM measuring_instrument WHERE ?1='all' OR type = ?1", nativeQuery = true)
+    @Query("SELECT COUNT(mi) FROM MeasuringInstrument mi WHERE ?1 = 'all' OR mi.type = ?1")
     Integer getMeasuringInstrumentCountByType(String type);
 
 
@@ -674,7 +700,7 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      *
      * @return the manual attribute count
      */
-    @Query(value = "SELECT COUNT(*) FROM measuring_instrument mi LEFT JOIN measuring_instrument_attributes mia ON mia.measuring_instrument_id = mi.id where mia.type = 'manual' ", nativeQuery = true)
+    @Query("SELECT COUNT(mia) FROM MeasuringInstrument_Attributes mia WHERE mia.type = 'manual'")
     int getTotalManualAttributesCountofMeasuringInstruments();
 
 

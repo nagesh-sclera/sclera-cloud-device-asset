@@ -15,6 +15,7 @@ import io.sclera.models.ApplicationUser;
 import io.sclera.models.DeviceSpecification;
 import io.sclera.models.ManagedSoftware;
 import org.json.JSONArray;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -68,10 +69,10 @@ public class ManagedSoftwareService implements ManagedSoftwareServiceInterface {
      */
     @Transactional
     public List<ManagedSoftwareDTO> getAllManagedSoftwares(String username, String vdmsid, String dockername, String condition, String searchKey, Integer pageNo, Integer pageSize) {
-        // Calculate offset
-        Integer offset = pageSize * (pageNo - 1);
         log.info("Condition : {} ", condition);
-        List<ManagedSoftwareDTO> managedSoftwareDTOS = managedSoftwareRepository.getAllManagedSoftwares(condition, searchKey, offset, pageSize);
+        // Pageable replaces manual offset: PageRequest.of(pageNo-1, pageSize) preserves page math
+        List<ManagedSoftwareDTO> managedSoftwareDTOS = managedSoftwareRepository.getAllManagedSoftwares(
+                condition, searchKey, PageRequest.of(pageNo - 1, pageSize));
 
         // Update status based on subscription dates
         for (ManagedSoftwareDTO managedSoftwareDTO : managedSoftwareDTOS) {

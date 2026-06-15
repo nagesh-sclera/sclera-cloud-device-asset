@@ -25,7 +25,7 @@ public interface NotesRepository extends JpaRepository<Notes, NoteIds> {
 	 * @param id device identifier
 	 * @return count of notes for the device
 	 */
-	@Query(value = "SELECT COUNT(*) FROM notes WHERE device_id = ?1", nativeQuery = true)
+	@Query("SELECT COUNT(n) FROM Notes n WHERE n.device.id = ?1")
 	Integer getNotesCountByDeviceId(String id);
 
 
@@ -34,9 +34,9 @@ public interface NotesRepository extends JpaRepository<Notes, NoteIds> {
 	 *
 	 * @param device_id device identifier
 	 */
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "DELETE FROM notes WHERE device_id = ?1 AND is_global = 1" , nativeQuery = true)
+	@Query("DELETE FROM Notes n WHERE n.device.id = ?1 AND n.is_global = 1")
 	void deleteGlobalNotesByDeviceId(String device_id);
 
 	/**
@@ -48,6 +48,7 @@ public interface NotesRepository extends JpaRepository<Notes, NoteIds> {
 	 * @param is_global flag marking the note as global
 	 * @param device_id device identifier
 	 */
+	// NOT CONVERTED — stays native: plain INSERT (no upsert conflict logic, already PG-valid)
 	@Modifying
 	@Transactional
 	@Query(value = "INSERT INTO notes(id,body,title,is_global,device_id) VALUES(?1,?2,?3,?4,?5)" , nativeQuery = true)
@@ -59,7 +60,7 @@ public interface NotesRepository extends JpaRepository<Notes, NoteIds> {
 	 * @param device_id device identifier
 	 * @return identifiers of the device's global notes
 	 */
-	@Query(value = "SELECT id FROM notes WHERE device_id = ?1 AND is_global = 1" , nativeQuery = true)
+	@Query("SELECT n.id FROM Notes n WHERE n.device.id = ?1 AND n.is_global = 1")
 	Set<String> getGlobalNotesByDeviceId(String device_id);
 
 	/**
@@ -70,10 +71,10 @@ public interface NotesRepository extends JpaRepository<Notes, NoteIds> {
 	 * @param id note identifier
 	 * @param device_id device identifier
 	 */
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "UPDATE notes SET body = ?1 ,title = ?2 WHERE id = ?3 AND device_id = ?4 AND is_global = 1" , nativeQuery = true)
-	void updateGlobalNoteByNoteIdAndDeviceId(String body, String title, String id ,String device_id);
+	@Query("UPDATE Notes n SET n.body = ?1, n.title = ?2 WHERE n.id = ?3 AND n.device.id = ?4 AND n.is_global = 1")
+	void updateGlobalNoteByNoteIdAndDeviceId(String body, String title, String id, String device_id);
 
 	/**
 	 * Returns the identifiers of the non-global notes for the given device.
@@ -81,7 +82,7 @@ public interface NotesRepository extends JpaRepository<Notes, NoteIds> {
 	 * @param device_id device identifier
 	 * @return identifiers of the device's non-global notes
 	 */
-	@Query(value = "SELECT id FROM notes WHERE device_id= ?1 AND is_global = 0" , nativeQuery = true)
+	@Query("SELECT n.id FROM Notes n WHERE n.device.id = ?1 AND n.is_global = 0")
 	Set<String> getNoteIdsByDeviceId(String device_id);
 
 	/**
@@ -92,10 +93,10 @@ public interface NotesRepository extends JpaRepository<Notes, NoteIds> {
 	 * @param id note identifier
 	 * @param device_id device identifier
 	 */
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "UPDATE notes SET title = ?1 ,body = ?2 WHERE id = ?3 AND device_id = ?4" , nativeQuery = true)
-	void updateNoteByNoteIdAndDeviceId(String title, String body, String id ,String device_id);
+	@Query("UPDATE Notes n SET n.title = ?1, n.body = ?2 WHERE n.id = ?3 AND n.device.id = ?4")
+	void updateNoteByNoteIdAndDeviceId(String title, String body, String id, String device_id);
 
 	/**
 	 * Inserts a note for the given device.
@@ -105,6 +106,7 @@ public interface NotesRepository extends JpaRepository<Notes, NoteIds> {
 	 * @param body note body
 	 * @param device_id device identifier
 	 */
+	// NOT CONVERTED — stays native: plain INSERT (no upsert conflict logic, already PG-valid)
 	@Modifying
 	@Transactional
 	@Query(value = "INSERT INTO notes(id,title,body,device_id) VALUES(?1,?2,?3,?4)" , nativeQuery = true)
@@ -116,7 +118,7 @@ public interface NotesRepository extends JpaRepository<Notes, NoteIds> {
 	 * @param device_id device identifier
 	 * @return notes belonging to the device
 	 */
-	@Query(nativeQuery = true)
+	@Query("SELECT new io.sclera.dto.Product_NotesDTO(n.id, n.title, n.body, n.device.id, n.is_global) FROM Notes n WHERE n.device.id = ?1")
 	Set<Product_NotesDTO> getNotesByDeviceId(String device_id);
 
 	/**
@@ -126,19 +128,19 @@ public interface NotesRepository extends JpaRepository<Notes, NoteIds> {
 	 * @param device_id device identifier
 	 */
 	//delete is done by cascade delete, if this query not required can be deleted
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "DELETE FROM notes WHERE id = ?1 AND device_id = ?2" , nativeQuery = true)
-	void deleteNoteByNoteIdAndDeviceId(String note_id ,String device_id);
+	@Query("DELETE FROM Notes n WHERE n.id = ?1 AND n.device.id = ?2")
+	void deleteNoteByNoteIdAndDeviceId(String note_id, String device_id);
 
 	/**
 	 * Deletes all notes for the given device.
 	 *
 	 * @param device_id device identifier
 	 */
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "DELETE FROM notes WHERE device_id = ?1" , nativeQuery = true)
+	@Query("DELETE FROM Notes n WHERE n.device.id = ?1")
 	void deleteNotesByDeviceId(String device_id);
 
 }

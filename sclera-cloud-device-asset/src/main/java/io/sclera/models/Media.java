@@ -2,78 +2,11 @@ package io.sclera.models;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import io.sclera.dto.DocumentMediaDTO;
 import org.hibernate.annotations.ColumnDefault;
 
 import jakarta.persistence.*;
 import java.math.BigInteger;
 import java.util.Set;
-
-
-@SqlResultSetMapping(
-        name = "mediadetailmapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = DocumentMediaDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "name", type = String.class),
-                                @ColumnResult(name = "category", type = String.class),
-                                @ColumnResult(name = "link", type = String.class),
-                                @ColumnResult(name = "description", type = String.class),
-                                @ColumnResult(name = "created_email", type = String.class),
-                                @ColumnResult(name = "created_timestamp", type = BigInteger.class)
-
-                        })
-        })
-
-@NamedNativeQuery(
-        name = "Media.getMedias",
-        query = "SELECT me.id , me.name, me.category, me.link, me.description, me.created_email, me.created_timestamp "
-                + " FROM media me"
-                + " WHERE (?3 = 'null' or CONCAT_WS('', me.name,me.category,me.description) LIKE CONCAT('%',?3,'%'))"
-                + " LIMIT ?1 OFFSET ?2",
-        resultSetMapping = "mediadetailmapping"
-)
-
-@SqlResultSetMapping(
-        name = "mediamapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = DocumentMediaDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "name", type = String.class),
-                                @ColumnResult(name = "category", type = String.class),
-                                @ColumnResult(name = "link", type = String.class),
-                                @ColumnResult(name = "description", type = String.class),
-                                @ColumnResult(name = "created_email", type = String.class),
-                                @ColumnResult(name = "created_timestamp", type = BigInteger.class),
-                                @ColumnResult(name = "device_id", type = String.class)
-
-                        })
-        })
-
-
-@NamedNativeQuery(
-        name = "Media.getMediasByDeviceId",
-        query = "SELECT me.id , me.name, me.category, me.link, me.description, me.created_email, me.created_timestamp,demo.device_id "
-                + "FROM media me"
-                + " LEFT JOIN device_media demo ON demo.media_id = me.id "
-                + " WHERE demo.device_id = ?1",
-        resultSetMapping = "mediamapping"
-)
-
-
-@NamedNativeQuery(
-        name = "Media.getMediasByDeviceIdByPagination",
-        query = "SELECT me.id , me.name, me.category, me.link, me.description, me.created_email, me.created_timestamp,demo.device_id "
-                + "FROM media me"
-                + " LEFT JOIN device_media demo ON demo.media_id = me.id "
-                + " WHERE demo.device_id = ?1"
-                + " LIMIT ?2 OFFSET ?3",
-        resultSetMapping = "mediamapping"
-)
 
 
 /**

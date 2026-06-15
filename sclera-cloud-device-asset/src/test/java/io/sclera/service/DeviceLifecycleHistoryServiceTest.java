@@ -10,7 +10,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
 
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,10 +44,12 @@ class DeviceLifecycleHistoryServiceTest {
 
     @Test
     void getDeviceHistory_computesOffset() {
-        Set<DeviceLifecycleHistoryDTO> hist = Set.of(mock(DeviceLifecycleHistoryDTO.class));
-        // page 3, size 10 -> offset 20
-        when(deviceLifeCycleHistoryRepository.getDeviceLifeCycleHistory("d1", 10, 20)).thenReturn(hist);
-        assertThat(service.getDeviceHistory("u", "v", "d1", 3, 10)).isSameAs(hist);
+        DeviceLifecycleHistoryDTO dto = mock(DeviceLifecycleHistoryDTO.class);
+        List<DeviceLifecycleHistoryDTO> hist = List.of(dto);
+        // page 3, size 10 -> PageRequest.of(2, 10) (0-based)
+        when(deviceLifeCycleHistoryRepository.getDeviceLifeCycleHistory("d1", PageRequest.of(2, 10))).thenReturn(hist);
+        Set<DeviceLifecycleHistoryDTO> result = service.getDeviceHistory("u", "v", "d1", 3, 10);
+        assertThat(result).containsExactly(dto);
     }
 
     // ---- updateOperationalStatus -----------------------------------------

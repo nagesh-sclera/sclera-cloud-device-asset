@@ -25,6 +25,7 @@ import io.sclera.queryrepository.LocationQueryRepository;
 import io.sclera.utils.AuthenticationUtils;
 import io.sclera.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.uuid.Generators;
@@ -113,6 +114,9 @@ public class LocationService implements LocationServiceInterface {
     @Autowired
     VdmsRepository vdmsRepository;
 
+    @Autowired
+    io.sclera.Repository.FloorRepository floorRepository;
+
 
     /**
      * Inserts or updates the given locations under a floor, choosing add or update per location
@@ -140,19 +144,28 @@ public class LocationService implements LocationServiceInterface {
 
     /**
      * Adds a new location to a floor, generating an id when absent and syncing it to the ADC server.
+     * Plain INSERT semantics — always creates a new entity with id, name, position, area, type,
+     * updated_timestamp, and floor FK. No conflict/update path.
      *
      * @return the location id of the added location
      */
+    @Transactional
     public String addLocationByFloorId(LocationDTO locationdto, String floor_id) {
         if (locationdto.getLocation_id() == null) {
             String id = Generators.timeBasedGenerator().generate().toString();
             locationdto.setLocation_id(id);
         }
         BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
-        int rowsAffected = locationRepository.addLocationByFloorId(locationdto.getLocation_id(), locationdto.getName(), locationdto.getPosition(), floor_id, locationdto.getArea(), locationdto.getType(), timestamp);
-        if(rowsAffected > 0){
-            syncLocationToADCServer(List.of(locationdto), floor_id);
-        }
+        Location location = new Location();
+        location.setId(locationdto.getLocation_id());
+        location.setName(locationdto.getName());
+        location.setPosition(locationdto.getPosition());
+        location.setArea(locationdto.getArea());
+        location.setType(locationdto.getType());
+        location.setUpdated_timestamp(timestamp);
+        location.setFloor(floorRepository.getReferenceById(floor_id));
+        locationRepository.save(location);
+        syncLocationToADCServer(List.of(locationdto), floor_id);
         return locationdto.getLocation_id();
     }
 
@@ -289,17 +302,45 @@ public class LocationService implements LocationServiceInterface {
     /**
      * Upserts a single location for a floor, syncing to the ADC server and logging a success or
      * failure user action for the given ADD or UPDATE action.
+     *
+     * INSERT path (new row): sets id, name, position, area, floor FK, type, code, updated_timestamp
+     *   (status left null — matches original ON CONFLICT … INSERT col list).
+     * CONFLICT path (existing row): sets name, status, type, code, updated_timestamp ONLY
+     *   (position, area, floor are NOT changed — matches original DO UPDATE SET list).
      */
+    @Transactional
     public void upsertLocationByFloorId(String floor_id, LocationDTO location, String username, String action, HttpServletRequest httpServletRequest) {
         try {
             BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
-            int rowsAffected = locationRepository.upsertLocationByFloorId(location.getLocation_id(), location.getName(), location.getPosition(), location.getArea(), floor_id, location.getStatus(), location.getType(), location.getCode(), timestamp);
-            if(rowsAffected > 0)
-                syncLocationToADCServer(List.of(location), floor_id);
-            if (action.equals("ADD")) {
+            boolean isNew;
+            Location entity = locationRepository.findById(location.getLocation_id()).orElse(null);
+            if (entity == null) {
+                // INSERT path
+                isNew = true;
+                entity = new Location();
+                entity.setId(location.getLocation_id());
+                entity.setName(location.getName());
+                entity.setPosition(location.getPosition());
+                entity.setArea(location.getArea());
+                entity.setFloor(floorRepository.getReferenceById(floor_id));
+                entity.setType(location.getType());
+                entity.setCode(location.getCode());
+                entity.setUpdated_timestamp(timestamp);
+                // status left null per original INSERT column list
+            } else {
+                // CONFLICT path: update name, status, type, code, updated_timestamp ONLY
+                isNew = false;
+                entity.setName(location.getName());
+                entity.setStatus(location.getStatus());
+                entity.setType(location.getType());
+                entity.setCode(location.getCode());
+                entity.setUpdated_timestamp(timestamp);
+            }
+            locationRepository.save(entity);
+            syncLocationToADCServer(List.of(location), floor_id);
+            if (isNew) {
                 userActionLogService.addUserAction(username, "maps", action, "A Location with name: " + location.getName() + " and id: " + location.getLocation_id() + " is added", "success", "location", location.getLocation_id());
                 log.info("endpoint: {}, upsertLocationByFloorId, description: A new location is added, params: location: {} ", httpServletRequest.getRequestURI(), location);
-
             } else {
                 userActionLogService.addUserAction(username, "maps", action, "A Location with name: " + location.getName() + " and id: " + floor_id + " is updated", "success", "location", location.getLocation_id());
                 log.info("endpoint: {}, upsertLocationByFloorId, description: A location is updated, params: location: {}", httpServletRequest.getRequestURI(), location);
@@ -535,12 +576,36 @@ public class LocationService implements LocationServiceInterface {
     /**
      * Backend-sync upsert of a single location for a floor, syncing to the ADC server when a row is
      * affected.
+     *
+     * INSERT path (new row): sets id, name, position, area, floor FK, type, updated_timestamp.
+     * CONFLICT path (existing row): sets name, position, area, floor FK, type, updated_timestamp
+     *   (status and code are NOT changed — matches original DO UPDATE SET list which has no status/code).
      */
+    @Transactional
     public void upsertLocationByFloorIdBackendSync(String floor_id, LocationDTO location) {
         BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
-        int rowsAffected = locationRepository.upsertLocationByFloorIdBackendSync(location.getLocation_id(), location.getName(), location.getPosition(), location.getArea(), floor_id, location.getType(), timestamp);
-        if(rowsAffected > 0)
-            syncLocationToADCServer(List.of(location), floor_id);
+        Location entity = locationRepository.findById(location.getLocation_id()).orElse(null);
+        if (entity == null) {
+            // INSERT path
+            entity = new Location();
+            entity.setId(location.getLocation_id());
+            entity.setName(location.getName());
+            entity.setPosition(location.getPosition());
+            entity.setArea(location.getArea());
+            entity.setFloor(floorRepository.getReferenceById(floor_id));
+            entity.setType(location.getType());
+            entity.setUpdated_timestamp(timestamp);
+        } else {
+            // CONFLICT path: update name, position, area, floor FK, type, updated_timestamp
+            entity.setName(location.getName());
+            entity.setPosition(location.getPosition());
+            entity.setArea(location.getArea());
+            entity.setFloor(floorRepository.getReferenceById(floor_id));
+            entity.setType(location.getType());
+            entity.setUpdated_timestamp(timestamp);
+        }
+        locationRepository.save(entity);
+        syncLocationToADCServer(List.of(location), floor_id);
     }
 
     /**
@@ -1321,8 +1386,7 @@ public class LocationService implements LocationServiceInterface {
      * Returns a page of location alert details having the given status.
      */
     public List<LocationAlertDTO> getLocationsByStatus(String status, Integer pageno, Integer pagesize) {
-        Integer offset = pagesize * (pageno - 1);
-        return locationRepository.getLocationsByStatus(status, offset, pagesize);
+        return locationRepository.getLocationsByStatus(status, PageRequest.of(pageno - 1, pagesize));
     }
 
     public Integer getLocationsByStatusCountTs(String status) {
@@ -1351,17 +1415,47 @@ public class LocationService implements LocationServiceInterface {
     /**
      * Upserts a single location's details for a floor, syncing to the ADC server and logging a
      * success or failure user action for the given ADD or UPDATE action.
+     *
+     * INSERT path (new row): sets id, name, position, area, floor FK, type, code, updated_timestamp
+     *   (status left null — matches original INSERT column list).
+     * CONFLICT path (existing row): sets name, status, type, code, area, position, updated_timestamp
+     *   (floor FK is NOT changed — matches original DO UPDATE SET list which omits floor_id).
      */
+    @Transactional
     public void upsertlocationdetails(String floor_id, LocationDTO location, String username, String action, HttpServletRequest httpServletRequest) {
         try {
             BigInteger timestamp = BigInteger.valueOf(System.currentTimeMillis());
-            int rowsAffected = locationRepository.upsertlocationdetails(location.getLocation_id(), location.getName(), location.getPosition(), location.getArea(), floor_id, location.getStatus(), location.getType(), location.getCode(),timestamp);
-            if(rowsAffected > 0)
-                syncLocationToADCServer(List.of(location), floor_id);
-            if (action.equals("ADD")) {
+            boolean isNew;
+            Location entity = locationRepository.findById(location.getLocation_id()).orElse(null);
+            if (entity == null) {
+                // INSERT path
+                isNew = true;
+                entity = new Location();
+                entity.setId(location.getLocation_id());
+                entity.setName(location.getName());
+                entity.setPosition(location.getPosition());
+                entity.setArea(location.getArea());
+                entity.setFloor(floorRepository.getReferenceById(floor_id));
+                entity.setType(location.getType());
+                entity.setCode(location.getCode());
+                entity.setUpdated_timestamp(timestamp);
+                // status left null per original INSERT column list
+            } else {
+                // CONFLICT path: update name, status, type, code, area, position, updated_timestamp ONLY
+                isNew = false;
+                entity.setName(location.getName());
+                entity.setStatus(location.getStatus());
+                entity.setType(location.getType());
+                entity.setCode(location.getCode());
+                entity.setArea(location.getArea());
+                entity.setPosition(location.getPosition());
+                entity.setUpdated_timestamp(timestamp);
+            }
+            locationRepository.save(entity);
+            syncLocationToADCServer(List.of(location), floor_id);
+            if (isNew) {
                 userActionLogService.addUserAction(username, "maps", action, "A Location with name: " + location.getName() + " and id: " + location.getLocation_id() + " is added", "success", "location", location.getLocation_id());
                 log.info("endpoint: {}, upsertlocationdetails, description: A new location is added, params: location: {} ", httpServletRequest.getRequestURI(), location);
-
             } else {
                 userActionLogService.addUserAction(username, "maps", action, "A Location with name: " + location.getName() + " and id: " + floor_id + " is updated", "success", "location", location.getLocation_id());
                 log.info("endpoint: {},upsert location details, description: A location is updated, params: location: {}", httpServletRequest.getRequestURI(), location);

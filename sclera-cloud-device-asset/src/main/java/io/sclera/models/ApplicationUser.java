@@ -3,20 +3,8 @@ package io.sclera.models;
 
 import jakarta.persistence.*;
 
-@NamedNativeQueries({
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
-    @NamedNativeQuery(name = "ApplicationUser.upsertApplicationUsers", query = "INSERT INTO application_user (id, technician_id, email, type) VALUES (?1, ?2, ?3, ?4) ON CONFLICT (id) DO UPDATE SET technician_id = EXCLUDED.technician_id, email = EXCLUDED.email, type = EXCLUDED.type", resultClass = ApplicationUser.class),
-    @NamedNativeQuery(name = "ApplicationUser.clearManagedSoftwareId", query = "UPDATE application_user SET managed_software = null WHERE id IN ?1", resultClass = ApplicationUser.class),
-    @NamedNativeQuery(name = "ApplicationUser.updateManagedSoftwareIdByUserIds", query = "UPDATE application_user SET managed_software = ?2 WHERE id IN ?1", resultClass = ApplicationUser.class),
-    @NamedNativeQuery(name = "ApplicationUser.updateManagedSoftwareIdByUserId", query = "UPDATE application_user SET managed_software = ?2 WHERE id = ?1", resultClass = ApplicationUser.class),
-    @NamedNativeQuery(name = "ApplicationUser.findEmailsByUserIds", query = "SELECT email FROM application_user WHERE id IN ?1", resultClass = ApplicationUser.class),
-    @NamedNativeQuery(name = "ApplicationUser.findExistingUserIds", query = "SELECT id FROM application_user WHERE id IN ?1", resultClass = ApplicationUser.class),
-    @NamedNativeQuery(name = "ApplicationUser.deleteApplicationUsersByIds", query = "DELETE FROM application_user WHERE id IN ?1", resultClass = ApplicationUser.class),
-    @NamedNativeQuery(name = "ApplicationUser.deleteApplicationUsersById", query = "DELETE FROM application_user WHERE id = ?1", resultClass = ApplicationUser.class),
-    @NamedNativeQuery(name = "ApplicationUser.deleteByManagedSoftwareId", query = "DELETE FROM application_user WHERE managed_software = ?1", resultClass = ApplicationUser.class),
-    @NamedNativeQuery(name = "ApplicationUser.clearManagedSoftwareByManagedSoftwareIds", query = "UPDATE application_user SET managed_software = null WHERE managed_software IN ?1", resultClass = ApplicationUser.class),
-    @NamedNativeQuery(name = "ApplicationUser.findUserIdsByIds", query = "SELECT id FROM application_user WHERE id IN ?1", resultClass = ApplicationUser.class)
-})
+// All @NamedNativeQuery entries removed — all queries converted to JPQL in ApplicationUserRepository.
+// upsertApplicationUsers stays native (inline value= ON CONFLICT, no named-query lookup needed).
 @Entity
 @Table(name = "application_user")
 public class ApplicationUser {

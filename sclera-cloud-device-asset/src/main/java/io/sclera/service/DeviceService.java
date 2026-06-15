@@ -2800,6 +2800,19 @@ public class DeviceService implements DeviceServiceInterface {
     }
 
     /**
+     * Persists a single {@link Device_IP_Address} record via JPA save(), replacing the
+     * removed native INSERT query.
+     */
+    private void persistDeviceIpAddress(String id, DeviceIPAddressDTO deviceIPAddress, String deviceId) {
+        Device_IP_Address rec = new Device_IP_Address();
+        rec.setId(id);
+        rec.setIp_address(deviceIPAddress.getIp_address());
+        rec.setIp_conflict_status(deviceIPAddress.getIp_conflict_status());
+        rec.setDevice(deviceRepository.getReferenceById(deviceId));
+        deviceIPAddressRepository.save(rec);
+    }
+
+    /**
      * DB-per-service helper: enriches image_url_1 on DeviceListDTO rows by fetching
      * product images from InventoryClientStub (no-op until sclera-inventory is wired).
      */
@@ -2953,8 +2966,7 @@ public class DeviceService implements DeviceServiceInterface {
 
                             if (deviceIPAddress.getIp_conflict_status() != null) {
                                 System.out.println("Inside 1stt" + deviceIPAddress.toString());
-                                deviceIPAddressRepository.insertIPAddressByDeviceId(id, deviceIPAddress.getIp_address(),
-                                        deviceIPAddress.getIp_conflict_status(), device.getId());
+                                persistDeviceIpAddress(id, deviceIPAddress, device.getId());
                             } else {
                                 for (int j = 0; j < oldDeviceIPAddresses.size(); j++) {
                                     DeviceIPAddressDTO oldDeviceIPAddress = oldDeviceIPAddresses.get(j);
@@ -2967,8 +2979,7 @@ public class DeviceService implements DeviceServiceInterface {
                                     }
                                 }
                                 System.out.println("Inside 3nd" + deviceIPAddress.toString());
-                                deviceIPAddressRepository.insertIPAddressByDeviceId(id, deviceIPAddress.getIp_address(),
-                                        deviceIPAddress.getIp_conflict_status(), device.getId());
+                                persistDeviceIpAddress(id, deviceIPAddress, device.getId());
 
                             }
                         }
@@ -2998,8 +3009,7 @@ public class DeviceService implements DeviceServiceInterface {
                         for (int i = 0; i < deviceIPAddresses.size(); i++) {
                             DeviceIPAddressDTO deviceIPAddress = deviceIPAddresses.get(i);
                             String id = Generators.timeBasedGenerator().generate().toString();
-                            deviceIPAddressRepository.insertIPAddressByDeviceId(id, deviceIPAddress.getIp_address(),
-                                    deviceIPAddress.getIp_conflict_status(), device.getId());
+                            persistDeviceIpAddress(id, deviceIPAddress, device.getId());
                         }
                         // update vendor by mac address and hostname by ip address
                         this.updateVendorByMacAddress(device.getId(), device.getMac_address());

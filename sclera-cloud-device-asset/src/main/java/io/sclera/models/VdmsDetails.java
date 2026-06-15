@@ -3,83 +3,11 @@ package io.sclera.models;
 
 import jakarta.persistence.*;
 
-import io.sclera.dto.touchscreen.VdmsDetailsDTO;
-
-
-@SqlResultSetMapping(
-        name = "weathermapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = VdmsDetailsDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "weather_city", type = String.class),
-                                @ColumnResult(name = "weather_zip_code", type = String.class),
-                                @ColumnResult(name = "weather_country_code", type = String.class),
-                                @ColumnResult(name = "weather_latitude", type = String.class),
-                                @ColumnResult(name = "weather_longitude", type = String.class),
-                                @ColumnResult(name = "weather_data", type = String.class),
-                                @ColumnResult(name = "weather_units", type = String.class),
-                                @ColumnResult(name = "vdms_id", type = String.class)
-                        }
-                )
-        }
-)
-
-@NamedNativeQuery(
-        name = "VdmsDetails.getWeatherData",
-        query = "SELECT w.id,w.weather_city,w.weather_zip_code,w.weather_country_code,w.weather_latitude,w.weather_longitude,w.weather_data, w.weather_units,w.vdms_id"
-                + " FROM vdms_details w ",
-        resultSetMapping = "weathermapping"
-)
-
-@SqlResultSetMapping(
-        name = "layoutmapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = VdmsDetailsDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "layout_data", type = String.class),
-                                @ColumnResult(name = "vdms_id", type = String.class),
-                                @ColumnResult(name = "corrigo_layout_data", type = String.class)
-                        }
-                )
-        }
-)
-
-@NamedNativeQuery(
-        name = "VdmsDetails.getVdmsLayoutData",
-        query = "SELECT vd.id,vd.layout_data,vd.vdms_id,vd.corrigo_layout_data"
-                + " FROM vdms_details vd ",
-        resultSetMapping = "layoutmapping"
-)
-
-@SqlResultSetMapping(
-        name = "devicecustomfieldsmapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = VdmsDetailsDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "device_custom_fields", type = String.class)
-                        }
-                )
-        }
-)
-
-@NamedNativeQuery(
-        name = "VdmsDetails.getVdmsDeviceCustomFields",
-        query = "SELECT vd.id,vd.device_custom_fields"
-                + " FROM vdms_details vd ",
-        resultSetMapping = "devicecustomfieldsmapping"
-)
 
 /**
  * JPA entity holding per-VDMS presentation and configuration details such as weather data,
  * screen layout, device custom fields, and Corrigo layout. Linked one-to-one to a {@link Vdms}
- * and backed by the {@code vdms_details} table; supplies the named native queries used to
- * project this data onto {@code VdmsDetailsDTO}.
+ * and backed by the {@code vdms_details} table.
  */
 @Entity
 @Table(name = "vdms_details")

@@ -7,6 +7,7 @@ import java.util.Set;
 import jakarta.transaction.Transactional;
 
 import io.sclera.dto.FloorDTO;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -27,7 +28,7 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	 * @param building_id the building identifier
 	 * @return the matching floor identifiers
 	 */
-	@Query(value = "SELECT id FROM floor WHERE building_id = ?1" , nativeQuery = true)
+	@Query("SELECT f.id FROM Floor f WHERE f.building.id = ?1")
 	Set<String> getFloorIdsByBuildingId(String building_id);
 
 	/**
@@ -36,10 +37,13 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	 * @param floor_id the floor identifier
 	 * @return the floor image URL
 	 */
-	@Query(value = "SELECT image_url FROM floor WHERE id = ?1" ,nativeQuery = true)
+	@Query("SELECT f.image_url FROM Floor f WHERE f.id = ?1")
 	String getImageUrlById(String floor_id);
 
 	/**
+	 * NOT CONVERTED — stays native: String angle param into Integer column;
+	 * JPQL bulk UPDATE rejects the type mismatch (and this duplicates the Integer-angle overload).
+	 *
 	 * Updates the name, initial position, image URL, and angle of the given floor.
 	 *
 	 * @param name the new floor name
@@ -54,6 +58,9 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	void updateFloorByFloorId(String name, String initial_position, String image_url, String floor_id, String angle);
 
 	/**
+	 * NOT CONVERTED — stays native: plain INSERT already valid PostgreSQL;
+	 * entity save() is worse (assigned @Id -> merge -> SELECT eagerly loads @ManyToOne building graph).
+	 *
 	 * Inserts a new floor for the given building.
 	 *
 	 * @param floor_id the floor identifier
@@ -73,8 +80,7 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	 *
 	 * @return the unlinked floor identifiers
 	 */
-	//Get floor ids not tagged to a location
-	@Query(value = "SELECT id FROM floor f WHERE id NOT IN (SELECT l.floor_id FROM location l WHERE f.id = l.floor_id)" , nativeQuery = true)
+	@Query("SELECT f.id FROM Floor f WHERE f.id NOT IN (SELECT l.floor.id FROM Location l WHERE l.floor IS NOT NULL)")
 	Set<String> getUnlinkedFloorIds();
 
 
@@ -91,13 +97,16 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	 * @param timestamp the update timestamp
 	 * @return the number of rows updated
 	 */
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "UPDATE floor SET name = ?1 ,initial_position = ?2 ,image_url = ?3, angle = ?5, updated_timestamp = ?6 WHERE id = ?4" , nativeQuery = true)
+	@Query("UPDATE Floor f SET f.name = ?1, f.initial_position = ?2, f.image_url = ?3, f.angle = ?5, f.updatedTimestamp = ?6 WHERE f.id = ?4")
 	int updateFloorByFloorId(String name, String initial_position, String image_url, String floor_id, Integer angle, BigInteger timestamp);
 
 
 	/**
+	 * NOT CONVERTED — stays native: plain INSERT already valid PostgreSQL;
+	 * entity save() is worse (assigned @Id -> merge -> SELECT eagerly loads @ManyToOne building graph).
+	 *
 	 * Inserts a new floor for the given building with an update timestamp.
 	 *
 	 * @param floor_id the floor identifier
@@ -115,6 +124,9 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	int addFloorByBuildingId(String floor_id, String name, String initial_position ,String image_url ,String building_id, Integer angle, BigInteger timestamp);
 
 	/**
+	 * NOT CONVERTED — stays native: INSERT ... ON CONFLICT already valid PostgreSQL;
+	 * not worth an entity save() that merge-SELECTs the eager building graph.
+	 *
 	 * Inserts a floor for the given building, or updates its name and timestamp on identifier conflict.
 	 *
 	 * @param floor_id the floor identifier
@@ -139,9 +151,9 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	 * @param angle the new angle
 	 * @param building_id the building identifier
 	 */
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "UPDATE floor SET initial_position = ?1 , angle = ?2 WHERE building_id = ?3" ,nativeQuery = true)
+	@Query("UPDATE Floor f SET f.initial_position = ?1, f.angle = ?2 WHERE f.building.id = ?3")
 	void updateFloorOrientationsByBuildingId(String initial_position, Integer angle, String building_id);
 
 
@@ -153,19 +165,20 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	 * @param angle the new angle
 	 * @param floor_id the floor identifier
 	 */
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "UPDATE floor SET image_url = ?1 ,initial_position = ?2 ,angle = ?3 WHERE id = ?4" ,nativeQuery = true)
+	@Query("UPDATE Floor f SET f.image_url = ?1, f.initial_position = ?2, f.angle = ?3 WHERE f.id = ?4")
 	void addFloorImageUrlById(String updated_image_url, String initial_position, Integer angle, String floor_id);
 
 
 	/**
 	 * Returns the floors of the given building.
+	 * Supports 'all' as a wildcard to return floors from any building.
 	 *
-	 * @param building_id the building identifier
+	 * @param building_id the building identifier (or 'all')
 	 * @return the matching floors
 	 */
-	@Query(nativeQuery = true)
+	@Query("SELECT new io.sclera.dto.FloorDTO(f.id, f.name) FROM Floor f WHERE ('all' = ?1 OR f.building.id = ?1) ORDER BY f.name, f.id")
 	Set<FloorDTO> getFloorsByBuildingId(String building_id);
 
 
@@ -175,7 +188,7 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	 * @param buildingIds the building identifiers
 	 * @return the matching floors
 	 */
-	@Query(nativeQuery = true)
+	@Query("SELECT new io.sclera.dto.FloorDTO(f.id, f.name, f.building.id) FROM Floor f WHERE f.building.id IN ?1")
 	List<FloorDTO> getFloorsByBuildingIds(List<String> buildingIds);
 
 	/**
@@ -184,7 +197,7 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	 * @param location_id the location identifier
 	 * @return the matching floor
 	 */
-	@Query(nativeQuery = true)
+	@Query("SELECT new io.sclera.dto.FloorDTO(f.id, f.name) FROM Floor f JOIN f.location l WHERE l.id = ?1")
 	FloorDTO getFloorByLocationId(String location_id);
 
 	/**
@@ -193,7 +206,7 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	 * @param building_id the building identifier
 	 * @return the matching floor details
 	 */
-	@Query(nativeQuery = true)
+	@Query("SELECT new io.sclera.dto.FloorDTO(f.id, f.name, f.initial_position, f.image_url, f.building.id, f.angle, f.min_zoom, f.max_zoom, f.local_image_url) FROM Floor f WHERE f.building.id = ?1")
 	Set<FloorDTO> getFloorsDetailsByBuildingId(String building_id);
 
 	/**
@@ -202,7 +215,7 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	 * @param floor_id the floor identifier
 	 * @return the matching floor
 	 */
-	@Query(nativeQuery = true)
+	@Query("SELECT new io.sclera.dto.FloorDTO(f.id, f.name, f.initial_position, f.image_url, f.building.id, f.angle, f.min_zoom, f.max_zoom, f.local_image_url) FROM Floor f WHERE f.id = ?1")
 	FloorDTO getFloorById(String floor_id);
 
 	/**
@@ -211,16 +224,16 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	 * @param floor_id the floor identifier
 	 * @return the floor path
 	 */
-	@Query(value = "SELECT path FROM floor WHERE id = ?1" , nativeQuery = true)
+	@Query("SELECT f.path FROM Floor f WHERE f.id = ?1")
 	String getFloorPathByFloorId(String floor_id);
 
 	/**
-	 * Returns the floor with the given identifier.
+	 * Returns the floor with the given identifier (id and name only).
 	 *
 	 * @param floor_id the floor identifier
 	 * @return the matching floor
 	 */
-	@Query(nativeQuery = true)
+	@Query("SELECT new io.sclera.dto.FloorDTO(f.id, f.name) FROM Floor f WHERE f.id = ?1")
 	FloorDTO getFloor(String floor_id);
 
 	/**
@@ -229,13 +242,16 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	 * @param path the new path
 	 * @param floor_id the floor identifier
 	 */
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "UPDATE floor SET path = ?1 WHERE id = ?2" , nativeQuery = true)
+	@Query("UPDATE Floor f SET f.path = ?1 WHERE f.id = ?2")
 	void updatePathByFloorId(String path, String floor_id);
 
 
 	/**
+	 * NOT CONVERTED — stays native: INSERT ... ON CONFLICT already valid PostgreSQL;
+	 * not worth an entity save() that merge-SELECTs the eager building graph.
+	 *
 	 * Inserts a floor from the backend, or updates all of its fields on identifier conflict.
 	 *
 	 * @param floor_id the floor identifier
@@ -261,9 +277,9 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	 * @param max_zoom the new maximum zoom level
 	 * @param floor_id the floor identifier
 	 */
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "UPDATE floor SET min_zoom = ?1, max_zoom = ?2  WHERE id = ?3" , nativeQuery = true)
+	@Query("UPDATE Floor f SET f.min_zoom = ?1, f.max_zoom = ?2 WHERE f.id = ?3")
 	void updateFloorMapZoomLevels(String min_zoom, String max_zoom, String floor_id);
 
 	/**
@@ -272,9 +288,9 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	 * @param local_image_url the new local image URL
 	 * @param floor_id the floor identifier
 	 */
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "UPDATE floor SET local_image_url = ?1 WHERE id = ?2" , nativeQuery = true)
+	@Query("UPDATE Floor f SET f.local_image_url = ?1 WHERE f.id = ?2")
 	void updateLocalImageUrl(String local_image_url, String floor_id);
 
 	/**
@@ -285,32 +301,30 @@ public interface FloorRepository extends JpaRepository<Floor, String> {
 	 * @param floor_id the floor identifier
 	 */
 	//delete after sync is done
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "UPDATE floor SET local_image_url = ?1, image_url = ?2 WHERE id = ?3" , nativeQuery = true)
+	@Query("UPDATE Floor f SET f.local_image_url = ?1, f.image_url = ?2 WHERE f.id = ?3")
 	void updateImageUrls(String local_image_url, String image_url, String floor_id);
 
 	/**
 	 * Returns a paginated batch of floors matching the given identifiers.
 	 *
 	 * @param floorIds the floor identifiers
-	 * @param pageSize the maximum number of rows to return
-	 * @param offset the starting row offset
+	 * @param pageable pagination (page size and offset via {@code PageRequest.of(offset/pageSize, pageSize)})
 	 * @return the matching floors for the page
 	 */
-	@Query(nativeQuery = true)
-	List<FloorDTO> getBatchFloorsByPagination(Set<String> floorIds, int pageSize, int offset);
+	@Query("SELECT new io.sclera.dto.FloorDTO(f.id, f.name, f.initial_position, f.image_url, f.building.id, f.angle, f.min_zoom, f.max_zoom, f.local_image_url) FROM Floor f WHERE f.id IN ?1")
+	List<FloorDTO> getBatchFloorsByPagination(Set<String> floorIds, Pageable pageable);
 
 	/**
 	 * Returns a paginated list of floors belonging to the given buildings.
 	 *
 	 * @param buildingIds the building identifiers
-	 * @param pageSize the maximum number of rows to return
-	 * @param offset the starting row offset
+	 * @param pageable pagination (page size and offset via {@code PageRequest.of(offset/pageSize, pageSize)})
 	 * @return the matching floors for the page
 	 */
-	@Query(nativeQuery = true)
-	List<FloorDTO> getFloorIdsByBuildingIds(Set<String> buildingIds, int pageSize, int offset);
+	@Query("SELECT new io.sclera.dto.FloorDTO(f.id, f.name, f.initial_position, f.image_url, f.building.id, f.angle, f.min_zoom, f.max_zoom, f.local_image_url) FROM Floor f WHERE f.building.id IN ?1")
+	List<FloorDTO> getFloorIdsByBuildingIds(Set<String> buildingIds, Pageable pageable);
 	/*************************************************************** new Floor changes ******************************************************************/
 
 

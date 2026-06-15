@@ -5,32 +5,6 @@ import io.sclera.dto.LocationHistoryDTO;
 import jakarta.persistence.*;
 import java.math.BigInteger;
 
-@SqlResultSetMapping(
-        name = "locationhistorymapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = LocationHistoryDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "status", type = String.class),
-                                @ColumnResult(name = "type", type = String.class),
-                                @ColumnResult(name = "description", type = String.class),
-                                @ColumnResult(name = "updated_timestamp", type = BigInteger.class),
-                                @ColumnResult(name = "updated_email", type = String.class),
-                                @ColumnResult(name = "location_id", type = String.class)
-
-
-                        })
-        })
-
-@NamedNativeQuery(
-        name = "LocationHistory.getLocationHistory",
-        query = "SELECT lh.id , lh.status,lh.type, lh.description, lh.updated_timestamp, lh.updated_email, lh.location_id "
-                + " FROM location_history lh "
-                + " WHERE lh.location_id = ?1 "
-                + " ORDER BY  lh.updated_timestamp DESC, lh.id ",
-        resultSetMapping = "locationhistorymapping"
-)
 /**
  * JPA entity recording a status-change event for a location, used to build the audit
  * trail of location history within the asset-management domain.

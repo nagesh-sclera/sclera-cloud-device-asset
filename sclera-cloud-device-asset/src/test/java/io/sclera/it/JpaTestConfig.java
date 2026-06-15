@@ -41,6 +41,44 @@ import org.springframework.context.annotation.Configuration;
         PersistenceExceptionTranslationAutoConfiguration.class,
 })
 @EntityScan(basePackages = "io.sclera.models")
+@org.springframework.data.jpa.repository.config.EnableJpaRepositories(
+        basePackageClasses = io.sclera.Repository.AssetRepository.class,
+        includeFilters = @org.springframework.context.annotation.ComponentScan.Filter(
+                type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE,
+                classes = { io.sclera.Repository.AssetRepository.class,
+                            io.sclera.Repository.DeviceIPAddressRepository.class,
+                            io.sclera.Repository.LocationRepository.class,
+                            io.sclera.Repository.FloorRepository.class,
+                            io.sclera.Repository.AssetDeviceMappingRepository.class,
+                            io.sclera.Repository.BuildingRepository.class,
+                            io.sclera.Repository.DeviceOnboardStatusRepository.class,
+                            io.sclera.Repository.DeviceNetworkSpecificationRepository.class,
+                            io.sclera.Repository.DeviceOnboardStatusAssigneeRepository.class,
+                            io.sclera.Repository.DeviceLifeCycleHistoryRepository.class,
+                            io.sclera.Repository.DeviceSpecificationRepository.class,
+                            io.sclera.Repository.NotesRepository.class,
+                            io.sclera.Repository.DeviceInstalledAppsRepository.class,
+                            io.sclera.Repository.AiCallLogHistoryRepository.class,
+                            io.sclera.Repository.AiCallLogRepository.class,
+                            io.sclera.Repository.ConditionsRepository.class,
+                            io.sclera.Repository.DeviceConditionsRepository.class,
+                            io.sclera.Repository.AssetFieldRepository.class,
+                            io.sclera.Repository.LocationHistoryRepository.class,
+                            io.sclera.Repository.DeviceTypesRepository.class,
+                            io.sclera.Repository.SystemInterfaceRepository.class,
+                            io.sclera.Repository.DeviceTechnicianAISuggestionRepository.class,
+                            io.sclera.Repository.VdmsDetailsRepository.class,
+                            io.sclera.Repository.ClientBarCodeRepository.class,
+                            io.sclera.Repository.TechnicianCertificateRepository.class,
+                            io.sclera.Repository.TechnicianSkillRepository.class,
+                            io.sclera.Repository.MediaRepository.class,
+                            io.sclera.Repository.DocumentRepository.class,
+                            io.sclera.Repository.ManagedSoftwareRepository.class,
+                            io.sclera.Repository.ApplicationUserRepository.class,
+                            io.sclera.Repository.TechnicianAvailabilityRepository.class,
+                            io.sclera.Repository.TechnicianRepository.class,
+                            io.sclera.Repository.MeasuringInstrumentRepository.class,
+                            io.sclera.Repository.DeviceRepository.class }))
 public class JpaTestConfig {
     // Intentionally empty — all beans come from @ImportAutoConfiguration.
 }

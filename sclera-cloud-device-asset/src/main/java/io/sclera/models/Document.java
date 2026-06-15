@@ -4,18 +4,13 @@ import java.math.BigInteger;
 import java.util.Set;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.ColumnResult;
-import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.NamedNativeQuery;
-import jakarta.persistence.SqlResultSetMapping;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
-import io.sclera.dto.DocumentMediaDTO;
 import org.hibernate.annotations.ColumnDefault;
 
 
@@ -24,97 +19,6 @@ import org.hibernate.annotations.ColumnDefault;
  * or more devices. Used to store and retrieve supporting documentation for assets, including encryption and
  * source metadata.
  */
-//getDocuments
-@SqlResultSetMapping(
-        name = "documentdetailmapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = DocumentMediaDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "name", type = String.class),
-                                @ColumnResult(name = "category", type = String.class),
-                                @ColumnResult(name = "link", type = String.class),
-                                @ColumnResult(name = "description", type = String.class),
-                                @ColumnResult(name = "created_email", type = String.class),
-                                @ColumnResult(name = "created_timestamp", type = BigInteger.class),
-                                @ColumnResult(name = "encrypted_type", type = Integer.class)
-
-                        })
-        })
-
-
-@NamedNativeQuery(
-        name = "Document.getDocuments",
-        query = "SELECT do.id , do.name, do.category, do.link, do.description, do.created_email, do.created_timestamp, do.encrypted_type "
-                + " FROM document do"
-                + " WHERE ?3 ='null' or CONCAT_WS('',do.name,do.category,do.description) LIKE CONCAT('%',?3,'%')"
-                + " LIMIT ?1 OFFSET ?2",
-        resultSetMapping = "documentdetailmapping"
-)
-
-
-//getDocumentsByDeviceId
-@SqlResultSetMapping(
-        name = "documentmapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = DocumentMediaDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "name", type = String.class),
-                                @ColumnResult(name = "category", type = String.class),
-                                @ColumnResult(name = "link", type = String.class),
-                                @ColumnResult(name = "description", type = String.class),
-                                @ColumnResult(name = "created_email", type = String.class),
-                                @ColumnResult(name = "created_timestamp", type = BigInteger.class),
-                                @ColumnResult(name = "device_id", type = String.class),
-                                @ColumnResult(name = "encrypted_type", type = Integer.class)
-
-                        })
-        })
-
-
-@NamedNativeQuery(
-        name = "Document.getDocumentsByDeviceId",
-        query = "SELECT do.id , do.name, do.category, do.link, do.description, do.created_email, do.created_timestamp,dedo.device_id, do.encrypted_type  "
-                + "FROM document do "
-                + " LEFT JOIN device_document dedo ON dedo.document_id = do.id "
-                + " WHERE dedo.device_id = ?1",
-        resultSetMapping = "documentmapping"
-)
-
-@NamedNativeQuery(
-        name = "Document.getDocumentsByDeviceIdByPagination",
-        query = "SELECT do.id , do.name, do.category, do.link, do.description, do.created_email, do.created_timestamp,dedo.device_id, do.encrypted_type  "
-                + " FROM document do "
-                + " LEFT JOIN device_document dedo ON dedo.document_id = do.id "
-                + " WHERE dedo.device_id = ?1"
-                + " LIMIT ?2 OFFSET ?3",
-        resultSetMapping = "documentmapping"
-)
-
-//getDocumentsById
-@SqlResultSetMapping(
-        name = "documentByIdMapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = DocumentMediaDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "link", type = String.class),
-                                @ColumnResult(name = "encrypted_type", type = Integer.class)
-
-                        })
-        })
-@NamedNativeQuery(
-        name = "Document.getDocumentById",
-        query = "SELECT do.id AS id , do.link AS link, do.encrypted_type AS encrypted_type "
-                + " FROM document do "
-                + " WHERE do.id = ?1 ",
-        resultSetMapping = "documentByIdMapping"
-)
-
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", scope = Document.class)
 public class Document {

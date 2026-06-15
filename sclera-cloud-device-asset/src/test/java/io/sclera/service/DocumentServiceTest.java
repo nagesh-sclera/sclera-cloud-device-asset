@@ -11,7 +11,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.domain.PageRequest;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -32,17 +35,17 @@ class DocumentServiceTest {
 
     @Test
     void getDocuments_computesOffsetAndDelegates() {
-        Set<DocumentMediaDTO> docs = Set.of(mock(DocumentMediaDTO.class));
-        // pageno=2, pagesize=10 -> offset 10
-        when(documentRepository.getDocuments(10, 10, "key")).thenReturn(docs);
-        assertThat(service.getDocuments("u", "v", 2, 10, "key")).isSameAs(docs);
+        List<DocumentMediaDTO> docs = List.of(mock(DocumentMediaDTO.class));
+        // pageno=2, pagesize=10 -> PageRequest.of(1, 10)
+        when(documentRepository.getDocuments(eq("key"), eq(PageRequest.of(1, 10)))).thenReturn(docs);
+        assertThat(service.getDocuments("u", "v", 2, 10, "key")).containsAll(docs);
     }
 
     @Test
     void getDocumentsByDeviceId_computesOffsetAndDelegates() {
-        Set<DocumentMediaDTO> docs = Set.of(mock(DocumentMediaDTO.class));
-        when(documentRepository.getDocumentsByDeviceIdByPagination("d1", 10, 10)).thenReturn(docs);
-        assertThat(service.getDocumentsByDeviceId("u", "v", "d1", 2, 10)).isSameAs(docs);
+        List<DocumentMediaDTO> docs = List.of(mock(DocumentMediaDTO.class));
+        when(documentRepository.getDocumentsByDeviceIdByPagination(eq("d1"), eq(PageRequest.of(1, 10)))).thenReturn(docs);
+        assertThat(service.getDocumentsByDeviceId("u", "v", "d1", 2, 10)).containsAll(docs);
     }
 
     @Test

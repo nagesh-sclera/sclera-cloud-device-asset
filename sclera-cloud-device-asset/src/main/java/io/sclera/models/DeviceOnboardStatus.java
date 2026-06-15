@@ -1,35 +1,7 @@
 package io.sclera.models;
 
-import io.sclera.dto.DeviceOnboardStatusDTO;
-
 import jakarta.persistence.*;
 import java.util.Set;
-
-@SqlResultSetMapping(
-        name = "deviceonboardstatusmapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = DeviceOnboardStatusDTO.class,
-                        columns = {
-                                @ColumnResult(name = "assignee_email", type = String.class),
-                                @ColumnResult(name = "image_status", type = Integer.class),
-                                @ColumnResult(name = "geolocation_status", type = Integer.class),
-                                @ColumnResult(name = "tag_status", type = Integer.class),
-                                @ColumnResult(name = "field_status", type = Integer.class),
-                                @ColumnResult(name = "onboard_status", type = Integer.class)
-                        }
-                )
-        }
-)
-
-@NamedNativeQuery(
-        name = "DeviceOnboardStatus.getOnboardDataByDeviceId",
-        query = "SELECT dos.assignee_email, dos.image_status, dos.geolocation_status, dos.tag_status, dos.field_status, d.onboard_status  "
-                + " FROM device_onboard_status dos "
-                + " LEFT JOIN device d ON d.id = dos.device_id "
-                + " WHERE dos.device_id = ?1",
-        resultSetMapping = "deviceonboardstatusmapping"
-)
 
 /**
  * Represents the onboarding progress of a device, tracking per-step completion status (image, geolocation,

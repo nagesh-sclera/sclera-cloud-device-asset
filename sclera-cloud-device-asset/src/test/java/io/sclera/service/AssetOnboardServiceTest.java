@@ -7,6 +7,7 @@ import io.sclera.Repository.VdmsRepository;
 import io.sclera.dto.DeviceDTO;
 import io.sclera.dto.SpecificationsDTO;
 import io.sclera.dto.touchscreen.settings.VdmsDTO;
+import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,6 +38,7 @@ class AssetOnboardServiceTest {
     @Mock DeviceService deviceService;
     @Mock AssetRepository assetRepository;
     @Mock VdmsRepository vdmsRepository;
+    @Mock EntityManager entityManager;
 
     @InjectMocks AssetOnboardService service;
 
@@ -64,14 +67,49 @@ class AssetOnboardServiceTest {
     // ---- assetUpsert / deleteAllRecords ----------------------------------
 
     @Test
-    void assetUpsert_delegatesWithDeviceFields() {
+    void assetUpsert_insertPath_savesNewAssetWithDefaults() {
         DeviceDTO device = mock(DeviceDTO.class);
         when(device.getId()).thenReturn("d1");
+        when(device.getType()).thenReturn("pump");
+        when(assetRepository.findById("d1")).thenReturn(java.util.Optional.empty());
 
         service.assetUpsert(device, "v1", "import", "user");
 
-        verify(assetRepository).assetUpsert(eq("d1"), any(), any(), any(), any(), any(), any(), any(),
-                eq(7), any(), any(), eq(""), any(), any(), eq(false), any(), eq("v1"), eq(0), eq("import"));
+        org.mockito.ArgumentCaptor<io.sclera.models.Asset> cap =
+                org.mockito.ArgumentCaptor.forClass(io.sclera.models.Asset.class);
+        verify(assetRepository).save(cap.capture());
+        io.sclera.models.Asset saved = cap.getValue();
+        assertThat(saved.getId()).isEqualTo("d1");
+        assertThat(saved.getType()).isEqualTo("pump");
+        assertThat(saved.getNetwork_layer()).isEqualTo(7);
+        assertThat(saved.getImport_type()).isEqualTo("import");
+        assertThat(saved.getIsMatched()).isFalse();
+    }
+
+    @Test
+    void assetUpsert_conflictPath_updatesOnlyNameDescType() {
+        DeviceDTO device = mock(DeviceDTO.class);
+        when(device.getId()).thenReturn("d1");
+        when(device.getUser_data_name()).thenReturn("Renamed");
+        when(device.getDescription()).thenReturn("d2");
+        when(device.getType()).thenReturn("t2");
+
+        io.sclera.models.Asset existing = new io.sclera.models.Asset();
+        existing.setId("d1");
+        existing.setNetwork_layer(7);
+        existing.setImport_type("corrigo");
+        when(assetRepository.findById("d1")).thenReturn(java.util.Optional.of(existing));
+
+        service.assetUpsert(device, "v1", "import", "user");
+
+        org.mockito.ArgumentCaptor<io.sclera.models.Asset> cap =
+                org.mockito.ArgumentCaptor.forClass(io.sclera.models.Asset.class);
+        verify(assetRepository).save(cap.capture());
+        io.sclera.models.Asset saved = cap.getValue();
+        assertThat(saved.getDisplay_name()).isEqualTo("Renamed");
+        assertThat(saved.getType()).isEqualTo("t2");
+        assertThat(saved.getImport_type()).isEqualTo("corrigo"); // untouched on conflict
+        assertThat(saved.getNetwork_layer()).isEqualTo(7);       // untouched on conflict
     }
 
     @Test

@@ -16,6 +16,10 @@ import org.springframework.stereotype.Repository;
 import io.sclera.dto.ConditionsDTO;
 import io.sclera.models.Conditions;
 
+// JPQL conversion applied 2026-06-11.
+// addCondition          — NOT CONVERTED — stays native: multi-param INSERT (43 cols), no JPQL INSERT syntax.
+// getConditionsForAdvanceExcelExport — NOT CONVERTED — stays native: multi-table join returning List<Map<String,Object>>; JPQL constructor expressions require a DTO ctor (no portable Map projection).
+
 /**
  * Manages persistence and querying of {@link Conditions} entities.
  */
@@ -162,14 +166,14 @@ public interface ConditionsRepository extends JpaRepository<Conditions, String> 
      * @param enable_threshold_line_onchart  the enable-threshold-line-on-chart flag
      * @param color_of_threshold_line_onchart the color of the threshold line on the chart
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE conditions SET name = ?2, value = ?3, second_value=?4, alert_message = ?5, start_time = ?6, end_time = ?7, schedule = ?8, schedule_conditions =?9, max_alert_count = ?10, alert_count_enabled = ?11, alert_count = ?12, alert_condition = ?13, show_alert = ?14, "
-            + "show_alert_message_as_value = ?15, bacnet_object_bacnet_device_id = ?16, bacnet_object_id = ?17, lorawan_sensor_attributes_lorawan_sensor_id = ?18, "
-            + "lorawan_sensor_attributes_name = ?19, snmp_device_id = ?20, disruptive_sensor_id = ?21, my_devices_sensor_attributes_my_devices_sensor_id = ?22, "
-            + "my_devices_sensor_attributes_name = ?23, monnit_sensor_id = ?24, pelican_sensor_attributes_pelican_sensor_id = ?25, "
-            + "pelican_sensor_attributes_name = ?26, knx_group_address = ?27, knx_group_knx_device_address = ?28, snmp_object_snmp_device_configuration_id = ?29, snmp_object_oid = ?30,measuring_instrument_id = ?31, alert_time = ?32,daintree_device_id = ?33, daintree_point_id = ?34 , alert_profile_id = ?35 , ecobee_sensor_attributes_ecobee_sensor_id = ?36, ecobee_sensor_attributes_name= ?37, modbus_register_id= ?38, priority= ?39, last_alerted = ?40, alert_count_time = ?41, enable_threshold_line_onchart = ?42 , color_of_threshold_line_onchart = ?43"
-            + " WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Conditions c SET c.name = ?2, c.value = ?3, c.second_value = ?4, c.alert_message = ?5, c.start_time = ?6, c.end_time = ?7, c.schedule = ?8, c.schedule_conditions = ?9, c.max_alert_count = ?10, c.alert_count_enabled = ?11, c.alert_count = ?12, c.alert_condition = ?13, c.show_alert = ?14, "
+            + "c.show_alert_message_as_value = ?15, c.bacnet_object_bacnet_device_id = ?16, c.bacnet_object_id = ?17, c.lorawan_sensor_attributes_lorawan_sensor_id = ?18, "
+            + "c.lorawan_sensor_attributes_name = ?19, c.snmp_device_id = ?20, c.disruptive_sensor_id = ?21, c.my_devices_sensor_attributes_my_devices_sensor_id = ?22, "
+            + "c.my_devices_sensor_attributes_name = ?23, c.monnit_sensor_id = ?24, c.pelican_sensor_attributes_pelican_sensor_id = ?25, "
+            + "c.pelican_sensor_attributes_name = ?26, c.knx_group_address = ?27, c.knx_group_knx_device_address = ?28, c.snmp_object_snmp_device_configuration_id = ?29, c.snmp_object_oid = ?30, c.measuring_instrument_id = ?31, c.alert_time = ?32, c.daintree_device_id = ?33, c.daintree_point_id = ?34, c.alert_profile_id = ?35, c.ecobee_sensor_attributes_ecobee_sensor_id = ?36, c.ecobee_sensor_attributes_name = ?37, c.modbus_register_id = ?38, c.priority = ?39, c.last_alerted = ?40, c.alert_count_time = ?41, c.enable_threshold_line_onchart = ?42, c.color_of_threshold_line_onchart = ?43 "
+            + "WHERE c.id = ?1")
     void updateCondition(String id, String name, String value, String second_value, String alert_message, String start_time, String end_time, Integer schedule, String schedule_conditions, Integer max_alert_count, Integer alert_count_enabled, Integer alert_count,
                          String alert_condition, Boolean show_alert, Boolean show_alert_message_as_value,
                          String bacnet_device_id, String bacnet_object_id, String lorawan_sensor_id,
@@ -185,9 +189,9 @@ public interface ConditionsRepository extends JpaRepository<Conditions, String> 
      * @param conditionId the condition identifier
      */
     //delete is done by cascade delete, if this query not required can be deleted
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM conditions WHERE id = ?1", nativeQuery = true)
+    @Query("DELETE FROM Conditions c WHERE c.id = ?1")
     void deleteConditionById(String conditionId);
 
     /**
@@ -211,7 +215,29 @@ public interface ConditionsRepository extends JpaRepository<Conditions, String> 
      * @param modbus_register_id           the Modbus register identifier
      * @return the matching condition projections
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.ConditionsDTO(c.id, c.name, c.value, c.second_value, c.alert_message, c.start_time, c.end_time, "
+            + "c.schedule, c.schedule_conditions, c.alert_count_enabled, c.max_alert_count, c.alert_count, c.alert_condition, c.alert, c.show_alert, c.show_alert_message_as_value, "
+            + "c.bacnet_object_bacnet_device_id, c.bacnet_object_id, c.lorawan_sensor_attributes_lorawan_sensor_id, c.lorawan_sensor_attributes_name, "
+            + "c.snmp_device_id, c.disruptive_sensor_id, c.my_devices_sensor_attributes_my_devices_sensor_id, c.my_devices_sensor_attributes_name, "
+            + "c.monnit_sensor_id, c.pelican_sensor_attributes_pelican_sensor_id, c.pelican_sensor_attributes_name, "
+            + "c.knx_group_address, c.knx_group_knx_device_address, c.snmp_object_snmp_device_configuration_id, c.snmp_object_oid, "
+            + "c.measuring_instrument_id, c.last_alerted_timestamp, c.alert_time, c.daintree_device_id, c.daintree_point_id, c.alert_profile_id, "
+            + "c.ecobee_sensor_attributes_ecobee_sensor_id, c.ecobee_sensor_attributes_name, c.modbus_register_id, c.priority, c.last_alerted, c.alert_count_time, c.enable_threshold_line_onchart, c.color_of_threshold_line_onchart) "
+            + "FROM Conditions c WHERE "
+            + "(c.bacnet_object_id = ?1 AND c.bacnet_object_bacnet_device_id = ?2) "
+            + "OR c.lorawan_sensor_attributes_lorawan_sensor_id = ?3 "
+            + "OR c.snmp_device_id = ?4 "
+            + "OR c.disruptive_sensor_id = ?5 "
+            + "OR c.my_devices_sensor_attributes_my_devices_sensor_id = ?6 "
+            + "OR c.monnit_sensor_id = ?7 "
+            + "OR c.pelican_sensor_attributes_pelican_sensor_id = ?8 "
+            + "OR c.knx_group_address = ?9 "
+            + "OR c.knx_group_knx_device_address = ?10 "
+            + "OR (c.snmp_object_snmp_device_configuration_id = ?11 AND c.snmp_object_oid = ?12) "
+            + "OR c.measuring_instrument_id = ?13 "
+            + "OR c.daintree_device_id = ?14 "
+            + "OR c.ecobee_sensor_attributes_ecobee_sensor_id = ?15 "
+            + "OR c.modbus_register_id = ?16")
     Set<ConditionsDTO> getConditions(String bacnet_object_id, String bacnet_device_id, String lorawan_sensor_id, String snmp_device_id,
                                      String disruptive_sensor_id, String my_devices_sensor_id, String monnit_sensor_id, String pelican_sensor_id, String knx_group_address,
                                      String knx_device_address, String snmp_device_configuration_id, String snmp_object_oid, String measuring_instrument_id, String daintree_device_id, String ecobee_sensor_id, String modbus_register_id);
@@ -242,7 +268,29 @@ public interface ConditionsRepository extends JpaRepository<Conditions, String> 
      * @param modbus_register_id             the Modbus register identifier
      * @return the matching condition projections
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.ConditionsDTO(c.id, c.name, c.value, c.second_value, c.alert_message, c.start_time, c.end_time, "
+            + "c.schedule, c.schedule_conditions, c.alert_count_enabled, c.max_alert_count, c.alert_count, c.alert_condition, c.alert, c.show_alert, c.show_alert_message_as_value, "
+            + "c.bacnet_object_bacnet_device_id, c.bacnet_object_id, c.lorawan_sensor_attributes_lorawan_sensor_id, c.lorawan_sensor_attributes_name, "
+            + "c.snmp_device_id, c.disruptive_sensor_id, c.my_devices_sensor_attributes_my_devices_sensor_id, c.my_devices_sensor_attributes_name, "
+            + "c.monnit_sensor_id, c.pelican_sensor_attributes_pelican_sensor_id, c.pelican_sensor_attributes_name, "
+            + "c.knx_group_address, c.knx_group_knx_device_address, c.snmp_object_snmp_device_configuration_id, c.snmp_object_oid, "
+            + "c.measuring_instrument_id, c.last_alerted_timestamp, c.alert_time, c.daintree_device_id, c.daintree_point_id, c.alert_profile_id, "
+            + "c.ecobee_sensor_attributes_ecobee_sensor_id, c.ecobee_sensor_attributes_name, c.modbus_register_id, c.priority, c.last_alerted, c.alert_count_time, c.enable_threshold_line_onchart, c.color_of_threshold_line_onchart) "
+            + "FROM Conditions c WHERE "
+            + "(c.bacnet_object_bacnet_device_id = ?1 AND c.bacnet_object_id = ?2) "
+            + "OR (c.lorawan_sensor_attributes_lorawan_sensor_id = ?3 AND c.lorawan_sensor_attributes_name = ?4) "
+            + "OR c.snmp_device_id = ?5 "
+            + "OR c.disruptive_sensor_id = ?6 "
+            + "OR (c.my_devices_sensor_attributes_my_devices_sensor_id = ?7 AND c.my_devices_sensor_attributes_name = ?8) "
+            + "OR c.monnit_sensor_id = ?9 "
+            + "OR (c.pelican_sensor_attributes_pelican_sensor_id = ?10 AND c.pelican_sensor_attributes_name = ?11) "
+            + "OR c.knx_group_address = ?12 "
+            + "OR c.knx_group_knx_device_address = ?13 "
+            + "OR (c.snmp_object_snmp_device_configuration_id = ?14 AND c.snmp_object_oid = ?15) "
+            + "OR c.measuring_instrument_id = ?16 "
+            + "OR (c.daintree_device_id = ?17 AND c.daintree_point_id = ?18) "
+            + "OR (c.ecobee_sensor_attributes_ecobee_sensor_id = ?19 AND c.ecobee_sensor_attributes_name = ?20) "
+            + "OR c.modbus_register_id = ?21")
     Set<ConditionsDTO> getConditionsById(String bacnet_device_id, String bacnet_object_id, String lorawan_sensor_id,
                                          String lorawan_sensor_attributes_name, String snmp_device_id, String disruptive_sensor_id, String my_devices_sensor_id,
                                          String my_devices_sensor_attributes_name, String monnit_sensor_id, String pelican_sensor_id, String pelican_sensor_attributes_name,
@@ -263,9 +311,9 @@ public interface ConditionsRepository extends JpaRepository<Conditions, String> 
      * @param last_alerted_timestamp the last-alerted timestamp
      * @param last_alerted           the last-alerted flag
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE conditions SET alert = ?2, alert_count = ?3, last_alerted_timestamp = ?4, last_alerted = ?5  WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Conditions c SET c.alert = ?2, c.alert_count = ?3, c.last_alerted_timestamp = ?4, c.last_alerted = ?5 WHERE c.id = ?1")
     void updateConditionAlert(String id, Boolean alert, Integer alert_count, BigInteger last_alerted_timestamp, Boolean last_alerted);
 
     /**
@@ -275,9 +323,9 @@ public interface ConditionsRepository extends JpaRepository<Conditions, String> 
      * @param alert_count the alert count to set
      */
     //update condition alert count
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE conditions SET alert_count = ?2  WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Conditions c SET c.alert_count = ?2 WHERE c.id = ?1")
     void updateConditionAlertCount(String id, Integer alert_count);
 
     /**
@@ -287,7 +335,8 @@ public interface ConditionsRepository extends JpaRepository<Conditions, String> 
      * @return the condition projection with alert-count details
      */
     //get alert count details
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.ConditionsDTO(c.id, c.alert_count_enabled, c.max_alert_count, c.alert_count, c.alert_time) "
+            + "FROM Conditions c WHERE c.id = ?1")
     ConditionsDTO getConditionAlertCountDetails(String id);
 
     /**
@@ -295,9 +344,9 @@ public interface ConditionsRepository extends JpaRepository<Conditions, String> 
      *
      * @param alert_profile_id the alert profile identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE conditions SET alert_profile_id = NULL  WHERE alert_profile_id = ?1", nativeQuery = true)
+    @Query("UPDATE Conditions c SET c.alert_profile_id = NULL WHERE c.alert_profile_id = ?1")
     void updateAlertProfileId(String alert_profile_id);
 
     /**
@@ -306,9 +355,9 @@ public interface ConditionsRepository extends JpaRepository<Conditions, String> 
      * @param id           the condition identifier
      * @param last_alerted the last-alerted flag to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE conditions SET last_alerted = ?2  WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Conditions c SET c.last_alerted = ?2 WHERE c.id = ?1")
     void resetLastAlertById(String id, Boolean last_alerted);
 
     /**
@@ -317,7 +366,15 @@ public interface ConditionsRepository extends JpaRepository<Conditions, String> 
      * @param conditionId the condition identifier
      * @return the matching condition projection
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.ConditionsDTO(c.id, c.name, c.value, c.second_value, c.alert_message, c.start_time, c.end_time, "
+            + "c.schedule, c.schedule_conditions, c.alert_count_enabled, c.max_alert_count, c.alert_count, c.alert_condition, c.alert, c.show_alert, c.show_alert_message_as_value, "
+            + "c.bacnet_object_bacnet_device_id, c.bacnet_object_id, c.lorawan_sensor_attributes_lorawan_sensor_id, c.lorawan_sensor_attributes_name, "
+            + "c.snmp_device_id, c.disruptive_sensor_id, c.my_devices_sensor_attributes_my_devices_sensor_id, c.my_devices_sensor_attributes_name, "
+            + "c.monnit_sensor_id, c.pelican_sensor_attributes_pelican_sensor_id, c.pelican_sensor_attributes_name, "
+            + "c.knx_group_address, c.knx_group_knx_device_address, c.snmp_object_snmp_device_configuration_id, c.snmp_object_oid, "
+            + "c.measuring_instrument_id, c.last_alerted_timestamp, c.alert_time, c.daintree_device_id, c.daintree_point_id, c.alert_profile_id, "
+            + "c.ecobee_sensor_attributes_ecobee_sensor_id, c.ecobee_sensor_attributes_name, c.modbus_register_id, c.priority, c.last_alerted, c.alert_count_time, c.enable_threshold_line_onchart, c.color_of_threshold_line_onchart) "
+            + "FROM Conditions c WHERE c.id = ?1")
     ConditionsDTO getConditionByConditionId(String conditionId);
 
     /**
@@ -326,10 +383,10 @@ public interface ConditionsRepository extends JpaRepository<Conditions, String> 
      * @param id the condition identifier
      * @return the result of the update operation
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE conditions SET last_alerted_timestamp = NULL WHERE id = ?1", nativeQuery = true)
-    Object updateLastAlertedTimestamp(String id);
+    @Query("UPDATE Conditions c SET c.last_alerted_timestamp = NULL WHERE c.id = ?1")
+    int updateLastAlertedTimestamp(String id);
 
     /**
      * Returns condition and alert-profile details for a device, used for advanced Excel export.

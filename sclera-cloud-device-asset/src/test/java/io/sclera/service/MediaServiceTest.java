@@ -11,6 +11,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.domain.PageRequest;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -66,16 +68,16 @@ class MediaServiceTest {
 
     @Test
     void getMedias_computesOffset() {
-        Set<DocumentMediaDTO> medias = Set.of(media("m1", null));
-        when(mediaRepository.getMedias(10, 20, "key")).thenReturn(medias); // page 3
-        assertThat(service.getMedias("u", "v", 3, 10, "key")).isSameAs(medias);
+        List<DocumentMediaDTO> medias = List.of(media("m1", null));
+        when(mediaRepository.getMedias(eq("key"), eq(PageRequest.of(2, 10)))).thenReturn(medias); // page 3
+        assertThat(service.getMedias("u", "v", 3, 10, "key")).containsAll(medias);
     }
 
     @Test
     void getMediasByDeviceId_computesOffset() {
-        Set<DocumentMediaDTO> medias = Set.of(media("m1", null));
-        when(mediaRepository.getMediasByDeviceIdByPagination("d1", 5, 5)).thenReturn(medias); // page 2
-        assertThat(service.getMediasByDeviceId("u", "v", "d1", 2, 5)).isSameAs(medias);
+        List<DocumentMediaDTO> medias = List.of(media("m1", null));
+        when(mediaRepository.getMediasByDeviceIdByPagination(eq("d1"), eq(PageRequest.of(1, 5)))).thenReturn(medias); // page 2
+        assertThat(service.getMediasByDeviceId("u", "v", "d1", 2, 5)).containsAll(medias);
     }
 
     @Test

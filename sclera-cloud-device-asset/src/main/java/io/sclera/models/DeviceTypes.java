@@ -1,7 +1,5 @@
 package io.sclera.models;
 
-import io.sclera.dto.DeviceTypesDTO;
-
 import jakarta.persistence.*;
 import java.math.BigInteger;
 
@@ -9,46 +7,6 @@ import java.math.BigInteger;
  * Represents a category of device (device type) along with its display name and rename history.
  * Used to classify devices and to track renaming of device types across the asset catalogue.
  */
-@SqlResultSetMapping(
-        name = "deviceTypesMapping",
-        classes = @ConstructorResult(
-                targetClass = DeviceTypesDTO.class,
-                columns = {
-                        @ColumnResult(name = "id", type = String.class),
-                        @ColumnResult(name = "name", type = String.class),
-                        @ColumnResult(name = "updatedTimestamp", type = BigInteger.class)
-                }
-        )
-)
-
-@NamedNativeQuery(
-        name = "DeviceTypes.getAllDeviceTypes",
-        query = "SELECT dt.id, dt.name, dt.updated_timestamp AS updatedTimestamp " +
-                "FROM device_types dt ",
-        resultSetMapping = "deviceTypesMapping"
-)
-
-
-@SqlResultSetMapping(
-        name = "deviceTypesUpdateMapping",
-        classes = @ConstructorResult(
-                targetClass = DeviceTypesDTO.class,
-                columns = {
-                        @ColumnResult(name = "name", type = String.class),
-                        @ColumnResult(name = "oldName", type = String.class)
-                }
-        )
-)
-
-@NamedNativeQuery(
-        name = "DeviceTypes.getAllUpdatedDeviceTypes",
-        query = "SELECT dt.name, dt.old_name AS oldName " +
-                "FROM device_types dt WHERE dt.old_name IS NOT NULL ",
-        resultSetMapping = "deviceTypesUpdateMapping"
-)
-
-
-
 @Entity
 public class DeviceTypes {
     @Id

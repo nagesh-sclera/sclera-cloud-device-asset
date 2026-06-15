@@ -12,6 +12,11 @@ import org.springframework.stereotype.Repository;
 import jakarta.transaction.Transactional;
 import java.math.BigInteger;
 import java.util.Set;
+
+// JPQL conversion applied 2026-06-11.
+// updateDeviceConditions — NOT CONVERTED — stays native: sets device_id column which maps to @ManyToOne Device device;
+//     JPQL UPDATE SET cannot target a FK column directly when the field is a relation reference.
+// addDeviceConditions    — NOT CONVERTED — stays native: multi-param INSERT (15 cols); no JPQL INSERT syntax.
 /**
  * Manages persistence and querying of {@link DeviceConditions} entities.
  */
@@ -39,6 +44,7 @@ public interface DeviceConditionsRepository extends JpaRepository<DeviceConditio
      * @param alert_message        the alert message
      */
     // new changes
+    // NOT CONVERTED — stays native: device_id maps to @ManyToOne Device; JPQL UPDATE cannot set a relation FK by scalar id.
     @Modifying
     @Transactional
     @Query(value = "UPDATE device_conditions SET alert_condition = ?2, device_id = ?3 , alert_profile_id = ?4 , trigger_time = ?5, priority = ?6, start_time = ?7, end_time = ?8, alert_count = ?9, max_alert_count = ?10, alert_count_enabled = ?11, schedule = ?12, schedule_conditions = ?13, alert_count_time = ?14, last_alerted = ?15, alert_message = ?16 WHERE id = ?1", nativeQuery = true)
@@ -63,6 +69,7 @@ public interface DeviceConditionsRepository extends JpaRepository<DeviceConditio
      * @param last_alerted         the last-alerted flag
      * @param alert_message        the alert message
      */
+    // NOT CONVERTED — stays native: multi-param INSERT (15 cols); no JPQL INSERT syntax.
     @Modifying
     @Transactional
     @Query(value = "INSERT INTO device_conditions(id, alert_condition, device_id, alert_profile_id, trigger_time, priority,start_time,end_time,max_alert_count, alert_count_enabled, schedule, schedule_conditions, alert_count_time, last_alerted, alert_message) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)", nativeQuery = true)
@@ -74,7 +81,8 @@ public interface DeviceConditionsRepository extends JpaRepository<DeviceConditio
      * @param device_id the device identifier
      * @return the matching device-condition projections
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.DeviceConditionsDTO(dc.id, dc.alert_condition, dc.device.id, dc.alert_profile_id, dc.trigger_time, dc.last_alerted_time, dc.priority, dc.start_time, dc.end_time, dc.schedule, dc.schedule_conditions, dc.max_alert_count, dc.alert_count, dc.alert_count_enabled, dc.alert_count_time, dc.last_alerted, dc.alert_message) "
+            + "FROM DeviceConditions dc WHERE dc.device.id = ?1 AND dc.alert_condition <> 'device_offline_ai_call_alert'")
     Set<DeviceConditionsDTO> getDeviceConditions(String device_id);
 
     /**
@@ -83,7 +91,8 @@ public interface DeviceConditionsRepository extends JpaRepository<DeviceConditio
      * @param condition_id the device-condition identifier
      * @return the matching device-condition projection
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.DeviceConditionsDTO(dc.id, dc.alert_condition, dc.device.id, dc.alert_profile_id, dc.trigger_time, dc.last_alerted_time, dc.priority, dc.start_time, dc.end_time, dc.schedule, dc.schedule_conditions, dc.max_alert_count, dc.alert_count, dc.alert_count_enabled, dc.alert_count_time, dc.last_alerted, dc.alert_message) "
+            + "FROM DeviceConditions dc WHERE dc.id = ?1 AND dc.alert_condition <> 'device_offline_ai_call_alert'")
     DeviceConditionsDTO getDeviceConditionsById(String condition_id);
 
     /**
@@ -91,7 +100,7 @@ public interface DeviceConditionsRepository extends JpaRepository<DeviceConditio
      *
      * @param device_id the device identifier
      */
-    @Query(value = "SELECT alert_condition FROM device_conditions WHERE device_id = ?1 ", nativeQuery = true)
+    @Query("SELECT dc.alert_condition FROM DeviceConditions dc WHERE dc.device.id = ?1")
     void getDeviceConditionsByDeviceId(String device_id);
 
     /**
@@ -100,7 +109,7 @@ public interface DeviceConditionsRepository extends JpaRepository<DeviceConditio
      * @param device_id the device identifier
      * @return the last-alerted time
      */
-    @Query(value = "SELECT last_alerted_time FROM device_conditions WHERE device_id = ?1 ", nativeQuery = true)
+    @Query("SELECT dc.last_alerted_time FROM DeviceConditions dc WHERE dc.device.id = ?1")
     BigInteger getLastAlertedTimeByDeviceId(String device_id);
 
     /**
@@ -111,9 +120,9 @@ public interface DeviceConditionsRepository extends JpaRepository<DeviceConditio
      * @param last_alerted       the last-alerted flag
      * @param alert_count        the alert count
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device_conditions SET last_alerted_time = ?2, last_alerted = ?3, alert_count = ?4 WHERE id =?1 ", nativeQuery = true)
+    @Query("UPDATE DeviceConditions dc SET dc.last_alerted_time = ?2, dc.last_alerted = ?3, dc.alert_count = ?4 WHERE dc.id = ?1")
     void updateLastAlertedDetails(String id, BigInteger last_alerted_time, Boolean last_alerted, Integer alert_count);
 
 
@@ -123,9 +132,9 @@ public interface DeviceConditionsRepository extends JpaRepository<DeviceConditio
      * @param id the device-condition identifier
      */
     // query to just update last_alerted_time
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device_conditions SET last_alerted_time = NULL WHERE id =?1 ", nativeQuery = true)
+    @Query("UPDATE DeviceConditions dc SET dc.last_alerted_time = NULL WHERE dc.id = ?1")
     void updateLastAlertedTimestamp(String id);
 
     /**
@@ -133,9 +142,9 @@ public interface DeviceConditionsRepository extends JpaRepository<DeviceConditio
      *
      * @param alert_profile_id the alert profile identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device_conditions SET alert_profile_id = NULL  WHERE alert_profile_id = ?1", nativeQuery = true)
+    @Query("UPDATE DeviceConditions dc SET dc.alert_profile_id = NULL WHERE dc.alert_profile_id = ?1")
     void updateAlertProfileId(String alert_profile_id);
 
     /**
@@ -145,9 +154,9 @@ public interface DeviceConditionsRepository extends JpaRepository<DeviceConditio
      * @param alert_count  the alert count to set
      * @param last_alerted the last-alerted flag to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device_conditions SET alert_count = ?2, last_alerted = ?3, last_alerted_time = NULL  WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE DeviceConditions dc SET dc.alert_count = ?2, dc.last_alerted = ?3, dc.last_alerted_time = NULL WHERE dc.id = ?1")
     void resetDeviceConditions(String id, Integer alert_count, Boolean last_alerted);
 
 
@@ -157,7 +166,7 @@ public interface DeviceConditionsRepository extends JpaRepository<DeviceConditio
      * @param deviceId the device identifier
      * @return the alert count
      */
-    @Query(value = "SELECT alert_count FROM device_conditions WHERE device_id = ?1 AND alert_condition = 'device_offline_ai_call_alert'", nativeQuery = true)
+    @Query("SELECT dc.alert_count FROM DeviceConditions dc WHERE dc.device.id = ?1 AND dc.alert_condition = 'device_offline_ai_call_alert'")
     Integer getAlertCount(String deviceId);
 
     /**
@@ -166,7 +175,7 @@ public interface DeviceConditionsRepository extends JpaRepository<DeviceConditio
      * @param deviceId the device identifier
      * @return the device-condition identifier
      */
-    @Query(value = "SELECT id FROM device_conditions WHERE device_id = ?1 AND alert_condition = 'device_offline_ai_call_alert'", nativeQuery = true)
+    @Query("SELECT dc.id FROM DeviceConditions dc WHERE dc.device.id = ?1 AND dc.alert_condition = 'device_offline_ai_call_alert'")
     String getDeviceConditionIdByDeviceId(String deviceId);
 
     /**
@@ -175,7 +184,8 @@ public interface DeviceConditionsRepository extends JpaRepository<DeviceConditio
      * @param deviceId the device identifier
      * @return the matching device-condition projections
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.DeviceConditionsDTO(dc.id, dc.alert_condition, dc.device.id, dc.alert_profile_id, dc.trigger_time, dc.last_alerted_time, dc.priority, dc.start_time, dc.end_time, dc.schedule, dc.schedule_conditions, dc.max_alert_count, dc.alert_count, dc.alert_count_enabled, dc.alert_count_time, dc.last_alerted, dc.alert_message) "
+            + "FROM DeviceConditions dc WHERE dc.device.id = ?1 AND dc.alert_condition = 'device_offline_ai_call_alert'")
     Set<DeviceConditionsDTO> getDeviceConditionsForAiCall(String deviceId);
 
     /**
@@ -184,9 +194,9 @@ public interface DeviceConditionsRepository extends JpaRepository<DeviceConditio
      * @param id         the device-condition identifier
      * @param alertCount the alert count to set
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE device_conditions SET alert_count = ?2 WHERE id = ?1 AND alert_condition = 'device_offline_ai_call_alert'", nativeQuery = true)
+    @Query("UPDATE DeviceConditions dc SET dc.alert_count = ?2 WHERE dc.id = ?1 AND dc.alert_condition = 'device_offline_ai_call_alert'")
     void updateAlertCountByConditionId(String id, int alertCount);
 
     /**
@@ -195,7 +205,8 @@ public interface DeviceConditionsRepository extends JpaRepository<DeviceConditio
      * @param deviceConditionId the device-condition identifier
      * @return the matching device-condition projection
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.DeviceConditionsDTO(dc.id, dc.alert_condition, dc.device.id, dc.alert_profile_id, dc.trigger_time, dc.last_alerted_time, dc.priority, dc.start_time, dc.end_time, dc.schedule, dc.schedule_conditions, dc.max_alert_count, dc.alert_count, dc.alert_count_enabled, dc.alert_count_time, dc.last_alerted, dc.alert_message) "
+            + "FROM DeviceConditions dc WHERE dc.id = ?1 AND dc.alert_condition = 'device_offline_ai_call_alert'")
     DeviceConditionsDTO getDeviceConditionsByIdForAiCall(String deviceConditionId);
 }
 

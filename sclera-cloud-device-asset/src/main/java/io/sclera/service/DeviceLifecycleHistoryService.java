@@ -8,10 +8,13 @@ import io.sclera.dto.DeviceLifecycleHistoryDTO;
 import io.sclera.Repository.DeviceLifeCycleHistoryRepository;
 import io.sclera.interfaces.DeviceLifecycleHistoryServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -162,8 +165,9 @@ public class DeviceLifecycleHistoryService implements DeviceLifecycleHistoryServ
      * @return the lifecycle history entries for the requested page
      */
     public Set<DeviceLifecycleHistoryDTO> getDeviceHistory(String username, String vdmsid, String deviceId, Integer pageno, Integer pagesize) {
-        Integer offset = pagesize * (pageno - 1);
-        return deviceLifeCycleHistoryRepository.getDeviceLifeCycleHistory(deviceId, pagesize, offset);
+        List<DeviceLifecycleHistoryDTO> page =
+                deviceLifeCycleHistoryRepository.getDeviceLifeCycleHistory(deviceId, PageRequest.of(pageno - 1, pagesize));
+        return new LinkedHashSet<>(page);
     }
 
 

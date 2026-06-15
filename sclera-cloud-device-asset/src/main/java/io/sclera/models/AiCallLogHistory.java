@@ -1,40 +1,13 @@
 package io.sclera.models;
 
-import io.sclera.dto.AiCallLogHistoryDTO;
-
 import jakarta.persistence.*;
 import java.math.BigInteger;
 
-@SqlResultSetMapping(
-        name = "aicallloghistorymapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = AiCallLogHistoryDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "createdAt", type = BigInteger.class),
-                                @ColumnResult(name = "description", type = String.class),
-                                @ColumnResult(name = "technicianId", type = String.class),
-                                @ColumnResult(name = "state", type = String.class),
-                                @ColumnResult(name = "aiCallLogId", type = String.class)
-                        })
-        })
-
-
-@NamedNativeQuery(
-        name = "AiCallLogHistory.getAiCallLogHistoryByAiCallLogId",
-        query = "SELECT ach.id, ach.created_at as createdAt, ach.description, ach.ai_call_log_id as aiCallLogId, ach.technician_id as technicianId, ach.state " +
-                "FROM ai_call_log_history ach WHERE ai_call_log_id = ?1 " +
-                "ORDER BY ach.created_at ASC",
-        resultSetMapping = "aicallloghistorymapping"
-)
-
-@NamedNativeQuery(
-        name = "AiCallLogHistory.getAiCallLogHistoryById",
-        query = "SELECT ach.id, ach.created_at as createdAt, ach.description, ach.ai_call_log_id as aiCallLogId , ach.technician_id as technicianId , ach.state " +
-                "FROM ai_call_log_history ach WHERE id=?1",
-        resultSetMapping = "aicallloghistorymapping"
-)
+// @NamedNativeQuery "AiCallLogHistory.getAiCallLogHistoryByAiCallLogId" and
+// "AiCallLogHistory.getAiCallLogHistoryById" and their @SqlResultSetMapping
+// "aicallloghistorymapping" have been removed — both queries are now expressed as
+// JPQL constructor expressions in AiCallLogHistoryRepository (grep confirmed no other
+// class referenced these names).
 
 /**
  * JPA entity recording a single state-change entry in the lifecycle history of an {@link AiCallLog},
