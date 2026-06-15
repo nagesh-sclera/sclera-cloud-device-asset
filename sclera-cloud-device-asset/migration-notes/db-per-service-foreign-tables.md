@@ -18,7 +18,7 @@ serve cross-module reads via Dapr-shaped stub clients (`io.sclera.stubs`).
 | 3 | `alert_profile` | alerts | `models/AlertProfile.java` (deleted) | `Conditions.alert_profile_id`, `device_conditions.alert_profile_id` | DONE (Task 4) |
 | 4 | `report_attributes` | reports | `models/ReportAttributes.java` (deleted) | none on MI (link is `report_attributes.primary_id`) | DONE (Task 5) |
 | 5 | `location_global_checklist` | inspection | `models/LocationGlobalChecklist.java` (+ `LocationGlobalChecklistId.java`) (deleted) | none (queries gapped) | DONE (Task 6) |
-| 6 | `vendor` | integrations | `models/Vendor.java` | `Device.vendor_org_id` | pending |
+| 6 | `vendor` | integrations | `models/Vendor.java` (deleted) | `docker.vendor_org_id` (queries gapped) | DONE (Task 7) |
 | 7 | sensor-attributes family (`lorawan_sensor_attributes`, `my_devices_sensor_attributes`, `pelican_sensor_attributes`, `ecobee_sensor_attributes`, `snmp_object`, `disruptive_sensor`, `monnit_sensor`, `knx_group`, `daintree_point`, `modbus_register`) | integrations (sensor) | mixed — see note | `Conditions.*_id` scalars | deferred / documentation |
 
 **Keep (this service's own — do NOT touch):** `vendor_organisation` (`models/Vendor_Organisation.java`).
@@ -74,6 +74,22 @@ tables that are ALREADY non-local here.
 - **Entity deleted:** `models/LocationGlobalChecklist.java` + `models/LocationGlobalChecklistId.java` (`@IdClass`) — no repo, no Java references outside themselves.
 - **Pre-existing `// PG-gap` oddities in Location.java PRESERVED** (the `?8`-as-condition in `getAllInspectionLocations`, the duplicate `LEFT JOIN global_qrcode` in `getAllQrcodeLocations`) — untouched. Module compiles (exit 0).
 - **No EXPLAIN / no test changes:** SQL unchanged; no repo/service signatures changed (the 3 query methods are byte-identical), only comments added + unreferenced entities deleted.
+
+## Task 7 — `vendor` → integrations: DONE (2026-06-15, approach: gap all + delete entity)
+
+User decision 2026-06-15: **gap all** — all four active `vendor` queries are HARD CASES (vendor drives
+WHERE/FROM, including reverse lookups). sclera-integrations exists but has NO vendor endpoints, so a stub
+client would return empty → the queries yield nothing either way. NO client created.
+
+- **Only in `models/Docker.java`** (NOT touching the LOCAL `vendor_organisation` / `models/Vendor_Organisation.java` — KEPT). All four marked `// PG-gap`, SQL left VERBATIM:
+  - `Docker.listdocker` — `WHERE ve.role='master-vendor'` (filter docker by vendor role). [sibling `listdockerTS` was ALREADY de-vendored — vendor JOIN commented out.]
+  - `Docker.getNetworksByVendorEmail` — `WHERE v.email=?1` (filter docker by vendor email; reverse lookup).
+  - `Docker.getVendorInfoByDockerName` — `FROM vendor v` + 15 vendor cols (output IS vendor data).
+  - `Docker.getHostDockerObj` — `WHERE v.role LIKE 'master-vendor' AND d.host=1`.
+  - All break at runtime once `vendor` leaves the schema, until sclera-integrations exposes vendor query APIs (getVendorByOrgId, email/role -> vendor_org_id). Documented per the hard-case rule.
+- **Kept:** `dto/VendorDTO.java` (projection target for `vendorinfomapping` — a DTO, not the table) and `models/Vendor_Organisation.java` (this service's own table). Scalar `docker.vendor_org_id` stays.
+- **Entity deleted:** `models/Vendor.java` (no repo, no Java refs — only its own declaration).
+- **No EXPLAIN / no test changes:** SQL & all signatures unchanged; only comments added + the unreferenced entity deleted. Module compiles (exit 0).
 
 ## Filter/sort dependencies (hard cases — fill as found)
 _(queries where a foreign column is used in WHERE/ORDER BY/GROUP BY, not just SELECT)_

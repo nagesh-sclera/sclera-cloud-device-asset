@@ -109,6 +109,7 @@ import java.util.Set;
 
 @NamedNativeQuery (
         name = "Docker.listdocker",
+        // PG-gap (db-per-service): JOINs vendor (owner sclera-integrations) and filters WHERE ve.role='master-vendor'. Left verbatim; vendor leaves this schema — needs a sclera-integrations vendor query API. (cf. sibling Docker.listdockerTS, already de-vendored.)
         query = "SELECT d.name , d.approval_status, d.configuration_status, d.system_type, r.permission , ve.email, r.support, r.timestamp"
                 + " FROM docker as d "
                 + "LEFT JOIN vendor_organisation vo ON vo.id = d.vendor_org_id "
@@ -293,6 +294,7 @@ import java.util.Set;
 
 @NamedNativeQuery(
         name="Docker.getNetworksByVendorEmail",
+        // PG-gap (db-per-service): filters docker by vendor email (WHERE v.email=?1). vendor is owned by sclera-integrations and leaves this schema; needs a sclera-integrations email->vendor_org_id lookup. Left verbatim.
         query="SELECT d.name,d.vdms_id,d.host,d.gateway,d.external_ip_address,d.system_type,d.internal_ip_address,d.public_ip_address,d.internet_required,d.primary_dns,d.secondary_dns,d.is_static,d.is_tagged,d.vlan_id,d.interface_out,d.macvlan_name,d.cidr,d.configuration_status,d.approval_status,v.email,d.vendor_org_id,d.network_origin from docker as d LEFT JOIN vendor as v ON d.vendor_org_id=v.vendor_org_id WHERE v.email=?1",
         resultSetMapping = "networklistbyvendormapping"
 )
@@ -327,6 +329,7 @@ import java.util.Set;
 
 @NamedNativeQuery(
         name = "Docker.getVendorInfoByDockerName",
+        // PG-gap (db-per-service): output IS vendor data (FROM vendor v, 15 vendor columns) — vendor is owned by sclera-integrations and leaves this schema. Needs a sclera-integrations getVendorByOrgId API (local docker.vendor_org_id -> vendor). Left verbatim.
         query = "SELECT v.email ,v.name ,v.phone ,v.phone_type ,v.value ,v.company_name ,v.website ,v.address ,v.city ,v.country ,v.state ,"
                 + "v.zip ,v.role ,v.vendor_org_id, v.image_url FROM vendor v LEFT JOIN docker d ON d.vendor_org_id = v.vendor_org_id WHERE d.name = ?1 AND "
                 + "v.role = 'master-vendor'",
@@ -338,6 +341,7 @@ import java.util.Set;
 
 @NamedNativeQuery(
         name="Docker.getHostDockerObj",
+        // PG-gap (db-per-service): filters docker by vendor role (WHERE v.role LIKE 'master-vendor'). vendor owned by sclera-integrations and leaves this schema; needs a sclera-integrations role->vendor_org_id lookup. Left verbatim.
         query="SELECT d.name,d.vdms_id,d.host,d.gateway,d.external_ip_address,d.system_type,d.internal_ip_address,d.public_ip_address,d.internet_required,d.primary_dns,d.secondary_dns,d.is_static,d.is_tagged,d.vlan_id,d.interface_out,d.macvlan_name,d.cidr,d.configuration_status,d.approval_status,v.email from docker as d LEFT JOIN vendor as v ON d.vendor_org_id=v.vendor_org_id WHERE v.role LIKE 'master-vendor' AND d.host=1",
         resultSetMapping = "networklistbyvendormapping"
 )
