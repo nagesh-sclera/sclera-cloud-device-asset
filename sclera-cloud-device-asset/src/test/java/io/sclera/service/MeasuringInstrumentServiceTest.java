@@ -209,7 +209,8 @@ class MeasuringInstrumentServiceTest {
     void getAnalyticsMeasuringInstruments_computesOffsetAndDelegates() {
         Set<AnalyticSensorDTO> set = Set.of(mock(AnalyticSensorDTO.class));
         // pageno=3, pagesize=10 -> offset = 20
-        when(measuingInstrumentRepository.getAnalyticsMeasuringInstruments("cat", "key", 10, 20, "rt1"))
+        // db-per-service: repo no longer takes report_template_id (report_attributes JOIN removed); service still accepts it for API compatibility.
+        when(measuingInstrumentRepository.getAnalyticsMeasuringInstruments("cat", "key", 10, 20))
                 .thenReturn(set);
         assertThat(service.getAnalyticsMeasuringInstruments("cat", "key", 3, 10, "rt1")).isSameAs(set);
     }

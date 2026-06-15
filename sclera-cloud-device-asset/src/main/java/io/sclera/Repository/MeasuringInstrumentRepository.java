@@ -379,8 +379,9 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param report_template_id the report template identifier
      * @return the matching analytics sensors for the page
      */
+    // db-per-service: report_template_id dropped — it only scoped the removed report_attributes JOIN (is_added is now constant). The service keeps the param for API compatibility but no longer passes it here.
     @Query(nativeQuery = true)
-    Set<AnalyticSensorDTO> getAnalyticsMeasuringInstruments(String category, String searchkey, Integer pagesize, Integer offset, String report_template_id);
+    Set<AnalyticSensorDTO> getAnalyticsMeasuringInstruments(String category, String searchkey, Integer pagesize, Integer offset);
 
     /**
      * Returns the alert message conditions for instruments belonging to the given devices.
@@ -473,8 +474,9 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param report_attribute_id the report attribute identifier
      * @return the matching analytics sensor
      */
+    // db-per-service: report_attribute_id dropped — it only scoped the removed report_attributes JOIN. The service keeps the param for API compatibility but no longer passes it here.
     @Query(nativeQuery = true)
-    AnalyticSensorDTO getMeasuringInstrumentsByTemplateId(String measuring_instrument_id, String searchkey, String report_attribute_id);
+    AnalyticSensorDTO getMeasuringInstrumentsByTemplateId(String measuring_instrument_id, String searchkey);
 
     /**
      * Returns whether the given instrument is tagged to the given location.

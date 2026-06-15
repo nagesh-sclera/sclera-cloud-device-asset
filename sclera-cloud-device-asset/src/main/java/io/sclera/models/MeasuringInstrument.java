@@ -520,11 +520,12 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
         name = "MeasuringInstrument.getAnalyticsMeasuringInstruments",
         query = "SELECT mi.id as primary_id, null as secondary_id, mi.sensor_type as category, CASE WHEN mi.user_data_name IS NULL OR mi.user_data_name = '' THEN mi.name ELSE mi.user_data_name END as name,"
                 + " mi.alert, mi.value, l.id as location_id, l.name as location_name, mi.name as sensor_name, mi.device_id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name, mi.unit, mi.timestamp as last_seen, 'measuring_instrument' as protocol, "
-                + " CASE WHEN r.primary_id = mi.id THEN 1 ELSE 0 END as is_added, r.id as report_attribute_id  "
+                // db-per-service: report_attributes owned by sclera-reports — JOIN dropped. is_added/report_attribute_id default (no local data).
+                // PG-gap: computing is_added (is this MI in report template ?5) needs a sclera-reports query API.
+                + " 0 as is_added, CAST(NULL AS varchar) as report_attribute_id  "
                 + " FROM  measuring_instrument mi "
                 + " LEFT JOIN device d ON mi.device_id = d.id "
                 + " LEFT JOIN location l ON d.location_id = l.id "
-                + " LEFT JOIN report_attributes r on r.primary_id = mi.id AND r.report_template_id = ?5 AND protocol = 'measuring_instrument' "
                 + " WHERE (?1 = 'all' or mi.sensor_type = ?1) AND (?2 = 'null' or CONCAT_WS('',mi.id, mi.sensor_type, mi.name, l.id, l.name, d.id) LIKE CONCAT('%',?2,'%')) AND mi.device_id IS NOT NULL AND d.monitor = 1 "
                 + " LIMIT ?3 OFFSET ?4",
         resultSetMapping = "analyticsmeasuringinstrumentsmappings"
@@ -535,11 +536,11 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
         name = "MeasuringInstrument.getMeasuringInstrumentsByTemplateId",
         query = "SELECT mi.id as primary_id, null as secondary_id, mi.sensor_type as category, CASE WHEN mi.user_data_name IS NULL OR mi.user_data_name = '' THEN mi.name ELSE mi.user_data_name END as name,"
                 + " mi.alert, mi.category, mi.value, l.id as location_id, l.name as location_name, mi.name as sensor_name, mi.device_id, CASE WHEN d.user_data_name IS NULL OR d.user_data_name = '' THEN d.display_name ELSE d.user_data_name END as device_name,"
-                + " mi.unit, mi.timestamp as last_seen, 'measuring_instrument' as protocol , 0  as is_added, r.id as report_attribute_id "
+                // db-per-service: report_attributes owned by sclera-reports — JOIN dropped; report_attribute_id defaults NULL. // PG-gap: needs sclera-reports query API.
+                + " mi.unit, mi.timestamp as last_seen, 'measuring_instrument' as protocol , 0  as is_added, CAST(NULL AS varchar) as report_attribute_id "
                 + " FROM  measuring_instrument mi "
                 + " LEFT JOIN device d ON mi.device_id = d.id "
                 + " LEFT JOIN location l ON d.location_id = l.id "
-                + " LEFT JOIN report_attributes r on r.primary_id = mi.id AND r.id = ?3"
                 + " WHERE mi.id = ?1 AND (?2 = 'null' or CONCAT_WS('', mi.name, mi.user_data_name) LIKE CONCAT('%',?2,'%'))",
         resultSetMapping = "analyticsmeasuringinstrumentsmappings"
 )

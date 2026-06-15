@@ -16,7 +16,7 @@ serve cross-module reads via Dapr-shaped stub clients (`io.sclera.stubs`).
 | 1 | `product_details` | inventory | `models/Product_Details.java` (+ `Repository/Product_DetailsRepository.java`) | `Device.product_id` | pending |
 | 2 | `customer_organisation` | identity | `models/CustomerOrganisation.java` (deleted) | `User.customer_org_id` | DONE (Task 3) |
 | 3 | `alert_profile` | alerts | `models/AlertProfile.java` (deleted) | `Conditions.alert_profile_id`, `device_conditions.alert_profile_id` | DONE (Task 4) |
-| 4 | `report_attributes` | reports | `models/ReportAttributes.java` | `report_template_id` | pending |
+| 4 | `report_attributes` | reports | `models/ReportAttributes.java` (deleted) | none on MI (link is `report_attributes.primary_id`) | DONE (Task 5) |
 | 5 | `location_global_checklist` | inspection | `models/LocationGlobalChecklist.java` (+ `LocationGlobalChecklistId.java`) | checklist id in `Location` | pending |
 | 6 | `vendor` | integrations | `models/Vendor.java` | `Device.vendor_org_id` | pending |
 | 7 | sensor-attributes family (`lorawan_sensor_attributes`, `my_devices_sensor_attributes`, `pelican_sensor_attributes`, `ecobee_sensor_attributes`, `snmp_object`, `disruptive_sensor`, `monnit_sensor`, `knx_group`, `daintree_point`, `modbus_register`) | integrations (sensor) | mixed — see note | `Conditions.*_id` scalars | deferred / documentation |
@@ -35,6 +35,26 @@ sensor entities or guess ownership; report findings and escalate.**
 `ddl-auto=update` does NOT drop tables. After deleting the entities, run
 `docker compose down -v` + `up` to regenerate the schema without the removed tables
 (greenfield — no data loss).
+
+## Task 5 — `report_attributes` → reports: DONE (2026-06-15, approach: project defaults + // PG-gap)
+
+Owner `sclera-reports` does NOT exist (no client/DTO/compose service/app-id) — so NO stub client created
+(user decision 2026-06-15). Dropped the JOINs and projected defaults; `// PG-gap` notes mark where a future
+sclera-reports query API is needed.
+
+- **Only in `models/MeasuringInstrument.java`** (plan also guessed Bacnet_Object — WRONG, MI-only): two
+  `@NamedNativeQuery` JOINed `report_attributes`:
+  - `getAnalyticsMeasuringInstruments`: `LEFT JOIN report_attributes r ON r.primary_id = mi.id AND r.report_template_id = ?5 AND protocol='measuring_instrument'`. Selected `CASE WHEN r.primary_id=mi.id THEN 1 ELSE 0 END as is_added` and `r.id as report_attribute_id`. Rewrite: drop JOIN; `is_added` → constant `0`; `report_attribute_id` → `CAST(NULL AS varchar)`.
+  - `getMeasuringInstrumentsByTemplateId`: `LEFT JOIN report_attributes r ON r.primary_id = mi.id AND r.id = ?3`. Selected `r.id as report_attribute_id` (is_added already hardcoded 0). Rewrite: drop JOIN; `report_attribute_id` → `CAST(NULL AS varchar)`.
+- **Dead params dropped from the REPO methods only** (each was the LAST positional, used solely in the removed
+  JOIN — no renumbering): `getAnalyticsMeasuringInstruments(..., report_template_id)` → drop `?5`;
+  `getMeasuringInstrumentsByTemplateId(..., report_attribute_id)` → drop `?3`. **Service method signatures
+  KEPT** (`MeasuringInstrumentService` L761/L872 still accept the param — API frozen — but no longer pass it to the repo).
+- **No scalar FK on MI** — the relationship lives on `report_attributes.primary_id → mi.id` (reports' side); nothing to retain.
+- **Entity deleted:** `models/ReportAttributes.java` (no repo, no other usage).
+- **Tests:** updated `MeasuringInstrumentServiceTest.getAnalyticsMeasuringInstruments_computesOffsetAndDelegates`
+  stub to the 4-arg repo signature; class green. Both queries EXPLAIN-clean on live PG; module compiles.
+- **// PG-gap (deferred):** computing `is_added` (whether an MI is in a given report template) needs a sclera-reports query API; currently always 0 / report_attribute_id null.
 
 ## Filter/sort dependencies (hard cases — fill as found)
 _(queries where a foreign column is used in WHERE/ORDER BY/GROUP BY, not just SELECT)_

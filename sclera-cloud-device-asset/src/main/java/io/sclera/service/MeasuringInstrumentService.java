@@ -760,7 +760,8 @@ public class MeasuringInstrumentService {
      */
     public Set<AnalyticSensorDTO> getAnalyticsMeasuringInstruments(String category, String searchkey, Integer pageno, Integer pagesize, String report_template_id) {
         Integer offset = pagesize * (pageno - 1);
-        return measuingInstrumentRepository.getAnalyticsMeasuringInstruments(category, searchkey, pagesize, offset, report_template_id);
+        // db-per-service: report_template_id no longer passed to the repo (report_attributes JOIN removed; owner sclera-reports). Param kept on this method for API compatibility.
+        return measuingInstrumentRepository.getAnalyticsMeasuringInstruments(category, searchkey, pagesize, offset);
     }
 
     /**
@@ -870,7 +871,8 @@ public class MeasuringInstrumentService {
      * @return the matching analytics sensor
      */
     public AnalyticSensorDTO getMeasuringInstrumentsByTemplateId(String measuring_instrument_id, String searchkey, String report_attribute_id) {
-        return measuingInstrumentRepository.getMeasuringInstrumentsByTemplateId(measuring_instrument_id, searchkey, report_attribute_id);
+        // db-per-service: report_attribute_id no longer passed to the repo (report_attributes JOIN removed; owner sclera-reports). Param kept on this method for API compatibility.
+        return measuingInstrumentRepository.getMeasuringInstrumentsByTemplateId(measuring_instrument_id, searchkey);
     }
 
     /**
