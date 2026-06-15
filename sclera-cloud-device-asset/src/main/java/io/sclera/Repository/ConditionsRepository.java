@@ -346,14 +346,14 @@ public interface ConditionsRepository extends JpaRepository<Conditions, String> 
      * @return the matching rows as a list of column-keyed maps
      */
     @Query( nativeQuery = true,
-            value = "SELECT c.id AS condition_id,c.name AS condition_name,c.alert_condition AS alert_condition,c.value AS value_name,c.alert_message AS alert_message,c.priority AS priority,ap.id AS alert_profile_id,ap.name AS alert_profile_name,ap.ioc AS ioc,mi.id AS measuring_instrument_id,c.show_alert AS show_alert,c.show_alert_message_as_value AS show_alert_message_as_value,c.enable_threshold_line_onchart AS enable_threshold_line_onchart,c.color_of_threshold_line_onchart AS color_of_threshold_line_onchart,c.alert AS alert_after,c.alert_time AS alert_time, c.schedule AS schedule_alert, c.start_time AS schedule_start_time, c.end_time AS schedule_end_time,c.schedule_conditions AS schedule_conditions , c.alert_count_enabled AS alert_count_enable  " +
+            // db-per-service: alert_profile is owned by sclera-alerts. JOIN removed; alert_profile_id served
+            // from the local scalar FK c.alert_profile_id; name/ioc projected NULL and enriched in the service via AlertProfileClient.
+            value = "SELECT c.id AS condition_id,c.name AS condition_name,c.alert_condition AS alert_condition,c.value AS value_name,c.alert_message AS alert_message,c.priority AS priority,c.alert_profile_id AS alert_profile_id,CAST(NULL AS varchar) AS alert_profile_name,CAST(NULL AS integer) AS ioc,mi.id AS measuring_instrument_id,c.show_alert AS show_alert,c.show_alert_message_as_value AS show_alert_message_as_value,c.enable_threshold_line_onchart AS enable_threshold_line_onchart,c.color_of_threshold_line_onchart AS color_of_threshold_line_onchart,c.alert AS alert_after,c.alert_time AS alert_time, c.schedule AS schedule_alert, c.start_time AS schedule_start_time, c.end_time AS schedule_end_time,c.schedule_conditions AS schedule_conditions , c.alert_count_enabled AS alert_count_enable  " +
                     "FROM device d " +
                     "JOIN measuring_instrument mi " +
                     "ON mi.device_id = d.id " +
                     "JOIN conditions c " +
                     "ON c.measuring_instrument_id = mi.id " +
-                    "LEFT JOIN alert_profile ap " +
-                    "ON ap.id = c.alert_profile_id " +
                     "WHERE d.id = ?1 "
     )
     List<Map<String,Object>> getConditionsForAdvanceExcelExport(String deviceId);

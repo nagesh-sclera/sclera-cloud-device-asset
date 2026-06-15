@@ -2587,9 +2587,19 @@ public class ConditionsService {
             dto.setValueName((String) row.get("value_name"));
             dto.setAlertMessage((String) row.get("alert_message"));
             dto.setPriority((String) row.get("priority"));
-            dto.setAlertProfileId((String) row.get("alert_profile_id"));
+            String alertProfileId = (String) row.get("alert_profile_id");
+            dto.setAlertProfileId(alertProfileId);
             dto.setAlertProfileName((String) row.get("alert_profile_name"));
             dto.setIoc((Integer) row.get("ioc"));
+            // db-per-service: alert_profile is owned by sclera-alerts (no longer JOINed). Enrich name/ioc via the
+            // Dapr client; the stub returns null until sclera-alerts is wired, so these stay null (DTO shape unchanged).
+            if (alertProfileId != null) {
+                AlertProfileDTO alertProfile = alertProfileClient.getAlertProfileById(alertProfileId);
+                if (alertProfile != null) {
+                    dto.setAlertProfileName(alertProfile.getName());
+                    dto.setIoc(alertProfile.getIoc());
+                }
+            }
             dto.setMeasuringInstrumentId((String) row.get("measuring_instrument_id"));
             dto.setShowAlert((Boolean) row.get("show_alert"));
             dto.setShowAlertMessageAsValue((Boolean) row.get("show_alert_message_as_value"));

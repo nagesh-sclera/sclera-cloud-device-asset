@@ -15,7 +15,7 @@ serve cross-module reads via Dapr-shaped stub clients (`io.sclera.stubs`).
 |---|-------|-------|--------------------------|----------------|--------|
 | 1 | `product_details` | inventory | `models/Product_Details.java` (+ `Repository/Product_DetailsRepository.java`) | `Device.product_id` | pending |
 | 2 | `customer_organisation` | identity | `models/CustomerOrganisation.java` (deleted) | `User.customer_org_id` | DONE (Task 3) |
-| 3 | `alert_profile` | alerts | `models/AlertProfile.java` | `Conditions.alert_profile_id`, `device_conditions.alert_profile_id` | pending |
+| 3 | `alert_profile` | alerts | `models/AlertProfile.java` (deleted) | `Conditions.alert_profile_id`, `device_conditions.alert_profile_id` | DONE (Task 4) |
 | 4 | `report_attributes` | reports | `models/ReportAttributes.java` | `report_template_id` | pending |
 | 5 | `location_global_checklist` | inspection | `models/LocationGlobalChecklist.java` (+ `LocationGlobalChecklistId.java`) | checklist id in `Location` | pending |
 | 6 | `vendor` | integrations | `models/Vendor.java` | `Device.vendor_org_id` | pending |
@@ -66,4 +66,27 @@ already covered by the pre-existing `io.sclera.client.CustomerOrganisationClient
   own declaration; grep-verified).
 - EXPLAIN-validated both rewritten queries on live `sclera-postgres` (`root`/`sclera_assets`):
   clean `Seq Scan on "user"` plans, no `customer_organisation` reference. Module compiles (exit 0).
+- **Hard cases:** none.
+
+## Task 4 — `alert_profile` → alerts: DONE (2026-06-15)
+
+Mostly already Dapr-wired (unlike the plan's assumption of raw JOINs everywhere):
+
+- **DeviceConditions named queries** (4×, `models/DeviceConditions.java`): select only `dc.*` incl. the
+  scalar `dc.alert_profile_id` — **no `alert_profile` JOIN**. Enrichment of `DeviceConditionsDTO.alert_profile`
+  was ALREADY done in the service via `alertProfileClient.getAlertProfileDetailsById(...)`
+  (`DeviceConditionsService:152,184`). No change needed.
+- **ConditionsService** read paths (`:1535`, `DeviceService:4862`) already enrich via `AlertProfileClient`. No change.
+- **One real JOIN rewritten:** `ConditionsRepository.getConditionsForAdvanceExcelExport` (advanced Excel export)
+  `LEFT JOIN alert_profile ap` selected `ap.id`, `ap.name`, `ap.ioc` (SELECT-only — `ap` not in WHERE/ORDER BY,
+  so NOT a hard case). Rewrite: drop the JOIN; `ap.id AS alert_profile_id` → `c.alert_profile_id AS alert_profile_id`
+  (local scalar FK); `ap.name` → `CAST(NULL AS varchar)`; `ap.ioc` → `CAST(NULL AS integer)`.
+  Enriched `name`/`ioc` in `ConditionsService.getConditionsForAdvanceExcelExport` via `alertProfileClient.getAlertProfileById(id)`
+  (stub returns null → null until sclera-alerts is wired; DTO shape unchanged). EXPLAIN-clean.
+- **Scalar-FK DML untouched** (stays): `UPDATE conditions/device_conditions SET alert_profile_id = NULL WHERE ... = ?1`
+  (ConditionsRepository:308, DeviceConditionsRepository:138) and the insert/update DML carrying `alert_profile_id` —
+  these write the local scalar column, not the foreign table.
+- **Entity deleted:** `models/AlertProfile.java` (no repo, no JPA usage — only declaration + 2 comments).
+- **Existing clients reused (NOT created):** `io.sclera.client.AlertProfileClient` (→ `sclera-alerts`) + `io.sclera.dto.AlertProfileDTO` already existed from an earlier stub→client wave.
+- **Tests:** `ConditionsServiceTest` — added `@Mock AlertProfileClient` + `..._enrichesAlertProfileFromClient` happy-path test; full class green. Module compiles (exit 0).
 - **Hard cases:** none.

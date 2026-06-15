@@ -2,6 +2,8 @@ package io.sclera.service;
 
 import io.sclera.Repository.ConditionsRepository;
 import io.sclera.Repository.ScheduledJobRepository;
+import io.sclera.client.AlertProfileClient;
+import io.sclera.dto.AlertProfileDTO;
 import io.sclera.dto.ConditionsAdvanceExportExcelDto;
 import io.sclera.dto.ConditionsDTO;
 import io.sclera.dto.ScheduledJobDTO;
@@ -34,6 +36,7 @@ class ConditionsServiceTest {
     @Mock ConditionsRepository conditionsRepository;
     @Mock JobSchedulerService jobSchedulerService;
     @Mock ScheduledJobRepository scheduledJobRepository;
+    @Mock AlertProfileClient alertProfileClient;
 
     @InjectMocks ConditionsService service;
 
@@ -138,5 +141,25 @@ class ConditionsServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getConditionId()).isEqualTo("c1");
         assertThat(result.get(0).getConditionName()).isEqualTo("Temp High");
+    }
+
+    @Test
+    void getConditionsForAdvanceExcelExport_enrichesAlertProfileFromClient() {
+        // db-per-service: alert_profile name/ioc now come from the Dapr AlertProfileClient, not a JOIN.
+        Map<String, Object> row = new HashMap<>();
+        row.put("condition_id", "c1");
+        row.put("alert_profile_id", "ap1");
+        when(conditionsRepository.getConditionsForAdvanceExcelExport("d1")).thenReturn(List.of(row));
+        AlertProfileDTO ap = new AlertProfileDTO();
+        ap.setName("Critical");
+        ap.setIoc(2);
+        when(alertProfileClient.getAlertProfileById("ap1")).thenReturn(ap);
+
+        List<ConditionsAdvanceExportExcelDto> result = service.getConditionsForAdvanceExcelExport("u", "v", "d1");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getAlertProfileId()).isEqualTo("ap1");
+        assertThat(result.get(0).getAlertProfileName()).isEqualTo("Critical");
+        assertThat(result.get(0).getIoc()).isEqualTo(2);
     }
 }
