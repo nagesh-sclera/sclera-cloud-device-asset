@@ -239,137 +239,22 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
     public Set<DeviceDTO> searchDevices(String username, String vdmsid, String dockername, String condition, Integer pageNo, Integer pageSize, Map<String, Object> search_details) {
         try {
 
-            Integer virtual_device_type = null;
-            Integer status = null;
-            Integer monitor = 123;
-            Integer asset_match_status = null;
-            Integer offset = pageSize * (pageNo - 1);
-
-            if (condition.equals("all")) {
-                System.out.println("inside all" + virtual_device_type + status + monitor + offset + pageNo);
-            } else if (condition.equals("unmonitored")) {
-                System.out.println("outsidxse all" + virtual_device_type + status + monitor + offset + pageNo);
-                monitor = 0;
-            } else if (condition.equals("online")) {
-
-                monitor = 1;
-                status = 1;
-                System.out.println("Inside Online" + monitor + status);
-
-            } else if (condition.equals("offline")) {
-                monitor = 1;
-                status = 0;
-            } else if (condition.equals("other")) {
-                virtual_device_type = 123;
-            } else if (condition.equals("matched")) {
-                asset_match_status = 1;
-            } else if (condition.equals("unmatched")) {
-                asset_match_status = 0;
-            } else if (condition.equals("verified")) {
-                asset_match_status = 2;
-            } else if (condition.equals("archived")) {
-                asset_match_status = 3;
-            }
-
+            // PG-port/Criteria: condition decode + the UNION/CONCAT/jsonb_path search SQL replaced by
+            // DeviceSearchQueryBuilder.searchDeviceIds (bound params, JSON via registered funcs). The
+            // value==null early return and the post-fetch fuzzy re-rank workflow are unchanged.
             Set<String> device_ids = new HashSet<>();
             if (search_details.get("value") == null) {
                 return deviceService.getfilterdevices(username, vdmsid, dockername, condition, "null", pageNo, pageSize); //search key is given as null to get all devices based on condition
-            } else {
-                if (search_details.get("column") == null) {
-
-                    String query = "SELECT t1.* "
-                            + "FROM "
-                            + "((SELECT d.id, d.location_id, d.docker_name, d.docker_vdms_id, d.virtual_device_type, d.status, d.monitor, d.asset_match_status "
-                            + "FROM device d "
-                            // PG-port: JSON_EXTRACT(col,'$[*].*') -> jsonb_path_query_array(col::jsonb,'$[*].*')::text; col is text so ::jsonb cast needed
-                            + "WHERE jsonb_path_query_array(d.custom_fields::jsonb, '$[*].*')::text "
-                            + "LIKE CONCAT('%','" + search_details.get("value") + "','%')) "
-                            + "UNION "
-                            + "(SELECT d1.id, d1.location_id, d1.docker_name, d1.docker_vdms_id, d1.virtual_device_type, d1.status, d1.monitor, d1.asset_match_status "
-                            + "FROM device d1 "
-                            + "LEFT JOIN location l ON l.id = d1.location_id "
-                            + "LEFT JOIN floor f ON f.id = l.floor_id "
-                            + "LEFT JOIN building b ON b.id = f.building_id "
-                            // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END (three IF occurrences below)
-                            + "WHERE CONCAT_WS('',d1.id, CASE WHEN d1.user_data_name IS NULL or d1.user_data_name = '' THEN d1.display_name ELSE d1.user_data_name END, "
-                            + "CASE WHEN d1.user_data_vendor IS NULL or d1.user_data_vendor = '' THEN d1.vendor ELSE d1.user_data_vendor END, "
-                            + "CASE WHEN d1.user_data_model IS NULL or d1.user_data_model = '' THEN d1.model ELSE d1.user_data_model END, d1.type, d1.ip_address,"
-                            + "d1.mac_address, d1.latitude, d1.longitude, d1.serial_number, d1.warranty, l.name, f.name, b.name) "
-                            + "LIKE CONCAT('%','" + search_details.get("value") + "','%'))) AS t1 "
-                            + "WHERE ('" + vdmsid + "' = 'null' or t1.docker_vdms_id = '" + vdmsid
-                            + "') AND ('" + dockername + "' = 'all' or  t1.docker_name = '" + dockername + "') "
-                            // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                            + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
-                            + "AND (" + status + " IS NULL or t1.status = " + status + ") "
-                            // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                            + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = t1.monitor ELSE t1.monitor IS NULL or " + monitor + " = t1.monitor END) "
-                            + "AND ((" + asset_match_status + " IS NULL and t1.asset_match_status != 3) or "
-                            // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                            + "CASE WHEN " + asset_match_status + " = 3 THEN t1.asset_match_status = " + asset_match_status + " ELSE "
-                            + "(t1.asset_match_status = " + asset_match_status + " and t1.asset_match_status != 3) END) "
-                            + "LIMIT " + pageSize + " OFFSET " + offset;
-
-
-                    //					System.out.println("query--1:\n"+query);
-
-                    var queryResult = jdbcTemplate.queryForList(query);
-                    for (Map<String, Object> stringObjectMap : queryResult) {
-                        device_ids.add(String.valueOf(stringObjectMap.get("id")));
-                    }
-                } else {
-                    String searchColumn = String.valueOf(search_details.get("column")).replaceAll("\\s", "");
-                    if ((Boolean) search_details.get("custom")) {
-                        String query = "SELECT id FROM device "
-                                + " WHERE ('" + vdmsid + "' = 'null' or docker_vdms_id = '" + vdmsid
-                                + "') AND ('" + dockername + "' = 'all' or  docker_name = '" + dockername + "') "
-                                // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                                + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
-                                + "AND (" + status + " IS NULL or status = " + status + ") "
-                                // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                                + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = monitor ELSE monitor IS NULL or " + monitor + " = monitor END) "
-                                + "AND ((" + asset_match_status + " IS NULL and asset_match_status != 3) or "
-                                // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                                + "CASE WHEN " + asset_match_status + " = 3 THEN asset_match_status = " + asset_match_status + " ELSE "
-                                + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3) END) "
-                                // PG-port: jsonb_path_query_array(col::jsonb,'$[*]."field"')::text LIKE — validated via direct psql SELECT
-                                + "AND jsonb_path_query_array(custom_fields::jsonb, '$[*].\"" + searchColumn
-                                + "\"')::text LIKE CONCAT('%','" + search_details.get("value") + "','%') LIMIT "
-                                + pageSize + " OFFSET " + offset;
-
-                        var queryResult = jdbcTemplate.queryForList(query);
-                        for (Map<String, Object> stringObjectMap : queryResult) {
-                            device_ids.add(String.valueOf(stringObjectMap.get("id")));
-                        }
-                    } else {
-
-                        String updatedSearchColumn = this.updateDeviceSearchColumnName(searchColumn);
-
-                        String query = "SELECT  d.id FROM device d "
-                                + "LEFT JOIN location l ON l.id = d.location_id "
-                                + "LEFT JOIN floor f ON f.id = l.floor_id "
-                                + "LEFT JOIN building b ON b.id = f.building_id "
-                                + "WHERE ('" + vdmsid + "' = 'null' or d.docker_vdms_id = '" + vdmsid
-                                + "') AND ('" + dockername + "' = 'all' or  d.docker_name = '" + dockername + "') "
-                                // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                                + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
-                                + "AND (" + status + " IS NULL or d.status = " + status + ") "
-                                // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                                + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = d.monitor ELSE d.monitor IS NULL or " + monitor + " = d.monitor END) "
-                                + "AND ((" + asset_match_status + " IS NULL and d.asset_match_status != 3) or "
-                                // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                                + "CASE WHEN " + asset_match_status + " = 3 THEN d.asset_match_status = " + asset_match_status + " ELSE "
-                                + "(d.asset_match_status = " + asset_match_status + " and d.asset_match_status != 3) END) "
-                                + "AND " + updatedSearchColumn + " LIKE '%" + search_details.get("value") + "%' "
-                                + "LIMIT " + pageSize + " OFFSET " + offset;
-
-                        //						System.out.println("query--3:\n"+query);
-                        var queryResult = jdbcTemplate.queryForList(query);
-                        for (Map<String, Object> stringObjectMap : queryResult) {
-                            device_ids.add(String.valueOf(stringObjectMap.get("id")));
-                        }
-                    }
-                }
             }
+            DeviceSearchCriteria scope = DeviceSearchCriteria.from(
+                    vdmsid, dockername, condition, new com.alibaba.fastjson.JSONObject(), 123);
+            String searchColumn = search_details.get("column") == null ? null
+                    : String.valueOf(search_details.get("column")).replaceAll("\\s", "");
+            boolean searchCustom = Boolean.TRUE.equals(search_details.get("custom"));
+            device_ids.addAll(deviceSearchQueryBuilder.searchDeviceIds(scope,
+                    new DeviceSearchQueryBuilder.SplitSearch(searchColumn, searchCustom,
+                            String.valueOf(search_details.get("value"))),
+                    pageNo, pageSize));
 
 
             //			System.out.println("Device Ids " + device_ids);
@@ -528,104 +413,16 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
     public Set<DeviceDTO> sortDevices(String username, String vdmsid, String dockername, String condition, Integer pageno,
                                       Integer pagesize, Map<String, Object> sort_details) {
         try {
-            Integer virtual_device_type = null;
-            Integer status = null;
-            Integer monitor = 123;
-            Integer asset_match_status = null;
-
-            if (condition.equals("all")) {
-                System.out.println("inside all");
-            } else if (condition.equals("unmonitored")) {
-                monitor = 0;
-            } else if (condition.equals("online")) {
-
-                monitor = 1;
-                status = 1;
-                System.out.println("Inside Online" + monitor + status);
-
-            } else if (condition.equals("offline")) {
-                monitor = 1;
-                status = 0;
-            } else if (condition.equals("other")) {
-                virtual_device_type = 123;
-            } else if (condition.equals("matched")) {
-                asset_match_status = 1;
-            } else if (condition.equals("unmatched")) {
-                asset_match_status = 0;
-            } else if (condition.equals("verified")) {
-                asset_match_status = 2;
-            } else if (condition.equals("archived")) {
-                asset_match_status = 3;
-            }
-
-            Integer offset = pagesize * (pageno - 1);
+            // PG-port/Criteria: condition decode + ORDER BY string SQL replaced by
+            // DeviceSearchQueryBuilder.sortDeviceIds (ISNULL->CASE, INET_ATON->::inet via inet_val,
+            // custom-field jsonpath sort). LinkedHashSet preserves the sorted id order.
+            DeviceSearchCriteria scope = DeviceSearchCriteria.from(
+                    vdmsid, dockername, condition, new com.alibaba.fastjson.JSONObject(), 123);
             String searchColumn = String.valueOf(sort_details.get("column")).replaceAll("\\s", "");
-            Set<String> device_ids = new LinkedHashSet<>();
-
-            if ((Boolean) sort_details.get("custom")) {
-                String query = "SELECT "
-                        + "id"
-                        + " FROM device "
-                        + "WHERE ('" + vdmsid + "' = 'null' OR docker_vdms_id = '" + vdmsid + "') "
-                        + "AND ('" + dockername + "' = 'all' OR docker_name= '" + dockername + "') "
-                        // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                        + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
-                        + "AND (" + status + " IS NULL or status = " + status + ") "
-                        // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                        + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = monitor ELSE monitor IS NULL or " + monitor + " = monitor END) "
-                        + "AND ((" + asset_match_status + " IS NULL and asset_match_status != 3) or "
-                        // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                        + "CASE WHEN " + asset_match_status + " = 3 THEN asset_match_status = " + asset_match_status + " ELSE "
-                        + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3) END) "
-                        // PG-port: ORDER BY MySQL ->>'$[*].field' -> jsonb_path_query_first(...)#>>'{}' sort key
-                        + "ORDER BY (jsonb_path_query_first(custom_fields::jsonb, '$[*].\"" + searchColumn + "\"') #>> '{}' IS NULL OR jsonb_path_query_first(custom_fields::jsonb, '$[*].\"" + searchColumn + "\"') #>> '{}' = ''), "
-                        + "jsonb_path_query_first(custom_fields::jsonb, '$[*].\"" + searchColumn + "\"') #>> '{}' LIMIT " + pagesize + " OFFSET " + offset;
-
-                System.out.println("SORT QUERY WITH CUSTOM COLUMN " + query);
-
-                var queryResult = jdbcTemplate.queryForList(query);
-                for (Map<String, Object> stringObjectMap : queryResult) {
-                    System.out.println(stringObjectMap);
-                    device_ids.add(String.valueOf(stringObjectMap.get("id")));
-                }
-            } else {
-                String updatedSearchColumn = this.updateDeviceSearchColumnName(searchColumn);
-
-                if (searchColumn.equals("ip_address")) {
-//                    updatedSearchColumn = "INET_ATON(" + updatedSearchColumn + ")";
-                    // PG-port: INET_ATON(col) -> col::inet for numeric IP ordering (column cast)
-                    updatedSearchColumn = "(" + updatedSearchColumn + " IS NULL)," + updatedSearchColumn + "::inet "; // PG-port: ISNULL->IS NULL; INET_ATON(col)->col::inet for numeric IP sort (column cast, Hibernate-safe; throws on invalid IP string)
-                } else {
-                    // PG-port: ISNULL(x) -> (x IS NULL)
-                    updatedSearchColumn = "(" + updatedSearchColumn + " IS NULL)," + updatedSearchColumn + " ";
-                }
-
-                String query = "SELECT d.id FROM device d "
-                        + "LEFT JOIN location l ON l.id = d.location_id "
-                        + "LEFT JOIN floor f ON f.id = l.floor_id "
-                        + "LEFT JOIN building b ON b.id = f.building_id "
-                        + "WHERE ('" + vdmsid + "' = 'null' or d.docker_vdms_id = '" + vdmsid
-                        + "') AND ('" + dockername + "' = 'all' or  d.docker_name = '" + dockername + "') "
-                        // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                        + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
-                        + "AND (" + status + " IS NULL or d.status = " + status + ") "
-                        // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                        + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = monitor ELSE monitor IS NULL or " + monitor + " = monitor END) "
-                        + "AND ((" + asset_match_status + " IS NULL and asset_match_status != 3) or "
-                        // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                        + "CASE WHEN " + asset_match_status + " = 3 THEN asset_match_status = " + asset_match_status + " ELSE "
-                        + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3) END) "
-                        + "ORDER BY " + updatedSearchColumn
-                        + "LIMIT " + pagesize + " OFFSET " + offset;
-
-                System.out.println("SORT QUERY WITH SIMPLE COLUMN " + query);
-
-                var queryResult = jdbcTemplate.queryForList(query);
-                for (Map<String, Object> stringObjectMap : queryResult) {
-                    System.out.println(stringObjectMap);
-                    device_ids.add(String.valueOf(stringObjectMap.get("id")));
-                }
-            }
+            boolean sortCustom = Boolean.TRUE.equals(sort_details.get("custom"));
+            Set<String> device_ids = new LinkedHashSet<>(deviceSearchQueryBuilder.sortDeviceIds(
+                    scope, new DeviceSearchQueryBuilder.SplitSort(searchColumn, sortCustom),
+                    pageno, pagesize));
 
             return deviceService.getDevicesByIdList(vdmsid, device_ids);
         } catch (Exception e) {
@@ -643,63 +440,18 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
     public Set<DeviceDTO> filterDevices(String username, String vdmsid, String dockername, String condition, Integer pageno,
                                         Integer pagesize, List<Map<String, Object>> filter_details) {
         try {
-            Integer virtual_device_type = null;
-            Integer status = null;
-            Integer monitor = 123;
-            Integer asset_match_status = null;
-
-            if (condition.equals("all")) {
-                System.out.println("inside all");
-            } else if (condition.equals("unmonitored")) {
-                monitor = 0;
-            } else if (condition.equals("online")) {
-
-                monitor = 1;
-                status = 1;
-                System.out.println("Inside Online" + monitor + status);
-
-            } else if (condition.equals("offline")) {
-                monitor = 1;
-                status = 0;
-            } else if (condition.equals("other")) {
-                virtual_device_type = 123;
-            } else if (condition.equals("matched")) {
-                asset_match_status = 1;
-            } else if (condition.equals("unmatched")) {
-                asset_match_status = 0;
-            } else if (condition.equals("verified")) {
-                asset_match_status = 2;
-            } else if (condition.equals("archived")) {
-                asset_match_status = 3;
+            // PG-port/Criteria: condition decode + filter-present string SQL replaced by
+            // DeviceSearchQueryBuilder.filterDeviceIds (each column required IS NOT NULL AND <> '',
+            // custom via jsonb_path_query_first).
+            DeviceSearchCriteria scope = DeviceSearchCriteria.from(
+                    vdmsid, dockername, condition, new com.alibaba.fastjson.JSONObject(), 123);
+            List<DeviceSearchQueryBuilder.SplitFilter> filters = new ArrayList<>();
+            for (Map<String, Object> f : filter_details) {
+                filters.add(new DeviceSearchQueryBuilder.SplitFilter(
+                        String.valueOf(f.get("column")), Boolean.TRUE.equals(f.get("custom"))));
             }
-
-            Integer offset = pagesize * (pageno - 1);
-            Set<String> device_ids = new HashSet<>();
-            String query = "SELECT d.id FROM device d "
-                    + "LEFT JOIN location l ON l.id = d.location_id "
-                    + "LEFT JOIN floor f ON f.id = l.floor_id "
-                    + "LEFT JOIN building b ON b.id = f.building_id "
-                    + "WHERE ('" + vdmsid + "' = 'null' or d.docker_vdms_id = '" + vdmsid
-                    + "') AND ('" + dockername + "' = 'all' or  d.docker_name = '" + dockername + "') "
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "AND (" + virtual_device_type + " IS NULL or CASE WHEN " + virtual_device_type + " = 123 THEN (virtual_device_type IS NOT NULL AND (virtual_device_type != 0 AND virtual_device_type != 1)) ELSE NULL END) "
-                    + "AND (" + status + " IS NULL or d.status = " + status + ") "
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "AND (" + monitor + " = 123  or CASE WHEN " + monitor + " = 1 THEN " + monitor + " = monitor ELSE monitor IS NULL or " + monitor + " = monitor END) "
-                    + "AND ((" + asset_match_status + " IS NULL and asset_match_status != 3) or "
-                    // PG-port: IF(c,a,b) -> CASE WHEN c THEN a ELSE b END
-                    + "CASE WHEN " + asset_match_status + " = 3 THEN asset_match_status = " + asset_match_status + " ELSE "
-                    + "(asset_match_status = " + asset_match_status + " and asset_match_status != 3) END) AND"
-                    + generateMultiConditionStmt(filter_details, vdmsid, dockername)
-                    + "LIMIT " + pagesize + " OFFSET " + offset;
-
-            System.out.println("CONSTRUCTED QUERY: " + query);
-
-            var queryResult = jdbcTemplate.queryForList(query);
-            for (Map<String, Object> stringObjectMap : queryResult) {
-                System.out.println(stringObjectMap);
-                device_ids.add(String.valueOf(stringObjectMap.get("id")));
-            }
+            Set<String> device_ids = new HashSet<>(deviceSearchQueryBuilder.filterDeviceIds(
+                    scope, filters, pageno, pagesize));
             return deviceService.getDevicesByIdList(vdmsid, device_ids);
 
         } catch (Exception e) {
@@ -1092,22 +844,14 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
      */
     public List<DeviceDTO> getDeviceInfoByCustomFields(String username, String vdmsid, String dockername, com.alibaba.fastjson.JSONObject custom_fields) {
 
-        String query = "SELECT id FROM device "
-                + " WHERE ('" + vdmsid + "' = 'null' or docker_vdms_id = '" + vdmsid
-                + "') AND ('" + dockername + "' = 'all' or  docker_name = '" + dockername + "') "
-                // PG-port: jsonb_path_query_array(col::jsonb,'$[*]."field"')::text LIKE — validated via direct psql SELECT
-                + "AND jsonb_path_query_array(custom_fields::jsonb, '$[*].\"" + custom_fields.getString("key")
-                + "\"')::text LIKE CONCAT('%','" + custom_fields.getString("value") + "','%') LIMIT 1";
-
-        var queryResult = jdbcTemplate.queryForList(query);
-
-        System.out.println(queryResult);
+        // PG-port/Criteria: custom-field match SQL replaced by DeviceSearchQueryBuilder.customFieldDeviceIds.
+        List<String> ids = deviceSearchQueryBuilder.customFieldDeviceIds(
+                vdmsid, dockername, custom_fields.getString("key"), custom_fields.getString("value"), 1);
 
         List<DeviceDTO> devices = new ArrayList<>();
-
-        for (Map<String, Object> stringObjectMap : queryResult) {
+        for (String id : ids) {
             try {
-                devices.add(deviceService.getDeviceByDeviceId(username, vdmsid, dockername, String.valueOf(stringObjectMap.get("id"))));
+                devices.add(deviceService.getDeviceByDeviceId(username, vdmsid, dockername, id));
             } catch (Exception e) {
                 System.out.println(e);
             }

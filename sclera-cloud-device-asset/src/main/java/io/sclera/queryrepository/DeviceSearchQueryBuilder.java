@@ -77,6 +77,148 @@ public class DeviceSearchQueryBuilder {
         return em.createQuery(cq).getSingleResult();
     }
 
+    // ------------------------------------------------------------------ split search/sort/filter family
+    // Type-safe replacement for the older split DeviceSearchService.searchDevices / sortDevices /
+    // filterDevices / getDeviceInfoByCustomFields string SQL. These share the same scope+condition
+    // block as the merged query (decoded via DeviceSearchCriteria) but carry their OWN search/sort/
+    // filter semantics (contains-only, no strip; UNION rendered as OR; jsonb array text for search;
+    // raw-column sort). Flat queries (all joins are to-one), values BOUND (no injection).
+
+    /** column==null means search-all (custom-fields array OR the standard concat haystack). */
+    public record SplitSearch(String column, boolean custom, String value) {}
+    public record SplitSort(String column, boolean custom) {}
+    public record SplitFilter(String column, boolean custom) {}
+
+    /** searchDevices: scope + the contains search; no SQL ORDER BY (caller fuzzy-ranks). */
+    public List<String> searchDeviceIds(DeviceSearchCriteria scope, SplitSearch s, int pageNo, int pageSize) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> cq = cb.createQuery(String.class);
+        Root<Device> d = cq.from(Device.class);
+        cq.select(d.get("id")).distinct(true);
+        Ctx ctx = new Ctx(cb, d);
+        List<Predicate> ps = new ArrayList<>();
+        addScopeAndConditionPredicates(cb, ctx, scope, ps);
+        ps.add(splitSearchPredicate(cb, ctx, s));
+        cq.where(ps.toArray(new Predicate[0]));
+        return paginate(em.createQuery(cq), pageNo, pageSize);
+    }
+
+    /** sortDevices: scope + the legacy null-last ordering (ip_address via inet, custom via jsonpath). */
+    public List<String> sortDeviceIds(DeviceSearchCriteria scope, SplitSort s, int pageNo, int pageSize) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> cq = cb.createQuery(String.class);
+        Root<Device> d = cq.from(Device.class);
+        cq.select(d.get("id"));
+        Ctx ctx = new Ctx(cb, d);
+        List<Predicate> ps = new ArrayList<>();
+        addScopeAndConditionPredicates(cb, ctx, scope, ps);
+        cq.where(ps.toArray(new Predicate[0]));
+        cq.orderBy(splitOrders(cb, ctx, s));
+        return paginate(em.createQuery(cq), pageNo, pageSize);
+    }
+
+    /** filterDevices: scope + each column required present (IS NOT NULL AND <> ''). */
+    public List<String> filterDeviceIds(DeviceSearchCriteria scope, List<SplitFilter> filters,
+                                        int pageNo, int pageSize) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> cq = cb.createQuery(String.class);
+        Root<Device> d = cq.from(Device.class);
+        cq.select(d.get("id"));
+        Ctx ctx = new Ctx(cb, d);
+        List<Predicate> ps = new ArrayList<>();
+        addScopeAndConditionPredicates(cb, ctx, scope, ps);
+        for (SplitFilter f : filters) ps.add(splitFilterPredicate(cb, ctx, f));
+        cq.where(ps.toArray(new Predicate[0]));
+        return paginate(em.createQuery(cq), pageNo, pageSize);
+    }
+
+    /** getDeviceInfoByCustomFields: vdms/docker scope only (no condition) + a single custom-field match. */
+    public List<String> customFieldDeviceIds(String vdmsid, String dockername, String key,
+                                             String value, int limit) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> cq = cb.createQuery(String.class);
+        Root<Device> d = cq.from(Device.class);
+        cq.select(d.get("id"));
+        List<Predicate> ps = new ArrayList<>();
+        if (vdmsid != null && !"null".equals(vdmsid)) ps.add(cb.equal(d.get("docker_vdms_id"), vdmsid));
+        if (dockername != null && !"all".equals(dockername)) ps.add(cb.equal(d.get("docker_name"), dockername));
+        Expression<String> arr = cb.function("custom_field_array_text", String.class,
+                d.get("custom_fields"), cb.literal(jsonPathFor(key)));
+        ps.add(cb.like(arr, "%" + value + "%"));
+        cq.where(ps.toArray(new Predicate[0]));
+        TypedQuery<String> q = em.createQuery(cq);
+        q.setMaxResults(limit);
+        return q.getResultList();
+    }
+
+    private List<String> paginate(TypedQuery<String> q, int pageNo, int pageSize) {
+        q.setFirstResult(pageSize * (pageNo - 1));
+        q.setMaxResults(pageSize);
+        return q.getResultList();
+    }
+
+    private Predicate splitSearchPredicate(CriteriaBuilder cb, Ctx ctx, SplitSearch s) {
+        From<?, Device> d = ctx.d;
+        String like = "%" + s.value() + "%";
+        if (s.column() == null) {
+            // UNION rendered as OR: custom-fields array text match OR the standard concat haystack
+            // (no lower/strip — contains-only, faithful to the legacy split search).
+            Expression<String> customArr = cb.function("custom_field_array_text", String.class,
+                    d.get("custom_fields"), cb.literal("$[*].*"));
+            Expression<String> concat = cb.function("concat_ws", String.class, cb.literal(""),
+                    d.get("id"),
+                    userDataFallback(cb, d, "user_data_name", "display_name"),
+                    userDataFallback(cb, d, "user_data_vendor", "vendor"),
+                    userDataFallback(cb, d, "user_data_model", "model"),
+                    d.get("type"), d.get("ip_address"), d.get("mac_address"),
+                    d.get("latitude"), d.get("longitude"), d.get("serial_number"), d.get("warranty"),
+                    ctx.location().get("name"), ctx.floor().get("name"), ctx.building().get("name"));
+            return cb.or(cb.like(customArr, like), cb.like(concat, like));
+        }
+        if (s.custom()) {
+            Expression<String> arr = cb.function("custom_field_array_text", String.class,
+                    d.get("custom_fields"), cb.literal(jsonPathFor(s.column())));
+            return cb.like(arr, like);
+        }
+        return cb.like(resolveString(cb, ctx, s.column()), like);
+    }
+
+    private List<Order> splitOrders(CriteriaBuilder cb, Ctx ctx, SplitSort s) {
+        List<Order> orders = new ArrayList<>();
+        if (s.custom()) {
+            Expression<String> v = customFieldText(cb, ctx, s.column());
+            orders.add(cb.asc(cb.selectCase().when(cb.or(cb.isNull(v), cb.equal(v, "")), 1).otherwise(0)));
+            orders.add(cb.asc(v));
+            return orders;
+        }
+        if ("ip_address".equals(s.column())) {
+            Expression<String> ip = ctx.d.get("ip_address");
+            orders.add(nullsLast(cb, ip));
+            orders.add(cb.asc(cb.function("inet_val", String.class, ip)));
+            return orders;
+        }
+        Expression<?> col = resolveRaw(cb, ctx, s.column());
+        orders.add(nullsLast(cb, col));
+        orders.add(cb.asc(col));
+        return orders;
+    }
+
+    private Predicate splitFilterPredicate(CriteriaBuilder cb, Ctx ctx, SplitFilter f) {
+        Expression<String> col = f.custom()
+                ? customFieldText(cb, ctx, f.column())
+                : resolveString(cb, ctx, f.column());
+        return cb.and(cb.isNotNull(col), cb.notEqual(col, ""));
+    }
+
+    /** Like resolveString but keeps timestamp columns numeric (legacy sort ordered the raw column). */
+    private Expression<?> resolveRaw(CriteriaBuilder cb, Ctx ctx, String column) {
+        return switch (column == null ? "" : column) {
+            case "created_timestamp" -> ctx.d.get("created_timestamp");
+            case "updated_timestamp" -> ctx.d.get("updated_timestamp");
+            default -> resolveString(cb, ctx, column);
+        };
+    }
+
     // ------------------------------------------------------------------ outer query
 
     private TypedQuery<String> buildIdQuery(DeviceSearchCriteria c) {
