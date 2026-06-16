@@ -1,9 +1,9 @@
 package io.sclera.controller.admin;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import io.sclera.queryrepository.DeviceMetadataQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,8 +25,8 @@ public class DeviceMetadataController {
 
     private static final Logger log = LoggerFactory.getLogger(DeviceMetadataController.class);
 
-    @PersistenceContext
-    private EntityManager em;
+    @Autowired
+    private DeviceMetadataQueryBuilder metadataQueryBuilder;
 
     @GetMapping("/getuniquedevicetypes")
     public List<String> getUniqueDeviceTypes(@RequestParam(required = false) String vdms_id,
@@ -50,25 +50,12 @@ public class DeviceMetadataController {
         return distinct("category", vdms_id);
     }
 
-    // col is from a fixed whitelist below — never user input — so the inlined
-    // column name is safe.
+    // PG-port/Criteria: dynamic native SQL replaced by the type-safe DeviceMetadataQueryBuilder
+    // (whitelisted column, bound VDMS scope). The error-swallow + empty fallback is preserved.
     @Transactional(readOnly = true)
-    @SuppressWarnings("unchecked")
     private List<String> distinct(String col, String vdmsId) {
-        if (!col.equals("type") && !col.equals("asset_group") && !col.equals("category")) {
-            return List.of();
-        }
         try {
-            StringBuilder sql = new StringBuilder("SELECT DISTINCT d.").append(col)
-                    .append(" FROM device d WHERE d.").append(col)
-                    .append(" IS NOT NULL AND d.").append(col).append(" <> '' ")
-                    .append("AND (d.asset_match_status IS NULL OR d.asset_match_status <> 3)");
-            boolean scoped = vdmsId != null && !vdmsId.isBlank();
-            if (scoped) sql.append(" AND d.docker_vdms_id = :v");
-            sql.append(" ORDER BY 1");
-            var q = em.createNativeQuery(sql.toString());
-            if (scoped) q.setParameter("v", vdmsId);
-            return q.getResultList();
+            return metadataQueryBuilder.distinctColumnValues(col, vdmsId);
         } catch (Exception e) {
             log.warn("distinct({}) failed: {}", col, e.getMessage());
             return List.of();
