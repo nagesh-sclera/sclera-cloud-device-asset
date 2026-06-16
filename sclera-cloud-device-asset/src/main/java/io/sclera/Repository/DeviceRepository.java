@@ -1085,15 +1085,7 @@ public interface DeviceRepository extends JpaRepository<Device, String>, DeviceR
     @Query("UPDATE Device d SET d.vendor = ?2 WHERE d.id = ?1")
     void updateDeviceVendorById(String id, String vendor);
 
-    /**
-     * Returns all devices.
-     *
-     * @return the device projections
-     */
-    @Transactional
-    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
-    @Query(nativeQuery = true)
-    List<DeviceDTO> listAlldevices();
+    // listAlldevices(): multi-join DeviceDTO projection, now JPA Criteria in DeviceRepositoryImpl.
 
     /**
      * Counts monitored, asset-matched devices with the given status, optionally scoped by docker and assignee.
@@ -1904,14 +1896,7 @@ public interface DeviceRepository extends JpaRepository<Device, String>, DeviceR
     @Query(nativeQuery = true)
     Set<DeviceDTO> getAllQrcodeDevicesPagination(String searchkey, Integer pagesize, Integer offset, JSONArray dockernames, JSONArray types, JSONArray virtual_device_types, Boolean isTaggedToQrCode, JSONArray deviceIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray deviceIdsTaggedToNfc, Boolean isTaggedToBarCode, JSONArray deviceIdsTaggedToClientBarCode);
 
-    /**
-     * Returns a page of network parent devices filtered by docker, type, and tag associations.
-     *
-     * @return the matching device projections
-     */
-    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
-    @Query(nativeQuery = true)
-    Set<DeviceDTO> getAllNetworkParentDeviceByPagination(JSONArray dockernames, JSONArray types, String searchkey, Integer pagesize, Integer offset, JSONArray virtual_device_types, Boolean isTaggedToQrCode, JSONArray deviceIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray deviceIdsTaggedToNfc, Boolean isTaggedToBarCode, JSONArray deviceIdsTaggedToClientBarCode);
+    // getAllNetworkParentDeviceByPagination(...): multi-join DeviceDTO projection, now JPA Criteria in DeviceRepositoryImpl.
 
 
     /**
@@ -2059,14 +2044,7 @@ public interface DeviceRepository extends JpaRepository<Device, String>, DeviceR
     @Query(nativeQuery = true)
     Set<DeviceDTO> getAllQrcodeDevices(String searchkey, JSONArray dockernames, JSONArray types, JSONArray virtual_device_types, Boolean isTaggedToQrCode, JSONArray deviceIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray deviceIdsTaggedToNfc);
 
-    /**
-     * Returns the network parent devices filtered by docker, type, and tag associations.
-     *
-     * @return the matching device projections
-     */
-    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
-    @Query(nativeQuery = true)
-    Set<DeviceDTO> getAllNetworkParentDevices(JSONArray dockernames, JSONArray types, String searchkey, JSONArray virtual_device_types, Boolean isTaggedToQrCode, JSONArray deviceIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray deviceIdsTaggedToNfc);
+    // getAllNetworkParentDevices(...): multi-join DeviceDTO projection, now JPA Criteria in DeviceRepositoryImpl.
 
     /**
      * Returns the ids of devices matching the given docker, type, virtual type, search, tag, and location filters.
