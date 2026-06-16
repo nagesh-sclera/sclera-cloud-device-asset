@@ -23,7 +23,7 @@ import java.util.Set;
  * Manages persistence and querying of {@link Device} entities across networks, dockers, and VDMS instances.
  */
 @Repository
-public interface DeviceRepository extends JpaRepository<Device, String> {
+public interface DeviceRepository extends JpaRepository<Device, String>, DeviceRepositoryCustom {
 
     /**
      * Returns all devices belonging to the given VDMS and docker.
@@ -721,34 +721,8 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 //	@Query(nativeQuery = true)
 //	Set<DeviceDTO> getNetworkParentDeviceByPagination(Set<String> dockernames, String searchKey,Integer pagesize, Integer offset);
 
-    /**
-     * Returns a page of network parent devices for the given dockers and types.
-     *
-     * @param dockernames the docker names to match
-     * @param types the device types to match
-     * @param searchKey the search filter term
-     * @param pagesize the maximum number of devices to return
-     * @param offset the number of devices to skip
-     * @param virtual_device_types the virtual device types to match
-     * @return the matching device projections
-     */
-    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
-    @Query(nativeQuery = true)
-    Set<DeviceDTO> getNetworkParentDeviceByPagination(Set<String> dockernames, Set<String> types, String searchKey, Integer pagesize, Integer offset, Set<String> virtual_device_types);
-
-
-    /**
-     * Returns a page of all parent devices matching the search key.
-     *
-     * @param searchKey the search filter term
-     * @param pagesize the maximum number of devices to return
-     * @param offset the number of devices to skip
-     * @return the matching device projections
-     */
-    //Get Network Parent Device by Pagination
-    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
-    @Query(nativeQuery = true)
-    Set<DeviceDTO> getAllParentDeviceByPagination(String searchKey, Integer pagesize, Integer offset);
+    // getNetworkParentDeviceByPagination / getAllParentDeviceByPagination: multi-join DeviceDTO
+    // projection, now implemented with JPA Criteria in DeviceRepositoryImpl (DeviceRepositoryCustom).
 
     /**
      * Returns the display name of the parent device, falling back to the display name when no user-supplied name exists.
