@@ -4,7 +4,9 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import io.sclera.Repository.ManagedSoftwareRepository;
 import io.sclera.dto.ManagedSoftwareDTO;
+import io.sclera.dto.ManagedSoftwareSearchCriteria;
 import io.sclera.interfaces.ManagedSoftwareSearchServiceInterface;
+import io.sclera.queryrepository.ManagedSoftwareSearchQueryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,9 @@ public class ManagedSoftwareSearchService implements ManagedSoftwareSearchServic
 
     @Autowired
     ManagedSoftwareRepository managedSoftwareRepository;
+
+    @Autowired
+    private ManagedSoftwareSearchQueryBuilder managedSoftwareSearchQueryBuilder;
 
     /**
      * Maps a logical search column name to its qualified SQL column expression.
@@ -144,40 +149,16 @@ public class ManagedSoftwareSearchService implements ManagedSoftwareSearchServic
                                                                    String condition, Integer pageNo, Integer pageSize,
                                                                    JSONObject search_sort_filter_details) {
         try {
-            int offset = pageSize * (pageNo - 1);
-            Set<String> managedSoftwareIds = new LinkedHashSet<>();
+            // PG-port/Criteria: dynamic SQL replaced by type-safe ManagedSoftwareSearchQueryBuilder.
+            // Documented fixes vs the old string SQL: bound params (no injection), REGEXP_REPLACE 'g'
+            // flag via strip_specials, ISNULL()->portable CASE (MySQL ISNULL doesn't exist on PG),
+            // and subscription-date sort no longer emits bigint = ''. The id-fetch ->
+            // getManagedSoftwareByIdList hydration workflow is unchanged.
+            ManagedSoftwareSearchCriteria criteria =
+                    ManagedSoftwareSearchCriteria.from(condition, search_sort_filter_details);
+            Set<String> managedSoftwareIds = new LinkedHashSet<>(
+                    managedSoftwareSearchQueryBuilder.findIds(criteria, pageNo, pageSize));
 
-            String searchAndFilterCustomQuery = this.generateSearchAndFilterCustomQuery(search_sort_filter_details);
-            String groupByAndSortCustomQuery = this.generateGroupByAndSortCustomQuery(search_sort_filter_details);
-
-            String query = "SELECT ms.id "
-                    + "FROM managed_software ms "
-                    + "LEFT JOIN device_installed_apps dia ON ms.id = dia.managed_software_id "
-                    + "LEFT JOIN device_specification ds ON dia.device_specification_id = ds.id "
-                    + "WHERE ms.id IN ( "
-                    + "SELECT DISTINCT ms.id "
-                    + "FROM managed_software ms "
-                    + "LEFT JOIN device_installed_apps dia ON ms.id = dia.managed_software_id "
-                    + "LEFT JOIN device_specification ds ON dia.device_specification_id = ds.id "
-                    + "WHERE ( "
-                    + "  ('" + condition + "' = 'all') "
-                    + "  OR ('" + condition + "' = 'active' AND ms.status = 'active') "
-                    + "  OR ('" + condition + "' = 'expired' AND ms.status = 'expired') "
-                    + "  OR ('" + condition + "' = 'others' AND ms.status NOT IN ('active','expired')) "
-                    + ") "
-                    + searchAndFilterCustomQuery
-                    + ") "
-                    + groupByAndSortCustomQuery
-                    + " LIMIT " + pageSize + " OFFSET " + offset;
-
-            log.info("CONSTRUCTED FILTER QUERY: {}", query);
-            var queryResult = jdbcTemplate.queryForList(query);
-
-            for (Map<String, Object> stringObjectMap : queryResult) {
-                managedSoftwareIds.add(String.valueOf(stringObjectMap.get("id")));
-            }
-
-//            log.info("Filtered Managed Software IDs: {}", managedSoftwareIds);
             Set<ManagedSoftwareDTO> filteredManagedSoftwares = managedSoftwareRepository.getManagedSoftwareByIdList(managedSoftwareIds);
 //            log.info("Filtered Managed Software DTOs: {}", filteredManagedSoftwares);
 
@@ -374,33 +355,16 @@ public class ManagedSoftwareSearchService implements ManagedSoftwareSearchServic
     public String searchSortFilterManagedSoftwareCount(String username, String vdmsId, String dockerName,
                                                        String condition, JSONObject search_sort_filter_details) {
         try {
-            String searchAndFilterCustomQuery = this.generateSearchAndFilterCustomQuery(search_sort_filter_details);
-
-            String query = "SELECT COUNT(DISTINCT ms.id) AS count "
-                    + "FROM managed_software ms "
-                    + "LEFT JOIN device_installed_apps dia ON ms.id = dia.managed_software_id "
-                    + "LEFT JOIN device_specification ds ON dia.device_specification_id = ds.id "
-                    + "WHERE ( "
-                    + "  ('" + condition + "' = 'all') "
-                    + "  OR ('" + condition + "' = 'active' AND ms.status = 'active') "
-                    + "  OR ('" + condition + "' = 'expired' AND ms.status = 'expired') "
-                    + "  OR ('" + condition + "' = 'others' AND ms.status NOT IN ('active','expired')) "
-                    + ") "
-                    + searchAndFilterCustomQuery;
-
-            log.info("CONSTRUCTED COUNT QUERY: {}", query);
-            var queryResult = jdbcTemplate.queryForList(query);
-
-            for (Map<String, Object> stringObjectMap : queryResult) {
-                log.info("Managed Software count: {}", stringObjectMap.get("count"));
-                return String.valueOf(stringObjectMap.get("count"));
-            }
+            // PG-port/Criteria: same condition/filter/search predicates as the paginated query,
+            // counted via ManagedSoftwareSearchQueryBuilder (COUNT over ms.id IN (subquery)).
+            ManagedSoftwareSearchCriteria criteria =
+                    ManagedSoftwareSearchCriteria.from(condition, search_sort_filter_details);
+            long count = managedSoftwareSearchQueryBuilder.count(criteria);
+            log.info("Managed Software count: {}", count);
+            return String.valueOf(count);
 
         } catch (Exception e) {
             throw new RuntimeException("Error during search-sort-filter-count operation: " + e.getMessage(), e);
         }
-
-        log.warn("COUNT query did not return any result row, possibly a query or database issue");
-        return null;
     }
 }
