@@ -7,7 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,34 +24,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class DeviceSearchServiceTest {
 
-    @Mock JdbcTemplate jdbcTemplate;
     @Mock DeviceService deviceService;
     @Mock APICallClient apiCallService;
 
     @InjectMocks DeviceSearchService service;
-
-    // ---- updateDeviceSearchColumnName ------------------------------------
-
-    @Test
-    void updateDeviceSearchColumnName_mapsKnownColumns() {
-        assertThat(service.updateDeviceSearchColumnName("id")).isEqualTo("d.id");
-        assertThat(service.updateDeviceSearchColumnName("type")).isEqualTo("d.type");
-        assertThat(service.updateDeviceSearchColumnName("location")).isEqualTo("l.name");
-        assertThat(service.updateDeviceSearchColumnName("building")).isEqualTo("b.name");
-        assertThat(service.updateDeviceSearchColumnName("serial_number")).isEqualTo("d.serial_number");
-    }
-
-    @Test
-    void updateDeviceSearchColumnName_displayName_returnsCaseExpression() {
-        assertThat(service.updateDeviceSearchColumnName("display_name"))
-                .contains("user_data_name").contains("CASE WHEN");
-    }
-
-    @Test
-    void updateDeviceSearchColumnName_unknownColumn_returnsDefaultNameExpression() {
-        assertThat(service.updateDeviceSearchColumnName("totally_unknown"))
-                .contains("user_data_name").contains("display_name");
-    }
 
     // ---- getFuzzyValueByBaseStringAndSearchString ------------------------
 
