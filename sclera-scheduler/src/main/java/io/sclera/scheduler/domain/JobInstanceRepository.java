@@ -9,6 +9,7 @@ public interface JobInstanceRepository
 
     List<JobInstanceEntity> findByJobName(String jobName);
     List<JobInstanceEntity> findByVdmsId(String vdmsId);
+    long countByVdmsId(String vdmsId);
     List<JobInstanceEntity> findByStateAndSnoozeUntilLessThanEqual(
             JobInstanceState state, Instant cutoff);
 

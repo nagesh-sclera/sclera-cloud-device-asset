@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -89,5 +90,30 @@ class PerVdmsRegistrarTest {
 
         // Only the first instance registered; guardrail skipped the rest.
         verify(scheduler, times(1)).schedule(any(JobSchedule.class));
+    }
+
+    @Test
+    void reregisterUpdatesTimezoneAndOnlyReschedulesEnabledInstances() {
+        JobEntity job = new JobEntity("vdmsSystemHealth", "0 0 0 * * *", "device-asset",
+                "scheduler.trigger", JobState.ENABLED);
+        job.setScope(JobScope.PER_VDMS);
+        when(jobs.findById("vdmsSystemHealth")).thenReturn(Optional.of(job));
+
+        VdmsRegistryEntity vdmsReg = new VdmsRegistryEntity("vdms-1", "UTC", true);
+        when(registry.findById("vdms-1")).thenReturn(Optional.of(vdmsReg));
+
+        JobInstanceEntity enabled = new JobInstanceEntity("vdmsSystemHealth", "vdms-1", "vdmsSystemHealth::vdms-1");
+        // default state is ENABLED
+        JobInstanceEntity paused = new JobInstanceEntity("vdmsSystemHealth", "vdms-1", "vdmsSystemHealth::vdms-1-x");
+        paused.setState(JobInstanceState.PAUSED);
+        when(instances.findByVdmsId("vdms-1")).thenReturn(List.of(enabled, paused));
+
+        registrar().reregister("vdms-1", "America/New_York");
+
+        assertEquals("America/New_York", vdmsReg.getTimezone());
+        org.mockito.ArgumentCaptor<JobSchedule> cap = org.mockito.ArgumentCaptor.forClass(JobSchedule.class);
+        verify(scheduler).schedule(cap.capture());   // ONLY the ENABLED instance → exactly one schedule() call
+        assertEquals("vdmsSystemHealth::vdms-1", cap.getValue().name());
+        assertEquals("America/New_York", cap.getValue().timezone());
     }
 }

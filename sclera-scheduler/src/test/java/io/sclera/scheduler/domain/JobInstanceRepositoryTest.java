@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @Transactional
@@ -68,5 +69,16 @@ class JobInstanceRepositoryTest extends AbstractPostgresTest {
                 && c.getState() == JobInstanceState.SNOOZED).mapToLong(JobInstanceStateCount::getCnt).sum();
         assertThat(enabled).isEqualTo(1);
         assertThat(snoozed).isEqualTo(1);
+    }
+
+    @Test
+    void countsInstancesForOneVdms() {
+        seed();
+        registry.save(new VdmsRegistryEntity("vdms-2", "UTC", true));
+        instances.save(new JobInstanceEntity("vdmsSystemHealth", "vdms-1", "vdmsSystemHealth::vdms-1"));
+        instances.save(new JobInstanceEntity("vdmsSystemHealth", "vdms-2", "vdmsSystemHealth::vdms-2"));
+
+        assertEquals(1, instances.countByVdmsId("vdms-1"));
+        assertEquals(0, instances.countByVdmsId("vdms-404"));
     }
 }
