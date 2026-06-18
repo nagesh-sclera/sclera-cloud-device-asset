@@ -16,8 +16,8 @@ so they are done together in one per-method pass rather than as three separate s
 
 1. **Swagger** — no `@Operation`/`@ApiResponse`/`@Parameter`/`@Tag` anywhere.
 2. **JavaDoc** — inconsistent. Some controllers (e.g. `BuildingController`) have solid
-   method JavaDoc; many of the ~72 controllers have none.
-3. **Logging** — inconsistent. Only ~23 of 72 controllers declare a logger, and there
+   method JavaDoc; many of the 23 controllers have none.
+3. **Logging** — inconsistent. Many of the 23 controllers do not declare a logger, and there
    are **619** `System.out.println` / `printStackTrace` occurrences across 37 files
    (`DeviceService` alone has 252, `ConditionsService` 86), plus a stray
    `System.out.println` inside `BuildingController.updateFloorMaps`.
@@ -31,8 +31,18 @@ rethrown by controllers bypass it and fall through to Spring's default error han
 
 - **Module:** `sclera-cloud-device-asset` only. Other services (alerts, audit, scheduler,
   vdms-service, integrations, gateway) are out of scope for this pass.
+- **Controller count:** there are **23 REST controllers**, all in
+  `io.sclera.controller.admin`. (The older 2026-05-27 spec said "72"; that figure
+  counted across the whole multi-module repo / an earlier state and is not the
+  device-asset count.) Two `*Controller`/advice classes are explicitly excluded from
+  the Swagger work:
+  - `MaximoExceptionHandler` — the `@ControllerAdvice` being extended, not an endpoint.
+  - `TriggerDispatchSubscriber` — a Dapr event subscriber (annotated `@RestController`
+    but an internal event handler, not a public REST API). It gets **JavaDoc + logging
+    only**, no Swagger annotations.
+  - `io.sclera.models.GaiameshController` — not Spring-annotated; out of scope.
 - **Layers:**
-  - **Controllers (~72):** all three concerns — Swagger annotations + JavaDoc + logging.
+  - **Controllers (23):** all three concerns — Swagger annotations + JavaDoc + logging.
   - **Services/utils (37 files):** logging cleanup **only** — replace
     `System.out.println`/`printStackTrace` with proper SLF4J logging. No JavaDoc sweep,
     no signature or control-flow changes beyond the print→log swap.
@@ -135,7 +145,7 @@ For the 37 files containing `System.out.println`/`printStackTrace`:
 - **Error-response shape change (accepted):** generic exceptions move from Spring's
   default error JSON to the standardized `ResponseDTO`. More consistent, but a contract
   change — clients/tests asserting the old shape must be updated. Surfaced during impl.
-- **Volume:** ~72 controllers + 37 service/util files. The pilot-then-batch sequencing
+- **Volume:** 23 controllers + 37 service/util files. The pilot-then-batch sequencing
   with a review gate keeps the pattern correct before scaling.
 - **No route changes:** annotation normalization (`@RequestMapping` → `@GetMapping` etc.)
   must be a pure equivalent; URL paths and HTTP methods are never altered.
