@@ -2,6 +2,11 @@ package io.sclera.controller.admin;
 
 import io.sclera.dto.*;
 import io.sclera.client.PropertyQrcodeClient;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +22,7 @@ import java.util.Set;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
+@Tag(name = "Property Services", description = "Manage property services, tagged locations, service requests/responses and QR-code zone maps.")
 public class PropertyServiceController {
     private static final Logger log = LoggerFactory.getLogger(PropertyServiceController.class);
 
@@ -32,15 +38,20 @@ public class PropertyServiceController {
      * @param propertyService  property service payload to upsert
      * @return the upserted property service
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/upsertpropertyservice")
-    public PropertyServiceDTO upsertPropertyServiceDetails(@RequestParam String username, @RequestParam String vdmsid, @RequestBody PropertyServiceDTO propertyService) {
+    @Operation(summary = "Upsert a property service",
+            description = "Creates or updates a property service and its associated service requests.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Property service upserted"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/upsertpropertyservice")
+    public PropertyServiceDTO upsertPropertyServiceDetails(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @RequestBody PropertyServiceDTO propertyService) {
         log.info("upsertPropertyServiceDetails username={} vdmsid={}", username, vdmsid);
-        try {
-            return propertyQrcodeService.upsertPropertyServiceDetails(username, vdmsid, propertyService);
-        } catch (Exception e) {
-            log.error("upsertPropertyServiceDetails failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        return propertyQrcodeService.upsertPropertyServiceDetails(username, vdmsid, propertyService);
     }
 
     // Add Locations to Property Service
@@ -57,15 +68,21 @@ public class PropertyServiceController {
      * @param property_service_id  property service the locations are added to
      * @param locationDTOS         locations to add
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/service/{property_service_id}/addpropertyservicelocations")
-    public void addPropertyServiceLocations(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String property_service_id, @RequestBody Set<LocationDTO> locationDTOS) {
+    @Operation(summary = "Add locations to a property service",
+            description = "Adds locations to the given property service.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Locations added"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/service/{property_service_id}/addpropertyservicelocations")
+    public void addPropertyServiceLocations(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Property service the locations are added to") @PathVariable String property_service_id,
+            @RequestBody Set<LocationDTO> locationDTOS) {
         log.info("addPropertyServiceLocations username={} vdmsid={} property_service_id={}", username, vdmsid, property_service_id);
-        try {
-            propertyQrcodeService.addPropertyServiceLocations(username, vdmsid, property_service_id,locationDTOS);
-        } catch (Exception e) {
-            log.error("addPropertyServiceLocations failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        propertyQrcodeService.addPropertyServiceLocations(username, vdmsid, property_service_id, locationDTOS);
     }
 
 
@@ -77,15 +94,20 @@ public class PropertyServiceController {
      * @param vdmsid                    owning VDMS id
      * @param propertyServiceResponses  property service responses to update
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/updatepropertyserviceresponses")
-    public void multiUpdatePropertyServiceResponse(@RequestParam String username, @RequestParam String vdmsid,@RequestBody Set<PropertyServiceResponseDTO> propertyServiceResponses) {
+    @Operation(summary = "Update property service responses",
+            description = "Updates multiple property service responses in a single request.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Property service responses updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/updatepropertyserviceresponses")
+    public void multiUpdatePropertyServiceResponse(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @RequestBody Set<PropertyServiceResponseDTO> propertyServiceResponses) {
         log.info("multiUpdatePropertyServiceResponse username={} vdmsid={}", username, vdmsid);
-        try {
-            propertyQrcodeService.multiUpdatePropertyServiceResponse(username,vdmsid,propertyServiceResponses);
-        } catch (Exception e) {
-            log.error("multiUpdatePropertyServiceResponse failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        propertyQrcodeService.multiUpdatePropertyServiceResponse(username, vdmsid, propertyServiceResponses);
     }
 
     //Get Property Services
@@ -96,15 +118,18 @@ public class PropertyServiceController {
      * @param vdmsid    owning VDMS id
      * @return the property services
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/getpropertyservices")
-    public Set<PropertyServiceDTO> getPropertyServices(@RequestParam String username, @RequestParam String vdmsid) {
+    @Operation(summary = "Get property services",
+            description = "Returns all property services for the given user and VDMS.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Property services returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/getpropertyservices")
+    public Set<PropertyServiceDTO> getPropertyServices(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid) {
         log.info("getPropertyServices username={} vdmsid={}", username, vdmsid);
-        try {
-            return propertyQrcodeService.getPropertyServices(username, vdmsid);
-        } catch (Exception e) {
-            log.error("getPropertyServices failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        return propertyQrcodeService.getPropertyServices(username, vdmsid);
     }
 
     // Get property service locations
@@ -116,15 +141,20 @@ public class PropertyServiceController {
      * @param property_service_id  property service whose locations are requested
      * @return the tagged locations as QR-code entries
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/service/{property_service_id}/getpropertyservicelocations")
-    public  Set<PropertyQrcodeDTO> getPropertyServiceLocationsById(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String property_service_id) {
+    @Operation(summary = "Get property service locations",
+            description = "Returns the locations tagged to the given property service.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Tagged locations returned"),
+            @ApiResponse(responseCode = "404", description = "Property service not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/service/{property_service_id}/getpropertyservicelocations")
+    public Set<PropertyQrcodeDTO> getPropertyServiceLocationsById(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Property service whose locations are requested") @PathVariable String property_service_id) {
         log.info("getPropertyServiceLocationsById username={} vdmsid={} property_service_id={}", username, vdmsid, property_service_id);
-        try {
-            return propertyQrcodeService.getPropertyServiceLocationsById(username, vdmsid, property_service_id);
-        } catch (Exception e) {
-            log.error("getPropertyServiceLocationsById failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        return propertyQrcodeService.getPropertyServiceLocationsById(username, vdmsid, property_service_id);
     }
 
     //delete property service requests
@@ -135,15 +165,20 @@ public class PropertyServiceController {
      * @param vdmsid                   owning VDMS id
      * @param propertyServiceRequests  property service requests to delete
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/deletepropertyservicerequests")
-    public void deletePropertyServiceRequests(@RequestParam String username, @RequestParam String vdmsid, @RequestBody Set<PropertyServiceRequestDTO> propertyServiceRequests) {
+    @Operation(summary = "Delete property service requests",
+            description = "Deletes the given property service requests.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Property service requests deleted"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @DeleteMapping("/deletepropertyservicerequests")
+    public void deletePropertyServiceRequests(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @RequestBody Set<PropertyServiceRequestDTO> propertyServiceRequests) {
         log.info("deletePropertyServiceRequests username={} vdmsid={}", username, vdmsid);
-        try {
-            propertyQrcodeService.deletePropertyServiceRequests(username, vdmsid, propertyServiceRequests);
-        } catch (Exception e) {
-            log.error("deletePropertyServiceRequests failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        propertyQrcodeService.deletePropertyServiceRequests(username, vdmsid, propertyServiceRequests);
     }
 
     //delete locations tagged to service
@@ -155,16 +190,21 @@ public class PropertyServiceController {
      * @param property_service_id  property service the locations are removed from
      * @param locations            ids of the locations to delete
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/service/{property_service_id}/deletepropertyservicelocations")
-    public void deletePropertyServiceLocations(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String property_service_id,
-                                              @RequestBody Set<String> locations) {
+    @Operation(summary = "Delete property service locations",
+            description = "Deletes the given locations tagged to the property service.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Tagged locations deleted"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @DeleteMapping("/service/{property_service_id}/deletepropertyservicelocations")
+    public void deletePropertyServiceLocations(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Property service the locations are removed from") @PathVariable String property_service_id,
+            @RequestBody Set<String> locations) {
         log.info("deletePropertyServiceLocations username={} vdmsid={} property_service_id={}", username, vdmsid, property_service_id);
-        try {
-            propertyQrcodeService.deletePropertyServiceLocations(username, vdmsid, property_service_id, locations);
-        } catch (Exception e) {
-            log.error("deletePropertyServiceLocations failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        propertyQrcodeService.deletePropertyServiceLocations(username, vdmsid, property_service_id, locations);
     }
 
     //delete property service
@@ -175,15 +215,20 @@ public class PropertyServiceController {
      * @param vdmsid               owning VDMS id
      * @param property_service_id  property service to delete
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/service/{property_service_id}/deletepropertyservice")
-    public void deletePropertyService(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String property_service_id) {
+    @Operation(summary = "Delete a property service",
+            description = "Deletes the property service identified by the given id.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Property service deleted"),
+            @ApiResponse(responseCode = "404", description = "Property service not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @DeleteMapping("/service/{property_service_id}/deletepropertyservice")
+    public void deletePropertyService(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Property service to delete") @PathVariable String property_service_id) {
         log.info("deletePropertyService username={} vdmsid={} property_service_id={}", username, vdmsid, property_service_id);
-        try {
-            propertyQrcodeService.deletePropertyService(username, vdmsid, property_service_id);
-        } catch (Exception e) {
-            log.error("deletePropertyService failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        propertyQrcodeService.deletePropertyService(username, vdmsid, property_service_id);
     }
 
     // Get zone map
@@ -198,15 +243,23 @@ public class PropertyServiceController {
      * @param property_service_id  property service scope of the zone map
      * @return the zone map as QR-code entries
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/building/{building_id}/floor/{floor_id}/location/{location_id}/service/{property_service_id}/getzonemap")
-    public  Set<PropertyQrcodeDTO> getZoneMap(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String building_id,@PathVariable String floor_id, @PathVariable String location_id,@PathVariable String property_service_id) {
+    @Operation(summary = "Get QR-code zone map",
+            description = "Returns the QR-code zone map for the given building, floor, location and property service.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Zone map returned"),
+            @ApiResponse(responseCode = "404", description = "Zone map not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/building/{building_id}/floor/{floor_id}/location/{location_id}/service/{property_service_id}/getzonemap")
+    public Set<PropertyQrcodeDTO> getZoneMap(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Building scope of the zone map") @PathVariable String building_id,
+            @Parameter(description = "Floor scope of the zone map") @PathVariable String floor_id,
+            @Parameter(description = "Location scope of the zone map") @PathVariable String location_id,
+            @Parameter(description = "Property service scope of the zone map") @PathVariable String property_service_id) {
         log.info("getZoneMap username={} vdmsid={} building_id={} floor_id={} location_id={} property_service_id={}", username, vdmsid, building_id, floor_id, location_id, property_service_id);
-        try {
-            return propertyQrcodeService.getZoneMap(username, vdmsid,building_id,floor_id,location_id,property_service_id);
-        } catch (Exception e) {
-            log.error("getZoneMap failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        return propertyQrcodeService.getZoneMap(username, vdmsid, building_id, floor_id, location_id, property_service_id);
     }
-   
+
 }

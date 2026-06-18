@@ -6,6 +6,11 @@ import io.sclera.dto.DeviceDTO;
 import io.sclera.integration.dto.ResponseDTO;
 import io.sclera.service.AiCallService;
 import io.sclera.utils.PageUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,27 +35,31 @@ import java.util.Set;
  */
 @RestController
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
+@Tag(name = "AI Call Log", description = "AI-assisted call logging, call-flow configuration and call triggering.")
 public class AiCallLogController {
     private static final Logger log = LoggerFactory.getLogger(AiCallLogController.class);
     @Autowired
     AiCallService aiCallService;
 
-   /**
-    * Creates a call log for the given device and issue type.
-    *
-    * @param deviceId   device the call log belongs to
-    * @param issueType  type of issue the call concerns
-    * @return identifier or status of the created call log
-    */
-   @PostMapping("/deviceId/{deviceId}/createcalllog")
-    public String createCallLog(@PathVariable String deviceId, @RequestParam String issueType) {
+    /**
+     * Creates a call log for the given device and issue type.
+     *
+     * @param deviceId   device the call log belongs to
+     * @param issueType  type of issue the call concerns
+     * @return identifier or status of the created call log
+     */
+    @Operation(summary = "Create a call log",
+            description = "Creates a call log for the given device and issue type.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Call log created"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/deviceId/{deviceId}/createcalllog")
+    public String createCallLog(
+            @Parameter(description = "Device the call log belongs to") @PathVariable String deviceId,
+            @Parameter(description = "Type of issue the call concerns") @RequestParam String issueType) {
         log.info("createCallLog deviceId={} issueType={}", deviceId, issueType);
-        try {
-            return aiCallService.createCallLog(deviceId, issueType);
-        } catch (Exception e) {
-            log.error("createCallLog failed deviceId={}: {}", deviceId, e.getMessage(), e);
-            throw e;
-        }
+        return aiCallService.createCallLog(deviceId, issueType);
     }
 
     /**
@@ -64,15 +73,22 @@ public class AiCallLogController {
      * @param isCompleted  whether to return only completed calls (default false)
      * @return list of call log entries for the requested page
      */
+    @Operation(summary = "Get call statuses",
+            description = "Returns a paged list of call statuses for the tenant, optionally restricted to completed calls.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Call statuses returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping("/getallcallstatus")
-    public Page<AiCallLogDTO>  getallcallstatus(@RequestParam String username, @RequestParam String vdmsid,@RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey, @RequestParam(defaultValue = "false") boolean isCompleted) {
+    public Page<AiCallLogDTO> getallcallstatus(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Page number") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "10") Integer pagesize,
+            @Parameter(description = "Optional search filter") @RequestParam(defaultValue = "null") String searchkey,
+            @Parameter(description = "Whether to return only completed calls") @RequestParam(defaultValue = "false") boolean isCompleted) {
         log.info("getallcallstatus username={} vdmsid={}", username, vdmsid);
-        try {
-            return PageUtils.toPage(aiCallService.getallcallstatus(username, vdmsid, pageno, pagesize, searchkey, isCompleted), pageno, pagesize);
-        } catch (Exception e) {
-            log.error("getallcallstatus failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(aiCallService.getallcallstatus(username, vdmsid, pageno, pagesize, searchkey, isCompleted), pageno, pagesize);
     }
 
     /**
@@ -82,15 +98,18 @@ public class AiCallLogController {
      * @param vdmsid    owning VDMS id
      * @return map of status name to count
      */
+    @Operation(summary = "Get call status counts",
+            description = "Returns a count of call statuses grouped by status for the tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Call status counts returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping("/getcallstatuscount")
-    public Map<String, Integer> getCallStatusCount(@RequestParam String username, @RequestParam String vdmsid) {
+    public Map<String, Integer> getCallStatusCount(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid) {
         log.info("getCallStatusCount username={} vdmsid={}", username, vdmsid);
-        try {
-            return aiCallService.getCallStatusCount(username, vdmsid);
-        } catch (Exception e) {
-            log.error("getCallStatusCount failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        return aiCallService.getCallStatusCount(username, vdmsid);
     }
 
     /**
@@ -99,15 +118,18 @@ public class AiCallLogController {
      * @param deviceId  device to look up
      * @return device details for the given id
      */
+    @Operation(summary = "Get device info",
+            description = "Returns device information loaded from the database for the given id.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Device info returned"),
+            @ApiResponse(responseCode = "404", description = "Device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping("/getdeviceinfo/{deviceId}")
-    public DeviceDTO getDeviceInfo(@PathVariable String deviceId) {
+    public DeviceDTO getDeviceInfo(
+            @Parameter(description = "Device to look up") @PathVariable String deviceId) {
         log.info("getDeviceInfo deviceId={}", deviceId);
-        try {
-            return aiCallService.getDeviceInfoFromDb(deviceId);
-        } catch (Exception e) {
-            log.error("getDeviceInfo failed deviceId={}: {}", deviceId, e.getMessage(), e);
-            throw e;
-        }
+        return aiCallService.getDeviceInfoFromDb(deviceId);
     }
 
     /**
@@ -115,16 +137,17 @@ public class AiCallLogController {
      *
      * @return identifier or status of the resolved assignee
      */
+    @Operation(summary = "Trigger assignee resolution",
+            description = "Triggers resolution of an assignee and returns the result.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Assignee resolved"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping("/assign")
     public String triggerGetAssignee() {
         log.info("triggerGetAssignee called");
-        try {
-            return aiCallService.getAssignee("");
-        } catch (Exception e) {
-            log.error("triggerGetAssignee failed: {}", e.getMessage(), e);
-            throw e;
-        }
-   }
+        return aiCallService.getAssignee("");
+    }
 
     /**
      * Parses an uploaded JSON file and inserts the contained call response.
@@ -132,26 +155,26 @@ public class AiCallLogController {
      * @param file  multipart file containing the call response JSON payload
      * @return identifier or status of the inserted call response
      */
+    @Operation(summary = "Insert a call response",
+            description = "Parses an uploaded JSON file and inserts the contained call response.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Call response inserted"),
+            @ApiResponse(responseCode = "400", description = "Invalid or unreadable JSON file"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @PostMapping("/insertcallresponse")
     public String insertCallResponse(@RequestParam("callinfo") MultipartFile file) {
         log.info("insertCallResponse called");
         try {
-            try {
-                String jsonString = new String(file.getBytes(), StandardCharsets.UTF_8);
-                JSONObject json = new JSONObject(jsonString); // Use org.json
-                return aiCallService.insertCallResponse(json);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to read uploaded JSON file", e);
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
-            }
-        } catch (Exception e) {
-            log.error("insertCallResponse failed: {}", e.getMessage(), e);
-            throw e;
+            String jsonString = new String(file.getBytes(), StandardCharsets.UTF_8);
+            JSONObject json = new JSONObject(jsonString); // Use org.json
+            return aiCallService.insertCallResponse(json);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read uploaded JSON file", e);
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
         }
     }
-
-
 
     /**
      * Creates or updates a call-flow rule for the tenant.
@@ -161,16 +184,20 @@ public class AiCallLogController {
      * @param callFlowRuleDTO  call-flow rule payload to upsert
      * @return response entity wrapping the upsert result
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/upsertcallflow")
-    public ResponseEntity<ResponseDTO> upsertCallFlow(@RequestParam String username, @RequestParam String vdmsid, @RequestBody CallFlowRuleDTO callFlowRuleDTO) {
+    @Operation(summary = "Upsert a call-flow rule",
+            description = "Creates or updates a call-flow rule for the tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Call-flow rule upserted"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/upsertcallflow")
+    public ResponseEntity<ResponseDTO> upsertCallFlow(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @RequestBody CallFlowRuleDTO callFlowRuleDTO) {
         log.info("upsertCallFlow username={} vdmsid={}", username, vdmsid);
-        try {
-            System.out.println("Received DTO: " + callFlowRuleDTO);
-            return aiCallService.upsertCallFlow(callFlowRuleDTO, username, vdmsid);
-        } catch (Exception e) {
-            log.error("upsertCallFlow failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        return aiCallService.upsertCallFlow(callFlowRuleDTO, username, vdmsid);
     }
 
     /**
@@ -181,15 +208,19 @@ public class AiCallLogController {
      * @param searchkey  optional search filter (default "null")
      * @return set of matching docker names
      */
+    @Operation(summary = "Browse docker names",
+            description = "Returns the set of docker names available to the tenant, optionally filtered by a search term.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Docker names returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping("/browsedockers")
-    public Set<String> browseDockers(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "null") String searchkey) {
+    public Set<String> browseDockers(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Optional search filter") @RequestParam(defaultValue = "null") String searchkey) {
         log.info("browseDockers username={} vdmsid={}", username, vdmsid);
-        try {
-            return aiCallService.browseDockers(username,vdmsid,searchkey);
-        } catch (Exception e) {
-            log.error("browseDockers failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        return aiCallService.browseDockers(username, vdmsid, searchkey);
     }
 
     /**
@@ -203,18 +234,22 @@ public class AiCallLogController {
      * @param searchkey   optional search filter (default "null")
      * @return list of call-flow rules for the matching devices
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/browsedevices")
-    public Page<CallFlowRuleDTO> browseCallFlowDevicesWithSearch(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
-                                                                    @RequestParam(defaultValue = "1") Integer pageno,
-                                                                    @RequestParam(defaultValue = "10") Integer pagesize,
-                                                                    @RequestParam(defaultValue = "null") String searchkey) {
+    @Operation(summary = "Browse call-flow devices",
+            description = "Returns a paged list of call-flow devices for a docker, with optional search.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Call-flow devices returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/docker/{dockername}/browsedevices")
+    public Page<CallFlowRuleDTO> browseCallFlowDevicesWithSearch(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker whose devices are browsed") @PathVariable String dockername,
+            @Parameter(description = "Page number") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "10") Integer pagesize,
+            @Parameter(description = "Optional search filter") @RequestParam(defaultValue = "null") String searchkey) {
         log.info("browseCallFlowDevicesWithSearch username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return PageUtils.toPage(aiCallService.browseCallFlowDevicesWithSearch(username, vdmsid, dockername, pageno, pagesize, searchkey), pageno, pagesize);
-        } catch (Exception e) {
-            log.error("browseCallFlowDevicesWithSearch failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(aiCallService.browseCallFlowDevicesWithSearch(username, vdmsid, dockername, pageno, pagesize, searchkey), pageno, pagesize);
     }
 
     /**
@@ -227,16 +262,21 @@ public class AiCallLogController {
      * @param searchkey  optional search filter (default "null")
      * @return list of call-flow rules for the requested page
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/getcallflow")
-    public Page<CallFlowRuleDTO> getCallFlow(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "1") Integer pageno,
-                                             @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey) {
+    @Operation(summary = "Get call-flow rules",
+            description = "Returns a paged list of call-flow rules for the tenant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Call-flow rules returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/getcallflow")
+    public Page<CallFlowRuleDTO> getCallFlow(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Page number") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "10") Integer pagesize,
+            @Parameter(description = "Optional search filter") @RequestParam(defaultValue = "null") String searchkey) {
         log.info("getCallFlow username={} vdmsid={}", username, vdmsid);
-        try {
-            return PageUtils.toPage(aiCallService.getCallFlow(username, vdmsid, pageno, pagesize, searchkey), pageno, pagesize);
-        } catch (Exception e) {
-            log.error("getCallFlow failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(aiCallService.getCallFlow(username, vdmsid, pageno, pagesize, searchkey), pageno, pagesize);
     }
 
     /**
@@ -246,15 +286,20 @@ public class AiCallLogController {
      * @param vdmsid          owning VDMS id
      * @param callFlowRuleId  set of call-flow rule ids to delete
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/configuration/deletecallflowbyid")
-    public void deleteCallFlowById(@RequestParam String username, @RequestParam String vdmsid, @RequestBody Set<String> callFlowRuleId) {
+    @Operation(summary = "Delete call-flow rules by ids",
+            description = "Deletes the call-flow rules identified by the given ids.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Call-flow rules deleted"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @DeleteMapping("/configuration/deletecallflowbyid")
+    public void deleteCallFlowById(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @RequestBody Set<String> callFlowRuleId) {
         log.info("deleteCallFlowById username={} vdmsid={}", username, vdmsid);
-        try {
-            aiCallService.deleteCallFlowById(username, vdmsid, callFlowRuleId);
-        } catch (Exception e) {
-            log.error("deleteCallFlowById failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        aiCallService.deleteCallFlowById(username, vdmsid, callFlowRuleId);
     }
 
     /**
@@ -264,15 +309,19 @@ public class AiCallLogController {
      * @param criteria   criteria selecting the call-flow rule
      * @param calllogid  call log associated with the trigger
      */
-    @RequestMapping(method= RequestMethod.GET , value = "/{deviceid}/{criteria}/{calllogid}/triggercallflow")
-    public void triggerCallFlow(@PathVariable String deviceid, @PathVariable String criteria, @PathVariable String calllogid) {
+    @Operation(summary = "Trigger a call flow",
+            description = "Triggers the call flow for a device matching the given criteria and call log.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Call flow triggered"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/{deviceid}/{criteria}/{calllogid}/triggercallflow")
+    public void triggerCallFlow(
+            @Parameter(description = "Device whose call flow is triggered") @PathVariable String deviceid,
+            @Parameter(description = "Criteria selecting the call-flow rule") @PathVariable String criteria,
+            @Parameter(description = "Call log associated with the trigger") @PathVariable String calllogid) {
         log.info("triggerCallFlow deviceid={} criteria={} calllogid={}", deviceid, criteria, calllogid);
-        try {
-            aiCallService.triggerCallFlow(deviceid, criteria, calllogid);
-        } catch (Exception e) {
-            log.error("triggerCallFlow failed deviceid={}: {}", deviceid, e.getMessage(), e);
-            throw e;
-        }
+        aiCallService.triggerCallFlow(deviceid, criteria, calllogid);
     }
 
 }
