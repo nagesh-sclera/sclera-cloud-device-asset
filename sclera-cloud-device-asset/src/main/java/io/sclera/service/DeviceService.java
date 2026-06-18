@@ -462,8 +462,8 @@ public class DeviceService implements DeviceServiceInterface {
             try {
                 device.setIp_addresses(this.getDeviceIPAddressByDeviceId(device.getId()));
             } catch (Exception e) {
-                System.out.println("Error getting device ip address " + e);
-                System.out.println(e);
+                log.debug("{}", "Error getting device ip address " + e);
+                log.debug("{}", e);
             }
 
         }
@@ -486,18 +486,18 @@ public class DeviceService implements DeviceServiceInterface {
         Integer offset = pageSize * (pageNo - 1);
         Integer assigned_status = null;
 
-        System.out.println("outside all" + virtual_device_type + status + monitor + offset + pageNo);
+        log.debug("{}", "outside all" + virtual_device_type + status + monitor + offset + pageNo);
 
         if (condition.equals("all")) {
-            System.out.println("inside all" + virtual_device_type + status + monitor + offset + pageNo);
+            log.debug("{}", "inside all" + virtual_device_type + status + monitor + offset + pageNo);
         } else if (condition.equals("unmonitored")) {
-            System.out.println("outsidxse all" + virtual_device_type + status + monitor + offset + pageNo);
+            log.debug("{}", "outsidxse all" + virtual_device_type + status + monitor + offset + pageNo);
             monitor = 0;
         } else if (condition.equals("online")) {
 
             monitor = 1;
             status = 1;
-            System.out.println("Inside Online" + monitor + status);
+            log.debug("{}", "Inside Online" + monitor + status);
 
         } else if (condition.equals("offline")) {
             monitor = 1;
@@ -525,8 +525,8 @@ public class DeviceService implements DeviceServiceInterface {
                 device.setIp_addresses(this.getDeviceIPAddressByDeviceId(device.getId()));
                 device.setSubsystems(new HashSet<>());
             } catch (Exception e) {
-                System.out.println("Error getting device ip address " + e);
-                System.out.println(e);
+                log.debug("{}", "Error getting device ip address " + e);
+                log.debug("{}", e);
             }
 
         }
@@ -583,7 +583,7 @@ public class DeviceService implements DeviceServiceInterface {
                     }
 
                 } catch (Exception e) {
-                    System.out.println(e.getStackTrace());
+                    log.debug("{}", e.getStackTrace());
                 }
 
             }
@@ -596,7 +596,7 @@ public class DeviceService implements DeviceServiceInterface {
             }
 
         } catch (Exception e) {
-            System.out.println(e.getStackTrace());
+            log.debug("{}", e.getStackTrace());
         }
 
     }
@@ -793,7 +793,7 @@ public class DeviceService implements DeviceServiceInterface {
             Set<String> device_ids = Collections.singleton(device_id);
             this.updateDeviceProductPortStatus(vdmsid, device_ids);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
 
         return this.getDeviceByDeviceId(username, vdmsid, devicedto.getDocker_name(), device_id);
@@ -827,10 +827,10 @@ public class DeviceService implements DeviceServiceInterface {
                 String extension = getImageExtensionByImageUrl(productdto.getImage_url_3());
                 modified_image_url_3 = "http://localhost:8888/images/" + productdto.getId() + "_3." + extension;
             }
-            System.out.println(productdto.getId());
-            System.out.println(image_url_1);
-            System.out.println(image_url_2);
-            System.out.println(image_url_3);
+            log.debug("{}", productdto.getId());
+            log.debug("{}", image_url_1);
+            log.debug("{}", image_url_2);
+            log.debug("{}", image_url_3);
 
             product_detailsService.addProductImages(productdto.getId(), modified_image_url_1, modified_image_url_2,
                     modified_image_url_3, productdto.getImage_url_1(), productdto.getImage_url_2(), productdto.getImage_url_3());
@@ -863,10 +863,10 @@ public class DeviceService implements DeviceServiceInterface {
             String extension = getImageExtensionByImageUrl(productdto.getImage_url_3());
             modified_image_url_3 = "http://localhost:8888/images/" + productdto.getId() + "_3." + extension;
         }
-        System.out.println(productdto.getId());
-        System.out.println(image_url_1);
-        System.out.println(image_url_2);
-        System.out.println(image_url_3);
+        log.debug("{}", productdto.getId());
+        log.debug("{}", image_url_1);
+        log.debug("{}", image_url_2);
+        log.debug("{}", image_url_3);
 
         product_detailsService.addProductImages(productdto.getId(), modified_image_url_1, modified_image_url_2,
                 modified_image_url_3, productdto.getImage_url_1(), productdto.getImage_url_2(), productdto.getImage_url_3());
@@ -906,7 +906,7 @@ public class DeviceService implements DeviceServiceInterface {
             Files.write(path, image);
             return dir + file_name + "." + file_extension;
         } else {
-            System.out.println("Error");
+            log.debug("{}", "Error");
             return null;
         }
     }
@@ -918,9 +918,9 @@ public class DeviceService implements DeviceServiceInterface {
         File file = new File(absolute_path + file_name + "." + file_extension);
         if (file.exists()) {
             if (file.delete()) {
-                System.out.println("File deleted successfully");
+                log.debug("{}", "File deleted successfully");
             } else {
-                System.out.println("Failed to delete the file");
+                log.debug("{}", "Failed to delete the file");
             }
         }
     }
@@ -1104,7 +1104,7 @@ public class DeviceService implements DeviceServiceInterface {
                 this.updateParentSubsystemCount(multidevicedto.getSubsystem_parent_id());
                 this.updateParentSubsystemCount(multidevicedto.getPrevious_subsystem_parent_id());
             } catch (Exception e) {
-                System.out.println(e);
+                log.debug("{}", e);
             }
         }
 
@@ -1112,7 +1112,7 @@ public class DeviceService implements DeviceServiceInterface {
         try {
             this.updateDeviceProductPortStatus(vdmsid, device_ids);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
     }
 
@@ -1291,7 +1291,7 @@ public class DeviceService implements DeviceServiceInterface {
                 }
 
                 if (updateDevice.getOnboard_data() != null) {
-                    System.out.println("quick update onboard data : " + updateDevice.getOnboard_data());
+                    log.debug("{}", "quick update onboard data : " + updateDevice.getOnboard_data());
                     this.updateAssetOnboardData(username, vdmsid, existingDevice.getId(), updateDevice.getOnboard_data(), existingDevice.getOnboard_status());
                 }
 
@@ -1341,7 +1341,7 @@ public class DeviceService implements DeviceServiceInterface {
         try {
             this.updateMultipleDevicesProductPortStatus(vdmsid, devices);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
     }
 
@@ -1359,18 +1359,18 @@ public class DeviceService implements DeviceServiceInterface {
         Integer onboard_status = 123;
         Integer assigned_status = null;
 
-        System.out.println("outside all" + virtual_device_type + status + monitor);
+        log.debug("{}", "outside all" + virtual_device_type + status + monitor);
 
         if (condition.equals("all")) {
-            System.out.println("inside all" + virtual_device_type + status + monitor);
+            log.debug("{}", "inside all" + virtual_device_type + status + monitor);
         } else if (condition.equals("unmonitored")) {
-            System.out.println("outsidxse all" + virtual_device_type + status + monitor);
+            log.debug("{}", "outsidxse all" + virtual_device_type + status + monitor);
             monitor = 0;
         } else if (condition.equals("online")) {
 
             monitor = 1;
             status = 1;
-            System.out.println("Inside Online" + monitor + status);
+            log.debug("{}", "Inside Online" + monitor + status);
 
         } else if (condition.equals("offline")) {
             monitor = 1;
@@ -1407,8 +1407,8 @@ public class DeviceService implements DeviceServiceInterface {
                 device.setOnboard_data(new DeviceOnboardStatusDTO(device.getAssignee_email(), device.getImage_status(), device.getGeolocation_status(), device.getTag_status(), device.getField_status()));
                 device.setSubsystems(new HashSet<>());
             } catch (Exception e) {
-                System.out.println("Error getting device ip address " + e);
-                System.out.println(e);
+                log.debug("{}", "Error getting device ip address " + e);
+                log.debug("{}", e);
             }
 
         }
@@ -1550,7 +1550,7 @@ public class DeviceService implements DeviceServiceInterface {
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
-                System.out.println(e);
+                log.debug("{}", e);
             }
         }
 
@@ -1585,7 +1585,7 @@ public class DeviceService implements DeviceServiceInterface {
             device_status = 0;
         }
 
-        System.out.println("virtual device status " + status);
+        log.debug("{}", "virtual device status " + status);
         return device_status;
     }
 
@@ -1754,7 +1754,7 @@ public class DeviceService implements DeviceServiceInterface {
                 }
 
                 if (virtualDevice.getOnboard_data() != null) {
-                    System.out.println("Virtual Onboard data: " + virtualDevice.getOnboard_data());
+                    log.debug("{}", "Virtual Onboard data: " + virtualDevice.getOnboard_data());
                     log.info("Virtual Onboard data: : {}", virtualDevice.getOnboard_data());
                     this.updateAssetOnboardData(username, vdmsid, virtual_device_id, virtualDevice.getOnboard_data(), existingDevice.getOnboard_status());
                 }
@@ -1783,14 +1783,14 @@ public class DeviceService implements DeviceServiceInterface {
                 this.updateDeviceSnmpCount(virtualDevice.getId());
                 this.updateDeviceNotesCount(virtualDevice.getId());
             } catch (Exception e) {
-                System.out.println(e);
+                log.debug("{}", e);
             }
         }
 
         try {
             this.updateDeviceProductPortStatus(vdmsid, device_ids);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
 
     }
@@ -1824,12 +1824,12 @@ public class DeviceService implements DeviceServiceInterface {
         try {
             this.removeAssetImages(deviceDTO);
         } catch (Exception e) {
-            System.out.println("Unable to remove asset images");
+            log.debug("{}", "Unable to remove asset images");
         }
         try {
             removeAssetOcrImages(deviceDTO);
         } catch (Exception e) {
-            System.out.println("Unable to remove asset ocr images");
+            log.debug("{}", "Unable to remove asset ocr images");
         }
     }
 
@@ -2071,7 +2071,7 @@ public class DeviceService implements DeviceServiceInterface {
                             virtual_device_id);
                 }
             } catch (Exception e) {
-                System.out.println("Virtual Device History Error " + e);
+                log.debug("{}", "Virtual Device History Error " + e);
             }
         }
 
@@ -2103,7 +2103,7 @@ public class DeviceService implements DeviceServiceInterface {
             Integer snmp_count = snmpService.getSnmpDeviceCountByDeviceAndSnmpConfiguration(device_id);
             deviceRepository.updateDeviceSnmpCount(device_id, snmp_count);
         } catch (Exception e) {
-            System.out.println("Error in snmp count update " + e);
+            log.debug("{}", "Error in snmp count update " + e);
         }
     }
 
@@ -2117,7 +2117,7 @@ public class DeviceService implements DeviceServiceInterface {
 
             this.updateDeviceSnmpStatusByDeviceId(device_id);
         } catch (Exception e) {
-            System.out.println("Error in updating device snmp status " + e);
+            log.debug("{}", "Error in updating device snmp status " + e);
         }
     }
 
@@ -2136,7 +2136,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceSnmpStatus(device_id, snmp_status);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating device snmp status by device id " + e);
+            log.debug("{}", "Error in updating device snmp status by device id " + e);
         }
     }
 
@@ -2149,7 +2149,7 @@ public class DeviceService implements DeviceServiceInterface {
             Integer interface_count = interfaceService.getInterfaceCountByDevice(device_id);
             deviceRepository.updateDeviceInterfaceCount(device_id, interface_count);
         } catch (Exception e) {
-            System.out.println("Error updating interface count " + e);
+            log.debug("{}", "Error updating interface count " + e);
         }
 
     }
@@ -2163,7 +2163,7 @@ public class DeviceService implements DeviceServiceInterface {
             Integer notes_count = notesService.getNotesCountByDeviceId(device_id);
             deviceRepository.updateDeviceNotesCount(device_id, notes_count);
         } catch (Exception e) {
-            System.out.println("Error in Notes Count Update " + e);
+            log.debug("{}", "Error in Notes Count Update " + e);
         }
     }
 
@@ -2176,7 +2176,7 @@ public class DeviceService implements DeviceServiceInterface {
             Integer ticket_count = ticketService.getTicketCountByDeviceId(device_id);
             deviceRepository.updateDeviceTicketCount(device_id, ticket_count);
         } catch (Exception e) {
-            System.out.println("Error in updating ticket count " + e);
+            log.debug("{}", "Error in updating ticket count " + e);
         }
 
     }
@@ -2194,7 +2194,7 @@ public class DeviceService implements DeviceServiceInterface {
             }
             deviceRepository.updateDeviceTicketStatus(device_id, ticket_status);
         } catch (Exception e) {
-            System.out.println("Error in updating ticket status " + e);
+            log.debug("{}", "Error in updating ticket status " + e);
         }
     }
 
@@ -2207,7 +2207,7 @@ public class DeviceService implements DeviceServiceInterface {
             String device_id = bacnetService.getDeviceIdByBacnetObjectId(bacnet_device_id, bacnet_object_id);
             this.updateDeviceBacnetCountByDeviceId(device_id);
         } catch (Exception e) {
-            System.out.println("Error in updating bacnet count " + e);
+            log.debug("{}", "Error in updating bacnet count " + e);
         }
     }
 
@@ -2222,7 +2222,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceBacnetCount(device_id, bacnet_count);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating bacnet count by device id " + e);
+            log.debug("{}", "Error in updating bacnet count by device id " + e);
         }
     }
 
@@ -2237,7 +2237,7 @@ public class DeviceService implements DeviceServiceInterface {
             this.updateDeviceBacnetStatusByDeviceId(device_id);
 
         } catch (Exception e) {
-            System.out.println("Error in updating bacnet status " + e);
+            log.debug("{}", "Error in updating bacnet status " + e);
         }
     }
 
@@ -2256,7 +2256,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceBacnetStatus(device_id, bacnet_status);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating bacnet status by device id " + e);
+            log.debug("{}", "Error in updating bacnet status by device id " + e);
         }
     }
 
@@ -2269,7 +2269,7 @@ public class DeviceService implements DeviceServiceInterface {
             String device_id = lorawanService.getDeviceIdByLorawanSensorId(lorawan_sensor_id);
             this.updateDeviceLorawanCountByDeviceId(device_id);
         } catch (Exception e) {
-            System.out.println("Error in updating lorawan count " + e);
+            log.debug("{}", "Error in updating lorawan count " + e);
         }
     }
 
@@ -2284,7 +2284,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceLorawanCount(device_id, lorawan_count);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating lorawan count by device id " + e);
+            log.debug("{}", "Error in updating lorawan count by device id " + e);
         }
     }
 
@@ -2299,7 +2299,7 @@ public class DeviceService implements DeviceServiceInterface {
             this.updateDeviceLorawanStatusByDeviceId(device_id);
 
         } catch (Exception e) {
-            System.out.println("Error in updating lorawan status " + e);
+            log.debug("{}", "Error in updating lorawan status " + e);
         }
     }
 
@@ -2318,7 +2318,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceLorawanStatus(device_id, lorawan_status);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating lorawan status by device id " + e);
+            log.debug("{}", "Error in updating lorawan status by device id " + e);
         }
     }
 
@@ -2331,7 +2331,7 @@ public class DeviceService implements DeviceServiceInterface {
             String device_id = disruptiveService.getDeviceIdByDisruptiveSensorId(disruptive_sensor_id);
             this.updateDeviceDisruptiveCountByDeviceId(device_id);
         } catch (Exception e) {
-            System.out.println("Error in updating disruptive count " + e);
+            log.debug("{}", "Error in updating disruptive count " + e);
         }
     }
 
@@ -2346,7 +2346,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceDisruptiveCount(device_id, disruptive_count);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating disruptive count by device id " + e);
+            log.debug("{}", "Error in updating disruptive count by device id " + e);
         }
     }
 
@@ -2360,7 +2360,7 @@ public class DeviceService implements DeviceServiceInterface {
 
             this.updateDeviceDisruptiveStatusByDeviceId(device_id);
         } catch (Exception e) {
-            System.out.println("Error in updating disruptive status " + e);
+            log.debug("{}", "Error in updating disruptive status " + e);
         }
     }
 
@@ -2379,7 +2379,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceDisruptiveStatus(device_id, disruptive_status);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating disruptive status by device id " + e);
+            log.debug("{}", "Error in updating disruptive status by device id " + e);
         }
     }
 
@@ -2392,7 +2392,7 @@ public class DeviceService implements DeviceServiceInterface {
             String device_id = myDevicesService.getDeviceIdByMyDevicesSensorId(my_devices_sensor_id);
             this.updateDeviceMyDevicesCountByDeviceId(device_id);
         } catch (Exception e) {
-            System.out.println("Error in updating my devices count " + e);
+            log.debug("{}", "Error in updating my devices count " + e);
         }
     }
 
@@ -2407,7 +2407,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceMyDevicesCount(device_id, my_devices_count);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating my devices count by device id " + e);
+            log.debug("{}", "Error in updating my devices count by device id " + e);
         }
     }
 
@@ -2422,7 +2422,7 @@ public class DeviceService implements DeviceServiceInterface {
             this.updateDeviceMyDevicesStatusByDeviceId(device_id);
 
         } catch (Exception e) {
-            System.out.println("Error in updating my devices status " + e);
+            log.debug("{}", "Error in updating my devices status " + e);
         }
     }
 
@@ -2441,7 +2441,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceMyDevicesStatus(device_id, my_devices_status);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating my devices status by device id " + e);
+            log.debug("{}", "Error in updating my devices status by device id " + e);
         }
     }
 
@@ -2454,7 +2454,7 @@ public class DeviceService implements DeviceServiceInterface {
             String device_id = monnitService.getDeviceIdByMonnitSensorId(monnit_sensor_id);
             this.updateDeviceDisruptiveCountByDeviceId(device_id);
         } catch (Exception e) {
-            System.out.println("Error in updating monnit count " + e);
+            log.debug("{}", "Error in updating monnit count " + e);
         }
     }
 
@@ -2469,7 +2469,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceMonnitCount(device_id, monnit_count);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating monnit count by device id " + e);
+            log.debug("{}", "Error in updating monnit count by device id " + e);
         }
     }
 
@@ -2484,7 +2484,7 @@ public class DeviceService implements DeviceServiceInterface {
             this.updateDeviceMonnitStatusByDeviceId(device_id);
 
         } catch (Exception e) {
-            System.out.println("Error in updating monnit status " + e);
+            log.debug("{}", "Error in updating monnit status " + e);
         }
     }
 
@@ -2503,7 +2503,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceMonnitStatus(device_id, monnit_status);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating monnit status by device id " + e);
+            log.debug("{}", "Error in updating monnit status by device id " + e);
         }
     }
 
@@ -2516,7 +2516,7 @@ public class DeviceService implements DeviceServiceInterface {
             String device_id = pelicanService.getDeviceIdByPelicanSensorId(pelican_sensor_id);
             this.updateDevicePelicanCountByDeviceId(device_id);
         } catch (Exception e) {
-            System.out.println("Error in updating pelican count " + e);
+            log.debug("{}", "Error in updating pelican count " + e);
         }
     }
 
@@ -2531,7 +2531,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDevicePelicanCount(device_id, pelican_count);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating pelican count by device id " + e);
+            log.debug("{}", "Error in updating pelican count by device id " + e);
         }
     }
 
@@ -2544,7 +2544,7 @@ public class DeviceService implements DeviceServiceInterface {
             String device_id = pelicanService.getDeviceIdByPelicanSensorId(pelican_sensor_id);
             this.updateDevicePelicanStatusByDeviceId(device_id);
         } catch (Exception e) {
-            System.out.println("Error in updating pelican status " + e);
+            log.debug("{}", "Error in updating pelican status " + e);
         }
     }
 
@@ -2563,7 +2563,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDevicePelicanStatus(device_id, pelican_status);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating pelican status by device id " + e);
+            log.debug("{}", "Error in updating pelican status by device id " + e);
         }
     }
 
@@ -2576,7 +2576,7 @@ public class DeviceService implements DeviceServiceInterface {
             String device_id = knxService.getDeviceIdByKNXGroupAddress(knx_device_address, knx_group_address);
             this.updateDeviceKNXCountByDeviceId(device_id);
         } catch (Exception e) {
-            System.out.println("Error in updating knx count " + e);
+            log.debug("{}", "Error in updating knx count " + e);
         }
     }
 
@@ -2591,7 +2591,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceKNXCount(device_id, knx_count);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating knx count by device id " + e);
+            log.debug("{}", "Error in updating knx count by device id " + e);
         }
     }
 
@@ -2605,7 +2605,7 @@ public class DeviceService implements DeviceServiceInterface {
             this.updateDeviceKNXStatusByDeviceId(device_id);
 
         } catch (Exception e) {
-            System.out.println("Error in updating knx status " + e);
+            log.debug("{}", "Error in updating knx status " + e);
         }
     }
 
@@ -2624,7 +2624,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceKNXStatus(device_id, knx_status);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating knx status by device id " + e);
+            log.debug("{}", "Error in updating knx status by device id " + e);
         }
     }
 
@@ -2639,7 +2639,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceMeasureCount(device_id, measure_count);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating measure count by device id " + e);
+            log.debug("{}", "Error in updating measure count by device id " + e);
         }
     }
 
@@ -2654,7 +2654,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceDocumentsCount(device_id, documents_count);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating documents count by device id " + e);
+            log.debug("{}", "Error in updating documents count by device id " + e);
         }
     }
 
@@ -2669,7 +2669,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceMediaCount(device_id, media_count);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating media count by device id " + e);
+            log.debug("{}", "Error in updating media count by device id " + e);
         }
     }
 
@@ -2684,7 +2684,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceCheckListsCount(device_id, checklists_count);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating checklists count by device id " + e);
+            log.debug("{}", "Error in updating checklists count by device id " + e);
         }
     }
 
@@ -2699,7 +2699,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceSnmpObjectCount(device_id, snmp_object_count);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating snmp object count by device id " + e);
+            log.debug("{}", "Error in updating snmp object count by device id " + e);
         }
     }
 
@@ -2714,7 +2714,7 @@ public class DeviceService implements DeviceServiceInterface {
             this.updateDeviceSnmpObjectStatusByDeviceId(device_id);
 
         } catch (Exception e) {
-            System.out.println("Error in updating snmp object status " + e);
+            log.debug("{}", "Error in updating snmp object status " + e);
         }
     }
 
@@ -2733,7 +2733,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceSnmpObjectStatus(device_id, snmp_object_status);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating device snmp object status by device id " + e);
+            log.debug("{}", "Error in updating device snmp object status by device id " + e);
         }
     }
 
@@ -2934,7 +2934,7 @@ public class DeviceService implements DeviceServiceInterface {
      */
     public void deviceUpsertbyId(String dockername, List<DeviceMonitorDTO> deviceMonitors, String assignee) {
 
-        System.out.println("Device**UPSET " + deviceMonitors.toString());
+        log.debug("{}", "Device**UPSET " + deviceMonitors.toString());
         for (DeviceMonitorDTO device : deviceMonitors) {
             String ipAddress = null;
             if (deviceRepository.checkDeviceByDeviceId(device.getMac_address(), device.getVdms_id(),
@@ -2945,8 +2945,8 @@ public class DeviceService implements DeviceServiceInterface {
                         this.updateOnlineStatus(device);
                         this.updateofflineStatus(device);
                     } catch (Exception e) {
-                        System.out.println("error in upsert device by monitor online/offline device " + e);
-                        System.out.println(e);
+                        log.debug("{}", "error in upsert device by monitor online/offline device " + e);
+                        log.debug("{}", e);
                     }
                 }
 
@@ -2955,7 +2955,7 @@ public class DeviceService implements DeviceServiceInterface {
                     if (deviceIPAddresses != null && deviceIPAddresses.size() < 10) {
                         List<DeviceIPAddressDTO> oldDeviceIPAddresses = this
                                 .getDeviceIPAddressByDeviceId(device.getId());
-                        System.out.println("oldDeviceIPAddresses " + oldDeviceIPAddresses);
+                        log.debug("{}", "oldDeviceIPAddresses " + oldDeviceIPAddresses);
                         deviceIPAddressRepository.deleteIPAddressByDeviceId(device.getId());
 
                         ipAddress = deviceIPAddresses.get(0).getIp_address();
@@ -2965,20 +2965,20 @@ public class DeviceService implements DeviceServiceInterface {
                             String id = Generators.timeBasedGenerator().generate().toString();
 
                             if (deviceIPAddress.getIp_conflict_status() != null) {
-                                System.out.println("Inside 1stt" + deviceIPAddress.toString());
+                                log.debug("{}", "Inside 1stt" + deviceIPAddress.toString());
                                 persistDeviceIpAddress(id, deviceIPAddress, device.getId());
                             } else {
                                 for (int j = 0; j < oldDeviceIPAddresses.size(); j++) {
                                     DeviceIPAddressDTO oldDeviceIPAddress = oldDeviceIPAddresses.get(j);
-                                    System.out.println("oldDeviceIPAddress " + oldDeviceIPAddress.getIp_address()
+                                    log.debug("{}", "oldDeviceIPAddress " + oldDeviceIPAddress.getIp_address()
                                             + "      device.getIp_address() " + device.getIp_address());
                                     if (oldDeviceIPAddress.getIp_address().equals(deviceIPAddress.getIp_address())) {
-                                        System.out.println("Inside 2nd" + deviceIPAddress.toString());
+                                        log.debug("{}", "Inside 2nd" + deviceIPAddress.toString());
                                         deviceIPAddress
                                                 .setIp_conflict_status(oldDeviceIPAddress.getIp_conflict_status());
                                     }
                                 }
-                                System.out.println("Inside 3nd" + deviceIPAddress.toString());
+                                log.debug("{}", "Inside 3nd" + deviceIPAddress.toString());
                                 persistDeviceIpAddress(id, deviceIPAddress, device.getId());
 
                             }
@@ -2988,11 +2988,11 @@ public class DeviceService implements DeviceServiceInterface {
                     deviceRepository.updateDeviceStatus(ipAddress, device.getMac_address(), device.getStatus(),
                             device.getLast_seen_on(), device.getVdms_id(), device.getDocker_name(), device.getId());
                 } catch (Exception e) {
-                    System.out.println("error in upsert device by monitor update device " + e);
-                    System.out.println("***********************************************************************");
-                    System.out.println(device.toString());
-                    System.out.println("***********************************************************************");
-                    System.out.println(e);
+                    log.debug("{}", "error in upsert device by monitor update device " + e);
+                    log.debug("{}", "***********************************************************************");
+                    log.debug("{}", device.toString());
+                    log.debug("{}", "***********************************************************************");
+                    log.debug("{}", e);
                 }
 
             } else {
@@ -3019,11 +3019,11 @@ public class DeviceService implements DeviceServiceInterface {
                     }
 
                 } catch (Exception e) {
-                    System.out.println("error in upsert device by monitor insert device " + e);
-                    System.out.println("***********************************************************************");
-                    System.out.println(device.toString());
-                    System.out.println("***********************************************************************");
-                    System.out.println(e);
+                    log.debug("{}", "error in upsert device by monitor insert device " + e);
+                    log.debug("{}", "***********************************************************************");
+                    log.debug("{}", device.toString());
+                    log.debug("{}", "***********************************************************************");
+                    log.debug("{}", e);
                 }
 
             }
@@ -3034,7 +3034,7 @@ public class DeviceService implements DeviceServiceInterface {
                     socketservice.socketDeviceCount();
                     socketservice.sockerDeviceCountByDocker(dockername,assignee);
                 } catch (Exception e) {
-                    System.out.println("error in upsert device by monitor socket event " + e);
+                    log.debug("{}", "error in upsert device by monitor socket event " + e);
                 }
 
             }
@@ -3049,8 +3049,8 @@ public class DeviceService implements DeviceServiceInterface {
         try {
             asyncService.updateVendorByMacAddress(device_id, mac_address);
         } catch (Exception e) {
-            System.out.println("error updating device vendor " + e);
-            System.out.println(e);
+            log.debug("{}", "error updating device vendor " + e);
+            log.debug("{}", e);
         }
     }
 
@@ -3061,13 +3061,13 @@ public class DeviceService implements DeviceServiceInterface {
         try {
             String internal_ip_address = dockerService.getDockerInternalIp(dockername);
             String display_name = apicallService.getDeviceHostNameByIP(internal_ip_address, ip_address);
-            System.out.println("********************************************************");
-            System.out.println("Display Name: " + display_name);
-            System.out.println("********************************************************");
+            log.debug("{}", "********************************************************");
+            log.debug("{}", "Display Name: " + display_name);
+            log.debug("{}", "********************************************************");
             this.updateDevicesDisplayNameById(device_id, display_name);
         } catch (Exception e) {
-            System.out.println("error updating device vendor/hostname " + e);
-            System.out.println(e);
+            log.debug("{}", "error updating device vendor/hostname " + e);
+            log.debug("{}", e);
         }
 
     }
@@ -3090,10 +3090,10 @@ public class DeviceService implements DeviceServiceInterface {
                         deviceHistory.getOld_ip_address(), deviceHistory.getTimestamp(), deviceHistory.getId());
                 rabbitmqService.rabbitmqDeviceEvent(dockername, deviceHistory);
             } catch (Exception e) {
-                System.out.println("************************History******************************************");
-                System.out.println(deviceHistory);
-                System.out.println("************************History******************************************");
-                System.out.println(e);
+                log.debug("{}", "************************History******************************************");
+                log.debug("{}", deviceHistory);
+                log.debug("{}", "************************History******************************************");
+                log.debug("{}", e);
             }
         }
 
@@ -3113,7 +3113,7 @@ public class DeviceService implements DeviceServiceInterface {
                         // new changes
                         this.getDeviceConditionStatus(device.getId(), device.getStatus());
                         String deviceConditionId=deviceConditionsService.deviceConditionsRepository.getDeviceConditionIdByDeviceId(device.getId());
-                        System.out.println("Device Condition Id: " + deviceConditionId);
+                        log.debug("{}", "Device Condition Id: " + deviceConditionId);
                         if(deviceConditionId!=null) {
                             aiCallService.updateDeviceOnlineStatus(device.getId(), device.getStatus(),deviceConditionId);
                         }
@@ -3137,7 +3137,7 @@ public class DeviceService implements DeviceServiceInterface {
 
         if (device.getStatus().equals(0)) {
             String parentDevice = deviceRepository.getDeviceparent(device.getId());
-            System.out.println("Parent Device: " + parentDevice);
+            log.debug("{}", "Parent Device: " + parentDevice);
 
             if (parentDevice == null || parentDevice.equals("no_parent")) {
                 String snmpParentDevice = deviceRepository.getDeviceSnmpparent(device.getId());
@@ -3147,7 +3147,7 @@ public class DeviceService implements DeviceServiceInterface {
                         if(device.getId() != null && device.getStatus() == 0) {
                             BigInteger dndTimestamp = BigInteger.valueOf(System.currentTimeMillis());
                             Boolean aiCallEnabled = deviceRepository.checkAiCallEnableStatus(device.getId());
-                            System.out.println("aiCallEnabled: " + aiCallEnabled);
+                            log.debug("{}", "aiCallEnabled: " + aiCallEnabled);
                             if (aiCallEnabled == null) {
                                 aiCallEnabled = false;
                                 log.info("aiCallEnabled was null, set to false for device: {} ", device.getId());
@@ -3288,7 +3288,7 @@ public class DeviceService implements DeviceServiceInterface {
         try {
             deviceRepository.updateSnmpParent(dockername, device.getId(), device.getSnmp_parent(), device.getDevice_type());
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
     }
 
@@ -3518,11 +3518,11 @@ public class DeviceService implements DeviceServiceInterface {
                         formated_devices.add(device);
                     }
                 } catch (Exception e) {
-                    System.out.println("FAILED TO FETCH DEVICE IN FORMATING FOR ALL NETWORK TOPOLOGY WITH DEVICE " + device.getId());
+                    log.debug("{}", "FAILED TO FETCH DEVICE IN FORMATING FOR ALL NETWORK TOPOLOGY WITH DEVICE " + device.getId());
                 }
             }
 
-            System.out.println("TOTAL COUNT : " + map_id_to_distinct_id.size());
+            log.debug("{}", "TOTAL COUNT : " + map_id_to_distinct_id.size());
 
 
             for (DeviceTopologyDTO device : formated_devices) {
@@ -3567,8 +3567,8 @@ public class DeviceService implements DeviceServiceInterface {
                     }
 
                 } catch (Exception e) {
-                    System.out.println(e);
-                    System.out.println("FAILED TO FETCH DEVICE IN ALL NETWORK TOPOLOGY FOR DEVICE " + device.getId());
+                    log.debug("{}", e);
+                    log.debug("{}", "FAILED TO FETCH DEVICE IN ALL NETWORK TOPOLOGY FOR DEVICE " + device.getId());
                 }
 
             }
@@ -3734,7 +3734,7 @@ public class DeviceService implements DeviceServiceInterface {
             }
             return devices;
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return null;
 
@@ -3825,7 +3825,7 @@ public class DeviceService implements DeviceServiceInterface {
                         }
                     }
                 } catch (Exception e) {
-                    System.out.println("RESET FAILED FOR DEVICE " + device.getIp_address());
+                    log.debug("{}", "RESET FAILED FOR DEVICE " + device.getIp_address());
                 }
             }
 
@@ -4117,18 +4117,18 @@ public class DeviceService implements DeviceServiceInterface {
         Integer onboard_status = 123;
         Integer assigned_status = null;
 
-        System.out.println("outside all" + virtual_device_type + status + monitor + offset + pageno);
+        log.debug("{}", "outside all" + virtual_device_type + status + monitor + offset + pageno);
 
         if (condition.equals("all")) {
-            System.out.println("inside all" + virtual_device_type + status + monitor + offset + pageno);
+            log.debug("{}", "inside all" + virtual_device_type + status + monitor + offset + pageno);
         } else if (condition.equals("unmonitored")) {
-            System.out.println("outsidxse all" + virtual_device_type + status + monitor + offset + pageno);
+            log.debug("{}", "outsidxse all" + virtual_device_type + status + monitor + offset + pageno);
             monitor = 0;
         } else if (condition.equals("online")) {
 
             monitor = 1;
             status = 1;
-            System.out.println("Inside Online" + monitor + status);
+            log.debug("{}", "Inside Online" + monitor + status);
 
         } else if (condition.equals("offline")) {
             monitor = 1;
@@ -4187,8 +4187,8 @@ public class DeviceService implements DeviceServiceInterface {
                     }
                 }
             } catch (Exception e) {
-                System.out.println("Error getting device ip address " + e);
-                System.out.println(e);
+                log.debug("{}", "Error getting device ip address " + e);
+                log.debug("{}", e);
             }
 
         }
@@ -4287,13 +4287,13 @@ public class DeviceService implements DeviceServiceInterface {
         try {
             socketservice.sockerDeviceCountByDocker(dockername,assignee);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
 
         try {
             inspectionRecordService.updateInspectionStatusOnDeviceArchive(deviceIds);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
     }
 
@@ -4318,7 +4318,7 @@ public class DeviceService implements DeviceServiceInterface {
             Integer virtual_device_type = 2;
             Integer monitor = 1;
 
-            System.out.println("Upserting device " + virtual_device);
+            log.debug("{}", "Upserting device " + virtual_device);
             virtual_device.setCreated_timestamp(BigInteger.valueOf(System.currentTimeMillis()));
             deviceRepository.upsertVirtualDeviceByAssetMapper(virtual_device.getId(), virtual_device.getDocker_name(), virtual_device.getVdms_id(),
                     virtual_device.getUser_data_name(), virtual_device.getUser_data_model(),
@@ -4329,7 +4329,7 @@ public class DeviceService implements DeviceServiceInterface {
             this.updateVirtualDeviceOnboardStatusByAssetMapper(virtual_device, username);
 
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
     }
 
@@ -4346,7 +4346,7 @@ public class DeviceService implements DeviceServiceInterface {
 
             this.getProductDetails("", virtual_device.getVdms_id(), virtual_device.getDocker_name(), virtual_device_id, virtual_device.getProduct_id(), previous_product_id);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
     }
 
@@ -4434,8 +4434,8 @@ public class DeviceService implements DeviceServiceInterface {
             try {
                 device.setIp_addresses(this.getDeviceIPAddressByDeviceId(device.getId()));
             } catch (Exception e) {
-                System.out.println("Error getting device ip address " + e);
-                System.out.println(e);
+                log.debug("{}", "Error getting device ip address " + e);
+                log.debug("{}", e);
             }
         }
         return devices;
@@ -4475,7 +4475,7 @@ public class DeviceService implements DeviceServiceInterface {
         try {
             executorService.shutdown();
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
     }
 
@@ -4504,7 +4504,7 @@ public class DeviceService implements DeviceServiceInterface {
         try {
             executorService.shutdown();
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
     }
 
@@ -4540,7 +4540,7 @@ public class DeviceService implements DeviceServiceInterface {
             this.updateDeviceMeasuringInstrumentStatusByDeviceId(device_id);
 
         } catch (Exception e) {
-            System.out.println("Error in updating measuring instrument status " + e);
+            log.debug("{}", "Error in updating measuring instrument status " + e);
         }
     }
 
@@ -4560,7 +4560,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceMeasuringInstrumentStatus(device_id, measuring_instrument_status);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating measuring_instrument status by device id " + e);
+            log.debug("{}", "Error in updating measuring_instrument status by device id " + e);
         }
     }
 
@@ -4587,7 +4587,7 @@ public class DeviceService implements DeviceServiceInterface {
             this.upsertProductDetailsForVirtualDevice("", "", "", device);
             this.updateDeviceProductDetails(device);
 
-            System.out.println(db_product.toString());
+            log.debug("{}", db_product.toString());
         }
     }
     /***********************************Update Product Details By Model and Mac Vendor - Model Detection Script************************************/
@@ -4602,7 +4602,7 @@ public class DeviceService implements DeviceServiceInterface {
      * @return the update DTO with vendor ids populated
      */
     public MultiDeviceDTO setProductVendorsForDevices(MultiDeviceDTO multidevicedto, String previous_product_id) {
-        System.out.println("---------- Entered setVendorsForDevices -------------");
+        log.debug("{}", "---------- Entered setVendorsForDevices -------------");
 
         if ((multidevicedto.getProduct_id() != null) && (!multidevicedto.getProduct_id().equals(previous_product_id))) {
             DeviceDTO device = deviceRepository.getDeviceByDeviceId(multidevicedto.getId());
@@ -4639,7 +4639,7 @@ public class DeviceService implements DeviceServiceInterface {
      */
     public void getProductDetails(String username, String vdmsid, String dockername, String device_id,
                                   String product_id, String previous_product_id) {
-        System.out.println("~~~~~~~~~~~~~~ Entered getProductDetails ~~~~~~~~~~~~~~~~~~~~~~~~~");
+        log.debug("{}", "~~~~~~~~~~~~~~ Entered getProductDetails ~~~~~~~~~~~~~~~~~~~~~~~~~");
 
         if (product_id == null) {
             this.deleteDeviceGlobalProductDetails(device_id);
@@ -4661,7 +4661,7 @@ public class DeviceService implements DeviceServiceInterface {
      * Removes the global product-derived SNMP, port, and notes records from a device.
      */
     public void deleteDeviceGlobalProductDetails(String device_id) {
-        System.out.println("~~~~~~~~~~~~~~~~~ Entered deleteGlobalDetails ~~~~~~~~~~~~~~~~~~~~~~`");
+        log.debug("{}", "~~~~~~~~~~~~~~~~~ Entered deleteGlobalDetails ~~~~~~~~~~~~~~~~~~~~~~`");
 
         snmpService.deleteGlobalSnmpByDeviceId(device_id);
         portService.deleteGlobalPortByDeviceId(device_id);
@@ -4675,7 +4675,7 @@ public class DeviceService implements DeviceServiceInterface {
     public void getProductDetailsByProductId(String username, String vdmsid, String dockername, String
             product_id, String device_id) {
         try {
-            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~ getProductDetailsFromCloud ~~~~~~~~~~~~~~~~~~~~~~~~~~");
+            log.debug("{}", "~~~~~~~~~~~~~~~~~~~~~~~~~ getProductDetailsFromCloud ~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
             ProductDTO db_product = apicallService.getProductDetailsByProductId(product_id);
 
@@ -4705,7 +4705,7 @@ public class DeviceService implements DeviceServiceInterface {
                 product_detailsService.upsertProductDetail(db_product);
             }
         } catch (IOException e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
     }
 
@@ -4718,7 +4718,7 @@ public class DeviceService implements DeviceServiceInterface {
      */
     public MultiDeviceDTO updateVendorPhoneBookDetails(String username, String vdmsid, String
             dockername, MultiDeviceDTO multiDeviceDTO) {
-        System.out.println(" ~~~~~~~~~~~~~~ Entered updateVendorPhoneBookDetails ~~~~~~~~~~~~~~~~~~~");
+        log.debug("{}", " ~~~~~~~~~~~~~~ Entered updateVendorPhoneBookDetails ~~~~~~~~~~~~~~~~~~~");
 
         if (multiDeviceDTO.getGlobal_vendor() != null) {
             multiDeviceDTO.setGlobal_vendor_id(multiDeviceDTO.getGlobal_vendor().getId());
@@ -4748,7 +4748,7 @@ public class DeviceService implements DeviceServiceInterface {
      */
     public void addPhoneBookAddressDetailsById(String username, String vdmsid, String
             dockername, PhonebookAddressDto phonebook) {
-        System.out.println("~~~~~~~~~~~~~~~~~~~ addPhoneBookAddressDetailsById ~~~~~~~~~~~~~~~~~~~~~");
+        log.debug("{}", "~~~~~~~~~~~~~~~~~~~ addPhoneBookAddressDetailsById ~~~~~~~~~~~~~~~~~~~~~");
         utilsService.upsertPhoneAddressById(username, vdmsid, dockername, phonebook);
     }
 
@@ -4756,7 +4756,7 @@ public class DeviceService implements DeviceServiceInterface {
      * Copies the vendor objects from a device DTO into a new multi-device DTO.
      */
     public MultiDeviceDTO mapProductVendorsToMultideviceDTO(DevicesDTO devicesDTO) {
-        System.out.println("~~~~~~~~~~~~~ mappingDTO ~~~~~~~~~~~~~~~");
+        log.debug("{}", "~~~~~~~~~~~~~ mappingDTO ~~~~~~~~~~~~~~~");
 
         MultiDeviceDTO multiDeviceDTO = new MultiDeviceDTO();
         multiDeviceDTO.setGlobal_vendor(devicesDTO.getGlobal_vendor());
@@ -4793,7 +4793,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceRecordChecklistStatus(device_id, checklist_status);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating record checklist status by device id " + e);
+            log.debug("{}", "Error in updating record checklist status by device id " + e);
         }
     }
 
@@ -4802,7 +4802,7 @@ public class DeviceService implements DeviceServiceInterface {
      */
     public void updateDeviceRecordChecklistCount(String device_id, String record_type) {
         Integer record_checklist_count = recordChecklistService.getChecklistStatusCountDeviceId(device_id, "inspection", record_type);
-        System.out.println("count--------------------" + record_checklist_count);
+        log.debug("{}", "count--------------------" + record_checklist_count);
         deviceRepository.updateDeviceRecordChecklistCount(device_id, record_checklist_count);
     }
 
@@ -4829,7 +4829,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceDaintreeDevicesCount(daintree_count, device_id);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating daintree count by device id " + e);
+            log.debug("{}", "Error in updating daintree count by device id " + e);
         }
     }
 
@@ -4843,7 +4843,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceQrcodeCount(qrcode_count, device_id);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating qrcode count by device id " + e);
+            log.debug("{}", "Error in updating qrcode count by device id " + e);
         }
     }
 
@@ -4912,7 +4912,7 @@ public class DeviceService implements DeviceServiceInterface {
             this.updateDeviceDaintreeStatusByDeviceId(device_id);
 
         } catch (Exception e) {
-            System.out.println("Error in updating DainTree status " + e);
+            log.debug("{}", "Error in updating DainTree status " + e);
         }
     }
 
@@ -4931,7 +4931,7 @@ public class DeviceService implements DeviceServiceInterface {
 
             }
         } catch (Exception e) {
-            System.out.println("Error in updating Daintree status by device id " + e);
+            log.debug("{}", "Error in updating Daintree status by device id " + e);
         }
     }
 
@@ -5464,9 +5464,9 @@ public class DeviceService implements DeviceServiceInterface {
             BigInteger currentTimestamp = BigInteger.valueOf(System.currentTimeMillis());
 
             if (deviceCondition.getSchedule() != null && deviceCondition.getSchedule() == 1) {
-                System.out.println("Start Time " + deviceCondition.getStart_time() + "    End Time " + deviceCondition.getEnd_time());
+                log.debug("{}", "Start Time " + deviceCondition.getStart_time() + "    End Time " + deviceCondition.getEnd_time());
                 checkCondition = conditionUtils.verifyCurrentSystemTimeWithinScheduledTime(deviceCondition.getStart_time(), deviceCondition.getEnd_time()); // reusing from conditions from sensor
-                System.out.println("checkCondition inside " + checkCondition);
+                log.debug("{}", "checkCondition inside " + checkCondition);
             }
 
             if (checkCondition) {
@@ -5483,7 +5483,7 @@ public class DeviceService implements DeviceServiceInterface {
 
                         if (scheduledJobDTO == null) {
 
-                            System.out.println("------------ Online job added ----------------");
+                            log.debug("{}", "------------ Online job added ----------------");
                             this.scheduleDeviceAlertJob("add", deviceCondition);
                         } else {
                             this.replaceDeviceAlertJob("replace", deviceCondition, scheduledJobDTO.getId());
@@ -5524,7 +5524,7 @@ public class DeviceService implements DeviceServiceInterface {
                         ScheduledJobDTO scheduledJobDTO = jobSchedulerService.getScheduledJobByConditionId(deviceCondition.getId());
                         deviceCondition.setLast_alerted(true);
                         if (scheduledJobDTO == null) {
-                            System.out.println("------------ Offline job added ----------------");
+                            log.debug("{}", "------------ Offline job added ----------------");
                             this.scheduleDeviceAlertJob("add", deviceCondition);
                         } else {
                             this.replaceDeviceAlertJob("replace", deviceCondition, scheduledJobDTO.getId());
@@ -5571,10 +5571,10 @@ public class DeviceService implements DeviceServiceInterface {
                 if (alertProfile != null) {
                     if ((!alerted) && deviceCondition.getLast_alerted()) {
                         if (deviceCondition.getAlert_count_enabled() != 1 && deviceCondition.getTrigger_time() == null) {
-                            System.out.println("------------ sending normal email --------------");
+                            log.debug("{}", "------------ sending normal email --------------");
                             this.sendDeviceEmailAlerts(deviceCondition, deviceAlert, alertProfile, currentTimestamp, status);
                         } else if (deviceCondition.getAlert_count_enabled() == 1 && (deviceCondition.getAlert_count() == deviceCondition.getMax_alert_count())) {
-                            System.out.println("------------ sending count based email --------------");
+                            log.debug("{}", "------------ sending count based email --------------");
                             this.sendDeviceEmailAlerts(deviceCondition, deviceAlert, alertProfile, currentTimestamp, status);
                         }
                     }
@@ -5646,7 +5646,7 @@ public class DeviceService implements DeviceServiceInterface {
                 ScheduledJobDTO jobSchedulerDTO = new ScheduledJobDTO();
                 jobSchedulerDTO.setJob_type("delete");
                 jobSchedulerDTO.setId(scheduledJobDTO.getId());
-                System.out.println("deleting from scheduler");
+                log.debug("{}", "deleting from scheduler");
                 String job_id = jobSchedulerService.createScheduledJob(jobSchedulerDTO);
                 //delete the record
                 if (job_id != null) {
@@ -5655,7 +5655,7 @@ public class DeviceService implements DeviceServiceInterface {
             }
 
         } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            log.debug("{}", ex.getMessage());
         }
     }
 
@@ -5710,7 +5710,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceEcobeeCount(device_id, ecobee_count);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating ecobee count by device id " + e);
+            log.debug("{}", "Error in updating ecobee count by device id " + e);
         }
     }
 
@@ -5729,7 +5729,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceEcobeeStatus(device_id, ecobee_status);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating pelican status by device id " + e);
+            log.debug("{}", "Error in updating pelican status by device id " + e);
         }
     }
 
@@ -5742,7 +5742,7 @@ public class DeviceService implements DeviceServiceInterface {
             String device_id = ecobeeService.getDeviceIdByEcobeeSensorId(ecobee_sensor_id);
             this.updateDeviceEcobeeStatusByDeviceId(device_id);
         } catch (Exception e) {
-            System.out.println("Error in updating ecobee status " + e);
+            log.debug("{}", "Error in updating ecobee status " + e);
         }
     }
 
@@ -5788,7 +5788,7 @@ public class DeviceService implements DeviceServiceInterface {
             }
             return deviceSensors;
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return null;
     }
@@ -5865,7 +5865,7 @@ public class DeviceService implements DeviceServiceInterface {
             }
             return devices;
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return null;
     }
@@ -5910,7 +5910,7 @@ public class DeviceService implements DeviceServiceInterface {
                 device.setNfc_count(nfcService.getQrNfcCountByDeviceId(device.getId()) + clientNfcService.getClientNfcCountByDeviceId(device.getId()));
                 device.setBarcode_count(clientBarCodeService.getClientBarCodeCountByDeviceId(device.getId()));
             } catch (Exception e) {
-                System.out.println(e);
+                log.debug("{}", e);
             }
         }
         return device;
@@ -6124,8 +6124,8 @@ public class DeviceService implements DeviceServiceInterface {
             deviceQrNfcCount.put("qr_nfc_device_count", qrNfcDeviceCount);
             return deviceQrNfcCount;
         } catch (Exception e) {
-            System.out.println("error getting qr nfc count from cloud");
-            System.out.println(e);
+            log.debug("{}", "error getting qr nfc count from cloud");
+            log.debug("{}", e);
 
         }
         return null;
@@ -6139,7 +6139,7 @@ public class DeviceService implements DeviceServiceInterface {
             String device_id = modbusService.getDeviceIdByModbusRegisterId(modbus_register_id);
             this.updateDeviceModbusStatusByDeviceId(device_id);
         } catch (Exception e) {
-            System.out.println("Error in updating modbus status " + e);
+            log.debug("{}", "Error in updating modbus status " + e);
         }
     }
 
@@ -6157,7 +6157,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceModbusStatus(device_id, modbus_status);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating modbus status by device id " + e);
+            log.debug("{}", "Error in updating modbus status by device id " + e);
         }
     }
 
@@ -6170,7 +6170,7 @@ public class DeviceService implements DeviceServiceInterface {
             String device_id = modbusService.getDeviceIdByModbusRegisterId(modbus_register_id);
             this.updateDeviceModbusCountByDeviceId(device_id);
         } catch (Exception e) {
-            System.out.println("Error in updating modbus count " + e);
+            log.debug("{}", "Error in updating modbus count " + e);
         }
     }
 
@@ -6185,7 +6185,7 @@ public class DeviceService implements DeviceServiceInterface {
                 deviceRepository.updateDeviceModbusCount(device_id, modbus_count);
             }
         } catch (Exception e) {
-            System.out.println("Error in updating modbus count by device id " + e);
+            log.debug("{}", "Error in updating modbus count by device id " + e);
         }
     }
 
@@ -6212,8 +6212,8 @@ public class DeviceService implements DeviceServiceInterface {
                 device.setOnboard_data(new DeviceOnboardStatusDTO(device.getAssignee_email(), device.getImage_status(), device.getGeolocation_status(), device.getTag_status(), device.getField_status(), deviceOnboardStatusAssigneeService.getDeviceOnboardStatusAssignees(device.getDevice_onboard_status_id())));
                 device.setSubsystems(new HashSet<>());
             } catch (Exception e) {
-                System.out.println("Error getting device ip address " + e);
-                System.out.println(e);
+                log.debug("{}", "Error getting device ip address " + e);
+                log.debug("{}", e);
             }
         }
         Set<DeviceDTO> devicesWithQrCodeDetails = this.getDevicesWithQrCodeCount(vdmsid, devices);
@@ -6518,7 +6518,7 @@ public class DeviceService implements DeviceServiceInterface {
                 this.upsertOnboardAsset(username, vdmsid, deviceOnboardStatusDTO, device_id, onboard_asset_data.getString("onboard_type"));
             }
         } catch (JacksonException e) {
-            System.out.println("Unable to upsert onboard assets");
+            log.debug("{}", "Unable to upsert onboard assets");
         }
 
     }
@@ -6782,7 +6782,7 @@ public class DeviceService implements DeviceServiceInterface {
                     log.info("Moved from pending/not onboarded to completed.");
                     this.updateOnboardAssetHistoryDetails(username, device_id, "asset_onboard", "completed", "");
                     DeviceDTO deviceDTO = deviceRepository.getDeviceByDeviceId(device_id);
-                    System.out.println("device dto : " + deviceDTO);
+                    log.debug("{}", "device dto : " + deviceDTO);
                     if (deviceDTO.getLocation_id() != null) {
                         locationDTO = locationService.getLocationByLocationId(deviceDTO.getLocation_id());
                     }
@@ -7083,16 +7083,16 @@ public class DeviceService implements DeviceServiceInterface {
                             for (DeviceDTO device : devices) {
                                 device.setMeasuringInstruments(measuringInstrumentService.getInstrumentsByDeviceId(username, vdmsid, device.getId()));
                             }
-                            System.out.println("-----------------------------------------");
+                            log.debug("{}", "-----------------------------------------");
                             log.info("Get is complete");
                             byte[] bytes = this.generateExcelForMeasuringInstrumentsEmail(username, vdmsid, devices);
                             this.sendAssetExportEmail(email, "Advanced Asset Export", modified_filename + "_" + "AssetListAdvancedExport" + "_" + currentDateTime, bytes, vdmsid);
-                            System.out.println("-------------------------------------------------------------------------");
+                            log.debug("{}", "-------------------------------------------------------------------------");
                             log.info("Sent Advance Report to: {}" + email);
-                            System.out.println("-------------------------------------------------------------------------");
+                            log.debug("{}", "-------------------------------------------------------------------------");
 
                         } catch (Exception e) {
-                            System.out.println(e);
+                            log.debug("{}", e);
                             log.error("Exception.  Params: condition: {}, searchSortFilterDetails: {}, onboardStatus: {}, template name: {}, email: {}, endpoint : {}", condition, searchSortFilterDetails, onboardStatus, template_name, email, httpServletRequest.getRequestURI(), e);
 
                         }
@@ -7101,7 +7101,7 @@ public class DeviceService implements DeviceServiceInterface {
                 }
             }
         } catch (IOException e) {
-            System.out.println(e);
+            log.debug("{}", e);
             log.error("Exception.  Params: condition: {}, searchSortFilterDetails: {}, onboardStatus: {}, template name: {}, email: {}, endpoint : {}", condition, searchSortFilterDetails, onboardStatus, template_name, email, httpServletRequest.getRequestURI(), e);
 
         }
@@ -7608,7 +7608,7 @@ public class DeviceService implements DeviceServiceInterface {
                                         modifiedHeaderNames.put(modifiedKey, lowercaseKey);
 
                                     } catch (Exception e) {
-                                        System.out.println(e);
+                                        log.debug("{}", e);
                                     }
 
                                 }
@@ -7640,7 +7640,7 @@ public class DeviceService implements DeviceServiceInterface {
 
         String filename = modified_filename + "_" + "AssetList" + "_";
 
-        System.out.println("------- File name --------" + filename);
+        log.debug("{}", "------- File name --------" + filename);
 
 
         SXSSFWorkbook workbook = new SXSSFWorkbook();
@@ -7677,18 +7677,18 @@ public class DeviceService implements DeviceServiceInterface {
         int rowIndex = 1;
 
         for (Map<String, String> excelMap : excelData) {
-            System.out.println("EXCEL MAP: " + excelMap);
+            log.debug("{}", "EXCEL MAP: " + excelMap);
             SXSSFRow dataRow = sheet.createRow(rowIndex++);
 
             for (Map.Entry<String, String> entry : excelMap.entrySet()) {
-                System.out.println("Entry: " + entry);
+                log.debug("{}", "Entry: " + entry);
                 Integer colIndex = headerMap.get(entry.getKey());
 
                 if (colIndex != null) {
                     Cell dataCell = dataRow.createCell(colIndex);
 
                     if (entry.getKey().contains("Asset Image")) {
-                        System.out.println("Image add came");
+                        log.debug("{}", "Image add came");
                         try {
                             URL url = new URL(entry.getValue());
                             byte[] imageBytes = IOUtils.toByteArray(url.openStream());
@@ -7714,10 +7714,10 @@ public class DeviceService implements DeviceServiceInterface {
                             // Create the picture
                             Picture picture = drawing.createPicture(anchor, pictureIdx);
                             picture.resize(1.0, 1.0);
-                            System.out.println("Image Addded Successfully");
+                            log.debug("{}", "Image Addded Successfully");
                         } catch (IOException e) {
-                            System.err.println("Failed to load image from URL: " + entry.getValue());
-                            e.printStackTrace();
+                            log.error("{}", "Failed to load image from URL: " + entry.getValue());
+                            log.error("{}", e.toString(), e);
                         }
                     } else {
                         dataCell.setCellValue(entry.getValue());
@@ -7730,7 +7730,7 @@ public class DeviceService implements DeviceServiceInterface {
             response.setContentType("application/octet-stream");
             String headerKey = "Content-Disposition";
             String headerValue = "attachment; filename=" + filename + currentDateTime + ".xlsx";
-            System.out.println("--------- header value -------" + headerValue);
+            log.debug("{}", "--------- header value -------" + headerValue);
             response.setHeader(headerKey, headerValue);
 
             ServletOutputStream outputStream = response.getOutputStream();
@@ -7766,7 +7766,7 @@ public class DeviceService implements DeviceServiceInterface {
             String filename = modified_filename + "_AssetListAdvancedExport_";
             String currentDateTime = utils.getCurrentDateByTimezone(BigInteger.valueOf(System.currentTimeMillis()), timeZoneId);
             String headerValue = "attachment; filename=" + filename + currentDateTime + ".xlsx";
-            System.out.println("------- File name --------" + headerValue);
+            log.debug("{}", "------- File name --------" + headerValue);
 
             // Create workbook and sheet
             XSSFWorkbook workbook = new XSSFWorkbook();
@@ -7833,12 +7833,12 @@ public class DeviceService implements DeviceServiceInterface {
             workbook.close();
             stream.close();
 
-            System.out.println("Generated bytes for the exports");
+            log.debug("{}", "Generated bytes for the exports");
             return bytes;
 
         } catch (Exception e) {
-            System.out.println("Error generating Excel for Device Id: " + deviceId);
-            e.printStackTrace();
+            log.debug("{}", "Error generating Excel for Device Id: " + deviceId);
+            log.error("{}", e.toString(), e);
             return null;
         }
     }
@@ -8303,7 +8303,7 @@ public class DeviceService implements DeviceServiceInterface {
             List<BacnetAdvanceExportExcelDTO> data = bacnetService.getBacnetDeviceIdForAdvanceExcelExport(username, vdmsid, deviceId);
             return data;
         } catch (Exception e) {
-            System.out.println("No BACnet data for device: " + deviceId);
+            log.debug("{}", "No BACnet data for device: " + deviceId);
             return new ArrayList<>();
         }
     }
@@ -8316,7 +8316,7 @@ public class DeviceService implements DeviceServiceInterface {
             List<SiemensAdvanceExportExcelDTO> data = siemensService.getSiemensDeviceIdForAdvanceExcelExport(username, vdmsid, deviceId);
             return data;
         } catch (Exception e) {
-            System.out.println("No Siemens data for device: " + deviceId);
+            log.debug("{}", "No Siemens data for device: " + deviceId);
             return new ArrayList<>();
         }
     }
@@ -8330,7 +8330,7 @@ public class DeviceService implements DeviceServiceInterface {
             return data;
         } catch (Exception e) {
 
-            System.out.println("No Conditions data for device: " + deviceId);
+            log.debug("{}", "No Conditions data for device: " + deviceId);
             return new ArrayList<>();
         }
     }
@@ -8342,7 +8342,7 @@ public class DeviceService implements DeviceServiceInterface {
             List<SiemensBmsExportDTO> data = siemensService.getSiemensBmsData(username, vdmsid, deviceId);
             return data;
         } catch (Exception e) {
-            System.out.println("No BMS data for device: " + deviceId);
+            log.debug("{}", "No BMS data for device: " + deviceId);
             return new ArrayList<>();
         }
     }
@@ -8938,7 +8938,7 @@ public String daysCleaned(String input){
      */
     public void syncDeviceOnboardStatus(String vdmsid) {
         Set<DeviceDTO> deviceDTOS = deviceRepository.listAllDeviceByVdmsId(vdmsid);
-        System.out.println("Total device size: " + deviceDTOS.size());
+        log.debug("{}", "Total device size: " + deviceDTOS.size());
         for (DeviceDTO device : deviceDTOS) {
             this.syncSingleDeviceOnboardStatus(vdmsid, device.getId());
         }
@@ -8963,7 +8963,7 @@ public String daysCleaned(String input){
         if (vdmsid != null && device_id != null) {
             DeviceDTO deviceDTO = this.getDeviceByDeviceIdNew(null, vdmsid, null, device_id);
 
-            System.out.println("Device id : " + device_id);
+            log.debug("{}", "Device id : " + device_id);
 
             int field_status = 1;
             int image_status = 1;
@@ -8999,13 +8999,13 @@ public String daysCleaned(String input){
                 deviceOnboardStatusRepository.addOnboardAsset(id, deviceDTO.getId(), null, image_status, geolocation_status, tag_status, field_status);
             }
 
-            System.out.println("Image : " + image_status);
-            System.out.println("field_status : " + field_status);
-            System.out.println("geolocation_status : " + geolocation_status);
-            System.out.println("tag_status : " + tag_status);
+            log.debug("{}", "Image : " + image_status);
+            log.debug("{}", "field_status : " + field_status);
+            log.debug("{}", "geolocation_status : " + geolocation_status);
+            log.debug("{}", "tag_status : " + tag_status);
 
             if (image_status == 0 || field_status == 0 || geolocation_status == 0 || tag_status == 0) {
-                System.out.println("Updating status.......");
+                log.debug("{}", "Updating status.......");
                 if (deviceDTO.getOnboard_status() != null) {
                     if (deviceDTO.getOnboard_status() == 3) {
                         this.updateOnboardAssetStatus(Collections.singleton(deviceDTO.getId()), 0);
@@ -9078,7 +9078,7 @@ public String daysCleaned(String input){
             log.info("tag_status : {}", tag_status);
 
             if (image_status == 0 || field_status == 0 || geolocation_status == 0 || tag_status == 0) {
-                System.out.println("Updating status.......");
+                log.debug("{}", "Updating status.......");
                 if (deviceDTO.getOnboard_status() != null) {
                     if (deviceDTO.getOnboard_status() == 3) {
                         log.info("Updating status.......from 3 to 0");
@@ -9108,7 +9108,7 @@ public String daysCleaned(String input){
      * query.
      */
     public DeviceDTO getDeviceByDeviceIdNew(String username, String vdmsid, String dockername, String device_id) {
-        System.out.println(device_id);
+        log.debug("{}", device_id);
 
         DeviceDTO device = deviceRepository.getDeviceByDeviceIdNew(device_id);
         if (device != null) {
@@ -9118,7 +9118,7 @@ public String daysCleaned(String input){
                 device.setNfc_count(nfcService.getQrNfcCountByDeviceId(device.getId()) + clientNfcService.getClientNfcCountByDeviceId(device.getId()));
                 device.setBarcode_count(clientBarCodeService.getClientBarCodeCountByDeviceId(device.getId()));
             } catch (Exception e) {
-                System.out.println(e);
+                log.debug("{}", e);
             }
         }
         return device;
@@ -9326,7 +9326,7 @@ public String daysCleaned(String input){
 
         this.updateVirtualDeviceHistory(deviceOnboardStatusDTO, deviceDTO.getId(), username);
 
-        System.out.println("Added onboard status: updateVirtualDeviceOnboardStatusByAssetMapper..");
+        log.debug("{}", "Added onboard status: updateVirtualDeviceOnboardStatusByAssetMapper..");
     }
 
     private DeviceOnboardStatusDTO updateDeviceOnboardStatusNotNull(DeviceDTO deviceDTO){
@@ -9374,7 +9374,7 @@ public String daysCleaned(String input){
 
     private void updateDeviceOnboardStatusByAutoDiscovered(DeviceMonitorDTO deviceMonitorDTO, String username) {
 
-        System.out.println("heree id : " + deviceMonitorDTO.getId());
+        log.debug("{}", "heree id : " + deviceMonitorDTO.getId());
         DeviceDTO deviceDTO = new DeviceDTO();
         deviceDTO.setId(deviceMonitorDTO.getId());
 
@@ -9396,7 +9396,7 @@ public String daysCleaned(String input){
 
         this.updateVirtualDeviceHistory(deviceOnboardStatusDTO, deviceDTO.getId(), username);
 
-        System.out.println("Added onboard status: updateDeviceOnboardStatusByAutoDiscovered..");
+        log.debug("{}", "Added onboard status: updateDeviceOnboardStatusByAutoDiscovered..");
     }
 
 
@@ -9463,16 +9463,16 @@ public String daysCleaned(String input){
                 log.info("this is virtual device updated: {}" + deviceDTO.getDisplay_name());
 
             } catch (IOException e) {
-                System.out.println(e);
+                log.debug("{}", e);
             }
         } else {
             try {
                 this.editDeviceByDeviceID(username, vdmsid, dockername, deviceDTO.getId(), deviceDTO, httpServletRequest,assignee);
                 log.info("this is device updated: {}" + deviceDTO.getDisplay_name());
             } catch (IOException e) {
-                System.out.println(e);
+                log.debug("{}", e);
             } catch (JSONException e) {
-                System.out.println(e);
+                log.debug("{}", e);
             }
         }
         try {
@@ -9543,7 +9543,7 @@ public String daysCleaned(String input){
 
     private void updateAssetImagesDetails(String username, String vdmsid, String asset_image_urls, String deviceId) {
         List<String> updated_asset_image_urls = utils.getJSONArrayFromJSONString(asset_image_urls, String.class);
-        System.out.println("images url :" + updated_asset_image_urls);
+        log.debug("{}", "images url :" + updated_asset_image_urls);
         if (updated_asset_image_urls != null && updated_asset_image_urls.size() > 0) {
             this.upsertAssetImagesFromUrl(username, vdmsid, Collections.singletonList(deviceId), updated_asset_image_urls);
         }
@@ -9638,7 +9638,7 @@ public String daysCleaned(String input){
      * Returns all devices for a VDMS and docker without pagination.
      */
     public List<DeviceDTO> getAllDeviceByVdmsIdAndDockerNameWithoutPagination(String username, String vdmsid, String dockername) {
-        System.out.println(vdmsid + " " + dockername);
+        log.debug("{}", vdmsid + " " + dockername);
         return deviceRepository.getAllDeviceByVdmsIdAndDockerNameWithoutPagination(vdmsid, dockername);
     }
 
@@ -9740,7 +9740,7 @@ public String daysCleaned(String input){
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Set<String> finalDevice_ids = device_ids;
         executorService.execute(() -> {
-            System.out.println("Executor started now ");
+            log.debug("{}", "Executor started now ");
             measuringInstrumentService.updateDeviceMeasureCountByDeviceIds(finalDevice_ids);
             this.updateDigitalTwinImageUrlByIds(devices);
 
@@ -9938,7 +9938,7 @@ public String daysCleaned(String input){
         try {
             this.generateExcelForMeasuringInstruments(username, vdmsid, devices, response);
         } catch (IOException e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
 
     }
@@ -9960,7 +9960,7 @@ public String daysCleaned(String input){
 
         String filename = modified_filename + "_" + "AssetListAdvancedExport" + "_";
 
-        System.out.println("------- File name --------" + filename);
+        log.debug("{}", "------- File name --------" + filename);
 
         String currentDateTime = utils.getCurrentDateByTimezone(BigInteger.valueOf(System.currentTimeMillis()), timeZoneId);
 
@@ -10150,7 +10150,7 @@ public String daysCleaned(String input){
                 deviceRepository.updatePolyLensDeviceCount(deviceId, polyLensDeviceCount);
             }
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
     }
 
@@ -10179,7 +10179,7 @@ public String daysCleaned(String input){
                 deviceRepository.updateMqttDeviceDeviceCount(deviceId, mqttDeviceCount);
             }
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
     }
 
@@ -10206,9 +10206,9 @@ public String daysCleaned(String input){
                         byte[] bytes = this.generateSimpleAssetExportReportPDF(devices, includeImages, response, email, modified_filename, currentDateTime);
                         this.sendAssetPDFExportEmail(email, "Basic Asset Export", modified_filename + "_" + "AssetList" + "_" + currentDateTime, bytes, vdmsid);
                     }
-                    System.out.println("-------------------------------------------------------------------------");
+                    log.debug("{}", "-------------------------------------------------------------------------");
                     log.info("Sent Simple Report to: {} " + email);
-                    System.out.println("-------------------------------------------------------------------------");
+                    log.debug("{}", "-------------------------------------------------------------------------");
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -10413,7 +10413,7 @@ public String daysCleaned(String input){
 
             int assetNumber = 1;
             for (List<HashMap<String, String>> sublist : mainList) {
-                System.out.println("SUBLIST" + sublist);
+                log.debug("{}", "SUBLIST" + sublist);
                 HashMap<String, String> staticMap = sublist.get(0);
 
                 PdfPTable outerTable = new PdfPTable(1);
@@ -10507,9 +10507,9 @@ public String daysCleaned(String input){
                 if (includeImages) {
                     if (staticMap.containsKey("Asset Images") && staticMap.get("Asset Images") != null) {
                         outerTable.addCell(new Phrase("Asset Images : ", sideHeadingFont));
-                        System.out.println("Asset image present ");
+                        log.debug("{}", "Asset image present ");
                         String assetImageUrl = staticMap.get("Asset Images");
-                        System.out.println("Asset Image Url: " + assetImageUrl);
+                        log.debug("{}", "Asset Image Url: " + assetImageUrl);
                         JSONArray imageUrls = JSONArray.parseArray(assetImageUrl);
                         PdfPTable imageTable = new PdfPTable(2);
                         imageTable.setSplitLate(false);
@@ -10517,7 +10517,7 @@ public String daysCleaned(String input){
                         if (imageUrls.size() > 0) {
                             for (int i = 0; i < Math.min(imageUrls.size(), 2); i++) {
                                 try {
-                                    System.out.println(imageUrls.getString(i));
+                                    log.debug("{}", imageUrls.getString(i));
                                     log.info("Asset image ", imageUrls.getString(i));
                                     Image image = Image.getInstance(new URL(imageUrls.getString(i)));
                                     float originalWidth = image.getScaledWidth() * 0.3f;
@@ -10541,7 +10541,7 @@ public String daysCleaned(String input){
                                         imageTable.addCell(noImgCell);
                                     }
                                 } catch (Exception e) {
-                                    System.err.println("Error loading image: " + e.getMessage());
+                                    log.error("{}", "Error loading image: " + e.getMessage());
                                 }
                                 outerTable.addCell(imageTable);
                             }
@@ -10563,7 +10563,7 @@ public String daysCleaned(String input){
             String filename = modified_filename + "_" + "AssetList" + "_";
             String headerKey = "Content-Disposition";
             String headerValue = "attachment; filename=" + filename + currentDateTime + ".pdf";
-            System.out.println("--------- header value -------" + headerValue);
+            log.debug("{}", "--------- header value -------" + headerValue);
             response.setContentType("application/pdf");
             response.setHeader(headerKey, headerValue);
 
@@ -10744,7 +10744,7 @@ public String daysCleaned(String input){
 
                             deviceDTO.getOnboard_data().setTag_status(tag_status);
                             if (image_status == 0 || field_status == 0 || geolocation_status == 0 || tag_status == 0) {
-                                System.out.println("Updating status.......");
+                                log.debug("{}", "Updating status.......");
                                 if (deviceDTO.getOnboard_status() != null) {
 
                                     if (deviceDTO.getOnboard_status() == 3) {
@@ -10882,7 +10882,7 @@ public String daysCleaned(String input){
 
             deviceDTOS.add(deviceDTO1);
             //send topic
-            System.out.println("--------- Sending device tag status update via WebSocket ---------");
+            log.debug("{}", "--------- Sending device tag status update via WebSocket ---------");
             socketservice.socketDeviceUpdate(deviceDTOS);
         }
     }
@@ -11214,21 +11214,21 @@ public String daysCleaned(String input){
      * with a trigger time is configured and no job already exists.
      */
     public void getAiCallDeviceOfflineConditionStatus(String deviceId, Integer status) {
-        System.out.println("Came inside getDeviceOfflineConditionStatus" + deviceId + " status: " + status);
+        log.debug("{}", "Came inside getDeviceOfflineConditionStatus" + deviceId + " status: " + status);
         Set<DeviceConditionsDTO> deviceConditions = deviceConditionsService.getDeviceConditionsForAiCall(null, null, null, deviceId);
         for (DeviceConditionsDTO deviceCondition : deviceConditions) {
-            System.out.println("Device condition: " + deviceCondition.getAlert_condition());
+            log.debug("{}", "Device condition: " + deviceCondition.getAlert_condition());
             if(deviceCondition.getAlert_condition().equals("device_offline_ai_call_alert") && (status != null && status == 0)) {
-                System.out.println("Device is offline and condition is device_offline_ai_call_alert");
+                log.debug("{}", "Device is offline and condition is device_offline_ai_call_alert");
                 if (deviceCondition.getTrigger_time() != null) {
                     ScheduledJobDTO scheduledJobDTO = jobSchedulerService.getScheduledJobByConditionId(deviceCondition.getId());
                     if (scheduledJobDTO == null) {
-                        System.out.println("------------ Offline job added ----------------");
+                        log.debug("{}", "------------ Offline job added ----------------");
                         String jobId=this.scheduleAiCallDeviceAlertJob("add", deviceCondition);
                         if(jobId != null) {
 
                         } else {
-                            System.out.println("Failed to schedule job for device condition: " + deviceCondition.getId());
+                            log.debug("{}", "Failed to schedule job for device condition: " + deviceCondition.getId());
                         }
                     }
                 }
@@ -11238,12 +11238,12 @@ public String daysCleaned(String input){
     }
 
     private String scheduleAiCallDeviceAlertJob(String job_type, DeviceConditionsDTO deviceCondition) {
-        System.out.println("Came inside scheduleAiCallDeviceAlertJob : " + deviceCondition.getId() + " job_type: " + job_type);
+        log.debug("{}", "Came inside scheduleAiCallDeviceAlertJob : " + deviceCondition.getId() + " job_type: " + job_type);
             ScheduledJobDTO jobSchedulerDTO = new ScheduledJobDTO();
             jobSchedulerDTO.setJob_type(job_type);
             jobSchedulerDTO.setTime_in_seconds(Long.valueOf(deviceCondition.getTrigger_time()));
             String job_id = jobSchedulerService.createScheduledJob(jobSchedulerDTO);
-            System.out.println("JOb id: " + job_id);
+            log.debug("{}", "JOb id: " + job_id);
 
             if (job_id != null) {
                 ScheduledJobDTO scheduledJobDTO = new ScheduledJobDTO();
@@ -11306,12 +11306,12 @@ public String daysCleaned(String input){
      * Reads a device's DND and system DND flags and clears them when both are enabled.
      */
     public void getDeviceDndAndSystemDndStatus(String deviceId, Boolean isDndEnabled) {
-        System.out.println("*****************getDeviceDndAndSystemDndStatus*****"+ deviceId + " isDndEnabled: " + isDndEnabled);
+        log.debug("{}", "*****************getDeviceDndAndSystemDndStatus*****"+ deviceId + " isDndEnabled: " + isDndEnabled);
         DeviceDTO deviceDTO=deviceRepository.getDeviceDndAndSystemDndStatus(deviceId, isDndEnabled);
-        System.out.println("Device DND status: " + deviceDTO.getIs_dnd_enabled() + ", System DND status: " + deviceDTO.getSystem_dnd_enabled());
+        log.debug("{}", "Device DND status: " + deviceDTO.getIs_dnd_enabled() + ", System DND status: " + deviceDTO.getSystem_dnd_enabled());
         if (deviceDTO.getIs_dnd_enabled() && deviceDTO.getSystem_dnd_enabled()) {
             this.updateDeviceDndAndSystemDndStatus(deviceId,false);
-            System.out.println("DND and system DND is enabled for device " + deviceId);
+            log.debug("{}", "DND and system DND is enabled for device " + deviceId);
         } else {
             log.info("DND and system DND is disabled for device {}", deviceId);
         }
