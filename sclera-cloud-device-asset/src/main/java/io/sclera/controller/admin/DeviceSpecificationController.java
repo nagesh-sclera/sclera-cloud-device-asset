@@ -8,6 +8,11 @@ import io.sclera.dto.RemoteAgentServerDetailsDTO;
 import io.sclera.service.DeviceInstalledAppsService;
 import io.sclera.service.DeviceSpecificationService;
 import io.sclera.client.RemoteDesktopSessionClient;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +30,7 @@ import java.util.List;
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@Tag(name = "Device Specifications", description = "Manage device hardware/software specifications, installed applications and remote desktop support sessions.")
 public class DeviceSpecificationController {
 
     private static final Logger log = LoggerFactory.getLogger(DeviceSpecificationController.class);
@@ -50,19 +56,23 @@ public class DeviceSpecificationController {
      * @param assignee            assignee filter for the specification (default "all")
      * @return the saved device id, or an empty body if none was produced
      */
+    @Operation(summary = "Save full device specification",
+            description = "Saves a full device specification JSON payload and returns the resolved device id. Returns an empty body when no device id is produced.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Specification saved"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @PostMapping("/devicespecification")
-    public ResponseEntity<String> receiveFullSpec(@RequestBody JSONObject body, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) {
+    public ResponseEntity<String> receiveFullSpec(
+            @RequestBody JSONObject body, HttpServletRequest httpServletRequest,
+            @Parameter(description = "Assignee filter for the specification") @RequestParam(defaultValue = "all") String assignee) {
         log.info("receiveFullSpec assignee={}", assignee);
-        try {
-            String deviceId = deviceSpecificationService.saveFullJson(body, httpServletRequest, assignee);
-            if (deviceId == null) {
-                return ResponseEntity.ok().body(null);
-            }
-            return ResponseEntity.ok(deviceId);
-        } catch (Exception e) {
-            log.error("receiveFullSpec failed assignee={}: {}", assignee, e.getMessage(), e);
-            throw e;
+        String deviceId = deviceSpecificationService.saveFullJson(body, httpServletRequest, assignee);
+        if (deviceId == null) {
+            return ResponseEntity.ok().body(null);
         }
+        return ResponseEntity.ok(deviceId);
     }
 
 
@@ -72,19 +82,21 @@ public class DeviceSpecificationController {
      * @param json the delta device specification JSON payload
      * @return a status message, or a bad-request response if the input is invalid or the device is not found
      */
+    @Operation(summary = "Upsert delta device specification",
+            description = "Upserts a delta (partial) device specification JSON payload. Returns a bad-request response when the input is invalid or the device is not found.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Delta specification upserted"),
+            @ApiResponse(responseCode = "400", description = "Invalid input or device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @PostMapping("/deltadevicespecs")
     public ResponseEntity<String> receiveDeltaJson(@RequestBody JSONObject json) {
         log.info("receiveDeltaJson called");
-        try {
-            String message = deviceSpecificationService.upsertDeltaJson(json);
-            if (message == null) {
-                return ResponseEntity.badRequest().body("Invalid input or device not found");
-            }
-            return ResponseEntity.ok(message);
-        } catch (Exception e) {
-            log.error("receiveDeltaJson failed: {}", e.getMessage(), e);
-            throw e;
+        String message = deviceSpecificationService.upsertDeltaJson(json);
+        if (message == null) {
+            return ResponseEntity.badRequest().body("Invalid input or device not found");
         }
+        return ResponseEntity.ok(message);
     }
 
 
@@ -94,19 +106,22 @@ public class DeviceSpecificationController {
      * @param deviceId the device whose specification is requested
      * @return the device specification, or an empty specification if none exists
      */
+    @Operation(summary = "Get device specification by device id",
+            description = "Returns the device specification for the given device. Returns an empty specification when none exists.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Specification returned"),
+            @ApiResponse(responseCode = "404", description = "Device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping("/devicespecification/{deviceId}")
-    public ResponseEntity<DeviceSpecificationDTO> getDeviceSpec(@PathVariable String deviceId) {
+    public ResponseEntity<DeviceSpecificationDTO> getDeviceSpec(
+            @Parameter(description = "Device whose specification is requested") @PathVariable String deviceId) {
         log.info("getDeviceSpec deviceId={}", deviceId);
-        try {
-            DeviceSpecificationDTO dto = deviceSpecificationService.getSpecDtoByDeviceId(deviceId);
-            if (dto == null) {
-                return ResponseEntity.ok(DeviceSpecificationDTO.builder().build());
-            }
-            return ResponseEntity.ok(dto);
-        } catch (Exception e) {
-            log.error("getDeviceSpec failed deviceId={}: {}", deviceId, e.getMessage(), e);
-            throw e;
+        DeviceSpecificationDTO dto = deviceSpecificationService.getSpecDtoByDeviceId(deviceId);
+        if (dto == null) {
+            return ResponseEntity.ok(DeviceSpecificationDTO.builder().build());
         }
+        return ResponseEntity.ok(dto);
     }
 
     /**
@@ -115,16 +130,19 @@ public class DeviceSpecificationController {
      * @param deviceId the device whose installed applications are requested
      * @return the installed applications for the device
      */
+    @Operation(summary = "Get installed applications by device id",
+            description = "Returns the list of installed applications for the given device.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Installed applications returned"),
+            @ApiResponse(responseCode = "404", description = "Device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping("/installedapps/{deviceId}")
-    public ResponseEntity<List<DeviceInstalledAppsDTO>> getInstalledApps(@PathVariable String deviceId) {
+    public ResponseEntity<List<DeviceInstalledAppsDTO>> getInstalledApps(
+            @Parameter(description = "Device whose installed applications are requested") @PathVariable String deviceId) {
         log.info("getInstalledApps deviceId={}", deviceId);
-        try {
-            List<DeviceInstalledAppsDTO> apps = deviceInstalledAppsService.getInstalledAppDTOs(deviceId);
-            return ResponseEntity.ok(apps);
-        } catch (Exception e) {
-            log.error("getInstalledApps failed deviceId={}: {}", deviceId, e.getMessage(), e);
-            throw e;
-        }
+        List<DeviceInstalledAppsDTO> apps = deviceInstalledAppsService.getInstalledAppDTOs(deviceId);
+        return ResponseEntity.ok(apps);
     }
 
     /**
@@ -133,16 +151,19 @@ public class DeviceSpecificationController {
      * @param deviceId the device whose system updates are requested
      * @return the system updates as a JSON array
      */
+    @Operation(summary = "Get system updates by device id",
+            description = "Returns the system updates for the given device.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "System updates returned"),
+            @ApiResponse(responseCode = "404", description = "Device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping("/systemupdates/{deviceId}")
-    public ResponseEntity<JSONArray> getSystemUpdates(@PathVariable String deviceId) {
+    public ResponseEntity<JSONArray> getSystemUpdates(
+            @Parameter(description = "Device whose system updates are requested") @PathVariable String deviceId) {
         log.info("getSystemUpdates deviceId={}", deviceId);
-        try {
-            JSONArray systemUpdates = deviceSpecificationService.getSystemUpdatesArrayByDeviceId(deviceId);
-            return ResponseEntity.ok(systemUpdates);
-        } catch (Exception e) {
-            log.error("getSystemUpdates failed deviceId={}: {}", deviceId, e.getMessage(), e);
-            throw e;
-        }
+        JSONArray systemUpdates = deviceSpecificationService.getSystemUpdatesArrayByDeviceId(deviceId);
+        return ResponseEntity.ok(systemUpdates);
     }
 
 
@@ -152,15 +173,17 @@ public class DeviceSpecificationController {
      * @param json the JSON payload describing the remote-connect flag change
      * @return the result of the remote-connect flag update
      */
+    @Operation(summary = "Update remote-connect flag",
+            description = "Updates the remote-connect flag for a remote support session.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Remote-connect flag updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @PostMapping("/remotesupport")
     public ResponseEntity<?> updateRemoteConnectFlag(@RequestBody JSONObject json) {
         log.info("updateRemoteConnectFlag called");
-        try {
-            return remoteDesktopSessionService.updateRemoteConnectFlag(json);
-        } catch (Exception e) {
-            log.error("updateRemoteConnectFlag failed: {}", e.getMessage(), e);
-            throw e;
-        }
+        return remoteDesktopSessionService.updateRemoteConnectFlag(json);
     }
 
 
@@ -171,15 +194,19 @@ public class DeviceSpecificationController {
      * @param username the user requesting the remote-connect info
      * @return the remote-connect information
      */
+    @Operation(summary = "Get remote-connect info by device id",
+            description = "Returns remote-connect information for the given device and user.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Remote-connect info returned"),
+            @ApiResponse(responseCode = "404", description = "Device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping("/remotesupport/device/{deviceId}")
-    public ResponseEntity<?> getRemoteConnectInfo(@PathVariable String deviceId, @RequestParam String username) {
+    public ResponseEntity<?> getRemoteConnectInfo(
+            @Parameter(description = "Device whose remote-connect info is requested") @PathVariable String deviceId,
+            @Parameter(description = "User requesting the remote-connect info") @RequestParam String username) {
         log.info("getRemoteConnectInfo deviceId={} username={}", deviceId, username);
-        try {
-            return remoteDesktopSessionService.getRemoteConnectInfo(deviceId,username);
-        } catch (Exception e) {
-            log.error("getRemoteConnectInfo failed deviceId={}: {}", deviceId, e.getMessage(), e);
-            throw e;
-        }
+        return remoteDesktopSessionService.getRemoteConnectInfo(deviceId, username);
     }
 
     /**
@@ -188,16 +215,19 @@ public class DeviceSpecificationController {
      * @param id the remote session id
      * @return the remote agent server session details
      */
+    @Operation(summary = "Get remote session details by id",
+            description = "Returns remote agent server session details for the given session id.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Session details returned"),
+            @ApiResponse(responseCode = "404", description = "Session not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping("/sessions/{id}")
-    public ResponseEntity<RemoteAgentServerDetailsDTO> getRemoteSessions(@PathVariable String id) {
+    public ResponseEntity<RemoteAgentServerDetailsDTO> getRemoteSessions(
+            @Parameter(description = "Remote session id") @PathVariable String id) {
         log.info("getRemoteSessions id={}", id);
-        try {
-            RemoteAgentServerDetailsDTO sessions = remoteDesktopSessionService.getRemoteSessionDetails(id);
-            return ResponseEntity.ok(sessions);
-        } catch (Exception e) {
-            log.error("getRemoteSessions failed id={}: {}", id, e.getMessage(), e);
-            throw e;
-        }
+        RemoteAgentServerDetailsDTO sessions = remoteDesktopSessionService.getRemoteSessionDetails(id);
+        return ResponseEntity.ok(sessions);
     }
 
     /**
@@ -206,16 +236,18 @@ public class DeviceSpecificationController {
      * @param json the JSON payload describing the session approval change
      * @return a confirmation message
      */
+    @Operation(summary = "Update session approval",
+            description = "Updates the acknowledgement/approval status of a remote support session.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Session approval updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @PostMapping("/session/approval")
     public String updateAcknowledge(@RequestBody JSONObject json) {
         log.info("updateAcknowledge called");
-        try {
-            remoteDesktopSessionService.updateAcknowledge(json);
-            return "Successfully updated session approval";
-        } catch (Exception e) {
-            log.error("updateAcknowledge failed: {}", e.getMessage(), e);
-            throw e;
-        }
+        remoteDesktopSessionService.updateAcknowledge(json);
+        return "Successfully updated session approval";
     }
 
 }
