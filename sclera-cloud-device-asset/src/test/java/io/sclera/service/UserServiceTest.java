@@ -135,7 +135,11 @@ class UserServiceTest {
         UserDTO b = mock(UserDTO.class);
         when(b.getEmail()).thenReturn("b@x.com");
 
-        assertThat(service.getUserDetailsByEmail("b@x.com", Set.of(a, b))).isSameAs(b);
+        // Ordered set (a before b) so iteration deterministically checks-and-rejects a, then matches b —
+        // both stubs are always exercised. Set.of(a, b) has nondeterministic order, which made this test
+        // flaky under Mockito strict stubbing (a.getEmail() unused when b was visited first).
+        assertThat(service.getUserDetailsByEmail("b@x.com",
+                new java.util.LinkedHashSet<>(java.util.List.of(a, b)))).isSameAs(b);
     }
 
     @Test

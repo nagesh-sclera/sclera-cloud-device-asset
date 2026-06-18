@@ -2,6 +2,8 @@ package io.sclera.controller.admin;
 
 import io.sclera.dto.DeviceLifecycleHistoryDTO;
 import io.sclera.service.DeviceLifecycleHistoryService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +17,8 @@ import java.util.Set;
 @CrossOrigin(allowedHeaders = "*", origins = "*")
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class DeviceLifecycleHistoryController {
+
+    private static final Logger log = LoggerFactory.getLogger(DeviceLifecycleHistoryController.class);
 
     @Autowired
     DeviceLifecycleHistoryService deviceLifeCycleHistoryService;
@@ -32,7 +36,13 @@ public class DeviceLifecycleHistoryController {
                                  @RequestParam String vdmsid,
                                  @RequestBody DeviceLifecycleHistoryDTO dto,
                                  @RequestParam String retireStatus) {
-        deviceLifeCycleHistoryService.addDeviceHistory(username, vdmsid, dto, retireStatus);
+        log.info("addDeviceHistory username={} vdmsid={} retireStatus={}", username, vdmsid, retireStatus);
+        try {
+            deviceLifeCycleHistoryService.addDeviceHistory(username, vdmsid, dto, retireStatus);
+        } catch (Exception e) {
+            log.error("addDeviceHistory failed username={}: {}", username, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -50,6 +60,12 @@ public class DeviceLifecycleHistoryController {
                                                            @RequestParam String vdmsid,
                                                            @PathVariable String device_id,
                                                            @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize) {
-        return deviceLifeCycleHistoryService.getDeviceHistory(username, vdmsid, device_id, pageno, pagesize);
+        log.info("getDeviceHistory username={} vdmsid={} device_id={} pageno={} pagesize={}", username, vdmsid, device_id, pageno, pagesize);
+        try {
+            return deviceLifeCycleHistoryService.getDeviceHistory(username, vdmsid, device_id, pageno, pagesize);
+        } catch (Exception e) {
+            log.error("getDeviceHistory failed username={} device_id={}: {}", username, device_id, e.getMessage(), e);
+            throw e;
+        }
     }
 }

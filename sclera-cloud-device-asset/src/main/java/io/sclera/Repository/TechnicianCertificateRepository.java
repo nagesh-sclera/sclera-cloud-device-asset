@@ -27,6 +27,7 @@ public interface TechnicianCertificateRepository extends JpaRepository<Technicia
      * @param technicianId owning technician identifier
      * @return the number of rows inserted
      */
+    // NOT CONVERTED — stays native: plain INSERT (already PG-valid)
     @Modifying
     @Transactional
     @Query(value = "INSERT INTO technician_certificate (id, name, type, url, technician_id) " +
@@ -45,6 +46,8 @@ public interface TechnicianCertificateRepository extends JpaRepository<Technicia
      * @param technicianId owning technician identifier
      * @return the number of rows updated
      */
+    // NOT CONVERTED — stays native: sets technician_id (relation FK column) from a scalar id param;
+    // JPQL cannot SET a @ManyToOne FK column by scalar value
     @Modifying
     @Transactional
     @Query(value = "UPDATE technician_certificate SET name = ?2, type = ?3, url = ?4, technician_id = ?5 WHERE id = ?1", nativeQuery = true)
@@ -55,7 +58,9 @@ public interface TechnicianCertificateRepository extends JpaRepository<Technicia
      *
      * @return the list of certificate projections
      */
-    @Query(name = "TechnicianCertificate.getAll", nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.TechnicianCertificateDTO(" +
+           "tc.id, tc.name, tc.type, tc.url, tc.technician.id, CAST(NULL AS integer)) " +
+           "FROM TechnicianCertificate tc")
     List<TechnicianCertificateDTO> getAllTechnicianCertificates();
 
     /**
@@ -64,7 +69,9 @@ public interface TechnicianCertificateRepository extends JpaRepository<Technicia
      * @param id certificate identifier
      * @return the matching certificate projection
      */
-    @Query(name = "TechnicianCertificate.getById", nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.TechnicianCertificateDTO(" +
+           "tc.id, tc.name, tc.type, tc.url, tc.technician.id, CAST(NULL AS integer)) " +
+           "FROM TechnicianCertificate tc WHERE tc.id = ?1")
     TechnicianCertificateDTO getTechnicianCertificateById(String id);
 
     /**
@@ -72,9 +79,9 @@ public interface TechnicianCertificateRepository extends JpaRepository<Technicia
      *
      * @param id certificate identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM technician_certificate WHERE id = ?1", nativeQuery = true)
+    @Query("DELETE FROM TechnicianCertificate tc WHERE tc.id = ?1")
     void deleteTechnicianCertificateById(String id);
 
     /**
@@ -83,7 +90,9 @@ public interface TechnicianCertificateRepository extends JpaRepository<Technicia
      * @param technicianId owning technician identifier
      * @return the matching certificate projections
      */
-    @Query(name = "TechnicianCertificate.getByTechnicianId", nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.TechnicianCertificateDTO(" +
+           "tc.id, tc.name, tc.type, tc.url, tc.technician.id, CAST(NULL AS integer)) " +
+           "FROM TechnicianCertificate tc WHERE tc.technician.id = ?1")
     List<TechnicianCertificateDTO> getCertificatesByTechnicianId(String technicianId);
 
     /**
@@ -96,9 +105,9 @@ public interface TechnicianCertificateRepository extends JpaRepository<Technicia
      * @param technicianId owning technician identifier
      * @return the number of rows affected
      */
+    // NOT CONVERTED — stays native: already PG-valid INSERT … ON CONFLICT (id) DO UPDATE
     @Modifying
     @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
     @Query(value = "INSERT INTO technician_certificate (id, name, type, url, technician_id) " +
             "VALUES (?1, ?2, ?3, ?4, ?5) " +
             "ON CONFLICT (id) DO UPDATE SET " +
@@ -112,7 +121,7 @@ public interface TechnicianCertificateRepository extends JpaRepository<Technicia
      * @param ids candidate certificate identifiers
      * @return the identifiers found in the table
      */
-    @Query(value = "SELECT id FROM technician_certificate WHERE id IN ?1", nativeQuery = true)
+    @Query("SELECT tc.id FROM TechnicianCertificate tc WHERE tc.id IN ?1")
     Set<String> findExistingTechnicianCertificatesByIds(List<String> ids);
 
     /**
@@ -121,9 +130,9 @@ public interface TechnicianCertificateRepository extends JpaRepository<Technicia
      * @param ids certificate identifiers to delete
      * @return the number of rows deleted
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM technician_certificate WHERE id IN ?1", nativeQuery = true)
+    @Query("DELETE FROM TechnicianCertificate tc WHERE tc.id IN ?1")
     int deleteTechnicianCertificatesByIds(Set<String> ids);
 
     /**
@@ -132,8 +141,8 @@ public interface TechnicianCertificateRepository extends JpaRepository<Technicia
      * @param technicianIds technician identifiers whose certificates are removed
      * @return the number of rows deleted
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM technician_certificate WHERE technician_id IN ?1", nativeQuery = true)
+    @Query("DELETE FROM TechnicianCertificate tc WHERE tc.technician.id IN ?1")
     int deleteTechnicianCertificatesByTechnicianIds(Set<String> technicianIds);
 }

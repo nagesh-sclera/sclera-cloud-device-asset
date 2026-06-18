@@ -1,0 +1,24 @@
+# Standalone server for the OTel/Jaeger traces page (test-ui/traces.html) on :3001.
+# The page talks to Jaeger (localhost:16686) and the gateway (localhost:8080)
+# directly from the browser, so this only needs to serve the static HTML.
+#
+#   docker compose -f traces-ui/docker-compose.yml up -d
+#   open http://localhost:3001
+services:
+  sclera-traces-ui:
+    image: nginx:alpine
+    container_name: sclera-traces-ui
+    ports:
+      - "3001:80"
+    volumes:
+      - ../test-ui:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - sclera-net
+    restart: unless-stopped
+
+networks:
+  # the stack's network, so nginx can reach the service containers by name
+  sclera-net:
+    external: true
+    name: sclera-cloud-device-asset_sclera-net

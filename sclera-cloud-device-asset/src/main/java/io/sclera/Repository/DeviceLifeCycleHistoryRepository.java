@@ -2,6 +2,7 @@ package io.sclera.Repository;
 
 import io.sclera.dto.DeviceLifecycleHistoryDTO;
 import io.sclera.models.DeviceLifecycleHistory;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import jakarta.transaction.Transactional;
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -38,6 +40,8 @@ public interface DeviceLifeCycleHistoryRepository extends JpaRepository<DeviceLi
      * @param description a description of the lifecycle event
      * @param assigned_by_user_id the identifier of the user who performed the assignment
      */
+    // NOT CONVERTED — stays native: plain INSERT already valid PostgreSQL; assigned-@Id entity +
+    // save() = merge() = eager SELECT-before-insert which would explode against the minimal test schema.
     @Modifying
     @Transactional
     @Query(value = "INSERT INTO device_lifecycle_history(" +
@@ -46,19 +50,28 @@ public interface DeviceLifeCycleHistoryRepository extends JpaRepository<DeviceLi
             "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)", nativeQuery = true)
     void addDeviceLifeCycleHistory(String id, String operational_status, String usage_status,
                                    String assigned_user_id, Integer assignment_count,
-                                   BigInteger created_timestamp,BigInteger assigned_timestamp, String device_id,
+                                   BigInteger created_timestamp, BigInteger assigned_timestamp, String device_id,
                                    String description, String assigned_by_user_id);
 
     /**
-     * Returns a page of lifecycle history records for the given device.
+     * Returns a page of lifecycle history records for the given device, ordered by most recent first.
+     *
+     * <p>Converted from {@code @NamedNativeQuery DeviceLifeCycleHistory.getDeviceLifeCycleHistory}
+     * (LIMIT/OFFSET) to JPQL constructor expression + Pageable. Callers must pass
+     * {@code PageRequest.of(pageno - 1, pagesize)} instead of raw offset/size integers.
      *
      * @param device_id the device identifier
-     * @param pagesize the maximum number of records to return
-     * @param offset the number of records to skip
-     * @return the set of matching lifecycle history records
+     * @param pageable page and size constraints
+     * @return the matching lifecycle history DTOs
      */
-    @Query(name = "DeviceLifeCycleHistory.getDeviceLifeCycleHistory", nativeQuery = true)
-    Set<DeviceLifecycleHistoryDTO> getDeviceLifeCycleHistory(String device_id, Integer pagesize, Integer offset);
+    @Query("SELECT new io.sclera.dto.DeviceLifecycleHistoryDTO(" +
+            "h.id, h.operational_status, h.usage_status, h.assigned_user_id, " +
+            "h.assignment_count, h.created_timestamp, h.assigned_timestamp, h.device.id, " +
+            "h.description, h.assigned_by_user_id) " +
+            "FROM DeviceLifecycleHistory h " +
+            "WHERE h.device.id = ?1 " +
+            "ORDER BY h.created_timestamp DESC, h.assignment_count DESC")
+    List<DeviceLifecycleHistoryDTO> getDeviceLifeCycleHistory(String device_id, Pageable pageable);
 
     /**
      * Returns the assignment count from the most recent lifecycle history record for the device.
@@ -66,9 +79,15 @@ public interface DeviceLifeCycleHistoryRepository extends JpaRepository<DeviceLi
      * @param device_id the device identifier
      * @return the latest assignment count, or {@code null} if no history exists
      */
-    @Query(value = "SELECT assignment_count FROM device_lifecycle_history " +
-            "WHERE device_id = ?1 ORDER BY created_timestamp DESC LIMIT 1", nativeQuery = true)
-    Integer getLatestAssignedCount(String device_id);
+    default Integer getLatestAssignedCount(String device_id) {
+        List<Integer> results = getLatestAssignedCountList(device_id, org.springframework.data.domain.PageRequest.of(0, 1));
+        return results.isEmpty() ? null : results.get(0);
+    }
+
+    @Query("SELECT h.assignment_count FROM DeviceLifecycleHistory h " +
+            "WHERE h.device.id = ?1 " +
+            "ORDER BY h.created_timestamp DESC")
+    List<Integer> getLatestAssignedCountList(String device_id, Pageable pageable);
 
     /**
      * Returns the operational status from the most recent lifecycle history record for the device.
@@ -76,8 +95,15 @@ public interface DeviceLifeCycleHistoryRepository extends JpaRepository<DeviceLi
      * @param deviceId the device identifier
      * @return the latest operational status, or {@code null} if no history exists
      */
-    @Query(value = "SELECT operational_status FROM device_lifecycle_history WHERE device_id = ?1 ORDER BY created_timestamp DESC LIMIT 1", nativeQuery = true)
-    String getLatestOperationalStatusFromHistory(String deviceId);
+    default String getLatestOperationalStatusFromHistory(String deviceId) {
+        List<String> results = getLatestOperationalStatusList(deviceId, org.springframework.data.domain.PageRequest.of(0, 1));
+        return results.isEmpty() ? null : results.get(0);
+    }
+
+    @Query("SELECT h.operational_status FROM DeviceLifecycleHistory h " +
+            "WHERE h.device.id = ?1 " +
+            "ORDER BY h.created_timestamp DESC")
+    List<String> getLatestOperationalStatusList(String deviceId, Pageable pageable);
 
     /**
      * Returns the assigned user email from the most recent lifecycle history record for the device.
@@ -85,6 +111,9 @@ public interface DeviceLifeCycleHistoryRepository extends JpaRepository<DeviceLi
      * @param deviceId the device identifier
      * @return the latest assigned user email, or {@code null} if no history exists
      */
+    // NOT CONVERTED — stays native: references column `assigned_user_email` which does not
+    // exist on the DeviceLifecycleHistory entity/table (no @Column mapping); JPQL has no path
+    // for a non-mapped column. This method is also commented-out at every call site.
     @Query(value = "SELECT assigned_user_email FROM device_lifecycle_history WHERE device_id = :deviceId ORDER BY created_timestamp DESC LIMIT 1", nativeQuery = true)
     String getLatestAssignedUserEmailFromHistory(String deviceId);
 

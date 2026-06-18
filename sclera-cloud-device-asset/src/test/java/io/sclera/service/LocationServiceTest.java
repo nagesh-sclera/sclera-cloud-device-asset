@@ -1,10 +1,13 @@
 package io.sclera.service;
 
 import com.alibaba.fastjson.JSONArray;
+import io.sclera.Repository.FloorRepository;
 import io.sclera.Repository.LocationRepository;
 import io.sclera.Repository.VdmsRepository;
 import io.sclera.client.APICallClient;
 import io.sclera.client.RecordChecklistClient;
+import io.sclera.models.Floor;
+import io.sclera.models.Location;
 import io.sclera.dto.LocationAlertDTO;
 import io.sclera.dto.LocationDTO;
 import io.sclera.dto.touchscreen.settings.VdmsDTO;
@@ -37,6 +40,7 @@ import static org.mockito.Mockito.when;
 class LocationServiceTest {
 
     @Mock LocationRepository locationRepository;
+    @Mock FloorRepository floorRepository;
     @Mock VdmsRepository vdmsRepository;
     @Mock APICallClient apicallService;
     @Mock RecordChecklistClient recordChecklistService;
@@ -128,28 +132,35 @@ class LocationServiceTest {
     // ---- add / update with ADC sync branch -------------------------------
 
     @Test
-    void addLocationByFloorId_generatesIdAndSyncsWhenRowsAffected() {
+    void addLocationByFloorId_generatesIdAndSyncs() {
+        // addLocationByFloorId now does find-or-create save() — always syncs after save
         LocationDTO l = loc(null); // id null -> service generates one
-        when(locationRepository.addLocationByFloorId(anyString(), any(), any(), eq("f1"), any(), any(), any()))
-                .thenReturn(1);
+        when(floorRepository.getReferenceById(eq("f1"))).thenReturn(mock(Floor.class));
+        when(locationRepository.save(any(Location.class))).thenAnswer(inv -> inv.getArgument(0));
         when(vdmsRepository.getSyncDetailsForADC()).thenReturn(mock(VdmsDTO.class));
         when(apicallService.syncLocationToADC(any(), any(), any(), any())).thenReturn(true);
 
         String id = service.addLocationByFloorId(l, "f1");
 
         assertThat(id).isNotNull();
+        verify(locationRepository).save(any(Location.class));
         verify(apicallService).syncLocationToADC(any(), eq("f1"), any(), any());
     }
 
     @Test
-    void addLocationByFloorId_noSyncWhenZeroRows() {
+    void addLocationByFloorId_withExistingId_savesAndSyncs() {
+        // Plain insert path: always saves and syncs (no rowsAffected check in new implementation)
         LocationDTO l = loc("L1");
-        when(locationRepository.addLocationByFloorId(anyString(), any(), any(), eq("f1"), any(), any(), any()))
-                .thenReturn(0);
+        when(floorRepository.getReferenceById(eq("f1"))).thenReturn(mock(Floor.class));
+        when(locationRepository.save(any(Location.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(vdmsRepository.getSyncDetailsForADC()).thenReturn(mock(VdmsDTO.class));
+        when(apicallService.syncLocationToADC(any(), any(), any(), any())).thenReturn(true);
 
-        service.addLocationByFloorId(l, "f1");
+        String id = service.addLocationByFloorId(l, "f1");
 
-        verify(apicallService, never()).syncLocationToADC(any(), any(), any(), any());
+        assertThat(id).isEqualTo("L1");
+        verify(locationRepository).save(any(Location.class));
+        verify(apicallService).syncLocationToADC(any(), eq("f1"), any(), any());
     }
 
     @Test

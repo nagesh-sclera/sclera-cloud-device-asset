@@ -22,6 +22,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.uuid.Generators;
@@ -200,8 +201,7 @@ public class DocumentService implements DocumentServiceInterface {
      */
     public Set<DocumentMediaDTO> getDocuments(String username, String vdmsid, Integer pageno, Integer pagesize, String searchkey) {
         // TODO Auto-generated method stub
-        Integer offset = pagesize * (pageno - 1);
-        return documentRepository.getDocuments(pagesize, offset, searchkey);
+        return new java.util.HashSet<>(documentRepository.getDocuments(searchkey, PageRequest.of(pageno - 1, pagesize)));
     }
 
     /**
@@ -216,8 +216,7 @@ public class DocumentService implements DocumentServiceInterface {
      */
     public Set<DocumentMediaDTO> getDocumentsByDeviceId(String username, String vdmsid, String deviceid, Integer pageno, Integer pagesize) {
         // TODO Auto-generated method stub
-        Integer offset = pagesize * (pageno - 1);
-        return documentRepository.getDocumentsByDeviceIdByPagination(deviceid, pagesize, offset);
+        return new java.util.HashSet<>(documentRepository.getDocumentsByDeviceIdByPagination(deviceid, PageRequest.of(pageno - 1, pagesize)));
     }
 
     /**

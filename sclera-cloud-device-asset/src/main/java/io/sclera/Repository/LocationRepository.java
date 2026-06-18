@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional;
 import com.alibaba.fastjson.JSONArray;
 import io.sclera.dto.LocationAlertDTO;
 import io.sclera.dto.LocationDTO;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -35,6 +36,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param floorname the floor name filter
      * @return the matching space status entries
      */
+    // NOT CONVERTED — stays native (PG-translation track): DeviceMonitorSpaceDTO projection via @NamedNativeQuery with multi-table CASE WHEN joins
     @Query(nativeQuery = true)
     ArrayList<DeviceMonitorSpaceDTO> listAllSpaceStatus(String spacetype, String buildingname, String floorname);
 
@@ -44,25 +46,10 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param floor_id the floor identifier
      * @return the matching location identifiers
      */
-    @Query(value = "SELECT id FROM location WHERE floor_id = ?1", nativeQuery = true)
+    @Query("SELECT l.id FROM Location l WHERE l.floor.id = ?1")
     Set<String> getLocationIdsByFloorId(String floor_id);
 
-    /**
-     * Inserts a new location on the given floor.
-     *
-     * @param location_id the location identifier
-     * @param name the location name
-     * @param position the location position
-     * @param floor_id the owning floor identifier
-     * @param area the location area
-     * @param type the location type
-     * @param updated_timestamp the update timestamp
-     * @return the number of rows inserted
-     */
-    @Modifying
-    @Transactional
-    @Query(value = "INSERT INTO location(id,name,position,floor_id, area, type, updated_timestamp ) VALUES(?1,?2,?3,?4,?5,?6,?7)", nativeQuery = true)
-    int addLocationByFloorId(String location_id, String name, String position, String floor_id, String area, String type, BigInteger updated_timestamp);
+    // addLocationByFloorId removed — replaced by find-or-create save() in LocationService.addLocationByFloorId
 
 
     /**
@@ -76,9 +63,9 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param updated_timestamp the update timestamp
      * @return the number of rows updated
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE location SET name = ?1 ,position = ?2, area = ?4, type = ?5, updated_timestamp = ?6  WHERE id = ?3", nativeQuery = true)
+    @Query("UPDATE Location l SET l.name = ?1, l.position = ?2, l.area = ?4, l.type = ?5, l.updated_timestamp = ?6 WHERE l.id = ?3")
     int updateLocationByLocationId(String name, String position, String location_id, String area, String type, BigInteger updated_timestamp);
 
     /**
@@ -86,6 +73,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): runtime DDL ALTER TABLE MODIFY (MySQL-only); should be removed, not converted
     @Query(value = "ALTER TABLE location MODIFY position varchar(128)", nativeQuery = true)
     void modifytable();
 
@@ -95,7 +83,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @return the unlinked location identifiers
      */
     //get locations not tagged to a device
-    @Query(value = "SELECT id FROM location l WHERE id NOT IN (SELECT d.location_id FROM device d WHERE l.id = d.location_id)", nativeQuery = true)
+    @Query("SELECT l.id FROM Location l WHERE l.id NOT IN (SELECT d.location.id FROM Device d WHERE d.location IS NOT NULL)")
     Set<String> getUnlinkedLocationIds();
 
     /**
@@ -104,8 +92,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param location_id the location identifier
      * @return 1 if the location exists, otherwise 0
      */
-    @Transactional
-    @Query(value = "SELECT EXISTS(SELECT * FROM location where id = ?1)", nativeQuery = true)
+    @Query("SELECT CASE WHEN COUNT(l) > 0 THEN 1 ELSE 0 END FROM Location l WHERE l.id = ?1")
     Integer checkLocationById(String location_id);
 
     /**
@@ -114,7 +101,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param location_id the location identifier
      * @return the location position
      */
-    @Query(value = "SELECT position FROM location where id = ?1", nativeQuery = true)
+    @Query("SELECT l.position FROM Location l WHERE l.id = ?1")
     String getPositionByLocationId(String location_id);
 
 
@@ -124,7 +111,10 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param location_id the location identifier
      * @return the matching location details
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(l.id, l.name, f.name, b.name, l.type, l.code)" +
+           " FROM Location l" +
+           " LEFT JOIN l.floor f LEFT JOIN f.building b" +
+           " WHERE l.id = ?1")
     LocationDTO getLocationDetails(String location_id);
 
     /**
@@ -133,9 +123,9 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param location_id the location identifier
      * @param checklist_status the new checklist status
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE location SET record_checklist_status = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Location l SET l.record_checklist_status = ?2 WHERE l.id = ?1")
     void updateLocationRecordChecklistStatus(String location_id, String checklist_status);
 
     /**
@@ -144,9 +134,9 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param location_id the location identifier
      * @param record_checklist_count the new checklist count
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE location SET record_checklist_count = ?2 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Location l SET l.record_checklist_count = ?2 WHERE l.id = ?1")
     void updateLocationRecordChecklistCount(String location_id, Integer record_checklist_count);
 
 
@@ -157,32 +147,19 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param name the location name
      * @return the matching location identifier
      */
-    @Query(value = "SELECT id FROM location where name = ?1 LIMIT 1", nativeQuery = true)
-    String getLocationIdbyLocationName(String name);
+    default String getLocationIdbyLocationName(String name) {
+        List<String> ids = findLocationIdsByName(name);
+        return ids.isEmpty() ? null : ids.get(0);
+    }
+
+    @Query("SELECT l.id FROM Location l WHERE l.name = ?1")
+    List<String> findLocationIdsByName(String name);
     /******************************************************To be deleted**************************************************************/
 
 
     /****************************************************************************** new location changes ***************************************/
 
-    /**
-     * Inserts a location on the given floor, or updates its name, status, type, code, and timestamp on identifier conflict.
-     *
-     * @param id the location identifier
-     * @param name the location name
-     * @param position the location position
-     * @param area the location area
-     * @param floor_id the owning floor identifier
-     * @param status the location status
-     * @param type the location type
-     * @param code the location code
-     * @param updated_timestamp the update timestamp
-     * @return the number of rows affected
-     */
-    @Modifying
-    @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
-    @Query(value = "INSERT INTO location(id,name,position,area,floor_id, type, code,updated_timestamp ) VALUES(?1,?2,?3,?4,?5,?7,?8,?9) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, status=?6, type = EXCLUDED.type, code = EXCLUDED.code, updated_timestamp = EXCLUDED.updated_timestamp", nativeQuery = true)
-    int upsertLocationByFloorId(String id, String name, String position, String area, String floor_id, String status, String type, String code, BigInteger updated_timestamp);
+    // upsertLocationByFloorId removed — replaced by find-or-create save() in LocationService.upsertLocationByFloorId
 
     /**
      * Returns the locations belonging to the given VDMS.
@@ -190,16 +167,33 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param vdms_id the VDMS identifier
      * @return the matching locations
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(l.id, l.name, l.type, l.code)" +
+           " FROM Location l" +
+           " LEFT JOIN l.floor f LEFT JOIN f.building b" +
+           " WHERE b.vdms.id = ?1")
     Set<LocationDTO> getLocationByVdmsId(String vdms_id);
 
     /**
      * Returns the locations on the given floor.
      *
+     * <p>BUGFIX during JPQL conversion: the original native query selected {@code f.name},
+     * {@code b.id}, {@code b.name}, {@code b.code} but its FROM clause was only
+     * {@code FROM location l} with NO join defining {@code f}/{@code b} — invalid SQL that
+     * fails at runtime on both MySQL and PostgreSQL (undefined alias). The floor/building
+     * LEFT JOINs below restore the obvious intent, matching the working paginated sibling
+     * {@code getLocationsByFloorByPagination}. This repairs a previously-broken call path
+     * (LocationService#getLocationsByFloorId, used by BuildingService/FloorService).
+     *
      * @param floor_id the floor identifier
      * @return the matching locations
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(" +
+           " l.id, l.name, l.position, l.area, l.floor.id, l.status, l.z_index," +
+           " l.record_checklist_count, l.record_checklist_status, l.type, f.name," +
+           " b.id, b.name, l.code, b.code)" +
+           " FROM Location l" +
+           " LEFT JOIN l.floor f LEFT JOIN f.building b" +
+           " WHERE l.floor.id = ?1")
     Set<LocationDTO> getLocationsByFloorId(String floor_id);
 
     /**
@@ -208,7 +202,8 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param floor_id the floor identifier
      * @return the matching locations
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(l.id, l.name, l.type, l.code)" +
+           " FROM Location l WHERE l.floor.id = ?1")
     Set<LocationDTO> getLocationsByFloor(String floor_id);
 
     /**
@@ -217,7 +212,8 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param floorIds the floor identifiers
      * @return the matching locations
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(l.id, l.name, l.type, l.code, l.floor.id)" +
+           " FROM Location l WHERE l.floor.id IN ?1")
     List<LocationDTO> getLocationsByFloorIds(List<String> floorIds);
 
     /**
@@ -238,6 +234,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param locationIdsTaggedToBarCode the location identifiers tagged to a barcode
      * @return the matching locations for the page
      */
+    // NOT CONVERTED — stays native (PG-translation track): JSONArray IN-params + tagging CASE WHEN conditions, no portable JPQL form
     @Query(nativeQuery = true)
     Set<LocationDTO> getLocationsByFloorByPagination(String floor_id, String searchkey, String qrcodeCondition, JSONArray locationIdsTaggedToQrCode, String nfcCondition, JSONArray locationIdsTaggedToNfc, String procedureCondition, String status, Integer pageSize, Integer offset, JSONArray types,String barCodeCondition,JSONArray locationIdsTaggedToBarCode);
 
@@ -247,7 +244,8 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param location_id the location identifier
      * @return the matching location
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(l.id, l.name, l.type, l.code)" +
+           " FROM Location l WHERE l.id = ?1")
     LocationDTO getLocationByLocationId(String location_id);
 
     /**
@@ -257,9 +255,9 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param area the new area
      * @param z_index the new z-index
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE location SET area = ?2, z_index = ?3 WHERE floor_id = ?1", nativeQuery = true)
+    @Query("UPDATE Location l SET l.area = ?2, l.z_index = ?3 WHERE l.floor.id = ?1")
     void updateArea(String floor_id, String area, Integer z_index);
 
     /**
@@ -275,9 +273,9 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param updated_timestamp the update timestamp
      * @return the number of rows updated
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "UPDATE location SET name = ?2, position = ?3, area = ?4, z_index = ?5, type = ?6, code = ?7, updated_timestamp = ?8 WHERE id = ?1", nativeQuery = true)
+    @Query("UPDATE Location l SET l.name = ?2, l.position = ?3, l.area = ?4, l.z_index = ?5, l.type = ?6, l.code = ?7, l.updated_timestamp = ?8 WHERE l.id = ?1")
     int updateLocationDetailsByLocationId(String id, String name, String position, String area, Integer z_index, String type, String code, BigInteger updated_timestamp);
 
     /**
@@ -292,12 +290,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param updated_timestamp the update timestamp
      * @return the number of rows affected
      */
-    //to be deleted after backend sync
-    @Modifying
-    @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
-    @Query(value = "INSERT INTO location(id,name,position,area,floor_id, type, updated_timestamp ) VALUES(?1,?2,?3,?4,?5, ?6, ?7 ) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, position = EXCLUDED.position, area = EXCLUDED.area, floor_id = EXCLUDED.floor_id, type = EXCLUDED.type, updated_timestamp = EXCLUDED.updated_timestamp", nativeQuery = true)
-    int upsertLocationByFloorIdBackendSync(String id, String name, String position, String area, String floor_id, String type, BigInteger updated_timestamp);
+    // upsertLocationByFloorIdBackendSync removed — replaced by find-or-create save() in LocationService.upsertLocationByFloorIdBackendSync
 
     /**
      * Returns the number of locations on the given floor matching the search key.
@@ -306,8 +299,12 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param searchkey the search key to match
      * @return the matching location count
      */
-    @Query(value = "SELECT COUNT(*) FROM location WHERE floor_id = ?1 AND (?2 = 'null' or CONCAT_WS('' , name ) LIKE CONCAT('%' ,?2, '%')) ", nativeQuery = true)
-    String getLocationsCountByFloorId(String floor_id, String searchkey);
+    default String getLocationsCountByFloorId(String floor_id, String searchkey) {
+        return String.valueOf(countLocationsByFloorId(floor_id, searchkey));
+    }
+
+    @Query("SELECT COUNT(l) FROM Location l WHERE l.floor.id = ?1 AND (?2 = 'null' OR CONCAT(COALESCE(l.name, '')) LIKE CONCAT('%', ?2, '%'))")
+    Long countLocationsByFloorId(String floor_id, String searchkey);
 
     /**
      * Returns the detailed record of the location with the given identifier.
@@ -315,7 +312,13 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param location_id the location identifier
      * @return the matching location details
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(" +
+           " l.id, l.name, l.position, l.area, l.floor.id, l.z_index," +
+           " f.name, b.name, l.record_checklist_count, l.record_checklist_status," +
+           " b.id, l.type, l.code)" +
+           " FROM Location l" +
+           " LEFT JOIN l.floor f LEFT JOIN f.building b" +
+           " WHERE l.id = ?1")
     LocationDTO getLocationDetailsByLocationId(String location_id);
 
     /**
@@ -324,7 +327,10 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param location_id the location identifier
      * @return the matching location alert details
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationAlertDTO(l.id, l.name, l.floor.id, f.name, b.id, b.name)" +
+           " FROM Location l" +
+           " LEFT JOIN l.floor f LEFT JOIN f.building b" +
+           " WHERE l.id = ?1")
     LocationAlertDTO getLocationAlertDetails(String location_id);
 
 
@@ -344,6 +350,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param building_id the building identifier filter
      * @return the matching locations for the page
      */
+    // NOT CONVERTED — stays native (PG-translation track): JSONArray IN + multi-join dynamic filters
     @Query(nativeQuery = true)
     Set<LocationDTO> getAllChecklistLocationsPagination(String searchkey, Integer pagesize, Integer offset, JSONArray global_checklist_ids, String floor_id,
                                                         Boolean isTaggedToQrCode,
@@ -367,6 +374,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param building_id the building identifier filter
      * @return the matching locations for the page
      */
+    // NOT CONVERTED — stays native (PG-translation track): JSONArray IN + multi-join dynamic filters
     @Query(nativeQuery = true)
     Set<LocationDTO> getAllInspectionLocationsPagination(String searchkey, Integer pagesize, Integer offset, JSONArray global_checklist_ids, String floor_id,
                                                          String global_inspection_record_id, Boolean isTaggedToQrCode, JSONArray locationIdsTaggedToQrCode,
@@ -387,6 +395,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param building_id the building identifier filter
      * @return the matching locations for the page
      */
+    // NOT CONVERTED — stays native (PG-translation track): JSONArray IN + multi-join dynamic filters
     @Query(nativeQuery = true)
     Set<LocationDTO> getAllQrcodeLocationsPagination(String searchkey, Integer pagesize, Integer offset, String floor_id, Boolean isTaggedToQrCode,
                                                      JSONArray locationIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray locationIdsTaggedToNfc, JSONArray types, String building_id);
@@ -397,7 +406,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param ids the candidate location identifiers
      * @return the identifiers found in the table
      */
-    @Query(value = "SELECT id FROM location where id IN ?1", nativeQuery = true)
+    @Query("SELECT l.id FROM Location l WHERE l.id IN ?1")
     Set<String> getLocationIds(Set<String> ids);
 
     /**
@@ -405,7 +414,8 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      *
      * @return all location details
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(l.id, l.name, l.type, l.code)" +
+           " FROM Location l")
     List<LocationDTO> getAllLocationDetails();
 
     /**
@@ -425,6 +435,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param locationIdsTaggedToBarCode the location identifiers tagged to a barcode
      * @return the matching location count
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join (floor/building) + JSONArray IN + 'all' IN ?n + CASE WHEN dynamics
     // PG-port: IF->CASE WHEN
     @Query(value = "SELECT COUNT(*) "
             + " FROM location l "
@@ -452,6 +463,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param building_id the building identifier filter
      * @return the matching locations
      */
+    // NOT CONVERTED — stays native (PG-translation track): JSONArray IN + multi-join dynamic filter
     @Query(nativeQuery = true)
     Set<LocationDTO> getAllChecklistLocations(String searchkey, String globalChecklistId, String floorId, Boolean isTaggedToQrCode, JSONArray locationIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray locationIdsTaggedToNfc, JSONArray types, String building_id);
 
@@ -470,6 +482,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param building_id the building identifier filter
      * @return the matching locations
      */
+    // NOT CONVERTED — stays native (PG-translation track): JSONArray IN + multi-join dynamic filter
     @Query(nativeQuery = true)
     Set<LocationDTO> getAllInspectionLocations(String searchkey, String globalChecklistId, String floorId, String globalInspectionRecordId, Boolean isTaggedToQrCode, JSONArray locationIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray locationIdsTaggedToNfc, JSONArray types, String building_id);
 
@@ -486,6 +499,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param building_id the building identifier filter
      * @return the matching locations
      */
+    // NOT CONVERTED — stays native (PG-translation track): JSONArray IN + multi-join dynamic filter
     @Query(nativeQuery = true)
     Set<LocationDTO> getAllQrcodeLocations(String searchkey, String floorId, Boolean isTaggedToQrCode, JSONArray locationIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray locationIdsTaggedToNfc, JSONArray types, String building_id);
 
@@ -495,6 +509,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param measuring_instrument_id the measuring instrument identifier
      * @return the matching locations
      */
+    // NOT CONVERTED — stays native (PG-translation track): projection via join to measuring-instrument mapping
     @Query(nativeQuery = true)
     Set<LocationDTO> getLocationDetailsByMeasuringInstrumentId(String measuring_instrument_id);
 
@@ -513,6 +528,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param building_id the building identifier filter
      * @return the matching locations for the page
      */
+    // NOT CONVERTED — stays native (PG-translation track): JSONArray IN + multi-join dynamic filter
     @Query(nativeQuery = true)
     Set<LocationDTO> getAllLocationPagination(String searchkey, Integer pagesize, Integer offset, String floorId, Boolean isTaggedToQrCode, JSONArray locationIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray locationIdsTaggedToNfc, JSONArray types, String building_id);
 
@@ -533,6 +549,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param building_id the building identifier filter
      * @return the matching locations for the page
      */
+    // NOT CONVERTED — stays native (PG-translation track): JSONArray IN + multi-join dynamic filter
     @Query(nativeQuery = true)
     Set<LocationDTO> getAllMeasuringInstrumentLocationsPagination(String searchkey, Integer pagesize, Integer offset, String floorId, JSONArray measuringInstrumentIds, Boolean isTaggedToQrCode, JSONArray locationIdsTaggedToQrCode, Boolean isTaggedToNfc, JSONArray locationIdsTaggedToNfc, JSONArray types, String building_id);
 
@@ -550,6 +567,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param types the location type filters, or "all"
      * @return the matching location identifiers
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join + JSONArray + 'all' IN + CASE WHEN
     // PG-port: IF->CASE WHEN
     @Query(value = "SELECT l.id FROM location l" +
             " LEFT JOIN floor f ON l.floor_id = f.id" +
@@ -576,6 +594,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param types the location type filters
      * @return the matching location alert details
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join + JSONArray + 'all' IN + CASE WHEN
     @Query(nativeQuery = true)
     List<LocationAlertDTO> getLocationsByFilter(String searchKey, Boolean isTaggedToQrCode, List<String> locationIdsTaggedToQrCode,
                                                 Boolean isTaggedToNfc, List<String> locationIdsTaggedToNfc, List<String> buildingIds,
@@ -587,7 +606,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      *
      * @return the unique location types
      */
-    @Query(value = "SELECT DISTINCT type FROM location WHERE type IS NOT NULL", nativeQuery = true)
+    @Query("SELECT DISTINCT l.type FROM Location l WHERE l.type IS NOT NULL")
     List<String> getUniqueLocationTypes();
 
     /**
@@ -596,7 +615,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param id the location identifier
      * @return the matching count
      */
-    @Query(value = "SELECT COUNT(id) FROM location where id = ?1", nativeQuery = true)
+    @Query("SELECT COUNT(l.id) FROM Location l WHERE l.id = ?1")
     int getLocationId(String id);
 
     /**
@@ -605,7 +624,8 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param locationIds the location identifiers
      * @return the matching locations
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationDTO(l.id, l.name, l.type, l.code)" +
+           " FROM Location l WHERE l.id IN ?1")
     Set<LocationDTO> getAllLocationsByIds(Set<String> locationIds);
 
     /**
@@ -623,6 +643,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native (PG-translation track): already PG-portable COALESCE; JPQL rejects the String/Integer z_index COALESCE mix
     // PG-port: IFNULL->COALESCE
     @Query(value = "UPDATE location SET name = COALESCE(?2, name), position = COALESCE(?3, position), area = COALESCE(?4, area), z_index = COALESCE(?5, z_index), type = COALESCE(?6, type),  code = COALESCE(?7, code), updated_timestamp = COALESCE(?8, updated_timestamp)  WHERE id IN ?1", nativeQuery = true)
     int multiUpdateLocations(Set<String> locationIds, String name, String position, String area, String z_index, String type, String code, BigInteger updated_timestamp);
@@ -642,6 +663,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param types the location type filters, or "all"
      * @return the matching location identifiers
      */
+    // NOT CONVERTED — stays native (PG-translation track): multi-join + JSONArray IN + CASE WHEN
     // PG-port: IF->CASE WHEN
     @Query(value =
             "  SELECT  l.id FROM location l LEFT JOIN floor f ON l.floor_id = f.id" +
@@ -660,19 +682,21 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param status the status substring to match
      * @return the matching location count
      */
-    @Query(value = "SELECT COUNT(*) FROM location l WHERE l.status LIKE CONCAT('%',?1,'%')", nativeQuery = true)
+    @Query("SELECT COUNT(l) FROM Location l WHERE l.status LIKE CONCAT('%', ?1, '%')")
     Integer getLocationStatusCountTs(String status);
 
     /**
      * Returns a paginated list of location alert details matching the given status.
      *
      * @param status the status to match
-     * @param offset the starting row offset
-     * @param pagesize the maximum number of rows to return
+     * @param pageable the page and size (replaces the former scalar offset/pagesize params)
      * @return the matching location alert details for the page
      */
-    @Query(nativeQuery = true)
-    List<LocationAlertDTO> getLocationsByStatus(String status, Integer offset, Integer pagesize);
+    @Query("SELECT new io.sclera.dto.LocationAlertDTO(l.id, l.name, l.floor.id, f.name, b.id, b.name)" +
+           " FROM Location l" +
+           " LEFT JOIN l.floor f LEFT JOIN f.building b" +
+           " WHERE l.status LIKE CONCAT('%', ?1, '%')")
+    List<LocationAlertDTO> getLocationsByStatus(String status, Pageable pageable);
 
     /**
      * Returns the number of locations whose status matches the given value (touchscreen).
@@ -680,30 +704,10 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param status the status substring to match
      * @return the matching location count
      */
-    @Query(value = "SELECT COUNT(*)"
-            + " FROM location l "
-            + " WHERE  l.status LIKE CONCAT('%',?1,'%')", nativeQuery = true)
+    @Query("SELECT COUNT(l) FROM Location l WHERE l.status LIKE CONCAT('%', ?1, '%')")
     Integer getLocationsByStatusCountTs(String status);
 
-    /**
-     * Inserts a location, or updates its detail fields on identifier conflict.
-     *
-     * @param id the location identifier
-     * @param name the location name
-     * @param position the location position
-     * @param area the location area
-     * @param floor_id the owning floor identifier
-     * @param status the location status
-     * @param type the location type
-     * @param code the location code
-     * @param updated_timestamp the update timestamp
-     * @return the number of rows affected
-     */
-    @Modifying
-    @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
-    @Query(value = "INSERT INTO location(id,name,position,area,floor_id, type, code, updated_timestamp) VALUES(?1,?2,?3,?4,?5,?7,?8,?9) ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, status=?6, type = EXCLUDED.type, code = EXCLUDED.code, area = EXCLUDED.area, position = EXCLUDED.position, updated_timestamp = EXCLUDED.updated_timestamp", nativeQuery = true)
-    int upsertlocationdetails(String id, String name, String position, String area, String floor_id, String status, String type, String code, BigInteger updated_timestamp);
+    // upsertlocationdetails removed — replaced by find-or-create save() in LocationService.upsertlocationdetails
 
 
     /**
@@ -721,6 +725,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param types the location type filters
      * @return the matching locations
      */
+    // NOT CONVERTED — stays native (PG-translation track): JSONArray IN + multi-join dynamic filter
     @Query(nativeQuery = true)
     Set<LocationDTO> getLocationsByBuildingAndFloor(String building_id, String floor_id, String searchKey, String qrCodeCondition, JSONArray locationIdsTaggedToQrCode, String nfcConditon, JSONArray locationIdsTaggedToNfc, String recordChecklistCondition, String status, JSONArray types);
 
@@ -744,6 +749,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param building_id the building identifier filter
      * @return the matching locations for the page
      */
+    // NOT CONVERTED — stays native (PG-translation track): JSONArray IN + multi-join dynamic filters
     @Query(nativeQuery = true)
     Set<LocationDTO> getAllRecordChecklistLocationsPagination(String searchkey, Integer pagesize, Integer offset, JSONArray global_checklist_ids, String floor_id,
                                                               String inspection_record_id, Boolean isTaggedToQrCode, JSONArray locationIdsTaggedToQrCode,
@@ -767,6 +773,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param locationIdsTaggedToBarCode the location identifiers tagged to a barcode
      * @return the matching locations
      */
+    // NOT CONVERTED — stays native (PG-translation track): JSONArray IN + multi-join dynamic filter
     @Query(nativeQuery = true)
     Set<LocationDTO> getAllLocationsByFilter(JSONArray floor_ids, String searchkey, String qrcodeCondition, JSONArray locationIdsTaggedToQrCode, String nfcCondition, JSONArray locationIdsTaggedToNfc, String procedureCondition, String status, JSONArray types, JSONArray building_ids, String barCodeCondition, JSONArray locationIdsTaggedToBarCode);
 
@@ -789,6 +796,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param locationIdsTaggedToBarCode the location identifiers tagged to a barcode
      * @return the matching locations for the page
      */
+    // NOT CONVERTED — stays native (PG-translation track): JSONArray IN + multi-join dynamic filter
     @Query(nativeQuery = true)
     Set<LocationDTO> getAllLocationsByFilterByPagination(JSONArray floor_ids, String searchkey, String qrcodeCondition, JSONArray locationIdsTaggedToQrCode, String nfcCondition, JSONArray locationIdsTaggedToNfc, String procedureCondition, String status, Integer pageSize, Integer offset, JSONArray types, JSONArray building_ids,String barCodeCondition,  JSONArray locationIdsTaggedToBarCode);
 
@@ -798,7 +806,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param locationId the location identifier
      * @return the location name
      */
-    @Query(value = "SELECT name FROM location where id = ?1",nativeQuery = true)
+    @Query("SELECT l.name FROM Location l WHERE l.id = ?1")
     String getLocationName(String locationId);
 
     /**
@@ -816,6 +824,7 @@ public interface LocationRepository extends JpaRepository<Location, String> {
      * @param building_id the building identifier filter
      * @return the matching locations for the page
      */
+    // NOT CONVERTED — stays native (PG-translation track): JSONArray IN + multi-join dynamic filters
     @Query(nativeQuery = true)
     Set<LocationDTO> getAllReactiveServiceLocationsPagination(String searchkey, Integer pagesize, Integer offset,  String floor_id,
                                                         Boolean isTaggedToQrCode,

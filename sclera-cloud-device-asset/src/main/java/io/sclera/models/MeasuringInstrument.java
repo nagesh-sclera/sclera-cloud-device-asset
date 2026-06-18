@@ -742,7 +742,7 @@ public class MeasuringInstrument {
 
     private String calculation_type;
 
-    @Column(columnDefinition = "varchar(64) default 'static'")
+    @Column(length = 64, columnDefinition = "varchar(64) default 'static'")
     private String scale_type;
 
     @Column(columnDefinition = "TEXT")

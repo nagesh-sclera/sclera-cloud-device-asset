@@ -860,4 +860,12 @@ public class Location {
         this.client_barcode = client_barcode;
     }
 
+    public BigInteger getUpdated_timestamp() {
+        return updated_timestamp;
+    }
+
+    public void setUpdated_timestamp(BigInteger updated_timestamp) {
+        this.updated_timestamp = updated_timestamp;
+    }
+
 }

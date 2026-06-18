@@ -271,9 +271,10 @@ function renderServices(states = {}) {
 }
 
 async function pingOne(svc) {
-  const url = `http://${HOST()}:${svc.port}/actuator/health`;
+  // Same-origin proxy (nginx) -> avoids CORS (services only allow :3000).
+  const url = `/svc/${svc.port}/actuator/health`;
   try {
-    const r = await fetch(url, { method: 'GET', mode: 'cors' });
+    const r = await fetch(url, { method: 'GET' });
     return r.ok ? 'up' : 'down';
   } catch {
     return 'down';
@@ -334,7 +335,8 @@ function setView(view) {
 
 async function fire() {
   const path = $('trig-target').value;
-  const url  = `http://${HOST()}:8080/${path}`;
+  // Same-origin proxy to the gateway (:8080) -> avoids CORS.
+  const url  = `/svc/8080/${path}`;
   const log  = $('trig-log');
   log.classList.add('show');
   log.textContent = `→ GET ${url}\n…`;

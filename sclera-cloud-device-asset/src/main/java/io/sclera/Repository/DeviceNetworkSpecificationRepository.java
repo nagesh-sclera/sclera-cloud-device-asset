@@ -28,7 +28,10 @@ public interface DeviceNetworkSpecificationRepository extends JpaRepository<Devi
      * @param serialNumber the network specification record identifier
      * @param deviceId the device identifier to assign
      */
-    @Modifying
+    // NOT CONVERTED — stays native: sets device_id column, which backs the @OneToOne Device relation
+    // (insertable=false, updatable=false on the join column). A JPQL bulk UPDATE cannot assign a
+    // @OneToOne association from a scalar id; native SQL is the correct approach here.
+    @Modifying(clearAutomatically = true)
     @Transactional
     @Query(value = "UPDATE device_network_specification SET device_id = ?2 WHERE id = ?1", nativeQuery = true)
     void updateDeviceIdBySerialNumber(String serialNumber, String deviceId);

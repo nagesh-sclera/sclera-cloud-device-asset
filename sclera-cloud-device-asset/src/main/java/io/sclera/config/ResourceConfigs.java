@@ -7,6 +7,8 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Registers a static resource handler that serves files under {@code /images/**} from the local
  * image directory with private, no-cache headers.
@@ -33,9 +35,18 @@ public class ResourceConfigs implements WebMvcConfigurer {
 	                .addResourceLocations(CLASS_PATH_RESOURCE_LOCATIONS)
 	                .setCacheControl(CacheControl.noCache().cachePrivate())
 	                .resourceChain(true)
-	                
+
 	                .addResolver(new PathResourceResolver());
-	        
+
+	        // Serves the HTML JavaDoc bundled into the jar at build time (see maven-javadoc-plugin
+	        // in pom.xml) under /javadoc/**. An explicit handler is required because @EnableWebMvc
+	        // disables Spring Boot's default classpath:/static/ resource mapping.
+	        registry.addResourceHandler("/javadoc/**")
+	                .addResourceLocations("classpath:/static/javadoc/apidocs/")
+	                .setCacheControl(CacheControl.maxAge(1, TimeUnit.HOURS).cachePublic())
+	                .resourceChain(true)
+	                .addResolver(new PathResourceResolver());
+
 	    }
 	    
 	    

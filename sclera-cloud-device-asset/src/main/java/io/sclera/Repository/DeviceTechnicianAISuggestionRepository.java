@@ -27,6 +27,8 @@ public interface DeviceTechnicianAISuggestionRepository extends JpaRepository<De
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native: CAST(?3 AS jsonb) is a PostgreSQL-specific type cast required
+    // to bind a String parameter into a jsonb column; no portable JPQL equivalent
     @Query(value = "INSERT INTO device_technician_ai_suggestion (id, device_type, technicians, vdms_id) " +
             "VALUES (?1, ?2, CAST(?3 AS jsonb), ?4)", nativeQuery = true)
     Integer createTechnicianSuggestion(String id, String deviceType, String technicians, String vdmsId);
@@ -42,6 +44,8 @@ public interface DeviceTechnicianAISuggestionRepository extends JpaRepository<De
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native: CAST(?3 AS jsonb) is a PostgreSQL-specific type cast required
+    // to bind a String parameter into a jsonb column; no portable JPQL equivalent
     @Query(value = "UPDATE device_technician_ai_suggestion " +
             "SET device_type = ?2, technicians = CAST(?3 AS jsonb), vdms_id = ?4 WHERE id = ?1", nativeQuery = true)
     Integer updateTechnicianSuggestion(String id, String deviceType, String technicians, String vdmsId);
@@ -54,7 +58,8 @@ public interface DeviceTechnicianAISuggestionRepository extends JpaRepository<De
      * @param id the suggestion identifier
      * @return the matching suggestion projection
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.DeviceTechnicianAISuggestionDTO(s.id, s.deviceType, s.technicians, s.vdms.id) " +
+            "FROM DeviceTechnicianAISuggestion s WHERE s.id = ?1")
     DeviceTechnicianAISuggestionDTO getdevicetechnicianbyid(String id);
 
 
@@ -65,7 +70,8 @@ public interface DeviceTechnicianAISuggestionRepository extends JpaRepository<De
      *
      * @return the list of suggestion projections
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.DeviceTechnicianAISuggestionDTO(s.id, s.deviceType, s.technicians, s.vdms.id) " +
+            "FROM DeviceTechnicianAISuggestion s")
     List<DeviceTechnicianAISuggestionDTO> getAlldevicetechnician();
 
 
@@ -74,9 +80,9 @@ public interface DeviceTechnicianAISuggestionRepository extends JpaRepository<De
      *
      * @param id the suggestion identifier to delete
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM device_technician_ai_suggestion WHERE id = ?1", nativeQuery = true)
+    @Query("DELETE FROM DeviceTechnicianAISuggestion s WHERE s.id = ?1")
     void deletedevicetechnicianById(String id);
 
 
@@ -87,7 +93,7 @@ public interface DeviceTechnicianAISuggestionRepository extends JpaRepository<De
      * @param vdmsId the owning VDMS identifier
      * @return the technicians JSONB value
      */
-    @Query(value = "SELECT technicians FROM device_technician_ai_suggestion WHERE device_type = ?1 AND vdms_id = ?2", nativeQuery = true)
+    @Query("SELECT s.technicians FROM DeviceTechnicianAISuggestion s WHERE s.deviceType = ?1 AND s.vdms.id = ?2")
     String getDeviceTechnicianAISuggestionByDeviceType(String deviceType, String vdmsId);
 
     /**
@@ -101,7 +107,8 @@ public interface DeviceTechnicianAISuggestionRepository extends JpaRepository<De
      */
     @Modifying
     @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
+    // NOT CONVERTED — stays native: plain INSERT … ON CONFLICT upsert already valid PostgreSQL;
+    // also uses CAST(?3 AS jsonb) which is a PostgreSQL-specific type cast
     @Query(value = "INSERT INTO device_technician_ai_suggestion (id, device_type, technicians, vdms_id) " +
             "VALUES (?1, ?2, CAST(?3 AS jsonb), ?4) " +
             "ON CONFLICT (id) DO UPDATE SET " +

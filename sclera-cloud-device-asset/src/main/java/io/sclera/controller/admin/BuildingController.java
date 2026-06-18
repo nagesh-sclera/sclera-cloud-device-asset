@@ -3,6 +3,8 @@ package io.sclera.controller.admin;
 import io.sclera.dto.BuildingDTO;
 import io.sclera.dto.FloorDTO;
 import io.sclera.service.BuildingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +22,8 @@ import java.util.Set;
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class BuildingController {
 
+    private static final Logger log = LoggerFactory.getLogger(BuildingController.class);
+
     @Autowired
     private BuildingService buildingService;
 
@@ -34,7 +38,13 @@ public class BuildingController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/upsertbuildings")
     public Set<BuildingDTO> upsertBuildingsByVdmsId(@RequestParam String username, @RequestParam String vdms_id, @RequestBody Set<BuildingDTO> buildings, HttpServletRequest httpServletRequest) {
-        return buildingService.upsertBuildingsByVdmsId(username, vdms_id, buildings, httpServletRequest);
+        log.info("upsertBuildingsByVdmsId username={} vdms_id={}", username, vdms_id);
+        try {
+            return buildingService.upsertBuildingsByVdmsId(username, vdms_id, buildings, httpServletRequest);
+        } catch (Exception e) {
+            log.error("upsertBuildingsByVdmsId failed vdms_id={}: {}", vdms_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -47,7 +57,13 @@ public class BuildingController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/building/floor/location/{location_id}/getbuildingbylocation")
     public BuildingDTO getBuildingByLocationId(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String location_id) {
-        return buildingService.getBuildingByLocationId(username, vdms_id, location_id);
+        log.info("getBuildingByLocationId username={} vdms_id={} location_id={}", username, vdms_id, location_id);
+        try {
+            return buildingService.getBuildingByLocationId(username, vdms_id, location_id);
+        } catch (Exception e) {
+            log.error("getBuildingByLocationId failed location_id={}: {}", location_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -62,7 +78,13 @@ public class BuildingController {
     @RequestMapping(method = RequestMethod.GET, value = "/getbuildingsbyvdmsid")
     public Set<BuildingDTO> getBuildingsByVdmsId(@RequestParam String vdms_id,
                                                  @RequestParam(required = false) String field,@RequestParam(required = false) String field_id) {
-        return buildingService.getBuildingsByVdmsId(vdms_id, field, field_id);
+        log.info("getBuildingsByVdmsId vdms_id={}", vdms_id);
+        try {
+            return buildingService.getBuildingsByVdmsId(vdms_id, field, field_id);
+        } catch (Exception e) {
+            log.error("getBuildingsByVdmsId failed vdms_id={}: {}", vdms_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -76,7 +98,13 @@ public class BuildingController {
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/deletebuildings")
     public void deleteBuildingsByIds(@RequestParam String username, @RequestParam String vdmsid, @RequestBody Set<String> building_ids, HttpServletRequest httpServletRequest) {
-        buildingService.deleteBuildingsByIds(username, vdmsid, building_ids, httpServletRequest);
+        log.info("deleteBuildingsByIds username={} vdmsid={}", username, vdmsid);
+        try {
+            buildingService.deleteBuildingsByIds(username, vdmsid, building_ids, httpServletRequest);
+        } catch (Exception e) {
+            log.error("deleteBuildingsByIds failed vdmsid={}: {}", vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //  syncLocationsFromBackend to be deleted after sync
@@ -89,7 +117,13 @@ public class BuildingController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/syncbuildings")
     public Map<String, Object> syncLocationsFromBackend(HttpServletRequest httpServletRequest) {
-        return buildingService.syncLocationsFromBackend(httpServletRequest);
+        log.info("syncLocationsFromBackend called");
+        try {
+            return buildingService.syncLocationsFromBackend(httpServletRequest);
+        } catch (Exception e) {
+            log.error("syncLocationsFromBackend failed: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     //  syncLocationsFromBackend to be deleted after sync
@@ -101,7 +135,13 @@ public class BuildingController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/syncfloormaps")
     public Set<FloorDTO> syncFloorMaps(@RequestParam String vdms_id) {
-        return buildingService.syncFloorMaps(vdms_id);
+        log.info("syncFloorMaps vdms_id={}", vdms_id);
+        try {
+            return buildingService.syncFloorMaps(vdms_id);
+        } catch (Exception e) {
+            log.error("syncFloorMaps failed vdms_id={}: {}", vdms_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //  syncLocationsFromBackend to be deleted after sync
@@ -114,8 +154,14 @@ public class BuildingController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/updatefloormaps")
     public List<FloorDTO> updateFloorMaps(@RequestParam String vdms_id, @RequestBody List<FloorDTO> floorImages) {
-        System.out.println("******************Floor Images********************* " + floorImages);
-        return buildingService.updateFloorMaps(vdms_id, floorImages);
+        log.info("updateFloorMaps vdms_id={}", vdms_id);
+        try {
+            System.out.println("******************Floor Images********************* " + floorImages);
+            return buildingService.updateFloorMaps(vdms_id, floorImages);
+        } catch (Exception e) {
+            log.error("updateFloorMaps failed vdms_id={}: {}", vdms_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     //  syncFloorMapsTiles to be deleted after sync
@@ -126,8 +172,14 @@ public class BuildingController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/syncfloormapstiles")
     public List<FloorDTO> syncFloorMapsTiles() {
+        log.info("syncFloorMapsTiles called");
+        try {
 
-        return buildingService.syncFloorMapsTiles();
+            return buildingService.syncFloorMapsTiles();
+        } catch (Exception e) {
+            log.error("syncFloorMapsTiles failed: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 }
 

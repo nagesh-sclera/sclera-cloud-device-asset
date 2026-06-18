@@ -7,7 +7,7 @@
     <!--    Console Config Begins Here    -->
     <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
-            <Pattern>%(%d{ISO8601}) %(%-5level) [%(%t)] %(%C{1.}): %msg%n%throwable</Pattern>
+            <Pattern>%(%d{ISO8601}) %(%-5level) [%(%t)] [traceId=%X{trace_id:-} spanId=%X{span_id:-}] %(%C{1.}): %msg%n%throwable</Pattern>
         </layout>
     </appender>
 
@@ -26,7 +26,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -44,7 +44,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -62,7 +62,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -80,7 +80,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -98,7 +98,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -116,7 +116,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -133,7 +133,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -150,7 +150,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="GlobalInspectionRecordServiceDebugLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -168,7 +168,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="GlobalInspectionRecordServiceErrorLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -186,7 +186,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -206,7 +206,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="InspectionRecordServiceErrorLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -224,7 +224,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -243,7 +243,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="RecordChecklistServiceErrorLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -261,7 +261,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -281,7 +281,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="LorawanServiceErrorLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -299,7 +299,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -317,7 +317,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -335,7 +335,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -353,7 +353,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -371,7 +371,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -390,7 +390,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -408,7 +408,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -426,7 +426,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -444,7 +444,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -462,7 +462,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -480,7 +480,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -498,7 +498,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="QrCodeServiceDebugLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -515,7 +515,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="ClientQrCodeServiceErrorLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -532,7 +532,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="ClientQrCodeServiceDebugLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -549,7 +549,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -567,7 +567,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="NfcServiceDebugLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -584,7 +584,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="ClientNfcServiceErrorLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -601,7 +601,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="ClientNfcServiceDebugLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -618,7 +618,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -636,7 +636,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="EssentialServiceDebugLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -653,7 +653,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -671,7 +671,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -689,7 +689,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -707,7 +707,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -725,7 +725,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -743,7 +743,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -761,7 +761,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -779,7 +779,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -797,7 +797,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -816,7 +816,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -834,7 +834,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -852,7 +852,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -870,7 +870,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -888,7 +888,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -906,7 +906,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -924,7 +924,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -942,7 +942,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -961,7 +961,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -979,7 +979,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -998,7 +998,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1016,7 +1016,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1034,7 +1034,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1052,7 +1052,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1070,7 +1070,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1088,7 +1088,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="DisruptiveServiceErrorLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -1105,7 +1105,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1123,7 +1123,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1142,7 +1142,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1161,7 +1161,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="WorkorderActionHistoryServiceErrorLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -1178,7 +1178,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1196,7 +1196,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="GaiameshServiceErrorLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -1213,7 +1213,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1232,7 +1232,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1251,7 +1251,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1269,7 +1269,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="TicketServiceErrorLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -1286,7 +1286,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1304,7 +1304,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1323,7 +1323,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1342,7 +1342,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
     <appender name="AlertDowntimeScheduleServiceErrorLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -1359,7 +1359,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1377,7 +1377,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1395,7 +1395,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -1413,7 +1413,7 @@
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
-            <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d %-4relative [%thread] %-5level %logger{35} [traceId=%X{trace_id:-} spanId=%X{span_id:-}] - %msg%n</pattern>
         </encoder>
     </appender>
 

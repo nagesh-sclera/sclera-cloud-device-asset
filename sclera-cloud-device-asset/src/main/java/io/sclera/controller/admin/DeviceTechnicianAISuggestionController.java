@@ -2,6 +2,8 @@ package io.sclera.controller.admin;
 
 import io.sclera.dto.TechnicianDTO;
 import io.sclera.service.DeviceTechnicianAISuggestionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,8 @@ import java.util.List;
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class DeviceTechnicianAISuggestionController {
 
+    private static final Logger log = LoggerFactory.getLogger(DeviceTechnicianAISuggestionController.class);
+
     @Autowired
     DeviceTechnicianAISuggestionService deviceTechnicianAISuggestionService;
 
@@ -33,7 +37,13 @@ public class DeviceTechnicianAISuggestionController {
     public ResponseEntity<List<TechnicianDTO>> getDeviceTechnicianAISuggestionByDeviceType(@RequestParam String vdmsid,
                                                                                            @RequestParam String deviceType,
                                                                                            HttpServletRequest httpServletRequest) {
-        List<TechnicianDTO> technicians = deviceTechnicianAISuggestionService.getDeviceTechnicianAISuggestionsByDeviceType(deviceType, vdmsid, httpServletRequest);
-        return ResponseEntity.ok(technicians);
+        log.info("getDeviceTechnicianAISuggestionByDeviceType vdmsid={} deviceType={}", vdmsid, deviceType);
+        try {
+            List<TechnicianDTO> technicians = deviceTechnicianAISuggestionService.getDeviceTechnicianAISuggestionsByDeviceType(deviceType, vdmsid, httpServletRequest);
+            return ResponseEntity.ok(technicians);
+        } catch (Exception e) {
+            log.error("getDeviceTechnicianAISuggestionByDeviceType failed vdmsid={}: {}", vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 }

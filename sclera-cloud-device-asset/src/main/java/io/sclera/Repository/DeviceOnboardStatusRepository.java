@@ -22,7 +22,7 @@ public interface DeviceOnboardStatusRepository extends JpaRepository<DeviceOnboa
      * @param device_id the device identifier
      * @return the onboard status identifier, or {@code null} if none exists
      */
-    @Query(value = "SELECT id FROM device_onboard_status WHERE device_id = ?1", nativeQuery = true)
+    @Query("SELECT dos.id FROM DeviceOnboardStatus dos WHERE dos.device.id = ?1")
     String getOnboardAssetIdByDeviceId(String device_id);
 
     /**
@@ -38,7 +38,9 @@ public interface DeviceOnboardStatusRepository extends JpaRepository<DeviceOnboa
      */
     @Modifying
     @Transactional
-    // PG-port: IFNULL->COALESCE
+    // NOT CONVERTED — stays native: already valid PostgreSQL (IFNULL already ported to COALESCE). Its SET assigns the
+    // device_id FK column (?2) directly; DeviceOnboardStatus maps `device` as a @OneToOne relation, and a JPQL bulk
+    // UPDATE cannot set a relation from a bare scalar id.
     @Query(value = "UPDATE device_onboard_status SET device_id = ?2 ,assignee_email = ?3 , image_status = COALESCE(?4, image_status), " +
             " geolocation_status = COALESCE(?5, geolocation_status), tag_status = COALESCE(?6, tag_status), field_status = COALESCE(?7, field_status) WHERE id = ?1", nativeQuery = true)
     void updateOnboardAsset(String id, String device_id, String assignee_email, Integer image_status, Integer geolocation_status, Integer tag_status, Integer field_status);
@@ -56,6 +58,9 @@ public interface DeviceOnboardStatusRepository extends JpaRepository<DeviceOnboa
      */
     @Modifying
     @Transactional
+    // NOT CONVERTED — stays native: plain INSERT, already valid PostgreSQL. Entity save() is worse here —
+    // DeviceOnboardStatus has an assigned @Id, so Spring Data routes save() to merge(), whose SELECT-before-insert
+    // eagerly materialises the @OneToOne device and the device's large eager association graph.
     @Query(value = "INSERT INTO device_onboard_status(id, device_id, assignee_email, image_status, geolocation_status, tag_status, field_status) VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7)", nativeQuery = true)
     void addOnboardAsset(String id, String device_id, String assignee_email, Integer image_status, Integer geolocation_status, Integer tag_status, Integer field_status);
 
@@ -68,11 +73,11 @@ public interface DeviceOnboardStatusRepository extends JpaRepository<DeviceOnboa
      * @param tag_status the tag onboarding status, or {@code null} to keep the current value
      * @param field_status the field onboarding status, or {@code null} to keep the current value
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    // PG-port: IFNULL->COALESCE
-    @Query(value = "UPDATE device_onboard_status SET image_status = COALESCE(?2, image_status), geolocation_status = COALESCE(?3, geolocation_status),"
-            + " tag_status = COALESCE(?4, tag_status), field_status = COALESCE(?5, field_status) WHERE device_id = ?1", nativeQuery = true)
+    @Query("UPDATE DeviceOnboardStatus dos SET dos.image_status = COALESCE(?2, dos.image_status),"
+            + " dos.geolocation_status = COALESCE(?3, dos.geolocation_status), dos.tag_status = COALESCE(?4, dos.tag_status),"
+            + " dos.field_status = COALESCE(?5, dos.field_status) WHERE dos.device.id = ?1")
     void updateAssetOnboardData(String device_id, Integer image_status, Integer geolocation_status, Integer tag_status, Integer field_status);
 
     /**
@@ -81,7 +86,9 @@ public interface DeviceOnboardStatusRepository extends JpaRepository<DeviceOnboa
      * @param device_id the device identifier
      * @return the matching onboard status data, or {@code null} if none exists
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.DeviceOnboardStatusDTO(dos.assignee_email, dos.image_status, dos.geolocation_status,"
+            + " dos.tag_status, dos.field_status, d.onboard_status)"
+            + " FROM DeviceOnboardStatus dos LEFT JOIN dos.device d WHERE dos.device.id = ?1")
     DeviceOnboardStatusDTO getOnboardDataByDeviceId(String device_id);
 
     /**
@@ -89,7 +96,8 @@ public interface DeviceOnboardStatusRepository extends JpaRepository<DeviceOnboa
      *
      * @return the set of distinct assignee emails
      */
-    @Query(value = "SELECT DISTINCT dos.assignee_email FROM device_onboard_status dos LEFT JOIN device d ON d.id = dos.device_id WHERE dos.assignee_email IS NOT NULL AND (d.onboard_status = 1 OR d.onboard_status = 2)", nativeQuery = true)
+    @Query("SELECT DISTINCT dos.assignee_email FROM DeviceOnboardStatus dos LEFT JOIN dos.device d"
+            + " WHERE dos.assignee_email IS NOT NULL AND (d.onboard_status = 1 OR d.onboard_status = 2)")
     Set<String> getAssetOnboardAssignees();
 
     /**

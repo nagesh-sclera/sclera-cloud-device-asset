@@ -1,39 +1,7 @@
 package io.sclera.models;
 
-import io.sclera.dto.DeviceLifecycleHistoryDTO;
-
 import jakarta.persistence.*;
 import java.math.BigInteger;
-
-@SqlResultSetMapping(
-        name = "deviceLifeCycleHistoryMapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = DeviceLifecycleHistoryDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "operational_status", type = String.class),
-                                @ColumnResult(name = "usage_status", type = String.class),
-                                @ColumnResult(name = "assigned_user_id", type = String.class),
-                                @ColumnResult(name = "assignment_count", type = Integer.class),
-                                @ColumnResult(name = "created_timestamp", type = BigInteger.class),
-                                @ColumnResult(name = "assigned_timestamp", type = BigInteger.class),
-                                @ColumnResult(name = "device_id", type = String.class),
-                                @ColumnResult(name = "description", type = String.class),
-                                @ColumnResult(name = "assigned_by_user_id", type = String.class)
-                        })
-        })
-
-@NamedNativeQuery(
-        name = "DeviceLifeCycleHistory.getDeviceLifeCycleHistory",
-        query = "SELECT dlc.id, dlc.operational_status, dlc.usage_status, dlc.assigned_user_id, " +
-                "dlc.assignment_count, dlc.created_timestamp,dlc.assigned_timestamp, dlc.device_id, dlc.description, dlc.assigned_by_user_id " +
-                "FROM device_lifecycle_history dlc " +
-                "WHERE dlc.device_id = ?1 " +
-                "ORDER BY dlc.created_timestamp DESC, dlc.assignment_count DESC " +
-                "LIMIT ?2 OFFSET ?3",
-        resultSetMapping = "deviceLifeCycleHistoryMapping"
-)
 
 /**
  * Represents a historical record of a device's lifecycle changes, capturing operational and usage status,

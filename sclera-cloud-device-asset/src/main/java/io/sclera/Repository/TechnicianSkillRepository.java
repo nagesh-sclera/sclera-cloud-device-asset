@@ -30,6 +30,7 @@ public interface TechnicianSkillRepository extends JpaRepository<TechnicianSkill
      * @param technicianId owning technician identifier
      * @return the number of rows inserted
      */
+    // NOT CONVERTED — stays native: plain INSERT (already PG-valid)
     @Modifying
     @Transactional
     @Query(value = "INSERT INTO technician_skill (id, name, type, rating, ranking, created_by, created_at, technician_id) " +
@@ -49,6 +50,8 @@ public interface TechnicianSkillRepository extends JpaRepository<TechnicianSkill
      * @param technicianId owning technician identifier
      * @return the number of rows updated
      */
+    // NOT CONVERTED — stays native: sets technician_id (relation FK column) from a scalar id param;
+    // JPQL cannot SET a @ManyToOne FK column by scalar value
     @Modifying
     @Transactional
     @Query(value = "UPDATE technician_skill SET name = ?2, type = ?3, rating = ?4, ranking = ?5, created_by = ?6, created_at = ?7, technician_id = ?8 WHERE id = ?1", nativeQuery = true)
@@ -59,7 +62,9 @@ public interface TechnicianSkillRepository extends JpaRepository<TechnicianSkill
      *
      * @return the list of skill projections
      */
-    @Query(name = "TechnicianSkill.getAll", nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.TechnicianSkillDTO(" +
+           "ts.id, ts.name, ts.type, ts.rating, ts.ranking, ts.createdBy, ts.createdAt, ts.technician.id, CAST(NULL AS integer)) " +
+           "FROM TechnicianSkill ts")
     List<TechnicianSkillDTO> getAllTechnicianSkill();
 
     /**
@@ -68,7 +73,9 @@ public interface TechnicianSkillRepository extends JpaRepository<TechnicianSkill
      * @param id skill identifier
      * @return the matching skill projection
      */
-    @Query(name = "TechnicianSkill.getById", nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.TechnicianSkillDTO(" +
+           "ts.id, ts.name, ts.type, ts.rating, ts.ranking, ts.createdBy, ts.createdAt, ts.technician.id, CAST(NULL AS integer)) " +
+           "FROM TechnicianSkill ts WHERE ts.id = ?1")
     TechnicianSkillDTO getTechnicianSkillById(String id);
 
     /**
@@ -76,9 +83,9 @@ public interface TechnicianSkillRepository extends JpaRepository<TechnicianSkill
      *
      * @param id skill identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM technician_skill WHERE id = ?1", nativeQuery = true)
+    @Query("DELETE FROM TechnicianSkill ts WHERE ts.id = ?1")
     void deleteTechnicianSkillById(String id);
 
     /**
@@ -87,7 +94,9 @@ public interface TechnicianSkillRepository extends JpaRepository<TechnicianSkill
      * @param technicianId owning technician identifier
      * @return the matching skill projections
      */
-    @Query(name = "TechnicianSkill.getByTechnicianId", nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.TechnicianSkillDTO(" +
+           "ts.id, ts.name, ts.type, ts.rating, ts.ranking, ts.createdBy, ts.createdAt, ts.technician.id, CAST(NULL AS integer)) " +
+           "FROM TechnicianSkill ts WHERE ts.technician.id = ?1")
     List<TechnicianSkillDTO> getSkillsByTechnicianId(String technicianId);
 
     /**
@@ -103,9 +112,9 @@ public interface TechnicianSkillRepository extends JpaRepository<TechnicianSkill
      * @param technicianId owning technician identifier
      * @return the number of rows affected
      */
+    // NOT CONVERTED — stays native: already PG-valid INSERT … ON CONFLICT (id) DO UPDATE
     @Modifying
     @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED)
     @Query(value = "INSERT INTO technician_skill (id, name, type, rating, ranking, created_by, created_at, technician_id) " +
             "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8) " +
             "ON CONFLICT (id) DO UPDATE SET " +
@@ -119,7 +128,7 @@ public interface TechnicianSkillRepository extends JpaRepository<TechnicianSkill
      * @param ids candidate skill identifiers
      * @return the identifiers found in the table
      */
-    @Query(value = "SELECT id FROM technician_skill WHERE id IN ?1", nativeQuery = true)
+    @Query("SELECT ts.id FROM TechnicianSkill ts WHERE ts.id IN ?1")
     Set<String> findExistingTechnicianSkillsByIds(List<String> ids);
 
     /**
@@ -128,9 +137,9 @@ public interface TechnicianSkillRepository extends JpaRepository<TechnicianSkill
      * @param ids skill identifiers to delete
      * @return the number of rows deleted
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM technician_skill WHERE id IN ?1", nativeQuery = true)
+    @Query("DELETE FROM TechnicianSkill ts WHERE ts.id IN ?1")
     int deleteTechnicianSkillsByIds(Set<String> ids);
 
     /**
@@ -139,8 +148,8 @@ public interface TechnicianSkillRepository extends JpaRepository<TechnicianSkill
      * @param technicianIds technician identifiers whose skills are removed
      * @return the number of rows deleted
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM technician_skill WHERE technician_id IN ?1", nativeQuery = true)
+    @Query("DELETE FROM TechnicianSkill ts WHERE ts.technician.id IN ?1")
     int deleteTechnicianSkillsByTechnicianIds(Set<String> technicianIds);
 }

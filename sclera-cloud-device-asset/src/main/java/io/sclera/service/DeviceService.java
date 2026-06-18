@@ -135,6 +135,11 @@ public class DeviceService implements DeviceServiceInterface {
 
     private static final Logger log = LoggerFactory.getLogger(DeviceService.class);
 
+    // Used by the asset import / multi-update below for direct column upserts (the device.docker_name /
+    // docker_vdms_id JOIN columns of the @ManyToOne Docker can't be set via repository.save).
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager assetIoEntityManager;
+
     @Autowired
     SocketClient socketservice;
 
@@ -2795,6 +2800,19 @@ public class DeviceService implements DeviceServiceInterface {
     }
 
     /**
+     * Persists a single {@link Device_IP_Address} record via JPA save(), replacing the
+     * removed native INSERT query.
+     */
+    private void persistDeviceIpAddress(String id, DeviceIPAddressDTO deviceIPAddress, String deviceId) {
+        Device_IP_Address rec = new Device_IP_Address();
+        rec.setId(id);
+        rec.setIp_address(deviceIPAddress.getIp_address());
+        rec.setIp_conflict_status(deviceIPAddress.getIp_conflict_status());
+        rec.setDevice(deviceRepository.getReferenceById(deviceId));
+        deviceIPAddressRepository.save(rec);
+    }
+
+    /**
      * DB-per-service helper: enriches image_url_1 on DeviceListDTO rows by fetching
      * product images from InventoryClientStub (no-op until sclera-inventory is wired).
      */
@@ -2948,8 +2966,7 @@ public class DeviceService implements DeviceServiceInterface {
 
                             if (deviceIPAddress.getIp_conflict_status() != null) {
                                 System.out.println("Inside 1stt" + deviceIPAddress.toString());
-                                deviceIPAddressRepository.insertIPAddressByDeviceId(id, deviceIPAddress.getIp_address(),
-                                        deviceIPAddress.getIp_conflict_status(), device.getId());
+                                persistDeviceIpAddress(id, deviceIPAddress, device.getId());
                             } else {
                                 for (int j = 0; j < oldDeviceIPAddresses.size(); j++) {
                                     DeviceIPAddressDTO oldDeviceIPAddress = oldDeviceIPAddresses.get(j);
@@ -2962,8 +2979,7 @@ public class DeviceService implements DeviceServiceInterface {
                                     }
                                 }
                                 System.out.println("Inside 3nd" + deviceIPAddress.toString());
-                                deviceIPAddressRepository.insertIPAddressByDeviceId(id, deviceIPAddress.getIp_address(),
-                                        deviceIPAddress.getIp_conflict_status(), device.getId());
+                                persistDeviceIpAddress(id, deviceIPAddress, device.getId());
 
                             }
                         }
@@ -2993,8 +3009,7 @@ public class DeviceService implements DeviceServiceInterface {
                         for (int i = 0; i < deviceIPAddresses.size(); i++) {
                             DeviceIPAddressDTO deviceIPAddress = deviceIPAddresses.get(i);
                             String id = Generators.timeBasedGenerator().generate().toString();
-                            deviceIPAddressRepository.insertIPAddressByDeviceId(id, deviceIPAddress.getIp_address(),
-                                    deviceIPAddress.getIp_conflict_status(), device.getId());
+                            persistDeviceIpAddress(id, deviceIPAddress, device.getId());
                         }
                         // update vendor by mac address and hostname by ip address
                         this.updateVendorByMacAddress(device.getId(), device.getMac_address());
@@ -7038,8 +7053,9 @@ public class DeviceService implements DeviceServiceInterface {
 
         try {
             VdmsDTO vdmsDetails = vdmsService.getVDMSDetails();
-            String timeZoneId = vdmsDetails.getTimezone();
-            String propertyName = vdmsDetails.getProperty_name();
+            // VDMS details come from a Bucket-C stub that can return null in the local stack — fall back to safe defaults.
+            String timeZoneId = (vdmsDetails != null && vdmsDetails.getTimezone() != null) ? vdmsDetails.getTimezone() : "UTC";
+            String propertyName = (vdmsDetails != null && vdmsDetails.getProperty_name() != null) ? vdmsDetails.getProperty_name() : "assets";
             String modified_filename = utils.replaceSlashCharactersWithHyphen(propertyName);
             String currentDateTime = utils.getCurrentDateByTimezone(BigInteger.valueOf(System.currentTimeMillis()), timeZoneId);
             Set<DeviceDTO> devices = deviceSearchService.multipleKeywordSearchSortFilterDevicesForAssetExport(username, vdmsid, dockername, condition, searchSortFilterDetails, onboardStatus);
@@ -7106,6 +7122,288 @@ public class DeviceService implements DeviceServiceInterface {
         alertClient.sendDownloadEmail(body, file, "excel", vdmsid);
     }
 
+    /** Converts an int (0/1) or boolean (true/false) flag string to a readable Yes/No for export. */
+    private String flagLabel(String v) {
+        if (v == null || v.isEmpty()) return "";
+        if (v.equals("1") || v.equalsIgnoreCase("true")) return "Yes";
+        if (v.equals("0") || v.equalsIgnoreCase("false")) return "No";
+        return v;
+    }
+
+    // ===== Asset Import / Multi-Update (native upserts; consume the export's own columns) =====
+
+    /** Maps a workbook header (lowercased) -> device column. Accepts both the export's display
+     *  headers ("MAC Address") and raw snake_case ("mac_address"), so an exported file round-trips. */
+    private static final java.util.Map<String, String> ASSET_HEADER_ALIASES = new java.util.HashMap<>();
+    /** Device columns import / multi-update may write. */
+    private static final java.util.Set<String> ASSET_SETTABLE = new java.util.HashSet<>(java.util.Arrays.asList(
+            "display_name", "type", "vendor", "model", "mac_address", "ip_address", "network_layer",
+            "serial_number", "monitor", "status", "operational_status", "asset_group", "category",
+            "sub_category", "warranty", "cost_value", "cost_unit", "assigned_user_email", "latitude",
+            "longitude", "email_alert", "sms_alert", "popup_notification", "remote_access", "ai_call",
+            "is_dnd_enabled", "description"));
+    private static final java.util.Set<String> ASSET_INT_COLS = new java.util.HashSet<>(java.util.Arrays.asList(
+            "monitor", "status", "email_alert", "sms_alert", "popup_notification", "remote_access"));
+    private static final java.util.Set<String> ASSET_BOOL_COLS = new java.util.HashSet<>(java.util.Arrays.asList("ai_call", "is_dnd_enabled"));
+    static {
+        java.util.Map<String, String> a = ASSET_HEADER_ALIASES;
+        a.put("id", "id");
+        a.put("name", "display_name"); a.put("display name", "display_name"); a.put("display_name", "display_name");
+        a.put("asset name", "display_name"); a.put("user_data_name", "display_name");
+        a.put("model", "model"); a.put("user_data_model", "model");
+        a.put("vendor", "vendor"); a.put("manufacturer", "vendor"); a.put("user_data_vendor", "vendor");
+        a.put("serial number", "serial_number"); a.put("serial_number", "serial_number");
+        a.put("description", "description");
+        a.put("asset type", "type"); a.put("type", "type");
+        a.put("asset group", "asset_group"); a.put("asset_group", "asset_group");
+        a.put("category", "category");
+        a.put("sub category", "sub_category"); a.put("sub_category", "sub_category");
+        a.put("operational status", "operational_status"); a.put("operational_status", "operational_status");
+        a.put("assignee", "assigned_user_email"); a.put("assigned_user_email", "assigned_user_email");
+        a.put("cost value", "cost_value"); a.put("cost_value", "cost_value");
+        a.put("cost unit", "cost_unit"); a.put("cost_unit", "cost_unit");
+        a.put("warranty", "warranty");
+        a.put("mac address", "mac_address"); a.put("mac_address", "mac_address");
+        a.put("ip address", "ip_address"); a.put("ip_address", "ip_address");
+        a.put("network layer", "network_layer"); a.put("network_layer", "network_layer");
+        a.put("latitude", "latitude"); a.put("longitude", "longitude");
+        a.put("monitor", "monitor"); a.put("status", "status");
+        a.put("email alert", "email_alert"); a.put("email_alert", "email_alert");
+        a.put("sms alert", "sms_alert"); a.put("sms_alert", "sms_alert");
+        a.put("popup notification", "popup_notification"); a.put("popup_notification", "popup_notification");
+        a.put("remote access", "remote_access"); a.put("remote_access", "remote_access");
+        a.put("ai call", "ai_call"); a.put("ai_call", "ai_call");
+        a.put("do not disturb", "is_dnd_enabled"); a.put("is_dnd_enabled", "is_dnd_enabled");
+    }
+
+    /** Reads an uploaded .xlsx and upserts each row (by id, else creates). Returns a summary map. */
+    @org.springframework.transaction.annotation.Transactional
+    public java.util.Map<String, Object> importAssetsFromExcel(org.springframework.web.multipart.MultipartFile file, String vdmsid, String docker) throws IOException {
+        int created = 0, updated = 0, failed = 0;
+        java.util.List<String> errors = new java.util.ArrayList<>();
+        try (java.io.InputStream in = file.getInputStream(); org.apache.poi.ss.usermodel.Workbook wb = new XSSFWorkbook(in)) {
+            org.apache.poi.ss.usermodel.Sheet sheet = wb.getSheetAt(0);
+            if (sheet == null || sheet.getPhysicalNumberOfRows() == 0) {
+                return assetIoSummary(0, 0, 0, java.util.List.of("Workbook is empty"));
+            }
+            org.apache.poi.ss.usermodel.DataFormatter fmt = new org.apache.poi.ss.usermodel.DataFormatter();
+            Row headerRow = sheet.getRow(sheet.getFirstRowNum());
+            // header column index -> device column
+            java.util.Map<Integer, String> colByIndex = new java.util.LinkedHashMap<>();
+            for (int c = 0; c < headerRow.getLastCellNum(); c++) {
+                Cell h = headerRow.getCell(c);
+                if (h == null) continue;
+                String name = fmt.formatCellValue(h).trim().toLowerCase();
+                String mapped = ASSET_HEADER_ALIASES.get(name);
+                if (mapped != null) colByIndex.put(c, mapped);
+            }
+            for (int r = sheet.getFirstRowNum() + 1; r <= sheet.getLastRowNum(); r++) {
+                Row row = sheet.getRow(r);
+                if (row == null) continue;
+                try {
+                    java.util.Map<String, String> values = new java.util.LinkedHashMap<>();
+                    for (java.util.Map.Entry<Integer, String> e : colByIndex.entrySet()) {
+                        Cell cell = row.getCell(e.getKey());
+                        String v = cell == null ? "" : fmt.formatCellValue(cell).trim();
+                        if (!v.isEmpty()) values.putIfAbsent(e.getValue(), v); // first non-empty wins (e.g. Name vs display_name)
+                    }
+                    if (values.isEmpty()) continue;
+                    String id = values.getOrDefault("id", "");
+                    boolean exists = !id.isEmpty() && assetIoCount(id) > 0;
+                    if (exists) { assetUpdateRow(id, values); updated++; }
+                    else { assetInsertRow(id, values, vdmsid, docker); created++; }
+                } catch (Exception ex) {
+                    failed++;
+                    errors.add("Row " + (r + 1) + ": " + ex.getMessage());
+                    log.warn("importAssetsFromExcel row {} failed: {}", r + 1, ex.getMessage());
+                }
+            }
+        }
+        log.info("importAssetsFromExcel vdmsid={} docker={} created={} updated={} failed={}", vdmsid, docker, created, updated, failed);
+        return assetIoSummary(created, updated, failed, errors);
+    }
+
+    /** Applies one set of field changes to many device ids. Returns {updated}. */
+    @org.springframework.transaction.annotation.Transactional
+    public java.util.Map<String, Object> multiUpdateAssets(java.util.List<String> ids, java.util.Map<String, Object> changes) {
+        if (ids == null || ids.isEmpty() || changes == null || changes.isEmpty()) return java.util.Map.of("updated", 0);
+        java.util.List<String> sets = new java.util.ArrayList<>();
+        java.util.Map<String, Object> binds = new java.util.LinkedHashMap<>();
+        for (java.util.Map.Entry<String, Object> e : changes.entrySet()) {
+            String col = e.getKey();
+            if (!ASSET_SETTABLE.contains(col) || e.getValue() == null) continue;
+            String v = String.valueOf(e.getValue()).trim();
+            if (v.isEmpty()) continue;
+            sets.add(col + " = :" + col);
+            binds.put(col, assetCoerce(col, v));
+        }
+        if (sets.isEmpty()) return java.util.Map.of("updated", 0);
+        sets.add("updated_timestamp = :uts");
+        binds.put("uts", java.math.BigInteger.valueOf(System.currentTimeMillis()));
+        jakarta.persistence.Query q = assetIoEntityManager.createNativeQuery("UPDATE device SET " + String.join(", ", sets) + " WHERE id IN (:ids)");
+        binds.forEach(q::setParameter);
+        q.setParameter("ids", ids);
+        int updated = q.executeUpdate();
+        log.info("multiUpdateAssets ids={} cols={} updated={}", ids.size(), binds.keySet(), updated);
+        return java.util.Map.of("updated", updated);
+    }
+
+    /**
+     * Persists a device's asset image so it survives a reload, storing it the same way the root
+     * project does: an inline {@code data:image/...;base64,...} payload is decoded and written to
+     * disk under {@code server-asset-images-absolute-path}, and only the hosted URL
+     * ({@code server-asset-images-url} + filename) is saved — as a JSON array, e.g.
+     * {@code ["http://localhost:8085/images/assets/<deviceId>_<ts>.png"]}. A value that is already a
+     * hosted URL (or JSON array) is stored as-is; an empty value clears the image.
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public void setAssetImage(String deviceId, String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            deviceRepository.updateAssetImage(deviceId, "");
+            log.info("setAssetImage device={} cleared", deviceId);
+            return;
+        }
+        String stored;
+        try {
+            if (imageUrl.startsWith("data:")) {
+                int comma = imageUrl.indexOf(',');
+                String meta = comma > 0 ? imageUrl.substring("data:".length(), comma) : "";
+                String base64 = comma > 0 ? imageUrl.substring(comma + 1) : "";
+                byte[] bytes = java.util.Base64.getDecoder().decode(base64);
+                String extension = imageExtensionForMime(meta);
+                String url = utils.addFileToServer(bytes, server_asset_images_absolute_path, deviceId, extension, server_asset_images_url);
+                JSONArray arr = new JSONArray();
+                if (url != null) {
+                    arr.add(url);
+                }
+                stored = arr.toJSONString();
+            } else if (imageUrl.trim().startsWith("[")) {
+                stored = imageUrl;
+            } else {
+                JSONArray arr = new JSONArray();
+                arr.add(imageUrl);
+                stored = arr.toJSONString();
+            }
+        } catch (Exception e) {
+            log.error("setAssetImage failed to persist image for device={}", deviceId, e);
+            throw new RuntimeException(e);
+        }
+        deviceRepository.updateAssetImage(deviceId, stored);
+        log.info("setAssetImage device={} stored={}", deviceId, stored);
+    }
+
+    /** Maps a data-URL mime type (e.g. {@code image/png;base64}) to a file extension for storage. */
+    private String imageExtensionForMime(String meta) {
+        String m = meta == null ? "" : meta.toLowerCase();
+        if (m.contains("jpeg") || m.contains("jpg")) return "jpg";
+        if (m.contains("webp")) return "webp";
+        if (m.contains("gif")) return "gif";
+        if (m.contains("svg")) return "svg";
+        return "png";
+    }
+
+    /**
+     * Deletes a device's asset image: removes the underlying file(s) from disk (under
+     * {@code server-asset-images-absolute-path}) and clears the {@code asset_image_url} column —
+     * the same effect as the root project's deleteAssetImages for this device. File removal is
+     * best-effort (a legacy base64/data-URL value has no file); the column is always cleared.
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteAssetImage(String deviceId) {
+        try {
+            DeviceDTO deviceDTO = this.getDeviceAndOnboardStatusByDeviceId(deviceId);
+            String current = deviceDTO != null ? deviceDTO.getAsset_image_url() : null;
+            if (current != null && !current.isBlank()) {
+                java.util.List<String> urls = current.trim().startsWith("[")
+                        ? utils.getJSONArrayFromJSONString(current, String.class)
+                        : java.util.Collections.singletonList(current);
+                if (urls != null) {
+                    for (String url : urls) {
+                        if (url != null && url.startsWith("http")) {
+                            utils.removeFileFromServerByImageURL(url, server_asset_images_absolute_path);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("deleteAssetImage cleanup failed for device={}: {}", deviceId, e.getMessage());
+        }
+        deviceRepository.updateAssetImage(deviceId, "");
+        log.info("deleteAssetImage device={} cleared", deviceId);
+    }
+
+    private void assetUpdateRow(String id, java.util.Map<String, String> values) {
+        java.util.List<String> sets = new java.util.ArrayList<>();
+        java.util.Map<String, Object> binds = new java.util.LinkedHashMap<>();
+        for (java.util.Map.Entry<String, String> e : values.entrySet()) {
+            String col = e.getKey();
+            if (!ASSET_SETTABLE.contains(col) || e.getValue() == null || e.getValue().isEmpty()) continue;
+            sets.add(col + " = :" + col);
+            binds.put(col, assetCoerce(col, e.getValue()));
+        }
+        if (sets.isEmpty()) return;
+        sets.add("updated_timestamp = :uts");
+        binds.put("uts", java.math.BigInteger.valueOf(System.currentTimeMillis()));
+        jakarta.persistence.Query q = assetIoEntityManager.createNativeQuery("UPDATE device SET " + String.join(", ", sets) + " WHERE id = :id");
+        binds.forEach(q::setParameter);
+        q.setParameter("id", id);
+        q.executeUpdate();
+    }
+
+    private void assetInsertRow(String id, java.util.Map<String, String> values, String vdmsid, String docker) {
+        String newId = (id == null || id.isEmpty()) ? java.util.UUID.randomUUID().toString() : id;
+        String mac = values.getOrDefault("mac_address", "");
+        if (mac.isEmpty()) mac = "IMP-" + newId.substring(0, 8); // unique MAC so the upsert dedup never collides
+        jakarta.persistence.Query q = assetIoEntityManager.createNativeQuery(
+                "INSERT INTO device (id, mac_address, docker_name, docker_vdms_id, virtual_device_type,"
+                        + " created_timestamp, created_email) VALUES (:id, :mac, :docker, :vdmsid, 0, :ts, 'import')");
+        q.setParameter("id", newId);
+        q.setParameter("mac", mac);
+        q.setParameter("docker", docker);
+        q.setParameter("vdmsid", vdmsid);
+        q.setParameter("ts", java.math.BigInteger.valueOf(System.currentTimeMillis()));
+        q.executeUpdate();
+        java.util.Map<String, String> rest = new java.util.LinkedHashMap<>(values);
+        rest.remove("id");
+        rest.put("mac_address", mac);
+        assetUpdateRow(newId, rest);
+    }
+
+    private Object assetCoerce(String col, String value) {
+        if (value == null) return null;
+        String v = value.trim();
+        if (v.isEmpty()) return null;
+        if (ASSET_INT_COLS.contains(col)) {
+            String s = v.toLowerCase();
+            if (s.equals("monitored") || s.equals("online") || s.equals("yes") || s.equals("true")) return 1;
+            if (s.equals("unmonitored") || s.equals("offline") || s.equals("no") || s.equals("false")) return 0;
+            try { return (int) Double.parseDouble(v); } catch (NumberFormatException e) { return null; }
+        }
+        if (ASSET_BOOL_COLS.contains(col)) {
+            String s = v.toLowerCase();
+            return s.equals("yes") || s.equals("true") || s.equals("1");
+        }
+        if (col.equals("cost_value")) {
+            try { return new java.math.BigDecimal(v); } catch (NumberFormatException e) { return null; }
+        }
+        return v;
+    }
+
+    private long assetIoCount(String id) {
+        jakarta.persistence.Query q = assetIoEntityManager.createNativeQuery("SELECT count(*) FROM device WHERE id = :id");
+        q.setParameter("id", id);
+        return ((Number) q.getSingleResult()).longValue();
+    }
+
+    private java.util.Map<String, Object> assetIoSummary(int created, int updated, int failed, java.util.List<String> errors) {
+        java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("created", created);
+        m.put("updated", updated);
+        m.put("failed", failed);
+        m.put("errors", errors);
+        return m;
+    }
+
 
     /**
      * Builds the simple asset export Excel workbook for the given devices, optionally embedding asset
@@ -7115,8 +7413,9 @@ public class DeviceService implements DeviceServiceInterface {
      */
     public byte[] generateSimpleAssetExportReportExcel(Set<DeviceDTO> devices, Boolean includeImages, HttpServletResponse response, String email, String modified_filename, String currentDateTime) throws IOException {
         VdmsDTO vdmsDetails = vdmsService.getVDMSDetails();
-        String timeZoneId = vdmsDetails.getTimezone();
-        String propertyName = vdmsDetails.getProperty_name();
+        // VDMS details come from a Bucket-C stub that can return null in the local stack — fall back to safe defaults.
+        String timeZoneId = (vdmsDetails != null && vdmsDetails.getTimezone() != null) ? vdmsDetails.getTimezone() : "UTC";
+        String propertyName = (vdmsDetails != null && vdmsDetails.getProperty_name() != null) ? vdmsDetails.getProperty_name() : "assets";
         ObjectMapper objectMapper = new ObjectMapper();
         String object = objectMapper.writeValueAsString(devices);
 
@@ -7134,6 +7433,11 @@ public class DeviceService implements DeviceServiceInterface {
         List<String> headers = new ArrayList<>(List.of(
                 "ID", "Name", "Model", "Vendor", "Network", "Serial Number",
                 "Created Date", "Created By", "Description", "Location", "Asset Type",
+                // Extended to cover every field shown on the device-detail panel.
+                "Asset Group", "Category", "Sub Category", "Operational Status", "Assignee",
+                "Cost Value", "Cost Unit", "Warranty", "MAC Address", "IP Address", "Network Layer",
+                "Latitude", "Longitude", "Monitor", "Status", "Email Alert", "SMS Alert",
+                "Popup Notification", "Remote Access", "AI Call", "Do Not Disturb", "Last Seen",
                 "QR Code Status", "Geo Location Status", "VDMS ID"
         ));
 
@@ -7193,6 +7497,34 @@ public class DeviceService implements DeviceServiceInterface {
                 }
 
                 excelMap.put("Asset Type", Objects.requireNonNullElse(jsonObject.getString("type"), ""));
+
+                // Extended detail-panel fields.
+                excelMap.put("Asset Group", Objects.requireNonNullElse(jsonObject.getString("asset_group"), ""));
+                excelMap.put("Category", Objects.requireNonNullElse(jsonObject.getString("category"), ""));
+                excelMap.put("Sub Category", Objects.requireNonNullElse(jsonObject.getString("sub_category"), ""));
+                excelMap.put("Operational Status", Objects.requireNonNullElse(jsonObject.getString("operational_status"), ""));
+                excelMap.put("Assignee", Objects.requireNonNullElse(jsonObject.getString("assigned_user_email"), ""));
+                excelMap.put("Cost Value", Objects.requireNonNullElse(jsonObject.getString("cost_value"), ""));
+                excelMap.put("Cost Unit", Objects.requireNonNullElse(jsonObject.getString("cost_unit"), ""));
+                excelMap.put("Warranty", Objects.requireNonNullElse(jsonObject.getString("warranty"), ""));
+                excelMap.put("MAC Address", Objects.requireNonNullElse(jsonObject.getString("mac_address"), ""));
+                excelMap.put("IP Address", Objects.requireNonNullElse(jsonObject.getString("ip_address"), ""));
+                excelMap.put("Network Layer", Objects.requireNonNullElse(jsonObject.getString("network_layer"), ""));
+                excelMap.put("Latitude", Objects.requireNonNullElse(jsonObject.getString("latitude"), ""));
+                excelMap.put("Longitude", Objects.requireNonNullElse(jsonObject.getString("longitude"), ""));
+                String monVal = jsonObject.getString("monitor");
+                excelMap.put("Monitor", "1".equals(monVal) ? "Monitored" : ("0".equals(monVal) ? "Unmonitored" : ""));
+                String statVal = jsonObject.getString("status");
+                excelMap.put("Status", "1".equals(statVal) ? "Online" : ("0".equals(statVal) ? "Offline" : ""));
+                excelMap.put("Email Alert", flagLabel(jsonObject.getString("email_alert")));
+                excelMap.put("SMS Alert", flagLabel(jsonObject.getString("sms_alert")));
+                excelMap.put("Popup Notification", flagLabel(jsonObject.getString("popup_notification")));
+                excelMap.put("Remote Access", flagLabel(jsonObject.getString("remote_access")));
+                excelMap.put("AI Call", flagLabel(jsonObject.getString("ai_call")));
+                excelMap.put("Do Not Disturb", flagLabel(jsonObject.getString("is_dnd_enabled")));
+                if (jsonObject.getString("last_seen_on") != null) {
+                    excelMap.put("Last Seen", utils.getCurrentDateByTimezone(jsonObject.getBigInteger("last_seen_on"), timeZoneId));
+                }
 
                 JSONObject onboardData = jsonObject.getJSONObject("onboard_data");
 

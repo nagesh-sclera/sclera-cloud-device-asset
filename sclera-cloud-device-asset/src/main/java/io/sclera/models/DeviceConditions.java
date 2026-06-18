@@ -2,8 +2,6 @@
 package io.sclera.models;
 
 
-import io.sclera.dto.DeviceConditionsDTO;
-
 import jakarta.persistence.*;
 import java.math.BigInteger;
 
@@ -14,57 +12,10 @@ import java.math.BigInteger;
  * offline AI-call alerts.
  */
 @Entity
-@SqlResultSetMapping(
-        name = "deviceconditionsmapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = DeviceConditionsDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "alert_condition", type = String.class),
-                                @ColumnResult(name = "device_id", type = String.class),
-                                @ColumnResult(name = "alert_profile_id", type = String.class),
-                                @ColumnResult(name = "trigger_time", type = Integer.class),
-                                @ColumnResult(name = "last_alerted_time", type = BigInteger.class),
-                                @ColumnResult(name = "priority", type = String.class),
-                                @ColumnResult(name = "start_time", type = String.class),
-                                @ColumnResult(name = "end_time", type = String.class),
-                                @ColumnResult(name = "schedule", type = Integer.class),
-                                @ColumnResult(name = "schedule_conditions", type = String.class),
-                                @ColumnResult(name = "max_alert_count", type = Integer.class),
-                                @ColumnResult(name = "alert_count", type = Integer.class),
-                                @ColumnResult(name = "alert_count_enabled", type = Integer.class),
-                                @ColumnResult(name = "alert_count_time", type = Integer.class),
-                                @ColumnResult(name = "last_alerted", type = Boolean.class),
-                                @ColumnResult(name = "alert_message", type = String.class)
-
-
-                        })
-        })
-
-@NamedNativeQuery(
-        name = "DeviceConditions.getDeviceConditions",
-        query = "SELECT dc.id , dc.alert_condition, dc.device_id, dc.alert_profile_id, dc.trigger_time, dc.last_alerted_time, dc.priority, dc.start_time, dc.end_time, dc.schedule, dc.schedule_conditions, dc.max_alert_count, dc.alert_count, dc.alert_count_enabled, dc.alert_count_time, dc.last_alerted, dc.alert_message FROM device_conditions dc"
-                + " WHERE dc.device_id = ?1 AND dc.alert_condition != 'device_offline_ai_call_alert'  ",
-        resultSetMapping = "deviceconditionsmapping")
-
-@NamedNativeQuery(
-        name = "DeviceConditions.getDeviceConditionsById",
-        query = "SELECT dc.id , dc.alert_condition, dc.device_id, dc.alert_profile_id, dc.trigger_time, dc.last_alerted_time, dc.priority, dc.start_time, dc.end_time, dc.schedule, dc.schedule_conditions, dc.max_alert_count, dc.alert_count, dc.alert_count_enabled, dc.alert_count_time, dc.last_alerted, dc.alert_message FROM device_conditions dc"
-                + " WHERE dc.id = ?1  AND dc.alert_condition != 'device_offline_ai_call_alert'",
-        resultSetMapping = "deviceconditionsmapping")
-
-@NamedNativeQuery(
-        name = "DeviceConditions.getDeviceConditionsForAiCall",
-        query = "SELECT dc.id , dc.alert_condition, dc.device_id, dc.alert_profile_id, dc.trigger_time, dc.last_alerted_time, dc.priority, dc.start_time, dc.end_time, dc.schedule, dc.schedule_conditions, dc.max_alert_count, dc.alert_count, dc.alert_count_enabled, dc.alert_count_time, dc.last_alerted, dc.alert_message FROM device_conditions dc"
-                + " WHERE dc.device_id = ?1 AND dc.alert_condition = 'device_offline_ai_call_alert'  ",
-        resultSetMapping = "deviceconditionsmapping")
-
-@NamedNativeQuery(
-        name = "DeviceConditions.getDeviceConditionsByIdForAiCall",
-        query = "SELECT dc.id , dc.alert_condition, dc.device_id, dc.alert_profile_id, dc.trigger_time, dc.last_alerted_time, dc.priority, dc.start_time, dc.end_time, dc.schedule, dc.schedule_conditions, dc.max_alert_count, dc.alert_count, dc.alert_count_enabled, dc.alert_count_time, dc.last_alerted, dc.alert_message FROM device_conditions dc"
-                + " WHERE dc.id = ?1  AND dc.alert_condition = 'device_offline_ai_call_alert'",
-        resultSetMapping = "deviceconditionsmapping")
+// @SqlResultSetMapping "deviceconditionsmapping" and all @NamedNativeQuery on DeviceConditions removed 2026-06-11.
+// All four projection queries (getDeviceConditions, getDeviceConditionsById, getDeviceConditionsForAiCall,
+// getDeviceConditionsByIdForAiCall) are now JPQL constructor expressions in DeviceConditionsRepository.
+// @NamedNativeQuery for addDeviceConditions and updateDeviceConditions remain in the repository inline.
 
 public class DeviceConditions {
 

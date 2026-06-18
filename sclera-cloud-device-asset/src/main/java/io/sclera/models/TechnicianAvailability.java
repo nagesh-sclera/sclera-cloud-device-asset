@@ -29,9 +29,9 @@ public class TechnicianAvailability {
     private String id;
     private Long startDate;
     private Long endDate;
-    @Column(columnDefinition = "varchar(16) default \'09:00\'")
+    @Column(length = 16, columnDefinition = "varchar(16) default \'09:00\'")
     private String startTime = "09:00";
-    @Column(columnDefinition = "varchar(16) default \'17:00\'")
+    @Column(length = 16, columnDefinition = "varchar(16) default \'17:00\'")
     private String endTime = "17:00";
     @Column(columnDefinition = "boolean default false")
     private Boolean isAllDay = false;

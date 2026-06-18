@@ -3,6 +3,8 @@ package io.sclera.controller.admin;
 import io.sclera.dto.DeviceConditionsDTO;
 import io.sclera.dto.ShareConditionsDTO;
 import io.sclera.service.DeviceConditionsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +18,8 @@ import java.util.Set;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class DeviceConditionsController {
+
+    private static final Logger log = LoggerFactory.getLogger(DeviceConditionsController.class);
 
     @Autowired
     DeviceConditionsService deviceConditionsService;
@@ -31,7 +35,13 @@ public class DeviceConditionsController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/upsertdeviceconditions")
     public void upsertDeviceConditions(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestBody Set<DeviceConditionsDTO> device_conditions) {
-        deviceConditionsService.upsertDeviceConditions(username, vdmsid, dockername, device_conditions);
+        log.info("upsertDeviceConditions username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            deviceConditionsService.upsertDeviceConditions(username, vdmsid, dockername, device_conditions);
+        } catch (Exception e) {
+            log.error("upsertDeviceConditions failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
     //getcondtions
     /**
@@ -45,7 +55,13 @@ public class DeviceConditionsController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/{device_id}/getdeviceconditions")
     public Set<DeviceConditionsDTO> getDeviceConditions(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String device_id) {
-        return deviceConditionsService.getDeviceConditions(username, vdmsid, dockername, device_id);
+        log.info("getDeviceConditions username={} vdmsid={} dockername={} device_id={}", username, vdmsid, dockername, device_id);
+        try {
+            return deviceConditionsService.getDeviceConditions(username, vdmsid, dockername, device_id);
+        } catch (Exception e) {
+            log.error("getDeviceConditions failed username={} vdmsid={} dockername={} device_id={}: {}", username, vdmsid, dockername, device_id, e.getMessage(), e);
+            throw e;
+        }
     }
     // delete all conditions
     /**
@@ -57,7 +73,13 @@ public class DeviceConditionsController {
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/device/{device_id}/deletealldeviceconditions")
     public void deleteAllDeviceConditions(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String device_id ) {
-        deviceConditionsService.deleteAllDeviceConditions(username, vdmsid, device_id);
+        log.info("deleteAllDeviceConditions username={} vdmsid={} device_id={}", username, vdmsid, device_id);
+        try {
+            deviceConditionsService.deleteAllDeviceConditions(username, vdmsid, device_id);
+        } catch (Exception e) {
+            log.error("deleteAllDeviceConditions failed username={} vdmsid={} device_id={}: {}", username, vdmsid, device_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     // get condition by id
@@ -71,7 +93,13 @@ public class DeviceConditionsController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/condition/{condition_id}/getdeviceconditionsbyid")
     public DeviceConditionsDTO getDeviceConditionsById(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String condition_id) {
-        return deviceConditionsService.getDeviceConditionsById(username, vdmsid, condition_id);
+        log.info("getDeviceConditionsById username={} vdmsid={} condition_id={}", username, vdmsid, condition_id);
+        try {
+            return deviceConditionsService.getDeviceConditionsById(username, vdmsid, condition_id);
+        } catch (Exception e) {
+            log.error("getDeviceConditionsById failed username={} vdmsid={} condition_id={}: {}", username, vdmsid, condition_id, e.getMessage(), e);
+            throw e;
+        }
     }
     //delete condition
     /**
@@ -83,7 +111,13 @@ public class DeviceConditionsController {
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/deletedeviceconditions")
     public void deleteDeviceConditions(@RequestParam String username, @RequestParam String vdmsid,  @RequestBody Set<DeviceConditionsDTO> device_conditions) {
-        deviceConditionsService.deleteDeviceConditions(username, vdmsid, device_conditions);
+        log.info("deleteDeviceConditions username={} vdmsid={}", username, vdmsid);
+        try {
+            deviceConditionsService.deleteDeviceConditions(username, vdmsid, device_conditions);
+        } catch (Exception e) {
+            log.error("deleteDeviceConditions failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -96,7 +130,13 @@ public class DeviceConditionsController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/sharedeviceconditions")
     public void shareDeviceConditions(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestBody ShareConditionsDTO shareConditions) {
-        deviceConditionsService.shareDeviceConditions(username, vdmsid, dockername, shareConditions);
+        log.info("shareDeviceConditions username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            deviceConditionsService.shareDeviceConditions(username, vdmsid, dockername, shareConditions);
+        } catch (Exception e) {
+            log.error("shareDeviceConditions failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -109,6 +149,12 @@ public class DeviceConditionsController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/resetdeviceconditions")
     public void resetDeviceConditions(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestBody Set<DeviceConditionsDTO> device_conditions) {
-        deviceConditionsService.resetDeviceConditions(username, vdmsid, dockername,  device_conditions);
+        log.info("resetDeviceConditions username={} vdmsid={} dockername={}", username, vdmsid, dockername);
+        try {
+            deviceConditionsService.resetDeviceConditions(username, vdmsid, dockername,  device_conditions);
+        } catch (Exception e) {
+            log.error("resetDeviceConditions failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
     }
 }

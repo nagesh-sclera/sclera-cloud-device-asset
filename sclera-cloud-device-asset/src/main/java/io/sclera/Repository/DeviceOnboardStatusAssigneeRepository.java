@@ -19,9 +19,9 @@ public interface DeviceOnboardStatusAssigneeRepository extends JpaRepository<Dev
      *
      * @param device_onboard_status_id the onboard status identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM device_onboard_status_assignee  WHERE device_onboard_status_id =?1", nativeQuery = true)
+    @Query("DELETE FROM DeviceOnboardStatusAssignee dosa WHERE dosa.device_onboard_status.id = ?1")
     void deleteDeviceOnboardStatusAssigneesByDeviceOnboardStatusId(String device_onboard_status_id);
 
     /**
@@ -32,7 +32,10 @@ public interface DeviceOnboardStatusAssigneeRepository extends JpaRepository<Dev
      * @param type the assignee type
      * @param device_onboard_status_id the onboard status identifier the assignee belongs to
      */
-    @Modifying
+    // NOT CONVERTED — stays native: plain INSERT already valid PostgreSQL. The entity has an
+    // assigned @Id and a @ManyToOne relation; save() would route to merge() (SELECT-before-insert)
+    // and needs a managed DeviceOnboardStatus reference. The native INSERT is simpler and portable.
+    @Modifying(clearAutomatically = true)
     @Transactional
     @Query(value = "INSERT INTO device_onboard_status_assignee(id, email, type, device_onboard_status_id) VALUES(?1, ?2, ?3, ?4)", nativeQuery = true)
     void addDeviceOnboardStatusAssignees(String id, String email, String type, String device_onboard_status_id);
@@ -43,7 +46,10 @@ public interface DeviceOnboardStatusAssigneeRepository extends JpaRepository<Dev
      * @param deviceOnboardStatusId the onboard status identifier
      * @return the set of matching assignee records
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.DeviceOnboardStatusAssigneeDTO(" +
+           "dosa.id, dosa.type, dosa.email, dosa.device_onboard_status.id) " +
+           "FROM DeviceOnboardStatusAssignee dosa " +
+           "WHERE dosa.device_onboard_status.id = ?1")
     Set<DeviceOnboardStatusAssigneeDTO> getDeviceOnboardStatusAssignees(String deviceOnboardStatusId);
 
     /**
@@ -51,7 +57,7 @@ public interface DeviceOnboardStatusAssigneeRepository extends JpaRepository<Dev
      *
      * @return the set of distinct assignee emails
      */
-    @Query(value = "SELECT DISTINCT dosa.email FROM device_onboard_status_assignee dosa", nativeQuery = true)
+    @Query("SELECT DISTINCT dosa.email FROM DeviceOnboardStatusAssignee dosa")
     Set<String> getDeviceOnboardStatusAssigneesEmail();
 
 }

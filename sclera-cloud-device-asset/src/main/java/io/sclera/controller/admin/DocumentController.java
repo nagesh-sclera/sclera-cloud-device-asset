@@ -2,7 +2,10 @@ package io.sclera.controller.admin;
 
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +20,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import io.sclera.dto.DocumentMediaDTO;
 import io.sclera.service.DocumentService;
+import io.sclera.utils.PageUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -28,6 +32,8 @@ import jakarta.servlet.http.HttpServletRequest;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class DocumentController {
+
+    private static final Logger log = LoggerFactory.getLogger(DocumentController.class);
 
 
     @Autowired
@@ -53,7 +59,13 @@ public class DocumentController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/upsertdocument")
     public void upsertDocument(@RequestParam String username, @RequestParam String vdmsid, @RequestBody DocumentMediaDTO document, HttpServletRequest httpServletRequest) {
-        documentService.upsertDocument(username, vdmsid, document,httpServletRequest);
+        log.info("upsertDocument username={} vdmsid={}", username, vdmsid);
+        try {
+            documentService.upsertDocument(username, vdmsid, document,httpServletRequest);
+        } catch (Exception e) {
+            log.error("upsertDocument failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -66,7 +78,13 @@ public class DocumentController {
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/documentid/{documentid}/deletedocument")
     public void deleteDocumentbyId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String documentid) {
-        documentService.deleteDocument(username, vdmsid, documentid);
+        log.info("deleteDocumentbyId username={} vdmsid={} documentid={}", username, vdmsid, documentid);
+        try {
+            documentService.deleteDocument(username, vdmsid, documentid);
+        } catch (Exception e) {
+            log.error("deleteDocumentbyId failed username={} vdmsid={} documentid={}: {}", username, vdmsid, documentid, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -88,8 +106,14 @@ public class DocumentController {
      * @return the matching documents
      */
     @RequestMapping(method = RequestMethod.GET, value = "/getdocuments")
-    public Set<DocumentMediaDTO> getDocuments(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey) {
-        return documentService.getDocuments(username, vdmsid, pageno, pagesize, searchkey);
+    public Page<DocumentMediaDTO> getDocuments(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey) {
+        log.info("getDocuments username={} vdmsid={}", username, vdmsid);
+        try {
+            return PageUtils.toPage(documentService.getDocuments(username, vdmsid, pageno, pagesize, searchkey), pageno, pagesize);
+        } catch (Exception e) {
+            log.error("getDocuments failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -104,9 +128,15 @@ public class DocumentController {
      * @return the documents tagged to the device
      */
     @RequestMapping(method = RequestMethod.GET, value = "/device/{deviceid}/getdocumentbydeviceid")
-    public Set<DocumentMediaDTO> getDocumentsByDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String deviceid
+    public Page<DocumentMediaDTO> getDocumentsByDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String deviceid
             , @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize) {
-        return documentService.getDocumentsByDeviceId(username, vdmsid, deviceid, pageno, pagesize);
+        log.info("getDocumentsByDeviceId username={} vdmsid={} deviceid={}", username, vdmsid, deviceid);
+        try {
+            return PageUtils.toPage(documentService.getDocumentsByDeviceId(username, vdmsid, deviceid, pageno, pagesize), pageno, pagesize);
+        } catch (Exception e) {
+            log.error("getDocumentsByDeviceId failed username={} vdmsid={} deviceid={}: {}", username, vdmsid, deviceid, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -120,7 +150,13 @@ public class DocumentController {
     @RequestMapping(method = RequestMethod.POST, value = "/tagdocumenttodevice")
     public void tagDocumentToDevice(@RequestParam String username, @RequestParam String vdmsid,
                                     @RequestParam(defaultValue = "add") String share_method, @RequestBody Set<DocumentMediaDTO> document) {
-        documentService.tagDocumentToDevice(username, vdmsid, share_method, document);
+        log.info("tagDocumentToDevice username={} vdmsid={} share_method={}", username, vdmsid, share_method);
+        try {
+            documentService.tagDocumentToDevice(username, vdmsid, share_method, document);
+        } catch (Exception e) {
+            log.error("tagDocumentToDevice failed username={} vdmsid={} share_method={}: {}", username, vdmsid, share_method, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -133,7 +169,13 @@ public class DocumentController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/untagdocumenttodevice")
     public void untagDocumentToDevice(@RequestParam String username, @RequestParam String vdmsid, @RequestBody Set<DocumentMediaDTO> document) {
-        documentService.untagDocumentToDevice(username, vdmsid, document);
+        log.info("untagDocumentToDevice username={} vdmsid={}", username, vdmsid);
+        try {
+            documentService.untagDocumentToDevice(username, vdmsid, document);
+        } catch (Exception e) {
+            log.error("untagDocumentToDevice failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
+            throw e;
+        }
     }
 
 

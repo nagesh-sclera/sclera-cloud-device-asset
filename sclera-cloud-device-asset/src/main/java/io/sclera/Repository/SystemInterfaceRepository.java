@@ -5,8 +5,6 @@ import java.util.List;
 
 import jakarta.transaction.Transactional;
 
-import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -14,7 +12,6 @@ import org.springframework.stereotype.Repository;
 
 import io.sclera.dto.DockerInfoDto;
 import io.sclera.dto.VlanDTO;
-import io.sclera.models.Address;
 import io.sclera.models.System_interface;
 
 
@@ -34,7 +31,7 @@ public interface SystemInterfaceRepository  extends JpaRepository<System_interfa
 	 */
 	@Modifying
 	@Transactional
-	// PG-port: ON DUPLICATE KEY -> ON CONFLICT (interface_name) DO UPDATE SET (VALUES->EXCLUDED); VALUE->VALUES
+	// NOT CONVERTED — stays native: plain INSERT … ON CONFLICT upsert already valid PostgreSQL
 	@Query(value = "INSERT INTO system_interface(interface_name, status) VALUES (?1 , ?2) "
 			+ "ON CONFLICT (interface_name) DO UPDATE SET status = EXCLUDED.status", nativeQuery = true)
 	void upsertInterfaceStatus(String interface_name, String interface_status);
@@ -48,7 +45,7 @@ public interface SystemInterfaceRepository  extends JpaRepository<System_interfa
 	 * @return the interface status
 	 */
 	@Transactional
-	@Query(value = "SELECT status FROM system_interface WHERE interface_name = ?1", nativeQuery = true)
+	@Query("SELECT si.status FROM System_interface si WHERE si.interface_name = ?1")
 	String getInterfaceStatus(String interface_name);
 
 
@@ -60,7 +57,7 @@ public interface SystemInterfaceRepository  extends JpaRepository<System_interfa
 	 */
 	@Modifying
 	@Transactional
-	@Query(nativeQuery = true)
+	@Query("SELECT new io.sclera.dto.DockerInfoDto(si.interface_name, si.status) FROM System_interface si")
 	List<DockerInfoDto> getInterfaceStatusList();
 
 
@@ -71,7 +68,7 @@ public interface SystemInterfaceRepository  extends JpaRepository<System_interfa
 	 * @return the VLAN discovery details for the interface
 	 */
 	@Transactional
-	@Query(nativeQuery = true)
+	@Query("SELECT new io.sclera.dto.VlanDTO(si.pid, si.timestamp) FROM System_interface si WHERE si.interface_name = ?1")
 	VlanDTO getVlanDiscoverPidByInterfaceName(String interface_name);
 
 
@@ -83,9 +80,9 @@ public interface SystemInterfaceRepository  extends JpaRepository<System_interfa
 	 * @param timestamp update timestamp
 	 * @param interface_name interface name
 	 */
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "UPDATE system_interface SET pid = ?1, timestamp = ?2 WHERE interface_name = ?3", nativeQuery = true)
+	@Query("UPDATE System_interface si SET si.pid = ?1, si.timestamp = ?2 WHERE si.interface_name = ?3")
 	void updateVlanDiscoverPidByInterfaceName(String pid, BigInteger timestamp, String interface_name);
 
 
@@ -93,9 +90,9 @@ public interface SystemInterfaceRepository  extends JpaRepository<System_interfa
 	/**
 	 * Deletes all system interface records.
 	 */
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Transactional
-	@Query(value = "DELETE from system_interface", nativeQuery = true)
+	@Query("DELETE FROM System_interface si")
 	void deleteAllInterface();
 
 

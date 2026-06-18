@@ -31,7 +31,7 @@ public interface TechnicianAvailabilityRepository extends JpaRepository<Technici
      */
     @Modifying
     @Transactional
-    // PG-port: backtick removed (condition is not reserved in PG)
+    // NOT CONVERTED — stays native (PG-translation track): JPA JPQL has no INSERT statement; plain INSERT already PG-compatible (no MySQL constructs)
     @Query(value = "INSERT INTO technician_availability (id, start_date, end_date, start_time, end_time, is_all_day, frequency, condition, technician_id) " +
             "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)", nativeQuery = true)
     Integer createTechnicianAvailability(String id, Long startDate, Long endDate, String startTime, String endTime, Boolean isAllDay, String frequency, String condition, String technicianId);
@@ -50,9 +50,10 @@ public interface TechnicianAvailabilityRepository extends JpaRepository<Technici
      * @param technicianId owning technician identifier
      * @return the number of rows updated
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    // PG-port: backtick removed (condition is not reserved in PG)
+    // NOT CONVERTED (partial) — technician_id is managed by @ManyToOne Technician technician; JPQL cannot SET an association FK via path navigation
+    // in a bulk UPDATE. All other scalar columns are portable JPQL; technician_id update left native.
     @Query(value = "UPDATE technician_availability SET start_date = ?2, end_date = ?3, start_time = ?4, end_time = ?5, is_all_day = ?6, frequency = ?7, condition = ?8, technician_id = ?9 " +
             "WHERE id = ?1", nativeQuery = true)
     Integer updateTechnicianAvailability(String id, Long startDate, Long endDate, String startTime, String endTime, Boolean isAllDay, String frequency, String condition, String technicianId);
@@ -64,7 +65,7 @@ public interface TechnicianAvailabilityRepository extends JpaRepository<Technici
      * @param ids candidate availability identifiers
      * @return the identifiers found in the table
      */
-    @Query(value = "SELECT id FROM technician_availability WHERE id IN ?1", nativeQuery = true)
+    @Query("SELECT ta.id FROM TechnicianAvailability ta WHERE ta.id IN ?1")
     Set<String> findExistingTechnicianAvailabilityByIds(List<String> ids);
 
     /**
@@ -73,9 +74,9 @@ public interface TechnicianAvailabilityRepository extends JpaRepository<Technici
      * @param ids availability identifiers to delete
      * @return the number of rows deleted
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM technician_availability WHERE id IN ?1", nativeQuery = true)
+    @Query("DELETE FROM TechnicianAvailability ta WHERE ta.id IN ?1")
     int deleteTechnicianAvailabilityByIds(Set<String> ids);
 
     /**
@@ -84,9 +85,9 @@ public interface TechnicianAvailabilityRepository extends JpaRepository<Technici
      * @param technicianIds technician identifiers whose availability is removed
      * @return the number of rows deleted
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM technician_availability WHERE technician_id IN ?1", nativeQuery = true)
+    @Query("DELETE FROM TechnicianAvailability ta WHERE ta.technician.id IN ?1")
     int deleteTechnicianAvailabilityByTechnicianIds(Set<String> technicianIds);
 
     /**
@@ -94,6 +95,7 @@ public interface TechnicianAvailabilityRepository extends JpaRepository<Technici
      *
      * @return the list of availability projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with @SqlResultSetMapping; plain SELECT already PG-compatible
     @Query(nativeQuery = true)
     List<TechnicianAvailabilityDTO> getAllTechnicianAvailability();
 
@@ -103,6 +105,7 @@ public interface TechnicianAvailabilityRepository extends JpaRepository<Technici
      * @param id availability identifier
      * @return the matching availability projection
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with @SqlResultSetMapping; plain SELECT already PG-compatible
     @Query(nativeQuery = true)
     TechnicianAvailabilityDTO getTechnicianAvailabilityById(String id);
 
@@ -111,9 +114,9 @@ public interface TechnicianAvailabilityRepository extends JpaRepository<Technici
      *
      * @param id availability identifier
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
-    @Query(value = "DELETE FROM technician_availability WHERE id = ?1", nativeQuery = true)
+    @Query("DELETE FROM TechnicianAvailability ta WHERE ta.id = ?1")
     void deleteTechnicianAvailabilityById(String id);
 
     /**
@@ -124,6 +127,7 @@ public interface TechnicianAvailabilityRepository extends JpaRepository<Technici
      * @param endTime      range end time
      * @return the matching availability projections
      */
+    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with @SqlResultSetMapping; plain SELECT already PG-compatible
     @Query(name = "TechnicianAvailability.getTechnicianAvailabilityInRange", nativeQuery = true)
     List<TechnicianAvailabilityDTO> getTechnicianAvailabilityInRange(String technicianId, String startTime, String endTime);
 
@@ -143,7 +147,7 @@ public interface TechnicianAvailabilityRepository extends JpaRepository<Technici
      */
     @Modifying
     @Transactional
-    // PG-port: ON DUPLICATE KEY -> ON CONFLICT (id) DO UPDATE SET (VALUES->EXCLUDED); backticks removed (condition is not reserved in PG)
+    // NOT CONVERTED — stays native (PG-translation track): ON CONFLICT upsert already PG-portable; no portable JPQL equivalent for upsert semantics
     @Query(value = "INSERT INTO technician_availability (id, start_date, end_date, start_time, end_time, is_all_day, frequency, condition, technician_id) " +
             "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9) " +
             "ON CONFLICT (id) DO UPDATE SET " +

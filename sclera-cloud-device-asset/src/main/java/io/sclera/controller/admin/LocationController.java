@@ -4,7 +4,11 @@ import com.alibaba.fastjson.JSONObject;
 import io.sclera.dto.LocationDTO;
 import io.sclera.dto.TagDeviceOrLocationDTO;
 import io.sclera.service.LocationService;
+import io.sclera.utils.PageUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +24,8 @@ import java.util.Set;
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
 public class LocationController {
 
+    private static final Logger log = LoggerFactory.getLogger(LocationController.class);
+
     @Autowired
     LocationService locationService;
 
@@ -33,7 +39,13 @@ public class LocationController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/floor/{floor_id}/upsertlocations")
     public Set<LocationDTO> upsertLocationsByFloorId(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String floor_id, @RequestBody Set<LocationDTO> locations, HttpServletRequest httpServletRequest) {
-        return locationService.upsertLocationsByFloorId(username, vdms_id, floor_id, locations, httpServletRequest);
+        log.info("upsertLocationsByFloorId username={} vdms_id={} floor_id={}", username, vdms_id, floor_id);
+        try {
+            return locationService.upsertLocationsByFloorId(username, vdms_id, floor_id, locations, httpServletRequest);
+        } catch (Exception e) {
+            log.error("upsertLocationsByFloorId failed username={} vdms_id={} floor_id={}: {}", username, vdms_id, floor_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -43,7 +55,13 @@ public class LocationController {
      */
     @RequestMapping(method = RequestMethod.DELETE, value = "/building/floor/deletelocations")
     public void deleteLocationsByIds(@RequestParam String email, @RequestParam String vdms_id, @RequestBody Set<String> location_ids) {
-        locationService.deleteLocationsByIds(email, vdms_id, location_ids, false);
+        log.info("deleteLocationsByIds email={} vdms_id={}", email, vdms_id);
+        try {
+            locationService.deleteLocationsByIds(email, vdms_id, location_ids, false);
+        } catch (Exception e) {
+            log.error("deleteLocationsByIds failed email={} vdms_id={}: {}", email, vdms_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -53,7 +71,13 @@ public class LocationController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/getlocations")
     public Set<LocationDTO> getLocationsByVdmsId(@RequestParam String username, @RequestParam String vdms_id) {
-        return locationService.getLocationsByVdmsId(username, vdms_id);
+        log.info("getLocationsByVdmsId username={} vdms_id={}", username, vdms_id);
+        try {
+            return locationService.getLocationsByVdmsId(username, vdms_id);
+        } catch (Exception e) {
+            log.error("getLocationsByVdmsId failed username={} vdms_id={}: {}", username, vdms_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -64,7 +88,13 @@ public class LocationController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/floor/{floor_id}/getlocationsbyfloorid")
     public Set<LocationDTO> getLocationsByFloor(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String floor_id) {
-        return locationService.getLocationsByFloor(username, vdms_id, floor_id);
+        log.info("getLocationsByFloor username={} vdms_id={} floor_id={}", username, vdms_id, floor_id);
+        try {
+            return locationService.getLocationsByFloor(username, vdms_id, floor_id);
+        } catch (Exception e) {
+            log.error("getLocationsByFloor failed username={} vdms_id={} floor_id={}: {}", username, vdms_id, floor_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -77,7 +107,13 @@ public class LocationController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/floor/{floor_id}/location/{location_id}/updatelocationdetails")
     public void updateLocationsDetailsByLocationId(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String floor_id, @PathVariable String location_id, @RequestBody Set<LocationDTO> locations, HttpServletRequest httpServletRequest) {
-        locationService.updateLocationsDetailsByLocationId(username, vdms_id, floor_id, location_id, locations, httpServletRequest);
+        log.info("updateLocationsDetailsByLocationId username={} vdms_id={} floor_id={} location_id={}", username, vdms_id, floor_id, location_id);
+        try {
+            locationService.updateLocationsDetailsByLocationId(username, vdms_id, floor_id, location_id, locations, httpServletRequest);
+        } catch (Exception e) {
+            log.error("updateLocationsDetailsByLocationId failed username={} vdms_id={} floor_id={} location_id={}: {}", username, vdms_id, floor_id, location_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -93,11 +129,17 @@ public class LocationController {
      * @return the matching page of locations
      */
     @RequestMapping(method = RequestMethod.POST, value = "/floor/{floor_id}/getlocationsbyflooridpagination")
-    public Set<LocationDTO> getLocationsByFloorByPagination(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String floor_id,
+    public Page<LocationDTO> getLocationsByFloorByPagination(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String floor_id,
                                                             @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
                                                             @RequestParam(defaultValue = "null") String searchKey, @RequestParam(required = false) String field, @RequestParam(required = false) String field_id,
                                                             @RequestBody JSONObject filterObject) {
-        return locationService.getLocationsByFloorByPagination(username, vdms_id, floor_id, pageno, pagesize, searchKey, filterObject, field, field_id);
+        log.info("getLocationsByFloorByPagination username={} vdms_id={} floor_id={}", username, vdms_id, floor_id);
+        try {
+            return PageUtils.toPage(locationService.getLocationsByFloorByPagination(username, vdms_id, floor_id, pageno, pagesize, searchKey, filterObject, field, field_id), pageno, pagesize);
+        } catch (Exception e) {
+            log.error("getLocationsByFloorByPagination failed username={} vdms_id={} floor_id={}: {}", username, vdms_id, floor_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -110,7 +152,13 @@ public class LocationController {
     @RequestMapping(method = RequestMethod.GET, value = "/floor/{floor_id}/getlocationscountbyfloorid")
     public String getLocationsCountByFloorId(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String floor_id,
                                              @RequestParam(defaultValue = "null") String searchkey) {
-        return locationService.getLocationsCountByFloorId(username, vdms_id, floor_id, searchkey);
+        log.info("getLocationsCountByFloorId username={} vdms_id={} floor_id={}", username, vdms_id, floor_id);
+        try {
+            return locationService.getLocationsCountByFloorId(username, vdms_id, floor_id, searchkey);
+        } catch (Exception e) {
+            log.error("getLocationsCountByFloorId failed username={} vdms_id={} floor_id={}: {}", username, vdms_id, floor_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -121,7 +169,13 @@ public class LocationController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/location/{location_id}/getlocationdetailsbylocationid")
     public LocationDTO getLocationDetailsByLocationId(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String location_id) {
-        return locationService.getLocationDetailsByLocationId(username, vdms_id, location_id);
+        log.info("getLocationDetailsByLocationId username={} vdms_id={} location_id={}", username, vdms_id, location_id);
+        try {
+            return locationService.getLocationDetailsByLocationId(username, vdms_id, location_id);
+        } catch (Exception e) {
+            log.error("getLocationDetailsByLocationId failed username={} vdms_id={} location_id={}: {}", username, vdms_id, location_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -135,11 +189,17 @@ public class LocationController {
      * @return the matching page of locations
      */
     @RequestMapping(method = RequestMethod.POST, value = "/group/{group}/getalllocationspagination")
-    public Set<LocationDTO> getAllLocationsPagination(@RequestParam String username, @RequestParam String vdmsid,
+    public Page<LocationDTO> getAllLocationsPagination(@RequestParam String username, @RequestParam String vdmsid,
                                                       @PathVariable String group, @RequestParam(defaultValue = "null") String searchkey,
                                                       @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
                                                       @RequestBody JSONObject filterObject) {
-        return locationService.getAllLocationsPagination(username, vdmsid, group, searchkey, pageno, pagesize, filterObject);
+        log.info("getAllLocationsPagination username={} vdmsid={} group={}", username, vdmsid, group);
+        try {
+            return PageUtils.toPage(locationService.getAllLocationsPagination(username, vdmsid, group, searchkey, pageno, pagesize, filterObject), pageno, pagesize);
+        } catch (Exception e) {
+            log.error("getAllLocationsPagination failed username={} vdmsid={} group={}: {}", username, vdmsid, group, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -152,7 +212,13 @@ public class LocationController {
     @RequestMapping(method = RequestMethod.POST, value = "/searchSortFilterLocationsCount")
     public int searchSortFilterLocationsCount(@RequestParam String username, @RequestParam String vdms_id, @RequestParam(defaultValue = "null") String searchKey,
                                               @RequestBody JSONObject filterObject) {
-        return locationService.searchSortFilterLocationsCount(username, vdms_id, searchKey, filterObject);
+        log.info("searchSortFilterLocationsCount username={} vdms_id={}", username, vdms_id);
+        try {
+            return locationService.searchSortFilterLocationsCount(username, vdms_id, searchKey, filterObject);
+        } catch (Exception e) {
+            log.error("searchSortFilterLocationsCount failed username={} vdms_id={}: {}", username, vdms_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -163,7 +229,13 @@ public class LocationController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/measuring_instrument_id/{measuring_instrument_id}/gettaggedmeasuringinstrumentlocations")
     public Set<LocationDTO> getTaggedMeasuringInstrumentLocations(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String measuring_instrument_id) {
-        return locationService.getTaggedMeasuringInstrumentLocations(username, vdmsid, measuring_instrument_id);
+        log.info("getTaggedMeasuringInstrumentLocations username={} vdmsid={} measuring_instrument_id={}", username, vdmsid, measuring_instrument_id);
+        try {
+            return locationService.getTaggedMeasuringInstrumentLocations(username, vdmsid, measuring_instrument_id);
+        } catch (Exception e) {
+            log.error("getTaggedMeasuringInstrumentLocations failed username={} vdmsid={} measuring_instrument_id={}: {}", username, vdmsid, measuring_instrument_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -173,7 +245,13 @@ public class LocationController {
      */
     @RequestMapping(method = RequestMethod.GET, value = "/getuniquelocationtypes")
     public List<String> getUniqueLocationTypes(@RequestParam String username, @RequestParam String vdms_id) {
-        return locationService.getUniqueLocationTypes(username, vdms_id);
+        log.info("getUniqueLocationTypes username={} vdms_id={}", username, vdms_id);
+        try {
+            return locationService.getUniqueLocationTypes(username, vdms_id);
+        } catch (Exception e) {
+            log.error("getUniqueLocationTypes failed username={} vdms_id={}: {}", username, vdms_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -185,7 +263,13 @@ public class LocationController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/floor/{floor_id}/multiupdatelocations")
     public void multiUpateLocations(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String floor_id, @RequestBody TagDeviceOrLocationDTO tagDeviceOrLocationDTO, HttpServletRequest httpServletRequest) {
-        locationService.multiUpdateLocations(username, vdms_id, floor_id, tagDeviceOrLocationDTO, httpServletRequest);
+        log.info("multiUpateLocations username={} vdms_id={} floor_id={}", username, vdms_id, floor_id);
+        try {
+            locationService.multiUpdateLocations(username, vdms_id, floor_id, tagDeviceOrLocationDTO, httpServletRequest);
+        } catch (Exception e) {
+            log.error("multiUpateLocations failed username={} vdms_id={} floor_id={}: {}", username, vdms_id, floor_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -198,7 +282,13 @@ public class LocationController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/floor/{floor_id}/upsertlocationsdetails")
     public Set<LocationDTO> upsertlocationsdetails(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String floor_id, @RequestBody Set<LocationDTO> locations, HttpServletRequest httpServletRequest) {
-        return locationService.upsertlocationsdetails(username, vdms_id, floor_id, locations, httpServletRequest);
+        log.info("upsertlocationsdetails username={} vdms_id={} floor_id={}", username, vdms_id, floor_id);
+        try {
+            return locationService.upsertlocationsdetails(username, vdms_id, floor_id, locations, httpServletRequest);
+        } catch (Exception e) {
+            log.error("upsertlocationsdetails failed username={} vdms_id={} floor_id={}: {}", username, vdms_id, floor_id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -213,10 +303,16 @@ public class LocationController {
      * @return the matching page of locations
      */
     @RequestMapping(method = RequestMethod.POST, value = "/getalllocationsbyfilterbypagination")
-    public Set<LocationDTO> getAllLocationsByFilterByPagination(@RequestParam String username, @RequestParam String vdms_id,
+    public Page<LocationDTO> getAllLocationsByFilterByPagination(@RequestParam String username, @RequestParam String vdms_id,
                                                                 @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
                                                                 @RequestParam(defaultValue = "null") String searchKey, @RequestParam(required = false) String field, @RequestParam(required = false) String field_id,
                                                                 @RequestBody JSONObject filterObject) {
-        return locationService.getAllLocationsByFilterByPagination(username, vdms_id, pageno, pagesize, searchKey, filterObject, field, field_id);
+        log.info("getAllLocationsByFilterByPagination username={} vdms_id={}", username, vdms_id);
+        try {
+            return PageUtils.toPage(locationService.getAllLocationsByFilterByPagination(username, vdms_id, pageno, pagesize, searchKey, filterObject, field, field_id), pageno, pagesize);
+        } catch (Exception e) {
+            log.error("getAllLocationsByFilterByPagination failed username={} vdms_id={}: {}", username, vdms_id, e.getMessage(), e);
+            throw e;
+        }
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import jakarta.transaction.Transactional;
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -28,18 +29,24 @@ public interface LocationHistoryRepository extends JpaRepository<LocationHistory
      * @param updated_email the email of the user who made the update
      * @param location_id the identifier of the associated location
      */
+    // NOT CONVERTED — stays native: plain INSERT (not a SELECT/UPDATE/DELETE; no portable JPQL form for INSERT)
     @Modifying
     @Transactional
     @Query(value = "INSERT INTO location_history(id, status,type, description, updated_timestamp, updated_email, location_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7) ", nativeQuery = true)
     void addLocationHistory(String id, String status, String type, String description, BigInteger updated_timestamp, String updated_email, String location_id);
 
     /**
-     * Returns the location history entries for a given location.
+     * Returns the location history entries for a given location, ordered by timestamp descending.
      *
      * @param location_id the identifier of the location
      * @return the set of location history entries
      */
-    @Query(nativeQuery = true)
+    @Query("SELECT new io.sclera.dto.LocationHistoryDTO(" +
+           "lh.id, lh.status, lh.type, lh.description, " +
+           "lh.updated_timestamp, lh.updated_email, lh.location.id) " +
+           "FROM LocationHistory lh " +
+           "WHERE lh.location.id = :location_id " +
+           "ORDER BY lh.updated_timestamp DESC, lh.id")
     Set<LocationHistoryDTO> getLocationHistory(String location_id);
 
 }
