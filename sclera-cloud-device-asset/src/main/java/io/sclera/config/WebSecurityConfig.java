@@ -80,6 +80,8 @@ import io.sclera.auth.TenantJWSKeySelector;
 import io.sclera.auth.TenantJwtIssuerValidator;
 import io.sclera.utils.Utils;
 import org.apache.commons.net.util.SubnetUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -117,6 +119,7 @@ import java.util.List;
 @org.springframework.context.annotation.Profile("!docker")
 public class WebSecurityConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(WebSecurityConfig.class);
 
     @Autowired
     private Utils utils;
@@ -211,14 +214,14 @@ public class WebSecurityConfig {
         }
 
         String enableAuthHeader = request.getHeader("X-Enable-Auth");
-        System.out.println("X-Enable-Auth " + enableAuthHeader);
+        log.debug("{}", "X-Enable-Auth " + enableAuthHeader);
         if ((!request.getServletPath().contains("/ws")) && "true".equalsIgnoreCase(enableAuthHeader)) {
-            System.out.println("L4 Proxy request...");
+            log.debug("{}", "L4 Proxy request...");
             return false;
         }
 
         String clientIp = request.getRemoteAddr();
-        System.out.println("The clientIP is " + clientIp);
+        log.debug("{}", "The clientIP is " + clientIp);
         boolean isInRange = false;
         try {
             String range = utils.getScleraBridgeSubnet();
@@ -230,7 +233,7 @@ public class WebSecurityConfig {
                 }
             }
         } catch (UnknownHostException e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
 
 
@@ -240,7 +243,7 @@ public class WebSecurityConfig {
             ipAddresses = this.getLocalIPAddresses();
             remoteAddr = request.getRemoteAddr();
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
 
         return clientIp.equals("0:0:0:0:0:0:0:1") ||
@@ -272,7 +275,7 @@ public class WebSecurityConfig {
                 }
             }
         } catch (SocketException e) {
-            System.out.println("Error getting local IP addresses: " + e.getMessage());
+            log.debug("{}", "Error getting local IP addresses: " + e.getMessage());
         }
         return ipAddresses;
     }
