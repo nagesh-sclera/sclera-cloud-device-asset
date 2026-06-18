@@ -11,17 +11,24 @@ import io.sclera.dto.*;
 import io.sclera.service.touchscreen.DeviceMonitorService;
 import io.sclera.integration.dto.ResponseDTO;
 import io.sclera.utils.PageUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -45,6 +52,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
+@Tag(name = "Devices", description = "Manage devices, virtual devices, topology, asset images and device search/export for a VDMS.")
 public class DeviceController {
 
     private static final Logger log = LoggerFactory.getLogger(DeviceController.class);
@@ -72,16 +80,19 @@ public class DeviceController {
      * @param dockername docker (gateway) name to scope devices to
      * @return set of devices for the VDMS/docker
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/devices")
-    public Set<DeviceDTO> listAllDevicebyVdmsidAndDockerName(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername) {
+    @Operation(summary = "List devices for a VDMS/docker",
+            description = "Returns all devices for the given VDMS and docker.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/docker/{dockername}/devices")
+    public Set<DeviceDTO> listAllDevicebyVdmsidAndDockerName(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername) {
         log.info("listAllDevicebyVdmsidAndDockerName username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return deviceService.listAllDevicebyVdmsidAndDockerName(username, vdmsid, dockername);
-
-        } catch (Exception e) {
-            log.error("listAllDevicebyVdmsidAndDockerName failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.listAllDevicebyVdmsidAndDockerName(username, vdmsid, dockername);
     }
 
     /**
@@ -96,16 +107,23 @@ public class DeviceController {
      * @param pagesize   number of devices per page (default 10)
      * @return matching page of devices
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/getfilterdevice")
-    public Page<DeviceDTO> getfilterdevice(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition, @RequestParam(defaultValue = "null") String searchKey,
-                                          @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize) {
+    @Operation(summary = "Get a filtered page of devices",
+            description = "Returns a paginated, filtered slice of devices for the given VDMS and docker.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/docker/{dockername}/getfilterdevice")
+    public Page<DeviceDTO> getfilterdevice(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @Parameter(description = "Filter condition to apply") @RequestParam(defaultValue = "all") String condition,
+            @Parameter(description = "Search keyword to match against") @RequestParam(defaultValue = "null") String searchKey,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer pagesize) {
         log.info("getfilterdevice username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return PageUtils.toPage(deviceService.getfilterdevices(username, vdmsid, dockername, condition, searchKey, pageno, pagesize), pageno, pagesize);
-        } catch (Exception e) {
-            log.error("getfilterdevice failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(deviceService.getfilterdevices(username, vdmsid, dockername, condition, searchKey, pageno, pagesize), pageno, pagesize);
     }
 
     //new get method with subsystem parent device get initial
@@ -121,16 +139,23 @@ public class DeviceController {
      * @param assignee   assignee to filter by (default "all")
      * @return matching page of subsystem parent devices
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/getsubsystemparentdevicesbypagination")
-    public Page<DeviceDTO> getSubsystemParentDevicesByPagination(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
-                                                                @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") String assignee) {
+    @Operation(summary = "Get subsystem parent devices by pagination",
+            description = "Returns a paginated set of subsystem parent devices for the given VDMS and docker.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/docker/{dockername}/getsubsystemparentdevicesbypagination")
+    public Page<DeviceDTO> getSubsystemParentDevicesByPagination(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @Parameter(description = "Filter condition to apply") @RequestParam(defaultValue = "all") String condition,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer pagesize,
+            @Parameter(description = "Assignee to filter by") @RequestParam(defaultValue = "all") String assignee) {
         log.info("getSubsystemParentDevicesByPagination username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return PageUtils.toPage(deviceService.getSubsystemParentDevicesByPagination(username, vdmsid, dockername, condition, pageno, pagesize, assignee), pageno, pagesize);
-        } catch (Exception e) {
-            log.error("getSubsystemParentDevicesByPagination failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(deviceService.getSubsystemParentDevicesByPagination(username, vdmsid, dockername, condition, pageno, pagesize, assignee), pageno, pagesize);
     }
 
     //new get method with subsystem devices get
@@ -147,16 +172,24 @@ public class DeviceController {
      * @param assignee   assignee to filter by (default "all")
      * @return matching page of subsystem devices
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/{device_id}/getsubsystemdevicesbypagination")
-    public Page<DeviceDTO> getSubsystemDevicesByPagination(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String device_id, @RequestParam(defaultValue = "all") String condition,
-                                                          @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") String assignee) {
+    @Operation(summary = "Get subsystem devices by pagination",
+            description = "Returns a paginated set of subsystem devices under the given parent device.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/docker/{dockername}/device/{device_id}/getsubsystemdevicesbypagination")
+    public Page<DeviceDTO> getSubsystemDevicesByPagination(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @Parameter(description = "Parent device whose subsystem devices are requested") @PathVariable String device_id,
+            @Parameter(description = "Filter condition to apply") @RequestParam(defaultValue = "all") String condition,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer pagesize,
+            @Parameter(description = "Assignee to filter by") @RequestParam(defaultValue = "all") String assignee) {
         log.info("getSubsystemDevicesByPagination username={} vdmsid={} dockername={} device_id={}", username, vdmsid, dockername, device_id);
-        try {
-            return PageUtils.toPage(deviceService.getSubsystemDevicesByPagination(username, vdmsid, dockername, device_id, condition, pageno, pagesize, assignee), pageno, pagesize);
-        } catch (Exception e) {
-            log.error("getSubsystemDevicesByPagination failed username={} vdmsid={} dockername={} device_id={}: {}", username, vdmsid, dockername, device_id, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(deviceService.getSubsystemDevicesByPagination(username, vdmsid, dockername, device_id, condition, pageno, pagesize, assignee), pageno, pagesize);
     }
 
 
@@ -169,15 +202,22 @@ public class DeviceController {
      * @param dockername docker (gateway) name to scope devices to
      * @param assignee   assignee to associate with the devices (default "all")
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/devicesupsert")
-    public void upsertDeviceListByVdmsIdAndDockerName(@RequestBody List<DeviceDTO> devicesDto, @RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String assignee) {
+    @Operation(summary = "Upsert devices",
+            description = "Creates or updates the given list of devices for the VDMS and docker.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices upserted"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/devicesupsert")
+    public void upsertDeviceListByVdmsIdAndDockerName(
+            @RequestBody List<DeviceDTO> devicesDto,
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @Parameter(description = "Assignee to associate with the devices") @RequestParam(defaultValue = "all") String assignee) {
         log.info("upsertDeviceListByVdmsIdAndDockerName username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            deviceService.upsertDeviceListByVdmsIdAndDockerName(devicesDto, username, vdmsid, dockername, assignee);
-        } catch (Exception e) {
-            log.error("upsertDeviceListByVdmsIdAndDockerName failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.upsertDeviceListByVdmsIdAndDockerName(devicesDto, username, vdmsid, dockername, assignee);
     }
 
     /**
@@ -194,16 +234,24 @@ public class DeviceController {
      * @throws JSONException if the request payload cannot be parsed as JSON
      * @throws IOException   if reading the request or downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/device/{device_id}/edit")
-    public DeviceDTO editDeviceByDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
-                                          @PathVariable String device_id, @RequestBody DeviceDTO devicedto, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) throws JSONException, IOException {
+    @Operation(summary = "Edit a device by id",
+            description = "Updates a single device identified by its id.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Device updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "404", description = "Device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/device/{device_id}/edit")
+    public DeviceDTO editDeviceByDeviceId(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope the device to") @PathVariable String dockername,
+            @Parameter(description = "Device to edit") @PathVariable String device_id,
+            @RequestBody DeviceDTO devicedto, HttpServletRequest httpServletRequest,
+            @Parameter(description = "Assignee to associate with the device") @RequestParam(defaultValue = "all") String assignee) throws JSONException, IOException {
         log.info("editDeviceByDeviceId username={} vdmsid={} dockername={} device_id={}", username, vdmsid, dockername, device_id);
-        try {
-            return deviceService.editDeviceByDeviceID(username, vdmsid, dockername, device_id, devicedto, httpServletRequest, assignee);
-        } catch (Exception e) {
-            log.error("editDeviceByDeviceId failed username={} vdmsid={} dockername={} device_id={}: {}", username, vdmsid, dockername, device_id, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.editDeviceByDeviceID(username, vdmsid, dockername, device_id, devicedto, httpServletRequest, assignee);
     }
 
 
@@ -217,16 +265,21 @@ public class DeviceController {
      * @param vendor_type        type of vendor to unlink
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.PUT, value = "/docker/{dockername}/phoneaccount/{phoneaccount}/device/{device_id}/{vendor_type}")
-    public void unlinkVendorByVendorIdAndDeviceId(@RequestParam String username, @PathVariable String dockername, @PathVariable String phoneaccount,
-                                                  @PathVariable String device_id, @PathVariable String vendor_type, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Unlink a vendor from a device",
+            description = "Unlinks a vendor of the given type from a device.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Vendor unlinked"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PutMapping("/docker/{dockername}/phoneaccount/{phoneaccount}/device/{device_id}/{vendor_type}")
+    public void unlinkVendorByVendorIdAndDeviceId(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Docker (gateway) name to scope the device to") @PathVariable String dockername,
+            @Parameter(description = "Phone account associated with the vendor link") @PathVariable String phoneaccount,
+            @Parameter(description = "Device to unlink the vendor from") @PathVariable String device_id,
+            @Parameter(description = "Type of vendor to unlink") @PathVariable String vendor_type, HttpServletRequest httpServletRequest) {
         log.info("unlinkVendorByVendorIdAndDeviceId username={} dockername={} phoneaccount={} device_id={} vendor_type={}", username, dockername, phoneaccount, device_id, vendor_type);
-        try {
-            deviceService.unlinkVendorByVendorIdAndDeviceId(username, dockername, phoneaccount, device_id, vendor_type, httpServletRequest);
-        } catch (Exception e) {
-            log.error("unlinkVendorByVendorIdAndDeviceId failed username={} dockername={} phoneaccount={} device_id={} vendor_type={}: {}", username, dockername, phoneaccount, device_id, vendor_type, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.unlinkVendorByVendorIdAndDeviceId(username, dockername, phoneaccount, device_id, vendor_type, httpServletRequest);
     }
 
     /**
@@ -241,17 +294,23 @@ public class DeviceController {
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @return identifier or status of the created vendor link
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/phoneaccount/device/{device_id}/{vendor_type}/link")
-    public String linkVendorByVendorIdAndDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
-                                                  @PathVariable String device_id, @PathVariable String vendor_type,
-                                                  @RequestBody PhonebookAddressDto phonebookaddressdto, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Link a vendor to a device",
+            description = "Links a vendor of the given type to a device using the supplied phonebook address.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Vendor linked"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/phoneaccount/device/{device_id}/{vendor_type}/link")
+    public String linkVendorByVendorIdAndDeviceId(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope the device to") @PathVariable String dockername,
+            @Parameter(description = "Device to link the vendor to") @PathVariable String device_id,
+            @Parameter(description = "Type of vendor to link") @PathVariable String vendor_type,
+            @RequestBody PhonebookAddressDto phonebookaddressdto, HttpServletRequest httpServletRequest) {
         log.info("linkVendorByVendorIdAndDeviceId username={} vdmsid={} dockername={} device_id={} vendor_type={}", username, vdmsid, dockername, device_id, vendor_type);
-        try {
-            return deviceService.linkVendorByVendorIdAndDeviceId(username, vdmsid, dockername, device_id, phonebookaddressdto, vendor_type, httpServletRequest);
-        } catch (Exception e) {
-            log.error("linkVendorByVendorIdAndDeviceId failed username={} vdmsid={} dockername={} device_id={} vendor_type={}: {}", username, vdmsid, dockername, device_id, vendor_type, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.linkVendorByVendorIdAndDeviceId(username, vdmsid, dockername, device_id, phonebookaddressdto, vendor_type, httpServletRequest);
     }
 
     /**
@@ -266,20 +325,22 @@ public class DeviceController {
      * @throws JSONException if a request payload cannot be parsed as JSON
      * @throws IOException   if reading the request or downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.PUT, value = "/docker/{dockername}/devices")
-    public void multiDeviceUpdate(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
-                                  @RequestBody Set<MultiDeviceDTO> multidevicedtos, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) throws JSONException, IOException {
-        log.info("multiDeviceUpdate username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            System.out.println("***************************************************************");
-            System.out.println(multidevicedtos);
-            System.out.println("***************************************************************");
-
-            deviceService.multiDeviceUpdate(username, vdmsid, dockername, multidevicedtos, httpServletRequest, assignee);
-        } catch (Exception e) {
-            log.error("multiDeviceUpdate failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+    @Operation(summary = "Update multiple devices",
+            description = "Updates multiple devices in a single request.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PutMapping("/docker/{dockername}/devices")
+    public void multiDeviceUpdate(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @RequestBody Set<MultiDeviceDTO> multidevicedtos, HttpServletRequest httpServletRequest,
+            @Parameter(description = "Assignee to associate with the devices") @RequestParam(defaultValue = "all") String assignee) throws JSONException, IOException {
+        log.info("multiDeviceUpdate username={} vdmsid={} dockername={} count={}", username, vdmsid, dockername, multidevicedtos == null ? 0 : multidevicedtos.size());
+        deviceService.multiDeviceUpdate(username, vdmsid, dockername, multidevicedtos, httpServletRequest, assignee);
     }
 
     /**
@@ -294,16 +355,22 @@ public class DeviceController {
      * @return set of devices affected by the quick update
      * @throws IOException if downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/devices/quickupdate")
-    public Set<DeviceDTO> quickUpdate(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
-                                      @RequestBody TagDeviceOrLocationDTO tagDeviceOrLocationDTO, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) throws IOException {
+    @Operation(summary = "Quick-update devices",
+            description = "Applies a quick update (tag device or location) to matching devices.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/devices/quickupdate")
+    public Set<DeviceDTO> quickUpdate(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @RequestBody TagDeviceOrLocationDTO tagDeviceOrLocationDTO, HttpServletRequest httpServletRequest,
+            @Parameter(description = "Assignee to associate with the devices") @RequestParam(defaultValue = "all") String assignee) throws IOException {
         log.info("quickUpdate username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return deviceService.quickUpdate(username, vdmsid, dockername, tagDeviceOrLocationDTO, httpServletRequest, assignee);
-        } catch (Exception e) {
-            log.error("quickUpdate failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.quickUpdate(username, vdmsid, dockername, tagDeviceOrLocationDTO, httpServletRequest, assignee);
     }
 
     /**
@@ -314,15 +381,19 @@ public class DeviceController {
      * @param dockername docker (gateway) name to scope devices to
      * @return set of devices carrying their names
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/names")
-    public Set<DeviceDTO> getDeviceNamesByVdmsIdAndDockerName(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername) {
+    @Operation(summary = "Get device names",
+            description = "Returns the device names for the given VDMS and docker.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Device names returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/docker/{dockername}/device/names")
+    public Set<DeviceDTO> getDeviceNamesByVdmsIdAndDockerName(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername) {
         log.info("getDeviceNamesByVdmsIdAndDockerName username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return deviceService.getDeviceNamesByVdmsIdAndDockerName(username, vdmsid, dockername);
-        } catch (Exception e) {
-            log.error("getDeviceNamesByVdmsIdAndDockerName failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.getDeviceNamesByVdmsIdAndDockerName(username, vdmsid, dockername);
     }
 
 //	@RequestMapping(method = RequestMethod.POST , value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/virtual-device")
@@ -343,17 +414,23 @@ public class DeviceController {
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @param assignee           assignee to associate with the devices (default "all")
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/addvirtualdevice")
-    public void addVirtualDeviceByVdmsIdAndDockerName(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
-                                                      @RequestParam(value = "images", required = false) List<MultipartFile> asset_images,
-                                                      @RequestParam(value = "virtual_devices") String virtualDevicesDTO, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) {
+    @Operation(summary = "Add virtual devices",
+            description = "Adds one or more virtual devices, optionally with attached asset images.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Virtual devices added"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/addvirtualdevice")
+    public void addVirtualDeviceByVdmsIdAndDockerName(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @Parameter(description = "Optional asset image files to attach") @RequestParam(value = "images", required = false) List<MultipartFile> asset_images,
+            @Parameter(description = "Serialized virtual device definitions to add") @RequestParam(value = "virtual_devices") String virtualDevicesDTO, HttpServletRequest httpServletRequest,
+            @Parameter(description = "Assignee to associate with the devices") @RequestParam(defaultValue = "all") String assignee) {
         log.info("addVirtualDeviceByVdmsIdAndDockerName username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            deviceService.addVirtualDeviceByVdmsIdAndDockerName(username, vdmsid, dockername, virtualDevicesDTO, asset_images, httpServletRequest, assignee);
-        } catch (Exception e) {
-            log.error("addVirtualDeviceByVdmsIdAndDockerName failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.addVirtualDeviceByVdmsIdAndDockerName(username, vdmsid, dockername, virtualDevicesDTO, asset_images, httpServletRequest, assignee);
     }
 
     //	@RequestMapping(method = RequestMethod.POST , value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/virtual-device/{virtual_device_id}")
@@ -372,16 +449,21 @@ public class DeviceController {
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @throws IOException if downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/updatevirtualdevice")
-    public void editVirtualDeviceByVirtualDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
-                                                   @RequestBody Set<DeviceDTO> virtualDevices, HttpServletRequest httpServletRequest) throws IOException {
+    @Operation(summary = "Edit virtual devices",
+            description = "Edits a set of existing virtual devices.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Virtual devices updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/updatevirtualdevice")
+    public void editVirtualDeviceByVirtualDeviceId(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @RequestBody Set<DeviceDTO> virtualDevices, HttpServletRequest httpServletRequest) throws IOException {
         log.info("editVirtualDeviceByVirtualDeviceId username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            deviceService.editVirtualDeviceByVirtualDeviceId(username, vdmsid, dockername, virtualDevices, httpServletRequest);
-        } catch (Exception e) {
-            log.error("editVirtualDeviceByVirtualDeviceId failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.editVirtualDeviceByVirtualDeviceId(username, vdmsid, dockername, virtualDevices, httpServletRequest);
     }
 
 
@@ -394,16 +476,22 @@ public class DeviceController {
      * @param virtual_device_id virtual device to delete
      * @param assignee          assignee scope for the deletion (default "all")
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/docker/{dockername}/virtual-device/{virtual_device_id}")
-    public void deleteVirtualDeviceByVirtualDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
-                                                     @PathVariable String virtual_device_id, @RequestParam(defaultValue = "all") String assignee) {
+    @Operation(summary = "Delete a virtual device",
+            description = "Deletes a virtual device by its id.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Virtual device deleted"),
+            @ApiResponse(responseCode = "404", description = "Virtual device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @DeleteMapping("/docker/{dockername}/virtual-device/{virtual_device_id}")
+    public void deleteVirtualDeviceByVirtualDeviceId(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope the device to") @PathVariable String dockername,
+            @Parameter(description = "Virtual device to delete") @PathVariable String virtual_device_id,
+            @Parameter(description = "Assignee scope for the deletion") @RequestParam(defaultValue = "all") String assignee) {
         log.info("deleteVirtualDeviceByVirtualDeviceId username={} vdmsid={} dockername={} virtual_device_id={}", username, vdmsid, dockername, virtual_device_id);
-        try {
-            deviceService.deleteVirtualDeviceByVirtualDeviceId(username, vdmsid, dockername, virtual_device_id, assignee);
-        } catch (Exception e) {
-            log.error("deleteVirtualDeviceByVirtualDeviceId failed username={} vdmsid={} dockername={} virtual_device_id={}: {}", username, vdmsid, dockername, virtual_device_id, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.deleteVirtualDeviceByVirtualDeviceId(username, vdmsid, dockername, virtual_device_id, assignee);
     }
 
     /**
@@ -416,16 +504,23 @@ public class DeviceController {
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @param assignee           assignee scope for the deletion (default "all")
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/docker/{dockername}/deletedevices")
-    public void deleteDevicesById(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestBody Set<String> deviceIds, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) {
+    @Operation(summary = "Delete devices by ids",
+            description = "Soft-deletes the given devices by their ids so they can be reactivated later.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices deleted"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @DeleteMapping("/docker/{dockername}/deletedevices")
+    public void deleteDevicesById(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @RequestBody Set<String> deviceIds, HttpServletRequest httpServletRequest,
+            @Parameter(description = "Assignee scope for the deletion") @RequestParam(defaultValue = "all") String assignee) {
         log.info("deleteDevicesById username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
 //        deviceService.deleteDevicesById(username, vdmsid, dockername, deviceIds, httpServletRequest);
-            deviceService.softDeleteDevicesById(username, vdmsid, dockername, deviceIds, httpServletRequest, assignee);
-        } catch (Exception e) {
-            log.error("deleteDevicesById failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.softDeleteDevicesById(username, vdmsid, dockername, deviceIds, httpServletRequest, assignee);
     }
 
     //Get Single device information
@@ -438,15 +533,21 @@ public class DeviceController {
      * @param device_id  device to retrieve
      * @return the requested device
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/{device_id}/getdevice")
-    public DeviceDTO getDeviceByDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String device_id) {
+    @Operation(summary = "Get a device by id",
+            description = "Returns the details of a single device by its id.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Device found"),
+            @ApiResponse(responseCode = "404", description = "Device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/docker/{dockername}/device/{device_id}/getdevice")
+    public DeviceDTO getDeviceByDeviceId(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope the device to") @PathVariable String dockername,
+            @Parameter(description = "Device to retrieve") @PathVariable String device_id) {
         log.info("getDeviceByDeviceId username={} vdmsid={} dockername={} device_id={}", username, vdmsid, dockername, device_id);
-        try {
-            return deviceService.getDeviceByDeviceId(username, vdmsid, dockername, device_id);
-        } catch (Exception e) {
-            log.error("getDeviceByDeviceId failed username={} vdmsid={} dockername={} device_id={}: {}", username, vdmsid, dockername, device_id, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.getDeviceByDeviceId(username, vdmsid, dockername, device_id);
     }
 
     //Sync Virtual Device Status
@@ -461,15 +562,23 @@ public class DeviceController {
      * @return the updated virtual device
      * @throws IOException if downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.PUT, value = "/docker/{dockername}/virtual-device/{virtual_device_id}/syncstatus")
-    public DeviceDTO updateVirtualDeviceStatusByVirtualDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @PathVariable String virtual_device_id, @RequestBody DeviceDTO virtualdevicedto) throws IOException {
+    @Operation(summary = "Sync virtual device status",
+            description = "Syncs and updates the status of a virtual device by its id.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Status synced"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "404", description = "Virtual device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PutMapping("/docker/{dockername}/virtual-device/{virtual_device_id}/syncstatus")
+    public DeviceDTO updateVirtualDeviceStatusByVirtualDeviceId(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope the device to") @PathVariable String dockername,
+            @Parameter(description = "Virtual device whose status is synced") @PathVariable String virtual_device_id,
+            @RequestBody DeviceDTO virtualdevicedto) throws IOException {
         log.info("updateVirtualDeviceStatusByVirtualDeviceId username={} vdmsid={} dockername={} virtual_device_id={}", username, vdmsid, dockername, virtual_device_id);
-        try {
-            return deviceService.updateVirtualDeviceStatusByVirtualDeviceId(username, vdmsid, dockername, virtual_device_id, virtualdevicedto);
-        } catch (Exception e) {
-            log.error("updateVirtualDeviceStatusByVirtualDeviceId failed username={} vdmsid={} dockername={} virtual_device_id={}: {}", username, vdmsid, dockername, virtual_device_id, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.updateVirtualDeviceStatusByVirtualDeviceId(username, vdmsid, dockername, virtual_device_id, virtualdevicedto);
     }
 
     /**
@@ -477,16 +586,17 @@ public class DeviceController {
      *
      * @return the product details for the sample product
      */
+    @Operation(summary = "Get sample product details",
+            description = "Returns product details for a hard-coded sample product id. Test endpoint.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Product details returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping(value = "/test/product")
     public ProductDTO test() {
         log.info("test called");
-        try {
-            String product_id = "6aeeae74-2855-4b67-943e-49d979a45abf";
-            return apicallService.getProductDetailsByProductId(product_id);
-        } catch (Exception e) {
-            log.error("test failed: {}", e.getMessage(), e);
-            throw e;
-        }
+        String product_id = "6aeeae74-2855-4b67-943e-49d979a45abf";
+        return apicallService.getProductDetailsByProductId(product_id);
     }
 
 
@@ -499,18 +609,20 @@ public class DeviceController {
      * @param assignee   assignee to filter the counts by (default "all")
      * @return map of category to device count
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/getdevicecount")
-    public Map<String, Integer> getDeviceCount(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, @RequestParam(defaultValue = "all") String assignee) {
+    @Operation(summary = "Get device counts",
+            description = "Returns device counts (e.g. by status) for the given VDMS and docker.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Counts returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/docker/{dockername}/getdevicecount")
+    public Map<String, Integer> getDeviceCount(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @Parameter(description = "Assignee to filter the counts by") @RequestParam(defaultValue = "all") String assignee) {
         log.info("getDeviceCount username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-
-
-            return deviceService.getDeviceCount(username, vdmsid, dockername, assignee);
-
-        } catch (Exception e) {
-            log.error("getDeviceCount failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.getDeviceCount(username, vdmsid, dockername, assignee);
     }
 
     //listing all devices for snmp topology
@@ -522,15 +634,19 @@ public class DeviceController {
      * @param dockername docker (gateway) name to scope devices to
      * @return list of topology device entries
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/devicetopology")
-    public List<DeviceTopologyDTO> listTopologyDevicesByDockerName(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername) {
+    @Operation(summary = "List topology devices",
+            description = "Returns all devices arranged for the SNMP topology view.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Topology devices returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/docker/{dockername}/devicetopology")
+    public List<DeviceTopologyDTO> listTopologyDevicesByDockerName(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername) {
         log.info("listTopologyDevicesByDockerName username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return deviceService.listTopologyDevicesByDockerName(username, vdmsid, dockername);
-        } catch (Exception e) {
-            log.error("listTopologyDevicesByDockerName failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.listTopologyDevicesByDockerName(username, vdmsid, dockername);
     }
 
     /**
@@ -542,17 +658,21 @@ public class DeviceController {
      * @param devicePositions    devices with their updated position coordinates
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/updatedeviceposition")
-    public void updateDevicePosition(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
-                                     @RequestBody List<DeviceDTO> devicePositions, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Update device positions",
+            description = "Updates the topology positions of the given devices.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Positions updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/updatedeviceposition")
+    public void updateDevicePosition(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @RequestBody List<DeviceDTO> devicePositions, HttpServletRequest httpServletRequest) {
         log.info("updateDevicePosition username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-
-            deviceService.updateDevicePosition(devicePositions, vdmsid, username, httpServletRequest);
-        } catch (Exception e) {
-            log.error("updateDevicePosition failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.updateDevicePosition(devicePositions, vdmsid, username, httpServletRequest);
     }
 
     // Device list by docker name for integration
@@ -562,15 +682,17 @@ public class DeviceController {
      * @param dockername docker (gateway) name whose devices are listed
      * @return list of devices for the docker
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/devicelistintegration")
-    public List<DeviceDTO> listDevicebyDockerIntegration(@PathVariable String dockername) {
+    @Operation(summary = "List devices for integration",
+            description = "Returns the device list for the given docker, intended for integration consumers.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/docker/{dockername}/devicelistintegration")
+    public List<DeviceDTO> listDevicebyDockerIntegration(
+            @Parameter(description = "Docker (gateway) name whose devices are listed") @PathVariable String dockername) {
         log.info("listDevicebyDockerIntegration dockername={}", dockername);
-        try {
-            return deviceService.listDevicebyDockerIntegration(dockername);
-        } catch (Exception e) {
-            log.error("listDevicebyDockerIntegration failed dockername={}: {}", dockername, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.listDevicebyDockerIntegration(dockername);
     }
 
     //Get Gateway ID
@@ -580,15 +702,17 @@ public class DeviceController {
      * @param dockername docker (gateway) name to resolve
      * @return the gateway id
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/getgatewayid")
-    public String getGatewayId(@PathVariable String dockername) {
+    @Operation(summary = "Get gateway id",
+            description = "Returns the gateway id for the given docker.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Gateway id returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/docker/{dockername}/getgatewayid")
+    public String getGatewayId(
+            @Parameter(description = "Docker (gateway) name to resolve") @PathVariable String dockername) {
         log.info("getGatewayId dockername={}", dockername);
-        try {
-            return deviceService.getGatewayId(dockername);
-        } catch (Exception e) {
-            log.error("getGatewayId failed dockername={}: {}", dockername, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.getGatewayId(dockername);
     }
 
     /**
@@ -600,16 +724,21 @@ public class DeviceController {
      * @param devices            topology device entries to persist
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/updatetopology")
-    public void updateTopology(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
-                               @RequestBody List<DeviceTopologyDTO> devices, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Update device topology",
+            description = "Updates the device topology for the given VDMS and docker.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Topology updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/updatetopology")
+    public void updateTopology(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope the topology to") @PathVariable String dockername,
+            @RequestBody List<DeviceTopologyDTO> devices, HttpServletRequest httpServletRequest) {
         log.info("updateTopology username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            deviceService.updateTopology(username, vdmsid, dockername, devices, httpServletRequest);
-        } catch (Exception e) {
-            log.error("updateTopology failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.updateTopology(username, vdmsid, dockername, devices, httpServletRequest);
     }
 
     //reset topology
@@ -621,15 +750,19 @@ public class DeviceController {
      * @param dockername         docker (gateway) name whose topology is reset
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/resettopology")
-    public void resetTopology(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Reset device topology",
+            description = "Resets the device topology for the given docker.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Topology reset"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/resettopology")
+    public void resetTopology(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name whose topology is reset") @PathVariable String dockername, HttpServletRequest httpServletRequest) {
         log.info("resetTopology username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            deviceService.resetTopologyByDockername(username, vdmsid, dockername, httpServletRequest);
-        } catch (Exception e) {
-            log.error("resetTopology failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.resetTopologyByDockername(username, vdmsid, dockername, httpServletRequest);
     }
 
     //Get All sensors tagged to a device
@@ -642,21 +775,26 @@ public class DeviceController {
      * @param device_id  device whose sensors are requested
      * @return the sensors associated with the device
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/{device_id}/getalldevicesensors")
-    public AllSensorsDTO getDeviceSensors(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
-                                          @PathVariable String device_id) {
+    @Operation(summary = "Get device sensors",
+            description = "Returns all sensors tagged to the given device.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Sensors returned"),
+            @ApiResponse(responseCode = "404", description = "Device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/docker/{dockername}/device/{device_id}/getalldevicesensors")
+    public AllSensorsDTO getDeviceSensors(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope the device to") @PathVariable String dockername,
+            @Parameter(description = "Device whose sensors are requested") @PathVariable String device_id) {
         log.info("getDeviceSensors username={} vdmsid={} dockername={} device_id={}", username, vdmsid, dockername, device_id);
-        try {
-            return deviceService.getDeviceSensors(username, vdmsid, dockername, device_id);
-        } catch (Exception e) {
-            log.error("getDeviceSensors failed username={} vdmsid={} dockername={} device_id={}: {}", username, vdmsid, dockername, device_id, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.getDeviceSensors(username, vdmsid, dockername, device_id);
     }
 
     //Get Parent Device by Pagination
 //	@RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/getparentdevicebypagination")
-//	public Set<DeviceDTO> getParentDeviceByPagination(@PathVariable String username, @PathVariable String vdmsid, 
+//	public Set<DeviceDTO> getParentDeviceByPagination(@PathVariable String username, @PathVariable String vdmsid,
 //			@RequestParam(defaultValue = "null") String searchKey, @RequestParam(defaultValue = "1") Integer pageno,
 //			@RequestParam(defaultValue = "10") Integer pagesize, @RequestBody Set<String> dockernames)
 //	{
@@ -676,17 +814,24 @@ public class DeviceController {
      * @param virtual_device_types virtual device types to filter by (default "all")
      * @return matching page of parent devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/getparentdevicebypagination")
-    public Page<DeviceDTO> getParentDeviceByPagination(@RequestParam String username, @RequestParam String vdmsid,
-                                                      @RequestParam(defaultValue = "null") String searchKey, @RequestParam(defaultValue = "1") Integer pageno,
-                                                      @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") Set<String> dockernames, @RequestParam(defaultValue = "all") Set<String> types, @RequestParam(defaultValue = "all") Set<String> virtual_device_types) {
+    @Operation(summary = "Get parent devices by pagination",
+            description = "Returns a paginated set of parent devices for the given VDMS, optionally filtered by docker, type and virtual device type.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Parent devices returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/getparentdevicebypagination")
+    public Page<DeviceDTO> getParentDeviceByPagination(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Search keyword to match against") @RequestParam(defaultValue = "null") String searchKey,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer pagesize,
+            @Parameter(description = "Docker names to filter by") @RequestParam(defaultValue = "all") Set<String> dockernames,
+            @Parameter(description = "Device types to filter by") @RequestParam(defaultValue = "all") Set<String> types,
+            @Parameter(description = "Virtual device types to filter by") @RequestParam(defaultValue = "all") Set<String> virtual_device_types) {
         log.info("getParentDeviceByPagination username={} vdmsid={}", username, vdmsid);
-        try {
-            return PageUtils.toPage(deviceService.getParentDeviceByPagination(username, vdmsid, searchKey, pageno, pagesize, dockernames, types, virtual_device_types), pageno, pagesize);
-        } catch (Exception e) {
-            log.error("getParentDeviceByPagination failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(deviceService.getParentDeviceByPagination(username, vdmsid, searchKey, pageno, pagesize, dockernames, types, virtual_device_types), pageno, pagesize);
     }
 
     //Get Parent Device by Id
@@ -700,16 +845,21 @@ public class DeviceController {
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @return set of resolved parent devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/getparentdevice")
-    public Set<DeviceDTO> getParentDeviceById(@RequestParam String username, @RequestParam String vdmsid,
-                                              @PathVariable String dockername, @RequestBody Set<DeviceDTO> parent_devices, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Get parent devices by id",
+            description = "Returns parent device details for the supplied parent devices.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Parent devices returned"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/getparentdevice")
+    public Set<DeviceDTO> getParentDeviceById(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @RequestBody Set<DeviceDTO> parent_devices, HttpServletRequest httpServletRequest) {
         log.info("getParentDeviceById username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return deviceService.getParentDeviceById(username, vdmsid, dockername, parent_devices, httpServletRequest);
-        } catch (Exception e) {
-            log.error("getParentDeviceById failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.getParentDeviceById(username, vdmsid, dockername, parent_devices, httpServletRequest);
     }
 
     //get subsystem parent device info
@@ -723,16 +873,22 @@ public class DeviceController {
      * @param parent_id  id of the subsystem parent device
      * @return the subsystem parent device details
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/device/{device_id}/parent/{parent_id}/getsubsystemparentdeviceinfo")
-    public DeviceDTO getSubsystemParentDeviceInfo(@RequestParam String username, @RequestParam String vdmsid,
-                                                  @PathVariable String dockername, @PathVariable String device_id, @PathVariable String parent_id) {
+    @Operation(summary = "Get subsystem parent device info",
+            description = "Returns information about the subsystem parent device for the given device.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Parent device info returned"),
+            @ApiResponse(responseCode = "404", description = "Device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/docker/{dockername}/device/{device_id}/parent/{parent_id}/getsubsystemparentdeviceinfo")
+    public DeviceDTO getSubsystemParentDeviceInfo(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope the device to") @PathVariable String dockername,
+            @Parameter(description = "Device whose subsystem parent is requested") @PathVariable String device_id,
+            @Parameter(description = "Id of the subsystem parent device") @PathVariable String parent_id) {
         log.info("getSubsystemParentDeviceInfo username={} vdmsid={} dockername={} device_id={} parent_id={}", username, vdmsid, dockername, device_id, parent_id);
-        try {
-            return deviceService.getSubsystemParentDeviceInfo(username, vdmsid, dockername, device_id, parent_id);
-        } catch (Exception e) {
-            log.error("getSubsystemParentDeviceInfo failed username={} vdmsid={} dockername={} device_id={} parent_id={}: {}", username, vdmsid, dockername, device_id, parent_id, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.getSubsystemParentDeviceInfo(username, vdmsid, dockername, device_id, parent_id);
     }
 
     //update device matched product info
@@ -745,16 +901,21 @@ public class DeviceController {
      * @param device             device payload carrying the matched product info
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/updatematcheddeviceproduct")
-    public void updateMatchedDeviceProduct(@RequestParam String username, @RequestParam String vdmsid,
-                                           @PathVariable String dockername, @RequestBody DeviceDTO device, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Update matched device product",
+            description = "Updates the matched product information for a device.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Matched product updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/updatematcheddeviceproduct")
+    public void updateMatchedDeviceProduct(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope the device to") @PathVariable String dockername,
+            @RequestBody DeviceDTO device, HttpServletRequest httpServletRequest) {
         log.info("updateMatchedDeviceProduct username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            deviceService.updateMatchedDeviceProduct(username, vdmsid, dockername, device, httpServletRequest);
-        } catch (Exception e) {
-            log.error("updateMatchedDeviceProduct failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.updateMatchedDeviceProduct(username, vdmsid, dockername, device, httpServletRequest);
     }
 
     //search device by specific column or all columns
@@ -770,18 +931,24 @@ public class DeviceController {
      * @param search_details map describing the search criteria
      * @return matching page of devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/searchdevices")
-    public Page<DeviceDTO> searchDevices(@RequestParam String username, @RequestParam String vdmsid,
-                                        @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
-                                        @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
-                                        @RequestBody Map<String, Object> search_details) {
+    @Operation(summary = "Search devices",
+            description = "Searches devices by a specific column or across all columns.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices returned"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/searchdevices")
+    public Page<DeviceDTO> searchDevices(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @Parameter(description = "Search condition to apply") @RequestParam(defaultValue = "all") String condition,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer pagesize,
+            @RequestBody Map<String, Object> search_details) {
         log.info("searchDevices username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return PageUtils.toPage(deviceSearchService.searchDevices(username, vdmsid, dockername, condition, pageno, pagesize, search_details), pageno, pagesize);
-        } catch (Exception e) {
-            log.error("searchDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(deviceSearchService.searchDevices(username, vdmsid, dockername, condition, pageno, pagesize, search_details), pageno, pagesize);
     }
 
     //sort device by specific column
@@ -797,18 +964,24 @@ public class DeviceController {
      * @param sort_details map describing the sort criteria
      * @return matching page of sorted devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/sortdevices")
-    public Page<DeviceDTO> sortDevices(@RequestParam String username, @RequestParam String vdmsid,
-                                      @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
-                                      @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
-                                      @RequestBody Map<String, Object> sort_details) {
+    @Operation(summary = "Sort devices",
+            description = "Sorts devices by a specific column.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices returned"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/sortdevices")
+    public Page<DeviceDTO> sortDevices(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @Parameter(description = "Sort condition to apply") @RequestParam(defaultValue = "all") String condition,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer pagesize,
+            @RequestBody Map<String, Object> sort_details) {
         log.info("sortDevices username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return PageUtils.toPage(deviceSearchService.sortDevices(username, vdmsid, dockername, condition, pageno, pagesize, sort_details), pageno, pagesize);
-        } catch (Exception e) {
-            log.error("sortDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(deviceSearchService.sortDevices(username, vdmsid, dockername, condition, pageno, pagesize, sort_details), pageno, pagesize);
     }
 
     //filter devices by specific or multiple columns
@@ -824,18 +997,24 @@ public class DeviceController {
      * @param filter_details list of maps describing the filter criteria
      * @return matching page of filtered devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/filterdevices")
-    public Page<DeviceDTO> filterDevices(@RequestParam String username, @RequestParam String vdmsid,
-                                        @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
-                                        @RequestParam(defaultValue = "1") Integer pageno,
-                                        @RequestParam(defaultValue = "10") Integer pagesize, @RequestBody List<Map<String, Object>> filter_details) {
+    @Operation(summary = "Filter devices",
+            description = "Filters devices by one or multiple columns.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices returned"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/filterdevices")
+    public Page<DeviceDTO> filterDevices(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @Parameter(description = "Filter condition to apply") @RequestParam(defaultValue = "all") String condition,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer pagesize,
+            @RequestBody List<Map<String, Object>> filter_details) {
         log.info("filterDevices username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return PageUtils.toPage(deviceSearchService.filterDevices(username, vdmsid, dockername, condition, pageno, pagesize, filter_details), pageno, pagesize);
-        } catch (Exception e) {
-            log.error("filterDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(deviceSearchService.filterDevices(username, vdmsid, dockername, condition, pageno, pagesize, filter_details), pageno, pagesize);
     }
 
     /**
@@ -849,16 +1028,23 @@ public class DeviceController {
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @param assignee           assignee scope for the operation (default "all")
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/archivedevices")
-    public void archiveDevices(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
-                               @RequestParam(defaultValue = "1") Integer archive, @RequestBody Set<String> deviceIds, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) {
-        log.info("archiveDevices username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            deviceService.archiveDevices(username, vdmsid, dockername, archive, deviceIds, httpServletRequest, assignee);
-        } catch (Exception e) {
-            log.error("archiveDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+    @Operation(summary = "Archive or unarchive devices",
+            description = "Archives or unarchives the given devices, depending on the archive flag.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices archived"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/archivedevices")
+    public void archiveDevices(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @Parameter(description = "Archive flag (1 to archive)") @RequestParam(defaultValue = "1") Integer archive,
+            @RequestBody Set<String> deviceIds, HttpServletRequest httpServletRequest,
+            @Parameter(description = "Assignee scope for the operation") @RequestParam(defaultValue = "all") String assignee) {
+        log.info("archiveDevices username={} vdmsid={} dockername={} archive={}", username, vdmsid, dockername, archive);
+        deviceService.archiveDevices(username, vdmsid, dockername, archive, deviceIds, httpServletRequest, assignee);
     }
 
     /**
@@ -870,16 +1056,21 @@ public class DeviceController {
      * @param custom_fields JSON object of custom field values to match
      * @return list of matching devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/getdeviceinfobycustomfields")
-    public List<DeviceDTO> getDeviceInfoByCustomFields(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
-                                                       @RequestBody com.alibaba.fastjson.JSONObject custom_fields) {
+    @Operation(summary = "Get devices by custom fields",
+            description = "Returns device information matching the supplied custom field values.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices returned"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/getdeviceinfobycustomfields")
+    public List<DeviceDTO> getDeviceInfoByCustomFields(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @RequestBody com.alibaba.fastjson.JSONObject custom_fields) {
         log.info("getDeviceInfoByCustomFields username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return deviceSearchService.getDeviceInfoByCustomFields(username, vdmsid, dockername, custom_fields);
-        } catch (Exception e) {
-            log.error("getDeviceInfoByCustomFields failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return deviceSearchService.getDeviceInfoByCustomFields(username, vdmsid, dockername, custom_fields);
     }
 
     //multiple keyword search sort filter
@@ -896,20 +1087,25 @@ public class DeviceController {
      * @param search_sort_filter_details JSON object describing the search/sort/filter criteria
      * @return matching page of devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/searchsortfilterdevices")
-    public Page<DeviceDTO> multipleKeywordSearchSortFilterDevices(@RequestParam String username, @RequestParam String vdmsid,
-                                                                 @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
-                                                                 @RequestParam(defaultValue = "1") Integer pageno,
-                                                                 @RequestParam(defaultValue = "10") Integer pagesize,
-                                                                 @RequestParam(defaultValue = "123") Integer onboard_status,
-                                                                 @RequestBody com.alibaba.fastjson.JSONObject search_sort_filter_details) {
+    @Operation(summary = "Search, sort and filter devices",
+            description = "Returns devices matching a combined multi-keyword search, sort and filter request.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices returned"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/searchsortfilterdevices")
+    public Page<DeviceDTO> multipleKeywordSearchSortFilterDevices(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @Parameter(description = "Condition to apply") @RequestParam(defaultValue = "all") String condition,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer pagesize,
+            @Parameter(description = "Onboard status to filter by") @RequestParam(defaultValue = "123") Integer onboard_status,
+            @RequestBody com.alibaba.fastjson.JSONObject search_sort_filter_details) {
         log.info("multipleKeywordSearchSortFilterDevices username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return PageUtils.toPage(deviceSearchService.multipleKeywordSearchSortFilterDevices(username, vdmsid, dockername, condition, pageno, pagesize, search_sort_filter_details, onboard_status), pageno, pagesize);
-        } catch (Exception e) {
-            log.error("multipleKeywordSearchSortFilterDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(deviceSearchService.multipleKeywordSearchSortFilterDevices(username, vdmsid, dockername, condition, pageno, pagesize, search_sort_filter_details, onboard_status), pageno, pagesize);
     }
 
     //return count of search sort filter result
@@ -924,19 +1120,24 @@ public class DeviceController {
      * @param search_sort_filter_details JSON object describing the search/sort/filter criteria
      * @return count of matching devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/searchsortfilterdevicescount")
-    public String multipleKeywordSearchSortFilterDevicesCount(@RequestParam String username, @RequestParam String vdmsid,
-                                                              @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
-                                                              @RequestParam(defaultValue = "123") Integer onboard_status,
-                                                              @RequestBody com.alibaba.fastjson.JSONObject search_sort_filter_details) {
+    @Operation(summary = "Count search/sort/filter devices",
+            description = "Returns the count of devices matching a multi-keyword search, sort and filter request.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Count returned"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/searchsortfilterdevicescount")
+    public String multipleKeywordSearchSortFilterDevicesCount(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @Parameter(description = "Condition to apply") @RequestParam(defaultValue = "all") String condition,
+            @Parameter(description = "Onboard status to filter by") @RequestParam(defaultValue = "123") Integer onboard_status,
+            @RequestBody com.alibaba.fastjson.JSONObject search_sort_filter_details) {
         log.info("multipleKeywordSearchSortFilterDevicesCount username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return deviceSearchService.multipleKeywordSearchSortFilterDevicesCount(username, vdmsid, dockername, condition,
-                    search_sort_filter_details, onboard_status);
-        } catch (Exception e) {
-            log.error("multipleKeywordSearchSortFilterDevicesCount failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return deviceSearchService.multipleKeywordSearchSortFilterDevicesCount(username, vdmsid, dockername, condition,
+                search_sort_filter_details, onboard_status);
     }
 
     /**
@@ -946,15 +1147,18 @@ public class DeviceController {
      * @param network_name network whose assigned users are requested
      * @return list of unique assigned-user email addresses
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/device/network/{network_name}/getassignedemail")
-    public List<String> getUniqueAssignedUser(@RequestParam String vdms_id, @PathVariable String network_name) {
+    @Operation(summary = "Get assigned-user emails by network",
+            description = "Returns the distinct assigned-user emails for devices on the given network.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Emails returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/device/network/{network_name}/getassignedemail")
+    public List<String> getUniqueAssignedUser(
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdms_id,
+            @Parameter(description = "Network whose assigned users are requested") @PathVariable String network_name) {
         log.info("getUniqueAssignedUser vdms_id={} network_name={}", vdms_id, network_name);
-        try {
-            return deviceMonitorService.getUniqueAssignedUserEmail(vdms_id, network_name);
-        } catch (Exception e) {
-            log.error("getUniqueAssignedUser failed vdms_id={} network_name={}: {}", vdms_id, network_name, e.getMessage(), e);
-            throw e;
-        }
+        return deviceMonitorService.getUniqueAssignedUserEmail(vdms_id, network_name);
     }
 
     //Device Alert Message
@@ -966,20 +1170,24 @@ public class DeviceController {
      * @param dockername docker (gateway) name to scope devices to
      * @return list of alert condition messages
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/docker/{dockername}/getalertmessages")
-    public List<ConditionsDTO> getDeviceAlertMessages(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername) {
+    @Operation(summary = "Get device alert messages",
+            description = "Returns the device alert messages (conditions) for the given VDMS and docker.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Alert messages returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/docker/{dockername}/getalertmessages")
+    public List<ConditionsDTO> getDeviceAlertMessages(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername) {
         log.info("getDeviceAlertMessages username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return deviceService.getDeviceAlertMessages(username, vdmsid, dockername);
-        } catch (Exception e) {
-            log.error("getDeviceAlertMessages failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.getDeviceAlertMessages(username, vdmsid, dockername);
     }
 
     //search Parent devices by specific column or all columns
 //	@RequestMapping(method = RequestMethod.POST, value = "/user/{username}/vdms/{vdmsid}/docker/{dockername}/searchparentdevices")
-//	public Set<DeviceDTO> searchParentDevices(@PathVariable String username, @PathVariable String vdmsid, 
+//	public Set<DeviceDTO> searchParentDevices(@PathVariable String username, @PathVariable String vdmsid,
 //	@RequestParam(defaultValue = "null") String searchKey, @RequestParam(defaultValue = "1") Integer pageno,
 //	@RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") Set<String> dockernames,
 //	@RequestParam(defaultValue = "all") Set<String> types, @RequestBody Map<String, Object> search_details)
@@ -996,24 +1204,42 @@ public class DeviceController {
      * @param asset_images       optional asset image files to upsert
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/upsertassetimages")
-    public void upsertAssetImages(@RequestParam String username, @RequestParam String vdms_id,
-                                  @RequestParam List<String> device_ids, @RequestParam(value = "images", required = false) List<MultipartFile> asset_images, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Upsert asset images",
+            description = "Creates or updates asset images for the given devices.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Asset images upserted"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/upsertassetimages")
+    public void upsertAssetImages(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdms_id,
+            @Parameter(description = "Ids of the devices the images belong to") @RequestParam List<String> device_ids,
+            @Parameter(description = "Optional asset image files to upsert") @RequestParam(value = "images", required = false) List<MultipartFile> asset_images, HttpServletRequest httpServletRequest) {
         log.info("upsertAssetImages username={} vdms_id={}", username, vdms_id);
-        try {
-            deviceService.upsertAssetImages(username, vdms_id, device_ids, asset_images, httpServletRequest);
-        } catch (Exception e) {
-            log.error("upsertAssetImages failed username={} vdms_id={}: {}", username, vdms_id, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.upsertAssetImages(username, vdms_id, device_ids, asset_images, httpServletRequest);
     }
 
     /**
      * Sets a device's asset image to the given value (data URL or hosted URL), persisting it so it
-     * survives a page reload. Body: { "image": "data:image/png;base64,..." }.
+     * survives a page reload.
+     *
+     * @param device_id device whose asset image is set
+     * @param body      request body carrying the image value under the "image" key
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/device/{device_id}/setassetimage")
-    public void setAssetImage(@PathVariable String device_id, @RequestBody java.util.Map<String, String> body) {
+    @Operation(summary = "Set a device asset image",
+            description = "Sets a device's asset image to the given value (data URL or hosted URL) so it survives a page reload.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Asset image set"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/device/{device_id}/setassetimage")
+    public void setAssetImage(
+            @Parameter(description = "Device whose asset image is set") @PathVariable String device_id,
+            @RequestBody java.util.Map<String, String> body) {
+        log.info("setAssetImage device_id={}", device_id);
         deviceService.setAssetImage(device_id, body != null ? body.get("image") : null);
     }
 
@@ -1025,16 +1251,20 @@ public class DeviceController {
      * @param deviceDTOS         devices whose asset images should be deleted
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-@RequestMapping(method = RequestMethod.DELETE, value = "/deleteassetimages")
-    public void deleteAssetImages(@RequestParam String username, @RequestParam String vdms_id, @RequestBody List<DeviceDTO> deviceDTOS, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Delete asset images",
+            description = "Deletes asset images for the given devices.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Asset images deleted"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @DeleteMapping("/deleteassetimages")
+    public void deleteAssetImages(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdms_id,
+            @RequestBody List<DeviceDTO> deviceDTOS, HttpServletRequest httpServletRequest) {
         log.info("deleteAssetImages username={} vdms_id={}", username, vdms_id);
-        try {
-            System.out.println("heere");
-            deviceService.deleteAssetImages(username, vdms_id, deviceDTOS, httpServletRequest);
-        } catch (Exception e) {
-            log.error("deleteAssetImages failed username={} vdms_id={}: {}", username, vdms_id, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.deleteAssetImages(username, vdms_id, deviceDTOS, httpServletRequest);
     }
 
     /**
@@ -1046,15 +1276,21 @@ public class DeviceController {
      * @param category           image category to delete
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/deletedeviceimages")
-    public void deleteDeviceImages(@RequestParam String username, @RequestParam String vdms_id, @RequestBody List<DeviceDTO> deviceDTOS, @RequestParam String category, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Delete device images by category",
+            description = "Deletes device images of a given category for the supplied devices.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Device images deleted"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @DeleteMapping("/deletedeviceimages")
+    public void deleteDeviceImages(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdms_id,
+            @RequestBody List<DeviceDTO> deviceDTOS,
+            @Parameter(description = "Image category to delete") @RequestParam String category, HttpServletRequest httpServletRequest) {
         log.info("deleteDeviceImages username={} vdms_id={} category={}", username, vdms_id, category);
-        try {
-            deviceService.deleteDeviceImages(username, vdms_id, deviceDTOS, category,httpServletRequest);
-        } catch (Exception e) {
-            log.error("deleteDeviceImages failed username={} vdms_id={} category={}: {}", username, vdms_id, category, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.deleteDeviceImages(username, vdms_id, deviceDTOS, category,httpServletRequest);
     }
 
     /**
@@ -1065,15 +1301,20 @@ public class DeviceController {
      * @param device_id device whose asset image URLs are requested
      * @return serialized asset image URLs
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/device/{device_id}/getassetimages")
-    public String getAssetImageUrls(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String device_id) {
+    @Operation(summary = "Get asset image URLs",
+            description = "Returns the asset image URLs for the given device.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Asset image URLs returned"),
+            @ApiResponse(responseCode = "404", description = "Device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/device/{device_id}/getassetimages")
+    public String getAssetImageUrls(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdms_id,
+            @Parameter(description = "Device whose asset image URLs are requested") @PathVariable String device_id) {
         log.info("getAssetImageUrls username={} vdms_id={} device_id={}", username, vdms_id, device_id);
-        try {
-            return deviceService.getAssetImageUrls(username, vdms_id, device_id);
-        } catch (Exception e) {
-            log.error("getAssetImageUrls failed username={} vdms_id={} device_id={}: {}", username, vdms_id, device_id, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.getAssetImageUrls(username, vdms_id, device_id);
     }
 
     /**
@@ -1084,15 +1325,20 @@ public class DeviceController {
      * @param device_id device whose categorized asset image URLs are requested
      * @return serialized asset image URLs by category
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/device/{device_id}/getallassetimages")
-    public String getAssetImageUrlsByCategory(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String device_id) {
+    @Operation(summary = "Get asset image URLs by category",
+            description = "Returns the asset image URLs for the given device grouped by category.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Asset image URLs returned"),
+            @ApiResponse(responseCode = "404", description = "Device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/device/{device_id}/getallassetimages")
+    public String getAssetImageUrlsByCategory(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdms_id,
+            @Parameter(description = "Device whose categorized asset image URLs are requested") @PathVariable String device_id) {
         log.info("getAssetImageUrlsByCategory username={} vdms_id={} device_id={}", username, vdms_id, device_id);
-        try {
-            return deviceService.getAssetImageUrlsCategory(username, vdms_id, device_id);
-        } catch (Exception e) {
-            log.error("getAssetImageUrlsByCategory failed username={} vdms_id={} device_id={}: {}", username, vdms_id, device_id, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.getAssetImageUrlsCategory(username, vdms_id, device_id);
     }
 
     /**
@@ -1107,18 +1353,24 @@ public class DeviceController {
      * @param filterObject JSON object describing additional filters
      * @return matching page of devices
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/group/{group}/getalldevicespagination")
-    public Page<DeviceDTO> getAllDevicesPagination(@RequestParam String username, @RequestParam String vdmsid,
-                                                  @PathVariable String group, @RequestParam(defaultValue = "null") String searchkey,
-                                                  @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize,
-                                                  @RequestBody JSONObject filterObject) {
+    @Operation(summary = "Get all devices in a group",
+            description = "Returns a paginated set of all devices in a group, optionally filtered.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices returned"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/group/{group}/getalldevicespagination")
+    public Page<DeviceDTO> getAllDevicesPagination(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Group whose devices are listed") @PathVariable String group,
+            @Parameter(description = "Search keyword to match against") @RequestParam(defaultValue = "null") String searchkey,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer pagesize,
+            @RequestBody JSONObject filterObject) {
         log.info("getAllDevicesPagination username={} vdmsid={} group={}", username, vdmsid, group);
-        try {
-            return PageUtils.toPage(deviceService.getAllDevicesPagination(username, vdmsid, group, searchkey, pageno, pagesize, filterObject), pageno, pagesize);
-        } catch (Exception e) {
-            log.error("getAllDevicesPagination failed username={} vdmsid={} group={}: {}", username, vdmsid, group, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(deviceService.getAllDevicesPagination(username, vdmsid, group, searchkey, pageno, pagesize, filterObject), pageno, pagesize);
     }
 
 
@@ -1135,16 +1387,24 @@ public class DeviceController {
      * @param virtual_device_types virtual device types to filter by (default "all")
      * @return matching page of virtual devices
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/getfiltervirtualdevicesbypagination")
-    public Page<DeviceDTO> getFilterVirtualDevicesByPagination(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "null") String searchKey,
-                                                              @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize, @RequestParam(defaultValue = "all") Set<String> dockernames, @RequestParam(defaultValue = "all") Set<String> types, @RequestParam(defaultValue = "all") Set<String> virtual_device_types) {
+    @Operation(summary = "Get filtered virtual devices by pagination",
+            description = "Returns a paginated, filtered set of virtual devices for the given VDMS.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Virtual devices returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/getfiltervirtualdevicesbypagination")
+    public Page<DeviceDTO> getFilterVirtualDevicesByPagination(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Search keyword to match against") @RequestParam(defaultValue = "null") String searchKey,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer pagesize,
+            @Parameter(description = "Docker names to filter by") @RequestParam(defaultValue = "all") Set<String> dockernames,
+            @Parameter(description = "Device types to filter by") @RequestParam(defaultValue = "all") Set<String> types,
+            @Parameter(description = "Virtual device types to filter by") @RequestParam(defaultValue = "all") Set<String> virtual_device_types) {
         log.info("getFilterVirtualDevicesByPagination username={} vdmsid={}", username, vdmsid);
-        try {
-            return PageUtils.toPage(deviceService.getFilterVirtualDevicesByPagination(username, vdmsid, searchKey, pageno, pagesize, dockernames, types, virtual_device_types), pageno, pagesize);
-        } catch (Exception e) {
-            log.error("getFilterVirtualDevicesByPagination failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(deviceService.getFilterVirtualDevicesByPagination(username, vdmsid, searchKey, pageno, pagesize, dockernames, types, virtual_device_types), pageno, pagesize);
     }
 
     /**
@@ -1154,15 +1414,18 @@ public class DeviceController {
      * @param vdmsid   owning VDMS id
      * @return count of power-source topology connections
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/getpowersourcetopologyconnectionscount")
-    public Integer getPowerSourceTopologyConnectionsCount(@RequestParam String username, @RequestParam String vdmsid) {
+    @Operation(summary = "Count power-source topology connections",
+            description = "Returns the number of power-source topology connections for the given VDMS.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Count returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/getpowersourcetopologyconnectionscount")
+    public Integer getPowerSourceTopologyConnectionsCount(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid) {
         log.info("getPowerSourceTopologyConnectionsCount username={} vdmsid={}", username, vdmsid);
-        try {
-            return deviceService.getPowerSourceTopologyConnectionsCount(username, vdmsid);
-        } catch (Exception e) {
-            log.error("getPowerSourceTopologyConnectionsCount failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.getPowerSourceTopologyConnectionsCount(username, vdmsid);
     }
 
     /**
@@ -1174,16 +1437,20 @@ public class DeviceController {
      * @param pagesize number of entries per page (default 10)
      * @return the requested page of the power-source topology
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/getpowersourcetopologybypagination")
-    public PowerSourceTopologyDTO getPowerSourceTopologyByPagination(@RequestParam String username, @RequestParam String vdmsid,
-                                                                     @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize) {
+    @Operation(summary = "Get power-source topology by pagination",
+            description = "Returns a paginated view of the power-source topology for the given VDMS.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Topology page returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/getpowersourcetopologybypagination")
+    public PowerSourceTopologyDTO getPowerSourceTopologyByPagination(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Number of entries per page") @RequestParam(defaultValue = "10") Integer pagesize) {
         log.info("getPowerSourceTopologyByPagination username={} vdmsid={}", username, vdmsid);
-        try {
-            return deviceService.getPowerSourceTopologyByPagination(username, vdmsid, pageno, pagesize);
-        } catch (Exception e) {
-            log.error("getPowerSourceTopologyByPagination failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.getPowerSourceTopologyByPagination(username, vdmsid, pageno, pagesize);
     }
 
     /**
@@ -1196,16 +1463,21 @@ public class DeviceController {
      * @param pagesize    number of devices per page (default 10)
      * @return matching page of devices at the location
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/location/{location_id}/getdevicesbylocationid")
-    public Page<DeviceDTO> getAssetsByLocationId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String location_id,
-                                                @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "10") Integer pagesize) {
+    @Operation(summary = "Get assets by location",
+            description = "Returns a paginated set of assets (devices) at the given location.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Devices returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/location/{location_id}/getdevicesbylocationid")
+    public Page<DeviceDTO> getAssetsByLocationId(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Location whose devices are requested") @PathVariable String location_id,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer pagesize) {
         log.info("getAssetsByLocationId username={} vdmsid={} location_id={}", username, vdmsid, location_id);
-        try {
-            return PageUtils.toPage(deviceService.getAssetsByLocationId(username, vdmsid, location_id, pageno, pagesize), pageno, pagesize);
-        } catch (Exception e) {
-            log.error("getAssetsByLocationId failed username={} vdmsid={} location_id={}: {}", username, vdmsid, location_id, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(deviceService.getAssetsByLocationId(username, vdmsid, location_id, pageno, pagesize), pageno, pagesize);
     }
 
     /**
@@ -1216,17 +1488,20 @@ public class DeviceController {
      * @param deviceid device whose reboot status is requested
      * @return the device reboot status
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/device/{deviceid}/getdevicerebootstatus")
-    public String getDeviceRebootStatus(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String deviceid) {
+    @Operation(summary = "Get device reboot status",
+            description = "Returns the reboot status of the given device.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Reboot status returned"),
+            @ApiResponse(responseCode = "404", description = "Device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/device/{deviceid}/getdevicerebootstatus")
+    public String getDeviceRebootStatus(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Device whose reboot status is requested") @PathVariable String deviceid) {
         log.info("getDeviceRebootStatus username={} vdmsid={} deviceid={}", username, vdmsid, deviceid);
-        try {
-
-            return deviceService.getDeviceRebootStatus(username, vdmsid, deviceid);
-
-        } catch (Exception e) {
-            log.error("getDeviceRebootStatus failed username={} vdmsid={} deviceid={}: {}", username, vdmsid, deviceid, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.getDeviceRebootStatus(username, vdmsid, deviceid);
     }
 
     /**
@@ -1238,16 +1513,21 @@ public class DeviceController {
      * @param asset_ocr_images   optional asset OCR image files to upsert
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/upsertassetocrimages")
-    public void upsertAssetOcrImages(@RequestParam String username, @RequestParam String vdms_id,
-                                     @RequestParam List<String> device_ids, @RequestParam(value = "images", required = false) List<MultipartFile> asset_ocr_images, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Upsert asset OCR images",
+            description = "Creates or updates asset OCR images for the given devices.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Asset OCR images upserted"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/upsertassetocrimages")
+    public void upsertAssetOcrImages(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdms_id,
+            @Parameter(description = "Ids of the devices the OCR images belong to") @RequestParam List<String> device_ids,
+            @Parameter(description = "Optional asset OCR image files to upsert") @RequestParam(value = "images", required = false) List<MultipartFile> asset_ocr_images, HttpServletRequest httpServletRequest) {
         log.info("upsertAssetOcrImages username={} vdms_id={}", username, vdms_id);
-        try {
-            deviceService.upsertAssetOcrImages(username, vdms_id, device_ids, asset_ocr_images, httpServletRequest);
-        } catch (Exception e) {
-            log.error("upsertAssetOcrImages failed username={} vdms_id={}: {}", username, vdms_id, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.upsertAssetOcrImages(username, vdms_id, device_ids, asset_ocr_images, httpServletRequest);
     }
 
     /**
@@ -1258,16 +1538,20 @@ public class DeviceController {
      * @param deviceDTOS         devices whose asset OCR images should be deleted
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/deleteassetocrimages")
-    public void deleteAssetOcrImages(@RequestParam String username, @RequestParam String vdms_id, @RequestBody List<DeviceDTO> deviceDTOS, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Delete asset OCR images",
+            description = "Deletes asset OCR images for the given devices.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Asset OCR images deleted"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @DeleteMapping("/deleteassetocrimages")
+    public void deleteAssetOcrImages(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdms_id,
+            @RequestBody List<DeviceDTO> deviceDTOS, HttpServletRequest httpServletRequest) {
         log.info("deleteAssetOcrImages username={} vdms_id={}", username, vdms_id);
-        try {
-            System.out.println("heere");
-            deviceService.deleteAssetOcrImages(username, vdms_id, deviceDTOS, httpServletRequest);
-        } catch (Exception e) {
-            log.error("deleteAssetOcrImages failed username={} vdms_id={}: {}", username, vdms_id, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.deleteAssetOcrImages(username, vdms_id, deviceDTOS, httpServletRequest);
     }
 
 
@@ -1279,15 +1563,20 @@ public class DeviceController {
      * @param device_id device whose asset OCR image URLs are requested
      * @return serialized asset OCR image URLs
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/device/{device_id}/getassetocrimages")
-    public String getAssetOcrImageUrls(@RequestParam String username, @RequestParam String vdms_id, @PathVariable String device_id) {
+    @Operation(summary = "Get asset OCR image URLs",
+            description = "Returns the asset OCR image URLs for the given device.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Asset OCR image URLs returned"),
+            @ApiResponse(responseCode = "404", description = "Device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/device/{device_id}/getassetocrimages")
+    public String getAssetOcrImageUrls(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdms_id,
+            @Parameter(description = "Device whose asset OCR image URLs are requested") @PathVariable String device_id) {
         log.info("getAssetOcrImageUrls username={} vdms_id={} device_id={}", username, vdms_id, device_id);
-        try {
-            return deviceService.getAssetOcrImageUrls(username, vdms_id, device_id);
-        } catch (Exception e) {
-            log.error("getAssetOcrImageUrls failed username={} vdms_id={} device_id={}: {}", username, vdms_id, device_id, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.getAssetOcrImageUrls(username, vdms_id, device_id);
     }
 
 
@@ -1301,16 +1590,21 @@ public class DeviceController {
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @return the created device
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/adddevice")
-    public DeviceDTO addDevice(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
-                               @RequestBody DeviceDTO deviceDto, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Add a device",
+            description = "Adds a single device to the given VDMS and docker.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Device created"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/adddevice")
+    public DeviceDTO addDevice(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope the device to") @PathVariable String dockername,
+            @RequestBody DeviceDTO deviceDto, HttpServletRequest httpServletRequest) {
         log.info("addDevice username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return deviceService.addDevice(username, vdmsid, dockername, deviceDto, httpServletRequest);
-        } catch (Exception e) {
-            log.error("addDevice failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.addDevice(username, vdmsid, dockername, deviceDto, httpServletRequest);
     }
 
     /**
@@ -1329,56 +1623,86 @@ public class DeviceController {
      * @param httpServletRequest         current request, used to resolve tenant/VDMS context
      * @throws IOException if writing the export or downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/exportfiltereddevices")
-    public void exportFilteredDevices(HttpServletResponse response, @RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
-                                      @RequestParam(defaultValue = "all") String condition, @RequestParam(defaultValue = "123") Integer onboard_status,
-                                      @RequestParam(defaultValue = "simple_report") String template_name, @RequestParam(defaultValue = "excel") String file_type,
-                                      @RequestBody com.alibaba.fastjson.JSONObject search_sort_filter_details, @RequestParam(defaultValue = "") String email, HttpServletRequest httpServletRequest) throws IOException {
+    @Operation(summary = "Export filtered devices",
+            description = "Exports the filtered devices as a report file (e.g. Excel) to the response stream, optionally emailing the result.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Export written"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/exportfiltereddevices")
+    public void exportFilteredDevices(HttpServletResponse response,
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @Parameter(description = "Condition to apply") @RequestParam(defaultValue = "all") String condition,
+            @Parameter(description = "Onboard status to filter by") @RequestParam(defaultValue = "123") Integer onboard_status,
+            @Parameter(description = "Report template to use") @RequestParam(defaultValue = "simple_report") String template_name,
+            @Parameter(description = "Output file type") @RequestParam(defaultValue = "excel") String file_type,
+            @RequestBody com.alibaba.fastjson.JSONObject search_sort_filter_details,
+            @Parameter(description = "Optional email to send the export to") @RequestParam(defaultValue = "") String email, HttpServletRequest httpServletRequest) throws IOException {
         log.info("exportFilteredDevices username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            deviceService.exportFilteredDevices(response, username, vdmsid, dockername, condition, search_sort_filter_details, onboard_status,
-                    template_name, email, httpServletRequest, file_type);
-
-        } catch (Exception e) {
-            log.error("exportFilteredDevices failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.exportFilteredDevices(response, username, vdmsid, dockername, condition, search_sort_filter_details, onboard_status,
+                template_name, email, httpServletRequest, file_type);
     }
 
     /**
      * Imports assets from an uploaded .xlsx (the same column layout produced by exportfiltereddevices),
      * upserting by id. Returns {created, updated, failed, errors}.
+     *
+     * @param username   owning user
+     * @param vdmsid     owning VDMS id
+     * @param dockername docker (gateway) name to scope devices to
+     * @param file       uploaded .xlsx file to import
+     * @return map describing the import result (created, updated, failed, errors)
+     * @throws java.io.IOException if reading the uploaded file fails
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/importassets")
-    public java.util.Map<String, Object> importAssets(@RequestParam String username, @RequestParam String vdmsid,
-                                                      @PathVariable String dockername, @RequestParam("file") org.springframework.web.multipart.MultipartFile file) throws java.io.IOException {
+    @Operation(summary = "Import assets from Excel",
+            description = "Imports assets from an uploaded .xlsx (the column layout produced by exportfiltereddevices), upserting by id and returning created/updated/failed/errors.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Assets imported"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/importassets")
+    public java.util.Map<String, Object> importAssets(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @Parameter(description = "Uploaded .xlsx file to import") @RequestParam("file") org.springframework.web.multipart.MultipartFile file) throws java.io.IOException {
         log.info("importAssets username={} vdmsid={} dockername={} filename={}", username, vdmsid, dockername,
                 file != null ? file.getOriginalFilename() : null);
-        try {
-            return deviceService.importAssetsFromExcel(file, vdmsid, dockername);
-        } catch (Exception e) {
-            log.error("importAssets failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.importAssetsFromExcel(file, vdmsid, dockername);
     }
 
     /**
-     * Applies one set of field changes to many assets at once. Body: {ids:[...], changes:{...}}.
+     * Applies one set of field changes to many assets at once.
+     *
+     * @param username   owning user
+     * @param vdmsid     owning VDMS id
+     * @param dockername docker (gateway) name to scope devices to
+     * @param body       request body carrying the ids and changes (e.g. {ids:[...], changes:{...}})
+     * @return map describing the result of the bulk update
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/multiupdateassets")
-    public java.util.Map<String, Object> multiUpdateAssets(@RequestParam String username, @RequestParam String vdmsid,
-                                                           @PathVariable String dockername, @RequestBody java.util.Map<String, Object> body) {
+    @Operation(summary = "Multi-update assets",
+            description = "Applies one set of field changes to many assets at once.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Assets updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/multiupdateassets")
+    public java.util.Map<String, Object> multiUpdateAssets(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @RequestBody java.util.Map<String, Object> body) {
         log.info("multiUpdateAssets username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            @SuppressWarnings("unchecked")
-            java.util.List<String> ids = (java.util.List<String>) body.get("ids");
-            @SuppressWarnings("unchecked")
-            java.util.Map<String, Object> changes = (java.util.Map<String, Object>) body.get("changes");
-            return deviceService.multiUpdateAssets(ids, changes);
-        } catch (Exception e) {
-            log.error("multiUpdateAssets failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        @SuppressWarnings("unchecked")
+        java.util.List<String> ids = (java.util.List<String>) body.get("ids");
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> changes = (java.util.Map<String, Object>) body.get("changes");
+        return deviceService.multiUpdateAssets(ids, changes);
     }
 
     /**
@@ -1386,15 +1710,17 @@ public class DeviceController {
      *
      * @param vdmsid owning VDMS id
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/syncdeviceonboardstatus")
-    public void syncDeviceOnboardStatus(@RequestParam String vdmsid) {
+    @Operation(summary = "Sync onboard status for all devices",
+            description = "Syncs the onboard status of all devices in the given VDMS.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Onboard status synced"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/syncdeviceonboardstatus")
+    public void syncDeviceOnboardStatus(
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid) {
         log.info("syncDeviceOnboardStatus vdmsid={}", vdmsid);
-        try {
-            deviceService.syncDeviceOnboardStatus(vdmsid);
-        } catch (Exception e) {
-            log.error("syncDeviceOnboardStatus failed vdmsid={}: {}", vdmsid, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.syncDeviceOnboardStatus(vdmsid);
     }
 
     /**
@@ -1403,15 +1729,18 @@ public class DeviceController {
      * @param vdmsid    owning VDMS id
      * @param device_id device whose onboard status is synced
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/device/{device_id}/syncsingledeviceonboardstatus")
-    public void syncSingleDeviceOnboardStatus(@RequestParam String vdmsid, @PathVariable String device_id) {
+    @Operation(summary = "Sync onboard status for a device",
+            description = "Syncs the onboard status of a single device in the given VDMS.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Onboard status synced"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/device/{device_id}/syncsingledeviceonboardstatus")
+    public void syncSingleDeviceOnboardStatus(
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Device whose onboard status is synced") @PathVariable String device_id) {
         log.info("syncSingleDeviceOnboardStatus vdmsid={} device_id={}", vdmsid, device_id);
-        try {
-            deviceService.syncSingleDeviceOnboardStatus(vdmsid, device_id);
-        } catch (Exception e) {
-            log.error("syncSingleDeviceOnboardStatus failed vdmsid={} device_id={}: {}", vdmsid, device_id, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.syncSingleDeviceOnboardStatus(vdmsid, device_id);
     }
 
     /**
@@ -1425,16 +1754,22 @@ public class DeviceController {
      * @param assignee           assignee to associate with the device (default "all")
      * @return the updated device
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/updateassetmatchdetails")
-    public DeviceDTO updateAssetMatchDetails(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String dockername,
-                                             @RequestBody JSONObject deviceObject, HttpServletRequest httpServletRequest, @RequestParam(defaultValue = "all") String assignee) {
+    @Operation(summary = "Update asset match details",
+            description = "Updates the asset match details for a device.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Asset match details updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/updateassetmatchdetails")
+    public DeviceDTO updateAssetMatchDetails(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope the device to") @PathVariable String dockername,
+            @RequestBody JSONObject deviceObject, HttpServletRequest httpServletRequest,
+            @Parameter(description = "Assignee to associate with the device") @RequestParam(defaultValue = "all") String assignee) {
         log.info("updateAssetMatchDetails username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            return deviceService.updateAssetMatchDetails(username, vdmsid, dockername, deviceObject, httpServletRequest, assignee);
-        } catch (Exception e) {
-            log.error("updateAssetMatchDetails failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.updateAssetMatchDetails(username, vdmsid, dockername, deviceObject, httpServletRequest, assignee);
     }
 
     /**
@@ -1445,15 +1780,20 @@ public class DeviceController {
      * @param filterObject       payload describing the digital twin instruments to upsert
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/upsertdigitaltwininstruments")
-    public void upsertDigitalTwin(@RequestParam String username, @RequestParam String vdmsid, @RequestBody TagDeviceOrLocationDTO filterObject, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Upsert digital twin instruments",
+            description = "Creates or updates digital twin instruments for the given VDMS.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Digital twin instruments upserted"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/upsertdigitaltwininstruments")
+    public void upsertDigitalTwin(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @RequestBody TagDeviceOrLocationDTO filterObject, HttpServletRequest httpServletRequest) {
         log.info("upsertDigitalTwin username={} vdmsid={}", username, vdmsid);
-        try {
-            deviceService.upsertDigitalTwin(username, vdmsid, filterObject, httpServletRequest);
-        } catch (Exception e) {
-            log.error("upsertDigitalTwin failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.upsertDigitalTwin(username, vdmsid, filterObject, httpServletRequest);
     }
 
     /**
@@ -1464,15 +1804,20 @@ public class DeviceController {
      * @param device_id          device whose digital twin should be deleted
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/device_id/{device_id}/deletedigitaltwin")
-    public void deleteDigitalTwin(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String device_id, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Delete a digital twin",
+            description = "Deletes the digital twin associated with the given device.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Digital twin deleted"),
+            @ApiResponse(responseCode = "404", description = "Device not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @DeleteMapping("/device_id/{device_id}/deletedigitaltwin")
+    public void deleteDigitalTwin(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Device whose digital twin should be deleted") @PathVariable String device_id, HttpServletRequest httpServletRequest) {
         log.info("deleteDigitalTwin username={} vdmsid={} device_id={}", username, vdmsid, device_id);
-        try {
-            deviceService.deleteDigitalTwin(username, vdmsid, device_id, httpServletRequest);
-        } catch (Exception e) {
-            log.error("deleteDigitalTwin failed username={} vdmsid={} device_id={}: {}", username, vdmsid, device_id, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.deleteDigitalTwin(username, vdmsid, device_id, httpServletRequest);
     }
 
 
@@ -1486,17 +1831,22 @@ public class DeviceController {
      * @param image              optional image file to associate
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/multieditdigitaltwininstruments")
-    public void multiEditDigitalTwin(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(required = true) String data,
-                                     @RequestParam(required = false) String image_url,
-                                     @RequestParam(required = false) MultipartFile image, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Multi-edit digital twin instruments",
+            description = "Applies a bulk edit to digital twin instruments, optionally with an image.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Digital twin instruments updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/multieditdigitaltwininstruments")
+    public void multiEditDigitalTwin(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Serialized digital twin edit data") @RequestParam(required = true) String data,
+            @Parameter(description = "Optional image URL to associate") @RequestParam(required = false) String image_url,
+            @Parameter(description = "Optional image file to associate") @RequestParam(required = false) MultipartFile image, HttpServletRequest httpServletRequest) {
         log.info("multiEditDigitalTwin username={} vdmsid={}", username, vdmsid);
-        try {
-            deviceService.multiEditDigitalTwin(username, vdmsid, data, image_url, image, httpServletRequest);
-        } catch (Exception e) {
-            log.error("multiEditDigitalTwin failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.multiEditDigitalTwin(username, vdmsid, data, image_url, image, httpServletRequest);
     }
 
     /**
@@ -1513,20 +1863,25 @@ public class DeviceController {
      * @param search_sort_filter_details JSON object describing the search/sort/filter criteria
      * @throws IOException if writing the export or downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{dockername}/exportfilteredmeasuringinstrument")
-    public void exportFilteredMeasuringInstrument(HttpServletResponse response, @RequestParam String username, @RequestParam String vdmsid,
-                                                  @PathVariable String dockername, @RequestParam(defaultValue = "all") String condition,
-                                                  @RequestParam(defaultValue = "1") Integer pageno,
-                                                  @RequestParam(defaultValue = "10") Integer pagesize,
-                                                  @RequestParam(defaultValue = "123") Integer onboard_status,
-                                                  @RequestBody com.alibaba.fastjson.JSONObject search_sort_filter_details) throws IOException {
+    @Operation(summary = "Export filtered measuring instruments",
+            description = "Exports filtered measuring instruments to the response stream.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Export written"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{dockername}/exportfilteredmeasuringinstrument")
+    public void exportFilteredMeasuringInstrument(HttpServletResponse response,
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String dockername,
+            @Parameter(description = "Condition to apply") @RequestParam(defaultValue = "all") String condition,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer pagesize,
+            @Parameter(description = "Onboard status to filter by") @RequestParam(defaultValue = "123") Integer onboard_status,
+            @RequestBody com.alibaba.fastjson.JSONObject search_sort_filter_details) throws IOException {
         log.info("exportFilteredMeasuringInstrument username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        try {
-            deviceService.exportFilteredMeasuringInstrument(response, username, vdmsid, dockername, condition, pageno, pagesize, search_sort_filter_details, onboard_status);
-        } catch (Exception e) {
-            log.error("exportFilteredMeasuringInstrument failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.exportFilteredMeasuringInstrument(response, username, vdmsid, dockername, condition, pageno, pagesize, search_sort_filter_details, onboard_status);
     }
 
     /**
@@ -1535,15 +1890,17 @@ public class DeviceController {
      * @param vdmsId optional VDMS id to scope the update to; when absent applies to all
      * @return response describing the outcome of the update
      */
-    @RequestMapping(method = RequestMethod.PUT, value = "/vdms/updatedevicetype")
-    public ResponseDTO updateDeviceTypes(@RequestParam(required = false) String vdmsId) {
+    @Operation(summary = "Update device types",
+            description = "Recomputes and updates device types, optionally scoped to a single VDMS; when no VDMS is supplied it applies to all.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Device types updated"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PutMapping("/vdms/updatedevicetype")
+    public ResponseDTO updateDeviceTypes(
+            @Parameter(description = "Optional VDMS id to scope the update to") @RequestParam(required = false) String vdmsId) {
         log.info("updateDeviceTypes vdmsId={}", vdmsId);
-        try {
-            return deviceService.updateDeviceTypeForAll(vdmsId);
-        } catch (Exception e) {
-            log.error("updateDeviceTypes failed vdmsId={}: {}", vdmsId, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.updateDeviceTypeForAll(vdmsId);
     }
 
     /**
@@ -1554,16 +1911,19 @@ public class DeviceController {
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @throws IOException if downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/togglednd")
-    public void toggleDndStatus(@RequestParam(value = "device_id", required = true) String device_id,
-                                @RequestParam(value = "is_dnd_enabled", required = true) Boolean is_dnd_enabled, HttpServletRequest httpServletRequest) throws IOException {
+    @Operation(summary = "Toggle device DND status",
+            description = "Toggles the do-not-disturb (DND) status of a device.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "DND status toggled"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/togglednd")
+    public void toggleDndStatus(
+            @Parameter(description = "Device whose DND status is toggled") @RequestParam(value = "device_id", required = true) String device_id,
+            @Parameter(description = "Whether DND should be enabled") @RequestParam(value = "is_dnd_enabled", required = true) Boolean is_dnd_enabled, HttpServletRequest httpServletRequest) throws IOException {
         log.info("toggleDndStatus device_id={} is_dnd_enabled={}", device_id, is_dnd_enabled);
-        try {
-            deviceService.toggleDndStatus(device_id, is_dnd_enabled, httpServletRequest);
-        } catch (Exception e) {
-            log.error("toggleDndStatus failed device_id={}: {}", device_id, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.toggleDndStatus(device_id, is_dnd_enabled, httpServletRequest);
     }
 
 //    // HAM Assets import changes ///
@@ -1579,15 +1939,18 @@ public class DeviceController {
      * @param id       device id whose DND state is updated
      * @param timetamp timestamp to record for the DND change
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/deviceid/{id}/timetamp/{timetamp}/updatedndstatus")
-    public void updatedndstatus(@PathVariable String id, @PathVariable BigInteger timetamp) {
+    @Operation(summary = "Update device DND status and timestamp",
+            description = "Updates a device's DND enabled flag and the associated timestamp.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "DND status updated"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/deviceid/{id}/timetamp/{timetamp}/updatedndstatus")
+    public void updatedndstatus(
+            @Parameter(description = "Device id whose DND state is updated") @PathVariable String id,
+            @Parameter(description = "Timestamp to record for the DND change") @PathVariable BigInteger timetamp) {
         log.info("updatedndstatus id={} timetamp={}", id, timetamp);
-        try {
-            deviceService.UpdateDeviceDndEnabledAndTimestamp(id, timetamp);
-        } catch (Exception e) {
-            log.error("updatedndstatus failed id={} timetamp={}: {}", id, timetamp, e.getMessage(), e);
-            throw e;
-        }
+        deviceService.UpdateDeviceDndEnabledAndTimestamp(id, timetamp);
     }
 
 
@@ -1604,17 +1967,23 @@ public class DeviceController {
      * @return list of devices with their custom details
      * @throws IOException if downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/docker/{docker_name}/getalldevicedetails")
-    public Page<DeviceDTO> getAllDeviceCustomDetails(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String docker_name,
-                                                     @RequestParam(defaultValue = "1") Integer page_no, @RequestParam(defaultValue = "10") Integer page_size,
-                                                     @RequestParam(defaultValue = "null") String search_key, @RequestParam(defaultValue = "internal") String profile_type) throws IOException {
+    @Operation(summary = "Get all device custom details",
+            description = "Returns paginated custom device details for the given VDMS and docker.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Device details returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/docker/{docker_name}/getalldevicedetails")
+    public Page<DeviceDTO> getAllDeviceCustomDetails(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String docker_name,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer page_no,
+            @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer page_size,
+            @Parameter(description = "Search keyword to match against") @RequestParam(defaultValue = "null") String search_key,
+            @Parameter(description = "Profile type to use") @RequestParam(defaultValue = "internal") String profile_type) throws IOException {
         log.info("getAllDeviceCustomDetails username={} vdmsid={} docker_name={}", username, vdmsid, docker_name);
-        try {
-            return PageUtils.toPage(deviceService.getAllDeviceCustomDetails(username, vdmsid, docker_name, page_no, page_size, search_key, profile_type), page_no, page_size);
-        } catch (Exception e) {
-            log.error("getAllDeviceCustomDetails failed username={} vdmsid={} docker_name={}: {}", username, vdmsid, docker_name, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(deviceService.getAllDeviceCustomDetails(username, vdmsid, docker_name, page_no, page_size, search_key, profile_type), page_no, page_size);
     }
 
     /**
@@ -1628,18 +1997,22 @@ public class DeviceController {
      * @return list of devices with their custom details
      * @throws IOException if downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{docker_name}/getdevicedetailsbyids")
-    public Page<DeviceDTO> getDeviceCustomDetails(@PathVariable String docker_name,
-                                                  @RequestParam(defaultValue = "1") Integer page_no, @RequestParam(defaultValue = "10") Integer page_size,
-                                                  @RequestParam(defaultValue = "null") String search_key,
-                                                  @RequestBody List<String> device_ids) throws IOException {
+    @Operation(summary = "Get device custom details by ids",
+            description = "Returns paginated custom device details for the supplied device ids.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Device details returned"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{docker_name}/getdevicedetailsbyids")
+    public Page<DeviceDTO> getDeviceCustomDetails(
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String docker_name,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer page_no,
+            @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer page_size,
+            @Parameter(description = "Search keyword to match against") @RequestParam(defaultValue = "null") String search_key,
+            @RequestBody List<String> device_ids) throws IOException {
         log.info("getDeviceCustomDetails docker_name={}", docker_name);
-        try {
-            return PageUtils.toPage(deviceService.getDeviceCustomDetails(docker_name, page_no, page_size, search_key, device_ids), page_no, page_size);
-        } catch (Exception e) {
-            log.error("getDeviceCustomDetails failed docker_name={}: {}", docker_name, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(deviceService.getDeviceCustomDetails(docker_name, page_no, page_size, search_key, device_ids), page_no, page_size);
     }
 
     // This is not currently being used, was written when there was a filter page with asset_category and model in the edit profile section
@@ -1657,18 +2030,25 @@ public class DeviceController {
      * @return list of devices with their custom details
      * @throws IOException if downstream I/O fails
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/docker/{docker_name}/getdevicecustomdetailsbyids")
-    public Page<DeviceDTO> getDeviceCustomDetailsByIds(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String docker_name,
-                                                       @RequestParam(defaultValue = "1") Integer page_no, @RequestParam(defaultValue = "10") Integer page_size,
-                                                       @RequestParam(defaultValue = "null") String search_key, @RequestParam(defaultValue = "0") Integer has_pagination,
-                                                       @RequestBody JSONObject requestBody) throws IOException {
+    @Operation(summary = "Get device custom details by ids (body)",
+            description = "Returns custom device details for the ids in the request body, optionally paginated.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Device details returned"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/docker/{docker_name}/getdevicecustomdetailsbyids")
+    public Page<DeviceDTO> getDeviceCustomDetailsByIds(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String docker_name,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer page_no,
+            @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer page_size,
+            @Parameter(description = "Search keyword to match against") @RequestParam(defaultValue = "null") String search_key,
+            @Parameter(description = "Whether pagination is applied") @RequestParam(defaultValue = "0") Integer has_pagination,
+            @RequestBody JSONObject requestBody) throws IOException {
         log.info("getDeviceCustomDetailsByIds username={} vdmsid={} docker_name={}", username, vdmsid, docker_name);
-        try {
-            return PageUtils.toPage(deviceService.getDeviceCustomDetailsByIds(username, vdmsid, docker_name, has_pagination, page_no, page_size, search_key, requestBody), page_no, page_size);
-        } catch (Exception e) {
-            log.error("getDeviceCustomDetailsByIds failed username={} vdmsid={} docker_name={}: {}", username, vdmsid, docker_name, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(deviceService.getDeviceCustomDetailsByIds(username, vdmsid, docker_name, has_pagination, page_no, page_size, search_key, requestBody), page_no, page_size);
     }
 
     /**
@@ -1681,20 +2061,22 @@ public class DeviceController {
      * @param is_select_all whether all matching ids should be returned (default "false")
      * @return list of matching device ids
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/docker/{docker_name}/getalldeviceids")
-    public List<String> getAllDeviceIds(@PathVariable String docker_name,
-                                        @RequestParam(defaultValue = "1") Integer page_no, @RequestParam(defaultValue = "10") Integer page_size,
-                                        @RequestParam(defaultValue = "null") String search_key,
-                                        @RequestParam(defaultValue = "false") String is_select_all){
+    @Operation(summary = "Get all device ids",
+            description = "Returns the device ids for the given docker, with pagination and optional select-all.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Device ids returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/docker/{docker_name}/getalldeviceids")
+    public List<String> getAllDeviceIds(
+            @Parameter(description = "Docker (gateway) name to scope devices to") @PathVariable String docker_name,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer page_no,
+            @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer page_size,
+            @Parameter(description = "Search keyword to match against") @RequestParam(defaultValue = "null") String search_key,
+            @Parameter(description = "Whether all matching ids should be returned") @RequestParam(defaultValue = "false") String is_select_all){
         log.info("getAllDeviceIds docker_name={}", docker_name);
-        try {
-            return deviceService.getAllDeviceIds(docker_name, page_no, page_size, search_key, is_select_all);
-        } catch (Exception e) {
-            log.error("getAllDeviceIds failed docker_name={}: {}", docker_name, e.getMessage(), e);
-            throw e;
-        }
+        return deviceService.getAllDeviceIds(docker_name, page_no, page_size, search_key, is_select_all);
     }
 
 }
-
 
