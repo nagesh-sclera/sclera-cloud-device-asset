@@ -3,6 +3,8 @@ package io.sclera.utils;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import io.sclera.dto.MaximoDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -16,6 +18,8 @@ import java.util.Map;
  */
 @Component
 public class MaximoUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(MaximoUtils.class);
 
     private String token = null;
     private Long tokenCreatedAt = null;
@@ -150,7 +154,7 @@ public class MaximoUtils {
                 whereClause.append("]");
 
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("{}", e.toString(), e);
                 throw new RuntimeException("Error parsing siteId JSON", e);
             }
         }
@@ -170,7 +174,7 @@ public class MaximoUtils {
         params.put("pageno", pageno.toString());
 
 
-        System.out.println("params body:  " + params);
+        log.debug("{}", "params body:  " + params);
         return params;
     }
 

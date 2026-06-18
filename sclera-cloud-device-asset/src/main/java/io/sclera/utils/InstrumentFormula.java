@@ -2,6 +2,8 @@ package io.sclera.utils;
 
 import tools.jackson.databind.ObjectMapper;
 import io.sclera.dto.MeasuringInstrumentAttributesDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.text.DecimalFormat;
@@ -15,6 +17,8 @@ import java.util.regex.Pattern;
  */
 @Component
 public class InstrumentFormula {
+
+    private static final Logger log = LoggerFactory.getLogger(InstrumentFormula.class);
 
 
     /**
@@ -45,7 +49,7 @@ public class InstrumentFormula {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             if (attributes != null && attributes.size() > 0) {
-                System.out.println(attributes);
+                log.debug("{}", attributes);
                 switch (type) {
 
                     case "Generic":
@@ -368,7 +372,7 @@ public class InstrumentFormula {
                 }
             }
         } catch (Exception e) {
-            System.out.println("Exception in getValuebyMeasuringParameter for type : " + type);
+            log.debug("{}", "Exception in getValuebyMeasuringParameter for type : " + type);
         }
         return null;
     }
@@ -483,7 +487,7 @@ public class InstrumentFormula {
                 return String.valueOf(decimal_format.format(length * breadth));
             }
         } catch (Exception e) {
-            System.out.println("FAILED TO CALCULATE RECTANGULAR VOLUME BY PARAMETER");
+            log.debug("{}", "FAILED TO CALCULATE RECTANGULAR VOLUME BY PARAMETER");
         }
         return null;
     }
@@ -514,7 +518,7 @@ public class InstrumentFormula {
                 return String.valueOf(decimal_format.format(length * breadth * width));
             }
         } catch (Exception e) {
-            System.out.println("FAILED TO CALCULATE RECTANGULAR VOLUME BY PARAMETER");
+            log.debug("{}", "FAILED TO CALCULATE RECTANGULAR VOLUME BY PARAMETER");
         }
         return null;
     }
@@ -571,7 +575,7 @@ public class InstrumentFormula {
             }
 
         } catch (Exception e) {
-            System.out.println("FAILED TO CALCULATE CYLINDRICAL VOLUME BY PARAMETER");
+            log.debug("{}", "FAILED TO CALCULATE CYLINDRICAL VOLUME BY PARAMETER");
         }
         return null;
     }
@@ -699,7 +703,7 @@ public class InstrumentFormula {
                 }
             }
         } catch (Exception e) {
-            System.out.println("FAILED TO CALCULATE LADDER LENGTH BY PARAMETER");
+            log.debug("{}", "FAILED TO CALCULATE LADDER LENGTH BY PARAMETER");
         }
         return null;
     }
@@ -904,7 +908,7 @@ public class InstrumentFormula {
                 return String.valueOf(decimal_format.format(percentage_value));
             }
         } catch (Exception e) {
-            System.out.println("FAILED TO CALCULATE PERCENTAGE BY PARAMETER");
+            log.debug("{}", "FAILED TO CALCULATE PERCENTAGE BY PARAMETER");
         }
         return null;
     }
@@ -1163,7 +1167,7 @@ public class InstrumentFormula {
                             checkForIntensity = true;
                         }
                     } catch (Exception e) {
-                        System.out.println("Exception in getMultipleLightIntensityByParameter : " + e.getMessage());
+                        log.debug("{}", "Exception in getMultipleLightIntensityByParameter : " + e.getMessage());
                     }
                 }
             }
@@ -1179,7 +1183,7 @@ public class InstrumentFormula {
             }
 
         } catch (Exception e) {
-            System.out.println("Exception in getMultipleLightIntensityByParameter : " + e.getMessage());
+            log.debug("{}", "Exception in getMultipleLightIntensityByParameter : " + e.getMessage());
         }
 
         return null;
@@ -1330,7 +1334,7 @@ public class InstrumentFormula {
 
                 value = (Double.parseDouble(measuringInstrumentAttributesDTO.getValue()) - 32) * (5.0 / 9.0);
 
-                System.out.println("------ Value getCelsiusByFahrenheitParameter -----" + value);
+                log.debug("{}", "------ Value getCelsiusByFahrenheitParameter -----" + value);
 
                 if (value != null) {
                     DecimalFormat decimal_format = new DecimalFormat("#.##");

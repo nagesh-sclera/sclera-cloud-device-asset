@@ -9,6 +9,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.projecthaystack.io.HZincReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,8 @@ import java.util.Map;
  */
 @Service
 public class APIRequest {
+
+    private static final Logger log = LoggerFactory.getLogger(APIRequest.class);
 
     /**
      * Reads the response body from the given connection (error stream when status is above 299,
@@ -154,7 +158,7 @@ public class APIRequest {
 
             return this.validateResponse(con);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
             return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -208,7 +212,7 @@ public class APIRequest {
 
             return this.validateAndFormatSlaveResponse(con);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
             return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -271,7 +275,7 @@ public class APIRequest {
 
             return this.validateResponse(con);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
             return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
         }
 
@@ -324,7 +328,7 @@ public class APIRequest {
 
             return apiOutput;
         } catch (IOException e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
 
         return null;
@@ -355,7 +359,7 @@ public class APIRequest {
             APIRequest apiRequest = new APIRequest();
             return apiRequest.validateResponse(con);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
             return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -383,7 +387,7 @@ public class APIRequest {
             while ((n = r.read()) > 0) s.append((char) n);
             return new ResponseEntity<>(new HZincReader(s.toString()).readGrid().toJson(), HttpStatus.OK);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
             return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -453,7 +457,7 @@ public class APIRequest {
 
             return this.validateResponse(con);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
             return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -503,7 +507,7 @@ public class APIRequest {
                 return validateResponse(con);
 
             } catch (SocketTimeoutException | ConnectException e) {
-                System.out.println("Network error (attempt " + attempt + "/" + maxRetries + ") while calling " + apiurl + " : " + e.getMessage());
+                log.debug("{}", "Network error (attempt " + attempt + "/" + maxRetries + ") while calling " + apiurl + " : " + e.getMessage());
 
                 if (attempt == maxRetries) {
                     return new ResponseEntity<>("Connection timed out", HttpStatus.GATEWAY_TIMEOUT);
@@ -518,7 +522,7 @@ public class APIRequest {
                 backoffMillis *= 2;
 
             } catch (Exception e) {
-                System.out.println("Unexpected error while calling " + apiurl + " : " + e.getMessage());
+                log.debug("{}", "Unexpected error while calling " + apiurl + " : " + e.getMessage());
                 return new ResponseEntity<>("Internal error", HttpStatus.INTERNAL_SERVER_ERROR);
 
             } finally {

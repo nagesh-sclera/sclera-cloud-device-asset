@@ -6,6 +6,8 @@ import io.sclera.dto.DeviceAlertDTO;
 import io.sclera.dto.LocationAlertDTO;
 import io.sclera.client.WorkorderTemplateClient;
 import org.json.JSONException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +27,8 @@ import org.json.JSONObject;
 @Component
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CorrigoUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(CorrigoUtils.class);
 
     @Autowired
     WorkorderTemplateClient workorderTemplateService;
@@ -50,7 +54,7 @@ public class CorrigoUtils {
 
             return date.format(d);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return null;
     }
@@ -67,7 +71,7 @@ public class CorrigoUtils {
 
             return time.format(d).toUpperCase();
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return null;
     }
@@ -97,7 +101,7 @@ public class CorrigoUtils {
                 return formatted_result;
             }
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return null;
     }
@@ -116,7 +120,7 @@ public class CorrigoUtils {
             String newTime = df.format(cal.getTime());
             return newTime;
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return null;
     }
@@ -178,7 +182,7 @@ public class CorrigoUtils {
             SimpleDateFormat newDateFormate = new SimpleDateFormat("dd/mm/yyyy");
             return newDateFormate.format(currentDate);
         } catch (ParseException e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return null;
     }
@@ -210,7 +214,7 @@ public class CorrigoUtils {
             return fullAddress.toString();
 
         } catch (JSONException e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return null;
 
@@ -224,7 +228,7 @@ public class CorrigoUtils {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             return tomorrow.format(formatter);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return null;
     }
@@ -239,7 +243,7 @@ public class CorrigoUtils {
             LocalDate newDate = date.minusDays(days);
             return String.valueOf(newDate.format(formatter));
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return null;
     }

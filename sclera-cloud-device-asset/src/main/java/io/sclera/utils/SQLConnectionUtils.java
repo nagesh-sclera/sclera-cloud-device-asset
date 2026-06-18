@@ -1,5 +1,7 @@
 package io.sclera.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,8 @@ import java.sql.SQLException;
 @Service
 public class SQLConnectionUtils {
 
+    private static final Logger log = LoggerFactory.getLogger(SQLConnectionUtils.class);
+
     @Autowired
     DataSource dataSource;
 
@@ -24,7 +28,7 @@ public class SQLConnectionUtils {
     public Connection beginTransaction() throws SQLException {
         Connection connection = dataSource.getConnection();
         if (connection != null) {
-            System.out.println("setting auto commit false");
+            log.debug("{}", "setting auto commit false");
             connection.setAutoCommit(false);
         }
         return connection;
@@ -37,16 +41,16 @@ public class SQLConnectionUtils {
     public void commitTransaction(Connection conn) throws SQLException {
         try {
             if (conn != null) {
-                System.out.println("Commiting conn");
+                log.debug("{}", "Commiting conn");
                 conn.commit();
             }
         } catch (SQLException e) {
             rollbackTransaction(conn);
-            System.out.println("Commit failed");
+            log.debug("{}", "Commit failed");
         } finally {
             conn.setAutoCommit(true);
             conn.close();
-            System.out.println("Closing conn");
+            log.debug("{}", "Closing conn");
         }
     }
 
@@ -59,7 +63,7 @@ public class SQLConnectionUtils {
                 conn.rollback();
             }
         } catch (SQLException e) {
-            System.out.println("Rollback failed");
+            log.debug("{}", "Rollback failed");
             ;
         } finally {
             conn.setAutoCommit(true);
