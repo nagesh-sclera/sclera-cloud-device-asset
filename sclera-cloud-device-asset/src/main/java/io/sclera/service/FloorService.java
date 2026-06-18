@@ -240,7 +240,7 @@ public class FloorService implements FloorServiceInterface {
                 }
             }
         } else {
-            System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&& INSIDE ELSE &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+            log.debug("{}", "&&&&&&&&&&&&&&&&&&&&&&&&& INSIDE ELSE &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
             if (floor_image_url != null) {
                 String global_extension = getExtensionByUrl(floor_image_url);
                 try {
@@ -426,7 +426,7 @@ public class FloorService implements FloorServiceInterface {
             Files.write(path, image);
             return dir + file_name + file_extension;
         } else {
-            System.out.println("Error");
+            log.debug("{}", "Error");
             return null;
         }
 
@@ -439,9 +439,9 @@ public class FloorService implements FloorServiceInterface {
         File file = new File(absolute_path + file_name + "." + file_extension);
         if (file.exists()) {
             if (file.delete()) {
-                System.out.println("File deleted successfully");
+                log.debug("{}", "File deleted successfully");
             } else {
-                System.out.println("Failed to delete the file");
+                log.debug("{}", "Failed to delete the file");
             }
         }
     }
@@ -833,7 +833,7 @@ public class FloorService implements FloorServiceInterface {
                         ));
                 defaultCounts.putAll(computedCounts);
                 JSONObject counts = new JSONObject();
-                System.out.println("defaultCounts count for tagged :" + defaultCounts.get("tagged"));
+                log.debug("{}", "defaultCounts count for tagged :" + defaultCounts.get("tagged"));
                 if (field.equals("all_task") || field.equals("tagged")) {
                     JSONObject tagged_count = new JSONObject();
                     tagged_count.put("all_count",defaultCounts.get("tagged"));

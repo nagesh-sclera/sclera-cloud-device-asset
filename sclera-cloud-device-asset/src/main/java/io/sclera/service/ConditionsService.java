@@ -407,7 +407,7 @@ public class ConditionsService implements ConditionsServiceInterface {
                 break;
             }
             case "lorawan": {
-                System.out.println("testing lorawan");
+                log.debug("{}", "testing lorawan");
                 lorawan_sensor_id = id;  // primary_id
                 lorawan_sensor_attributes_name = sub_id;  // secondary_id
                 break;
@@ -473,7 +473,7 @@ public class ConditionsService implements ConditionsServiceInterface {
                 snmp_device_configuration_id, snmp_object_oid, measuring_instrument_id, daintree_device_id, daintree_point_id, ecobee_sensor_id, ecobee_sensor_attributes_name, modbus_register_id);
 
 
-        System.out.println(conditions);
+        log.debug("{}", conditions);
 
         Boolean oldAlert = false;
         Boolean newAlert = false;
@@ -490,7 +490,7 @@ public class ConditionsService implements ConditionsServiceInterface {
             }
 
 
-            System.out.println("**************reached time based alert conditions before *************\n condition.getLast_alerted_timestamp() " +
+            log.debug("{}", "**************reached time based alert conditions before *************\n condition.getLast_alerted_timestamp() " +
                     condition.getLast_alerted_timestamp() + " \n   condition alert count " + condition.getAlert_count());
 
             BigInteger currentTimestamp = BigInteger.valueOf(System.currentTimeMillis());
@@ -504,18 +504,18 @@ public class ConditionsService implements ConditionsServiceInterface {
 
             if (condition.getSchedule() != null && condition.getSchedule() == 1) {
                 if (condition.getSchedule_conditions() == null) {
-                    System.out.println("Start Time " + condition.getStart_time() + "    End Time " + condition.getEnd_time());
+                    log.debug("{}", "Start Time " + condition.getStart_time() + "    End Time " + condition.getEnd_time());
                     checkCondition = conditionUtils.verifyCurrentSystemTimeWithinScheduledTime(condition.getStart_time(), condition.getEnd_time());
-                    System.out.println("checkCondition inside a " + checkCondition);
+                    log.debug("{}", "checkCondition inside a " + checkCondition);
                 } else {
-                    System.out.println("Start Time " + condition.getStart_time() + "    End Time " + condition.getEnd_time());
+                    log.debug("{}", "Start Time " + condition.getStart_time() + "    End Time " + condition.getEnd_time());
                     JSONObject scheduleCondition = JSONObject.parseObject(condition.getSchedule_conditions());
                     if (conditionUtils.verifyDayOfWeek(scheduleCondition)) {
                         checkCondition = conditionUtils.verifyCurrentSystemTimeWithinScheduledTime(condition.getStart_time(), condition.getEnd_time());
-                        System.out.println("checkCondition inside b " + checkCondition);
+                        log.debug("{}", "checkCondition inside b " + checkCondition);
                     } else {
                         checkCondition = false;
-                        System.out.println("checkCondition inside b " + checkCondition);
+                        log.debug("{}", "checkCondition inside b " + checkCondition);
                     }
                 }
             }
@@ -940,16 +940,16 @@ public class ConditionsService implements ConditionsServiceInterface {
             }
 
 
-            System.out.println("**************reached time based alert conditions after *************\n currentTimestamp " +
+            log.debug("{}", "**************reached time based alert conditions after *************\n currentTimestamp " +
                     currentTimestamp + "     condition.getLast_alerted_timestamp() " + condition.getLast_alerted_timestamp());
 
-            System.out.println("Checking Before Updating the value of Last Altered..............");
-            System.out.println("Last alerted:" + condition.getLast_alerted());
+            log.debug("{}", "Checking Before Updating the value of Last Altered..............");
+            log.debug("{}", "Last alerted:" + condition.getLast_alerted());
 
             conditionsRepository.updateConditionAlert(condition.getId(), condition.getAlert(), condition.getAlert_count(),
                     condition.getLast_alerted_timestamp(), condition.getLast_alerted());
 
-            System.out.println("condition count" + condition.getAlert_count());
+            log.debug("{}", "condition count" + condition.getAlert_count());
 
             if (condition.getAlert()) {
                 newAlert = true;
@@ -964,13 +964,13 @@ public class ConditionsService implements ConditionsServiceInterface {
                     if (condition.getAlert_profile_id() != null) {
                         if (alerted == false && condition.getLast_alerted() == true) {
                             if (condition.getAlert_count_enabled() != 1 && condition.getAlert_time() == null) {
-                                System.out.println("----- Checking to send mail for normal condition ----");
-                                System.out.println("Last alerted " + condition.getLast_alerted() + "Alerted " + alerted);
-                                System.out.println("Entered here since alert profile not null" + condition.getAlert_profile_id());
+                                log.debug("{}", "----- Checking to send mail for normal condition ----");
+                                log.debug("{}", "Last alerted " + condition.getLast_alerted() + "Alerted " + alerted);
+                                log.debug("{}", "Entered here since alert profile not null" + condition.getAlert_profile_id());
                                 this.sendAlertInfo(conditionGroup, condition, alert_message, null);
                             } else if (condition.getAlert_count() == condition.getMax_alert_count() && condition.getAlert_count_enabled() == 1) {
-                                System.out.println("----- Checking to send mail for count based condition ----");
-                                System.out.println("Entered here since alert profile not null" + condition.getAlert_profile_id());
+                                log.debug("{}", "----- Checking to send mail for count based condition ----");
+                                log.debug("{}", "Entered here since alert profile not null" + condition.getAlert_profile_id());
                                 this.sendAlertInfo(conditionGroup, condition, alert_message, null);
                             }
 
@@ -978,22 +978,22 @@ public class ConditionsService implements ConditionsServiceInterface {
                     }
 
                 } catch (Exception e) {
-                    System.out.println("Error sending  alert info " + e);
-                    System.out.println(e);
+                    log.debug("{}", "Error sending  alert info " + e);
+                    log.debug("{}", e);
                 }
 
             }
 
 
         }
-        System.out.println("user data value " + user_data_value);
+        log.debug("{}", "user data value " + user_data_value);
 
 
         switch (conditionGroup) {
             case "bacnet": {
-                System.out.println("inside old and new " + oldAlert + "      " + newAlert);
+                log.debug("{}", "inside old and new " + oldAlert + "      " + newAlert);
                 if (oldAlert != newAlert) {
-                    System.out.println("inside old and new mismatch " + newAlert);
+                    log.debug("{}", "inside old and new mismatch " + newAlert);
 //                    bacnetService.updateBacnetObjectAlert(bacnet_device_id, bacnet_object_id, newAlert);
 
                     try {
@@ -1006,8 +1006,8 @@ public class ConditionsService implements ConditionsServiceInterface {
                             this.sendBacnetAlertInfo(bacnet_device_id, bacnet_object_id, alert_message);
 
                         } catch (Exception e) {
-                            System.out.println("Error sending bacnet alert info " + e);
-                            System.out.println(e);
+                            log.debug("{}", "Error sending bacnet alert info " + e);
+                            log.debug("{}", e);
                         }
                     }
                 } else {
@@ -1034,8 +1034,8 @@ public class ConditionsService implements ConditionsServiceInterface {
                         try {
                             this.sendLorawanAlertInfo(lorawan_sensor_id, lorawan_sensor_attributes_name, alert_message);
                         } catch (Exception e) {
-                            System.out.println("Error sending lorawan alert info " + e);
-                            System.out.println(e);
+                            log.debug("{}", "Error sending lorawan alert info " + e);
+                            log.debug("{}", e);
                         }
                     }
                 } else {
@@ -1084,8 +1084,8 @@ public class ConditionsService implements ConditionsServiceInterface {
                         try {
                             this.sendDisruptiveAlertInfo(disruptive_sensor_id, alert_message);
                         } catch (Exception e) {
-                            System.out.println("Error sending diruptive alert info " + e);
-                            System.out.println(e);
+                            log.debug("{}", "Error sending diruptive alert info " + e);
+                            log.debug("{}", e);
                         }
                     }
                 } else {
@@ -1113,8 +1113,8 @@ public class ConditionsService implements ConditionsServiceInterface {
                         try {
                             this.sendMyDevicesAlertInfo(my_devices_sensor_id, my_devices_sensor_attributes_name, alert_message);
                         } catch (Exception e) {
-                            System.out.println("Error sending mydevices alert info " + e);
-                            System.out.println(e);
+                            log.debug("{}", "Error sending mydevices alert info " + e);
+                            log.debug("{}", e);
                         }
                     }
                 } else {
@@ -1136,16 +1136,16 @@ public class ConditionsService implements ConditionsServiceInterface {
                     try {
 //                        sockertService.sockertSensorAlertCount();
                     } catch (Exception e) {
-                        System.out.println("Error updating monnit sensor alert count " + e);
-                        System.out.println(e);
+                        log.debug("{}", "Error updating monnit sensor alert count " + e);
+                        log.debug("{}", e);
                     }
                     if (newAlert) {
 
                         try {
                             this.sendMonnitAlertInfo(monnit_sensor_id, alert_message);
                         } catch (Exception e) {
-                            System.out.println("Error sending monnit alert info " + e);
-                            System.out.println(e);
+                            log.debug("{}", "Error sending monnit alert info " + e);
+                            log.debug("{}", e);
                         }
                     }
                 } else {
@@ -1176,8 +1176,8 @@ public class ConditionsService implements ConditionsServiceInterface {
                         try {
                             this.sendPelicanAlertInfo(pelican_sensor_id, pelican_sensor_attributes_name, alert_message);
                         } catch (Exception e) {
-                            System.out.println("Error sending pelican alert info " + e);
-                            System.out.println(e);
+                            log.debug("{}", "Error sending pelican alert info " + e);
+                            log.debug("{}", e);
                         }
                     }
                 } else {
@@ -1208,8 +1208,8 @@ public class ConditionsService implements ConditionsServiceInterface {
                         try {
                             this.sendKNXAlertInfo(knx_device_address, knx_group_address, alert_message);
                         } catch (Exception e) {
-                            System.out.println("Error sending knx alert info " + e);
-                            System.out.println(e);
+                            log.debug("{}", "Error sending knx alert info " + e);
+                            log.debug("{}", e);
                         }
                     }
                 } else {
@@ -1240,8 +1240,8 @@ public class ConditionsService implements ConditionsServiceInterface {
                         try {
                             this.sendSnmpObjectAlertInfo(snmp_device_configuration_id, snmp_object_oid, alert_message);
                         } catch (Exception e) {
-                            System.out.println("Error sending snmp alert info " + e);
-                            System.out.println(e);
+                            log.debug("{}", "Error sending snmp alert info " + e);
+                            log.debug("{}", e);
                         }
                     }
                 } else {
@@ -1264,8 +1264,8 @@ public class ConditionsService implements ConditionsServiceInterface {
                     try {
 //                        sockertService.sockertSensorAlertCount();
                     } catch (Exception e) {
-                        System.out.println("Error updating measuring_instrument sensor alert count " + e);
-                        System.out.println(e);
+                        log.debug("{}", "Error updating measuring_instrument sensor alert count " + e);
+                        log.debug("{}", e);
                     }
                     if (newAlert) {
 
@@ -1273,8 +1273,8 @@ public class ConditionsService implements ConditionsServiceInterface {
                             log.info("Sending Data to RabbitMq");
                             this.sendMeasuringInstrumentAlertInfo(measuring_instrument_id, alert_message);
                         } catch (Exception e) {
-                            System.out.println("Error sending measuring_instrument alert info " + e);
-                            System.out.println(e);
+                            log.debug("{}", "Error sending measuring_instrument alert info " + e);
+                            log.debug("{}", e);
                         }
                     }
                 } else {
@@ -1291,7 +1291,7 @@ public class ConditionsService implements ConditionsServiceInterface {
             case "daintree": {
                 if (oldAlert != newAlert) {
 
-                    System.out.println("old = " + oldAlert + " new = " + newAlert);
+                    log.debug("{}", "old = " + oldAlert + " new = " + newAlert);
 //                    daintreeService.updateDaintreeAlert(daintree_device_id, daintree_point_id, newAlert);
                     try {
 //                        sockertService.sockertSensorAlertCount();
@@ -1302,8 +1302,8 @@ public class ConditionsService implements ConditionsServiceInterface {
                         try {
                             this.sendDaintreeAlertInfo(daintree_device_id, daintree_point_id, alert_message);
                         } catch (Exception e) {
-                            System.out.println("Error sending daintree alert info " + e);
-                            System.out.println(e);
+                            log.debug("{}", "Error sending daintree alert info " + e);
+                            log.debug("{}", e);
                         }
 
                     }
@@ -1331,8 +1331,8 @@ public class ConditionsService implements ConditionsServiceInterface {
                         try {
 //                            this.sendEcobeeAlertInfo(ecobee_sensor_id, ecobee_sensor_attributes_name, alert_message);
                         } catch (Exception e) {
-                            System.out.println("Error sending ecobee alert info " + e);
-                            System.out.println(e);
+                            log.debug("{}", "Error sending ecobee alert info " + e);
+                            log.debug("{}", e);
                         }
                     }
                 } else {
@@ -1349,9 +1349,9 @@ public class ConditionsService implements ConditionsServiceInterface {
                 break;
             }
             case "modbus": {
-                System.out.println("inside old and new " + oldAlert + "      " + newAlert);
+                log.debug("{}", "inside old and new " + oldAlert + "      " + newAlert);
                 if (oldAlert != newAlert) {
-                    System.out.println("inside old and new mismatch " + newAlert);
+                    log.debug("{}", "inside old and new mismatch " + newAlert);
 //                    modbusService.updateModbusRegisterAlert(modbus_register_id, newAlert);
 
                     try {
@@ -1364,8 +1364,8 @@ public class ConditionsService implements ConditionsServiceInterface {
 //                            this.sendModbusAlertInfo(modbus_register_id, alert_message);//working on this
 
                         } catch (Exception e) {
-                            System.out.println("Error sending modbus alert info " + e);
-                            System.out.println(e);
+                            log.debug("{}", "Error sending modbus alert info " + e);
+                            log.debug("{}", e);
                         }
                     }
                 } else {
@@ -2065,8 +2065,8 @@ public class ConditionsService implements ConditionsServiceInterface {
             //send bacnet alert info to rabbitmq
 //            rabbitmqService.rabbitmqBacnetAlertData(bacnetObjectDetails);
         } catch (Exception e) {
-            System.out.println("Error sending bacnet alert info " + e);
-            System.out.println(e);
+            log.debug("{}", "Error sending bacnet alert info " + e);
+            log.debug("{}", e);
         }
     }
 
@@ -2093,8 +2093,8 @@ public class ConditionsService implements ConditionsServiceInterface {
             //send lorawan alert info to rabbitmq
 //            rabbitmqService.rabbitmqLorawanAlertData(lorawanSensorDetails, lorawan_sensor_attributes_name);
         } catch (Exception e) {
-            System.out.println("Error sending lorawan alert info " + e);
-            System.out.println(e);
+            log.debug("{}", "Error sending lorawan alert info " + e);
+            log.debug("{}", e);
         }
     }
 
@@ -2120,8 +2120,8 @@ public class ConditionsService implements ConditionsServiceInterface {
 //            //send disruptive alert info to rabbitmq
 //            rabbitmqService.rabbitmqDisruptiveAlertData(disruptiveSensorDetails);
         } catch (Exception e) {
-            System.out.println("Error sending disruptive alert info " + e);
-            System.out.println(e);
+            log.debug("{}", "Error sending disruptive alert info " + e);
+            log.debug("{}", e);
         }
     }
 
@@ -2148,8 +2148,8 @@ public class ConditionsService implements ConditionsServiceInterface {
 //            //send myedevices alert info to rabbitmq
 //            rabbitmqService.rabbitmqMyDevicesAlertData(myDevicesSensorDetails, my_devices_sensor_attributes_name);
         } catch (Exception e) {
-            System.out.println("Error sending mydevices alert info " + e);
-            System.out.println(e);
+            log.debug("{}", "Error sending mydevices alert info " + e);
+            log.debug("{}", e);
         }
     }
 
@@ -2175,8 +2175,8 @@ public class ConditionsService implements ConditionsServiceInterface {
 //            //send monnit alert info to rabbitmq
 //            rabbitmqService.rabbitmqMonnitAlertData(monnitSensorDetails);
         } catch (Exception e) {
-            System.out.println("Error sending monnit alert info " + e);
-            System.out.println(e);
+            log.debug("{}", "Error sending monnit alert info " + e);
+            log.debug("{}", e);
         }
     }
 
@@ -2203,8 +2203,8 @@ public class ConditionsService implements ConditionsServiceInterface {
 //            //send pelican alert info to rabbitmq
 //            rabbitmqService.rabbitmqPelicanAlertData(pelicanSensorDetails, pelican_sensor_attributes_name);
         } catch (Exception e) {
-            System.out.println("Error sending pelican alert info " + e);
-            System.out.println(e);
+            log.debug("{}", "Error sending pelican alert info " + e);
+            log.debug("{}", e);
         }
     }
 
@@ -2231,8 +2231,8 @@ public class ConditionsService implements ConditionsServiceInterface {
 //            //send bacnet alert info to rabbitmq
 //            rabbitmqService.rabbitmqKNXAlertData(knxGroupDetails);
         } catch (Exception e) {
-            System.out.println("Error sending KNX alert info " + e);
-            System.out.println(e);
+            log.debug("{}", "Error sending KNX alert info " + e);
+            log.debug("{}", e);
         }
     }
 
@@ -2273,8 +2273,8 @@ public class ConditionsService implements ConditionsServiceInterface {
 //            //send measuring instrument alert info to rabbitmq
 //            rabbitmqService.rabbitmqMeasuringInstrumentAlertData(measuringInstrumentDetails);
         } catch (Exception e) {
-            System.out.println("Error sending measuring instrument alert info " + e);
-            System.out.println(e);
+            log.debug("{}", "Error sending measuring instrument alert info " + e);
+            log.debug("{}", e);
         }
     }
 
@@ -2296,8 +2296,8 @@ public class ConditionsService implements ConditionsServiceInterface {
 //            rabbitmqService.rabbitmqDaintreeDeviceAlertData(daintreeDetails, daintree_point_id);
 
         } catch (Exception e) {
-            System.out.println("Error sending daintree alert info " + e);
-            System.out.println(e);
+            log.debug("{}", "Error sending daintree alert info " + e);
+            log.debug("{}", e);
         }
     }
 
@@ -2479,9 +2479,9 @@ public class ConditionsService implements ConditionsServiceInterface {
         ScheduledJobDTO jobSchedulerDTO = new ScheduledJobDTO();
         jobSchedulerDTO.setJob_type(job_type);
         jobSchedulerDTO.setTime_in_seconds(Long.valueOf(condition.getAlert_time()));
-        System.out.println("adding into scheduler");
+        log.debug("{}", "adding into scheduler");
         String job_id = jobSchedulerService.createScheduledJob(jobSchedulerDTO);
-        System.out.println("print job id  : " + job_id);
+        log.debug("{}", "print job id  : " + job_id);
         //add a record to scheduled_job
         if (job_id != null) {
             ScheduledJobDTO scheduledJobDTO = new ScheduledJobDTO();
@@ -2509,9 +2509,9 @@ public class ConditionsService implements ConditionsServiceInterface {
         jobSchedulerDTO.setJob_type(job_type);
         jobSchedulerDTO.setTime_in_seconds(Long.valueOf(condition.getAlert_time()));
         jobSchedulerDTO.setId(job_key);
-        System.out.println("replace into scheduler");
+        log.debug("{}", "replace into scheduler");
         String job_id = jobSchedulerService.createScheduledJob(jobSchedulerDTO);
-        System.out.println("print job iddd : " + job_id);
+        log.debug("{}", "print job iddd : " + job_id);
         //add a record to scheduled_job
         if (job_id != null) {
             jobSchedulerService.deleteScheduledJob(Set.of(job_key));
@@ -2550,7 +2550,7 @@ public class ConditionsService implements ConditionsServiceInterface {
                 jobSchedulerDTO.setJob_type("delete");
                 jobSchedulerDTO.setId(scheduledJobDTO.getId());
 
-                System.out.println("deleting from scheduler");
+                log.debug("{}", "deleting from scheduler");
                 String job_id = jobSchedulerService.createScheduledJob(jobSchedulerDTO);
                 //delete the record
                 if (job_id != null) {
@@ -2559,7 +2559,7 @@ public class ConditionsService implements ConditionsServiceInterface {
             }
 
         } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            log.debug("{}", ex.getMessage());
         }
     }
     /**

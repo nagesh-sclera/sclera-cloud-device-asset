@@ -52,7 +52,7 @@ public class TechnicianCertificateService implements TechnicianCertificateServic
                             technicianCertificateDTO.getTechnicianId()
                     );
                     if (rowsAffected != null && rowsAffected > 0) {
-                        System.out.println("Technician certificate upserted successfully.");
+                        log.debug("{}", "Technician certificate upserted successfully.");
                         insertedTechnicianCertificateIds.add(technicianCertificateDTO.getId());
                     }
                 } catch (Exception e) {
@@ -125,7 +125,7 @@ public class TechnicianCertificateService implements TechnicianCertificateServic
             );
         }
         else {
-            System.out.println("Technician certificate ID is missing.");
+            log.debug("{}", "Technician certificate ID is missing.");
         }
     }
 

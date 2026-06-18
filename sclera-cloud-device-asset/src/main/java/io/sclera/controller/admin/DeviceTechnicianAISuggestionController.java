@@ -2,6 +2,11 @@ package io.sclera.controller.admin;
 
 import io.sclera.dto.TechnicianDTO;
 import io.sclera.service.DeviceTechnicianAISuggestionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +23,7 @@ import java.util.List;
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
+@Tag(name = "Device Technician AI Suggestions", description = "Return AI-suggested technicians for a given device type.")
 public class DeviceTechnicianAISuggestionController {
 
     private static final Logger log = LoggerFactory.getLogger(DeviceTechnicianAISuggestionController.class);
@@ -33,17 +39,19 @@ public class DeviceTechnicianAISuggestionController {
      * @param httpServletRequest current request, used to resolve tenant/VDMS context
      * @return ranked list of suggested technicians
      */
+    @Operation(summary = "Get AI technician suggestions",
+            description = "Returns technicians recommended by the AI suggestion engine for the given device type.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Technician suggestions returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping("/getdevicetechnicianaisuggestion")
-    public ResponseEntity<List<TechnicianDTO>> getDeviceTechnicianAISuggestionByDeviceType(@RequestParam String vdmsid,
-                                                                                           @RequestParam String deviceType,
-                                                                                           HttpServletRequest httpServletRequest) {
+    public ResponseEntity<List<TechnicianDTO>> getDeviceTechnicianAISuggestionByDeviceType(
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Device type to find technician suggestions for") @RequestParam String deviceType,
+            HttpServletRequest httpServletRequest) {
         log.info("getDeviceTechnicianAISuggestionByDeviceType vdmsid={} deviceType={}", vdmsid, deviceType);
-        try {
-            List<TechnicianDTO> technicians = deviceTechnicianAISuggestionService.getDeviceTechnicianAISuggestionsByDeviceType(deviceType, vdmsid, httpServletRequest);
-            return ResponseEntity.ok(technicians);
-        } catch (Exception e) {
-            log.error("getDeviceTechnicianAISuggestionByDeviceType failed vdmsid={}: {}", vdmsid, e.getMessage(), e);
-            throw e;
-        }
+        List<TechnicianDTO> technicians = deviceTechnicianAISuggestionService.getDeviceTechnicianAISuggestionsByDeviceType(deviceType, vdmsid, httpServletRequest);
+        return ResponseEntity.ok(technicians);
     }
 }

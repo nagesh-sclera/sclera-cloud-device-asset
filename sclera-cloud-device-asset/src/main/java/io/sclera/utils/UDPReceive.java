@@ -5,6 +5,8 @@ import io.sclera.dto.touchscreen.DeviceMonitorDTO;
 import io.sclera.client.APICallClient;
 import io.sclera.client.MonitorClient;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +23,8 @@ import java.util.List;
 @Component
 public class UDPReceive {
 
+	private static final Logger log = LoggerFactory.getLogger(UDPReceive.class);
+
 	@Autowired
 	MonitorClient monitorService;
 
@@ -36,10 +40,10 @@ public class UDPReceive {
 			UDP4J udp = new UDP4J(2222, 1111, "127.0.0.1");
 			UDPreceive rcv = new UDPreceive(udp.getDs());
 			rcv.start();
-			System.out.println("UDP SOCKET RUNNING");
+			log.debug("{}", "UDP SOCKET RUNNING");
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block
-			System.out.println(e);
+			log.debug("{}", e);
 		}
 	}
 
@@ -79,7 +83,7 @@ public class UDPReceive {
 					//					System.out.println("Client:-" + data(receive));
 					try {
 						String jsonResponse = data(receive).toString();
-						System.out.println("PRINTT" + jsonResponse);
+						log.debug("{}", "PRINTT" + jsonResponse);
 						if(jsonResponse != null && !jsonResponse.isBlank() && !jsonResponse.isEmpty()) {
 							JSONObject json = new JSONObject(jsonResponse);
 
@@ -101,7 +105,7 @@ public class UDPReceive {
 						}
 
 					} catch (Exception e) {
-						System.out.println(e);
+						log.debug("{}", e);
 					}
 
 					
@@ -109,7 +113,7 @@ public class UDPReceive {
 
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
-					System.out.println(e);
+					log.debug("{}", e);
 				}
 
 				receive = new byte[65535];
@@ -130,7 +134,7 @@ public class UDPReceive {
 		}
 
 		public void start() {
-			System.out.println("Thread started");
+			log.debug("{}", "Thread started");
 			if (thread == null) {
 				thread = new Thread(this, "recv");
 				thread.start();

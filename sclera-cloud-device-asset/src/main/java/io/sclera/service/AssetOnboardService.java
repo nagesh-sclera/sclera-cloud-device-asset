@@ -104,7 +104,7 @@ public class AssetOnboardService implements AssetOnboardServiceInterface {
                 }
             }
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         if (deviceDTOList.size() > 0) {
             ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -135,7 +135,7 @@ public class AssetOnboardService implements AssetOnboardServiceInterface {
                 }
             }
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return final_specifications;
     }

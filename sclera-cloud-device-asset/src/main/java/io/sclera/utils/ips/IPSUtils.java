@@ -1,5 +1,7 @@
 package io.sclera.utils.ips;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -8,6 +10,9 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class IPSUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(IPSUtils.class);
+
     /**
      * Returns the centroid (average X and Y) of three points.
      */
@@ -51,10 +56,10 @@ public class IPSUtils {
         rd1 = Math.abs(d1 - r0);
         rd2 = Math.abs(d2 - r0);
 
-        System.out.println(d1);
-        System.out.println(d2);
-        System.out.println(rd1);
-        System.out.println(rd1);
+        log.debug("{}", d1);
+        log.debug("{}", d2);
+        log.debug("{}", rd1);
+        log.debug("{}", rd1);
 
         if(rd1<rd2) {
             coordinate.setX(x1);
@@ -133,7 +138,7 @@ public class IPSUtils {
             }
         }
 
-        System.out.println(finalOut1.toString() + finalOut2.toString() + finalOut3.toString());
+        log.debug("{}", finalOut1.toString() + finalOut2.toString() + finalOut3.toString());
         coordinate = centroid(finalOut1.getX(), finalOut1.getY(),finalOut2.getX(), finalOut2.getY(),finalOut3.getX(), finalOut3.getY());
         return coordinate;
     }
@@ -180,7 +185,7 @@ public class IPSUtils {
             coordinate[1].setX(intersectionPoint2_x);
             coordinate[1].setY(intersectionPoint2_y);
 
-            System.out.println("NO solution" + coordinate[0].toString());
+            log.debug("{}", "NO solution" + coordinate[0].toString());
             //coordinate[0].setX(Double.MIN_VALUE);
             return coordinate;
         }
@@ -206,7 +211,7 @@ public class IPSUtils {
             }
 
             //coordinate[0].setX(Double.MAX_VALUE);
-            System.out.println("Inside circle" + coordinate[0].toString());
+            log.debug("{}", "Inside circle" + coordinate[0].toString());
             //System.out.println(coordinate[0].toString());
             return coordinate;
         }
@@ -240,7 +245,7 @@ public class IPSUtils {
         double intersectionPoint1_y = point2_y + ry;
         double intersectionPoint2_y = point2_y - ry;
 
-        System.out.println("INTERSECTION Circle1 AND Circle2:"+ "(" + intersectionPoint1_x + "," + intersectionPoint1_y + ")" + " AND (" + intersectionPoint2_x + "," + intersectionPoint2_y + ")");
+        log.debug("{}", "INTERSECTION Circle1 AND Circle2:"+ "(" + intersectionPoint1_x + "," + intersectionPoint1_y + ")" + " AND (" + intersectionPoint2_x + "," + intersectionPoint2_y + ")");
 
         coordinate[0].setX(intersectionPoint1_x);
         coordinate[0].setY(intersectionPoint1_y);
@@ -284,7 +289,7 @@ public class IPSUtils {
 
         coordinate[1].setX(x1 - baX * abScalingFactor2);
         coordinate[1].setY(y1 - baY * abScalingFactor2);
-        System.out.println("line intersection coordinate" + coordinate[0].toString() + coordinate[1].toString()) ;
+        log.debug("{}", "line intersection coordinate" + coordinate[0].toString() + coordinate[1].toString()) ;
 
 
         return coordinate;

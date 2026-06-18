@@ -1,6 +1,8 @@
 package io.sclera.utils;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +20,8 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ConfigurationProperties(prefix = "sclera.chirpstackutils")
 public class ChirpStackUtils {
+
+	private static final Logger log = LoggerFactory.getLogger(ChirpStackUtils.class);
 
 	private String email;
 	private String password;
@@ -222,7 +226,7 @@ public class ChirpStackUtils {
 		       Decoder decoder = Base64.getDecoder(); 
 		       bt = decoder.decode(str);    
 		   } catch (Exception e) {    
-		       System.out.println(e);
+		       log.debug("{}", e);
 		   }    
 		   return bt;    
 		   }   
@@ -267,7 +271,7 @@ public class ChirpStackUtils {
             return null;
         }
         catch(Exception e){
-            System.out.println("Error converting date time to timestamp " + e);
+            log.debug("{}", "Error converting date time to timestamp " + e);
             return null;
         }
 	}

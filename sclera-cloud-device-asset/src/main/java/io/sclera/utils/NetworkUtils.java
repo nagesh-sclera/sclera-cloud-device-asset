@@ -1,5 +1,7 @@
 package io.sclera.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Stack;
@@ -10,6 +12,8 @@ import java.util.Stack;
  */
 @Service
 public class NetworkUtils {
+
+	private static final Logger log = LoggerFactory.getLogger(NetworkUtils.class);
 
 
 	/**
@@ -219,7 +223,7 @@ public class NetworkUtils {
 		broadcast_address = br[0] + "." + br[1] + "." + br[2] + "." + br[3];
 
 		// Printing in dotted decimal format
-		System.out.println("Broadcast Address : " + br[0] + "." + br[1] + "." + br[2] + "." + br[3]);
+		log.debug("{}", "Broadcast Address : " + br[0] + "." + br[1] + "." + br[2] + "." + br[3]);
 
 		return broadcast_address;
 	}

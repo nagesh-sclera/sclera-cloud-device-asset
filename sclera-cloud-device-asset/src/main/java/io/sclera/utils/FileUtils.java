@@ -1,5 +1,7 @@
 package io.sclera.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,7 +17,9 @@ import java.nio.file.Paths;
  */
 @Component
 public class FileUtils {
-	
+
+	private static final Logger log = LoggerFactory.getLogger(FileUtils.class);
+
 	private static final String ABSOLUTE_DOCUMENT_PATH =  "/home/sclera/images/document/";
 	private static final String DIRECTORY_DOCUMENT_PATH =  "http://localhost:8888/images/document/";
 	
@@ -38,7 +42,7 @@ public class FileUtils {
 				Files.write(filePath, documentFile.getBytes());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block0
-				System.out.println(e);
+				log.debug("{}", e);
 			}
             return DIRECTORY_DOCUMENT_PATH + fileName;
 
@@ -55,12 +59,12 @@ public class FileUtils {
 		File file = new File(ABSOLUTE_DOCUMENT_PATH + fileName);
 		if (file.exists()) {
             if (file.delete()) {
-                System.out.println("File deleted successfully");
+                log.debug("{}", "File deleted successfully");
             } else {
-                System.out.println("Failed to delete the file");
+                log.debug("{}", "Failed to delete the file");
             }
         } else {
-            System.out.println("File does not exist");
+            log.debug("{}", "File does not exist");
         }
 	}
 	
@@ -78,7 +82,7 @@ public class FileUtils {
 				Files.write(filePath, mediaFile.getBytes());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				System.out.println(e);
+				log.debug("{}", e);
 			}
             return DIRECTORY_MEDIA_PATH + fileName;
 
@@ -95,12 +99,12 @@ public class FileUtils {
 		File file = new File(ABSOLUTE_MEDIA_PATH + fileName);
 		if (file.exists()) {
             if (file.delete()) {
-                System.out.println("File deleted successfully");
+                log.debug("{}", "File deleted successfully");
             } else {
-                System.out.println("Failed to delete the file");
+                log.debug("{}", "Failed to delete the file");
             }
         } else {
-            System.out.println("File does not exist");
+            log.debug("{}", "File does not exist");
         }
 	}
 

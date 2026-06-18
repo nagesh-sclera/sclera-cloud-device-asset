@@ -8,6 +8,8 @@ import io.sclera.service.UserActionLogService;
 import io.sclera.service.UserService;
 import io.sclera.utils.UserRoleUtils;
 import io.sclera.utils.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -30,6 +32,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @org.springframework.context.annotation.Profile("!docker")
 public class JwtRequestFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtRequestFilter.class);
 
     @Autowired
     Utils utils;
@@ -76,7 +79,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         try {
 //            userActionLogService.updateLoginActivity(email_id, "access");
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
     }
 
@@ -95,11 +98,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 String email_id = this.extractEmailFromToken(token);
                 String roles = userRoleUtils.getRoles(email_id);
 
-                System.out.println("---------- User roles ----------" + email_id);
+                log.debug("{}", "---------- User roles ----------" + email_id);
                 if (roles == null) {
                     String roles_db = userService.getAllUserRoles(email_id);
                     userRoleUtils.setRoles(email_id, roles_db);
-                    System.out.println(userRoleUtils.getRoles(email_id) + "user rolesssss");
+                    log.debug("{}", userRoleUtils.getRoles(email_id) + "user rolesssss");
                     roles = roles_db;
                 }
                 if (email_id != null) {
@@ -110,7 +113,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             }
         } catch (IllegalArgumentException | JWTVerificationException e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
     }
 

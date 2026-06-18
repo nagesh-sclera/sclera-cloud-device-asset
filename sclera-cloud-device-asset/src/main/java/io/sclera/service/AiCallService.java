@@ -84,7 +84,7 @@ public class AiCallService implements AiCallServiceInterface {
             scheduler.schedule(() -> {
                 String aiCalllogid = aiCallLogRepository.getAiCallLogIdByDeviceId(deviceId);
                 if (aiCalllogid != null) {
-                    System.out.println("id:" + id);
+                    log.debug("{}", "id:" + id);
                     aiCallLogRepository.upsertStatus(id, null, true, null, "no-response");
                     aiCallLogHistoryRepository.insertAiCallLogHistoryState(Generators.timeBasedGenerator().generate().toString(), BigInteger.valueOf(System.currentTimeMillis()), "Technician not available", null, id, "no-response");
                     deviceService.updateDeviceDndAndSystemDndStatus(deviceId, false);
@@ -140,7 +140,7 @@ public class AiCallService implements AiCallServiceInterface {
      */
     public DeviceDTO getDeviceInfoFromDb(String deviceId) {
         DeviceDTO deviceDTO = deviceService.getDeviceInfoFromDb(deviceId);
-        System.out.println("Device info is " + deviceDTO);
+        log.debug("{}", "Device info is " + deviceDTO);
         return deviceDTO;
     }
 
@@ -187,7 +187,7 @@ public class AiCallService implements AiCallServiceInterface {
     public String getAssignee(String deviceId) {
         WebClient webClient = WebClient.create();
         List<TechnicianDTO> technicians = technicianService.getAvailableTechnicianCountryCodePhoneByDeviceId(deviceId);
-        System.out.println("Technicians: " + technicians.size());
+        log.debug("{}", "Technicians: " + technicians.size());
         String vdmsId = "VDMS400";
         String aiCallLogId = aiCallLogRepository.getAiCallLogIdByDeviceId(deviceId);
         List<JSONObject> requestBodies = new ArrayList<>();
@@ -223,9 +223,9 @@ public class AiCallService implements AiCallServiceInterface {
         String phone = technician.getPhone();
         String technicianId = technician.getId();
         String timezone = technician.getTimeZone();
-        System.out.println("Timezone: " + timezone);
-        System.out.println("Device Last Seen: " + deviceDTO.getLast_seen_on());
-        System.out.println("Device ID: " + deviceDTO.getId());
+        log.debug("{}", "Timezone: " + timezone);
+        log.debug("{}", "Device Last Seen: " + deviceDTO.getLast_seen_on());
+        log.debug("{}", "Device ID: " + deviceDTO.getId());
         if (countryCode == null || phone == null || countryCode.isBlank() || phone.isBlank()) {
             log.error("Invalid country code or phone for technician: {}", technicianName);
             processTechniciansSequentially(requestBodies, webClient, vdmsId, aiCallLogId, technicians, deviceDTO, index + 1);
@@ -346,7 +346,7 @@ public class AiCallService implements AiCallServiceInterface {
             Mono.delay(Duration.ofSeconds(90)).subscribeOn(Schedulers.boundedElastic()).subscribe(ignored -> {
                 try {
                     String latestStatus = aiCallLogHistoryRepository.getLatestCallStatus(aiCallLogId, technicianId);
-                    System.out.println("Latest status after 90 seconds: " + latestStatus);
+                    log.debug("{}", "Latest status after 90 seconds: " + latestStatus);
                     Integer deviceStatus = deviceService.getDeviceStatus(deviceDTO.getId());
                     // stop escalation
                     if ("accepted".equalsIgnoreCase(latestStatus)) {
@@ -550,7 +550,7 @@ public class AiCallService implements AiCallServiceInterface {
      * and deletes device conditions; otherwise it marks the device online and records history.
      */
     public void updateDeviceOnlineStatus(String id, Integer status, String deviceConditionId) {
-        System.out.println("*************Updating device online status for device ID: " + id + " with status: " + status);
+        log.debug("{}", "*************Updating device online status for device ID: " + id + " with status: " + status);
         String aiCallLogId = aiCallLogRepository.getAiCallLogIdByDeviceId(id);
         String aiCallLogHistoryId = Generators.timeBasedGenerator().generate().toString();
         Integer alertCount = deviceConditionsService.getAlertCount(id);

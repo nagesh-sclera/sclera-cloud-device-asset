@@ -23,6 +23,8 @@ import io.sclera.interfaces.UserServiceInterface;
 @Service
 public class UserService implements UserServiceInterface {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(UserService.class);
+
     @Autowired
     UserRepository userRepository;
 
@@ -101,7 +103,7 @@ public class UserService implements UserServiceInterface {
                     user.getPhone_type(),
                     user.getValue(), user.getWebsite(), user.getOrganisation_id(), user.getImage_url(), user.getLanguage(), user.getRole());
         } catch (Exception e) {
-            System.out.println("Error while inserting user: " + e.getMessage());
+            log.debug("{}", "Error while inserting user: " + e.getMessage());
         }
     }
 
@@ -230,7 +232,7 @@ public class UserService implements UserServiceInterface {
                     user.getPhone_type(), user.getValue(), user.getWebsite(), user.getOrganisation_id(), user.getEmail(),
                     user.getImage_url(), user.getLanguage(), user.getRole(), user.getCreation_timestamp());
         } catch (Exception e) {
-            System.out.println("Error while updating user: " + e.getMessage());
+            log.debug("{}", "Error while updating user: " + e.getMessage());
         }
     }
 

@@ -484,24 +484,24 @@ public class LocationService implements LocationServiceInterface {
             userActionLogService.addUserAction(username, "maps", "DELETE", "A Location with name : " + location.getName() + " and id : " + location_id + " is deleted.", "success", "location", location_id);
         } catch (Exception e) {
             userActionLogService.addUserAction(username, "maps", "DELETE", "Unable to delete Location name : " + location.getName() + " and id : " + location_id, "failed", "location", location_id);
-            System.out.println("Unable to delete locations. " + e);
+            log.debug("{}", "Unable to delete locations. " + e);
         }
 
-        System.out.println("fi size "+finalInspectionrecordIds.size());
-        System.out.println("fr size "+finalRecordChecklistIds.size());
-        System.out.println("fg size "+finalGlobalInspectionRelationIds.size());
+        log.debug("{}", "fi size "+finalInspectionrecordIds.size());
+        log.debug("{}", "fr size "+finalRecordChecklistIds.size());
+        log.debug("{}", "fg size "+finalGlobalInspectionRelationIds.size());
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(() -> {
-            System.out.println("Entered executor service at "+System.currentTimeMillis());
+            log.debug("{}", "Entered executor service at "+System.currentTimeMillis());
             archivedRecordService.batchUpdateArchivedRecords(userActionLogDTOS);
             recordChecklistService.deleteRecordChecklistInBatch(finalRecordChecklistIds);
             globalInspectionRecordService.deleteGlobalInspectionRelationInBatch(finalGlobalInspectionRelationIds);
             for(String id : finalInspectionrecordIds){
                 inspectionRecordService.updateInspectionRecordStatus(username,null,id,false);
-                System.out.println("Inspection record status updated while deleting location for id "+id);
+                log.debug("{}", "Inspection record status updated while deleting location for id "+id);
             }
-            System.out.println("Process completed at "+System.currentTimeMillis());
+            log.debug("{}", "Process completed at "+System.currentTimeMillis());
         });
     }
 
@@ -1012,7 +1012,7 @@ public class LocationService implements LocationServiceInterface {
                         ));
                 defaultCounts.putAll(computedCounts);
                 JSONObject counts = new JSONObject();
-                System.out.println("defaultCounts count for tagged :" + defaultCounts.get("tagged"));
+                log.debug("{}", "defaultCounts count for tagged :" + defaultCounts.get("tagged"));
                 if (field.equals("all_task") || field.equals("tagged")) {
                     JSONObject tagged_count = new JSONObject();
                     tagged_count.put("all_count",defaultCounts.get("tagged"));
@@ -1535,7 +1535,7 @@ public class LocationService implements LocationServiceInterface {
 //                locationIdsWithRoomStatus.add("");
 //            }
 //        }
-        System.out.println("============================================");
+        log.debug("{}", "============================================");
         Set<LocationDTO> locations = locationRepository.getAllLocationsByFilter(floor_ids, searchKey, qrCodeCondition, locationIdsTaggedToQrCode, nfcConditon,
                 locationIdsTaggedToNfc, recordChecklistCondition, status, types, building_ids,barCodeCondition,locationIdsTaggedToBarCode);
         this.updateLocationDTORoomStatus(locations, field, field_id);
@@ -1622,7 +1622,7 @@ public class LocationService implements LocationServiceInterface {
 //                locationIdsWithRoomStatus.add("");
 //            }
 //        }
-        System.out.println("============================================");
+        log.debug("{}", "============================================");
         Set<LocationDTO> locations = locationRepository.getAllLocationsByFilterByPagination(floor_ids, searchKey, qrCodeCondition, locationIdsTaggedToQrCode, nfcConditon,
                 locationIdsTaggedToNfc, recordChecklistCondition, status, pagesize, offset, types, building_ids,barCodeCondition,locationIdsTaggedToBarCode);
         this.updateLocationDTORoomStatus(locations, field, field_id);
