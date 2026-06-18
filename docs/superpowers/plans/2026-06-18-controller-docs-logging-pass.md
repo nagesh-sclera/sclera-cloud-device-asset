@@ -26,6 +26,14 @@ cd "C:\Users\DhanushVasanth\Desktop\AssetManagement POD\Microservice123\sclera-c
 
 To compile only (faster during iteration): `.\mvnw.cmd -q compile`. To run a single test class: `.\mvnw.cmd -q -Dtest=GlobalExceptionHandlerTest test`.
 
+### Verification contract (READ — the suite is not 100% green at baseline)
+
+`.\mvnw.cmd -q test` reports **`Tests run: 619 ... Errors: 4`** at baseline. All 4 errors are **pre-existing and environmental**: the Testcontainers-backed `@SpringBootTest` IT classes `CastParsingProbeTest`, `JsonbPathQuerySortTest` (2 methods), and `TechnicianAvailabilityTest` fail with `Failed to load ApplicationContext` because Docker/Testcontainers is not available in this run. They have nothing to do with this work.
+
+**Success criterion for every "run the suite" step:** `Failures: 0`, and `Errors` equals **exactly the 4 known `io.sclera.it.*` ApplicationContext failures** (the count rises only as new tests are added — e.g. 622 after Task 1's 3 new tests). **Any failure/error outside those 3 IT classes is a real regression — stop and fix it.**
+
+Do **not** pass a negated `-Dtest=!...` pattern — it disturbs the surefire/failsafe split and pulls the DB-backed `*IT` failsafe classes into the run (producing dozens of spurious errors). Use plain `.\mvnw.cmd -q test` for the full suite, or a **positive** single-class `-Dtest=ClassName` for a focused run. Do not attempt to start Postgres/Testcontainers for these tests.
+
 ## File structure
 
 - **New:** `src/main/java/io/sclera/exception/GlobalExceptionHandler.java` — generic `@RestControllerAdvice` (logging + `ResponseDTO` mapping). Sits beside the existing `MaximoExceptionHandler` (which is left unchanged).
@@ -62,7 +70,7 @@ cd "C:\Users\DhanushVasanth\Desktop\AssetManagement POD\Microservice123\sclera-c
 .\mvnw.cmd -q test
 ```
 
-Expected: `BUILD SUCCESS`. If red here, stop and fix the environment before proceeding — later "green" claims depend on this baseline.
+Expected: `Tests run: 619 ... Failures: 0, Errors: 4` — the 4 known `io.sclera.it.*` Testcontainers ApplicationContext failures (see Verification contract above). This is the accepted baseline; the build exits non-zero because of them. Any *other* failure means the environment is broken — stop and fix before proceeding.
 
 ---
 
