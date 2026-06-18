@@ -59,12 +59,12 @@ public class BuildingService implements BuildingServiceInterface {
         Set<String> building_ids = buildingRepository.getBuildingIdsByVdmsId(vdms_id);
         if (building_ids != null && building_ids.size() > 0) {
             if (compareIds(building_ids, buildingdto.getBuilding_id())) {
-                System.out.println("#############################################");
+                log.debug("{}", "#############################################");
                 log.info("Building IDs: {}", building_ids);
                 log.info("Building DTO ID: {}", buildingdto.getBuilding_id());
                 updateBuildingByBuildingId(buildingdto);
             } else {
-                System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+                log.debug("{}", "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
                 log.info("Building IDs: {}", building_ids);
                 log.info("Building DTO ID: {}", buildingdto.getBuilding_id());
                 addBuildingByVdmsId(buildingdto, vdms_id);
@@ -369,7 +369,7 @@ public class BuildingService implements BuildingServiceInterface {
      * @return a map of mismatched buildings, floors, and locations, or null when none exist locally
      */
     public Map<String, Object> syncLocationsFromBackend(HttpServletRequest httpServletRequest) {
-        System.out.println("********************SYNC LOCATIONS FROM CLOUD************************************");
+        log.debug("{}", "********************SYNC LOCATIONS FROM CLOUD************************************");
         //getting vdmsid of the sclera box
         String vdmsIdScleraBox = "VDMS400";
         // getting all buildings from location server..

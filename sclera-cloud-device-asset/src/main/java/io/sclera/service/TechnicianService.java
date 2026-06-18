@@ -506,7 +506,7 @@ public class TechnicianService implements TechnicianServiceInterface {
      * @return the list of available tagged {@link TechnicianDTO} records, or an empty list if none
      */
     public List<TechnicianDTO> getAvailableTechnicianCountryCodePhoneByDeviceId(String deviceId) {
-        System.out.println("Fetching all available technicians with country code and phone for device ID: " + deviceId);
+        log.debug("{}", "Fetching all available technicians with country code and phone for device ID: " + deviceId);
         try {
 
             List<String> technicianIds = technicianRepository.getAllTaggedTechnicianIds(deviceId);
