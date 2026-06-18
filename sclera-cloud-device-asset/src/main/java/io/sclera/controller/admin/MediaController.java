@@ -2,14 +2,21 @@ package io.sclera.controller.admin;
 
 import java.util.Set;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,6 +37,7 @@ import org.springframework.data.domain.Page;
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
+@Tag(name = "Media", description = "Upsert, read, delete and tag media items against devices for a VDMS.")
 public class MediaController {
 
     private static final Logger log = LoggerFactory.getLogger(MediaController.class);
@@ -45,19 +53,21 @@ public class MediaController {
      * @param media     media payload to upsert
      * @return identifier or status of the upserted media
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/upsertmedia")
-    public String upsertDocument(@RequestParam String username, @RequestParam String vdmsid, @RequestBody DocumentMediaDTO media) {
+    @Operation(summary = "Upsert a media item",
+            description = "Creates or updates a media item for the given user and VDMS.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Media upserted"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/upsertmedia")
+    public String upsertDocument(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @RequestBody DocumentMediaDTO media) {
         log.info("upsertDocument username={} vdmsid={}", username, vdmsid);
-        try {
-
-
-            return mediaService.upsertMedia(username, vdmsid, media);
-        } catch (Exception e) {
-            log.error("upsertDocument failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
-            throw e;
-        }
+        return mediaService.upsertMedia(username, vdmsid, media);
     }
-
 
     /**
      * Deletes the media item identified by the given id.
@@ -66,17 +76,21 @@ public class MediaController {
      * @param vdmsid    owning VDMS id
      * @param mediaid   media item to delete
      */
-    @RequestMapping(method = RequestMethod.DELETE, value = "/mediaid/{mediaid}/deletemedia")
-    public void deleteDocumentbyId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String mediaid) {
+    @Operation(summary = "Delete a media item by id",
+            description = "Deletes the media item identified by the given id.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Media deleted"),
+            @ApiResponse(responseCode = "404", description = "Media not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @DeleteMapping("/mediaid/{mediaid}/deletemedia")
+    public void deleteDocumentbyId(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Media item to delete") @PathVariable String mediaid) {
         log.info("deleteDocumentbyId username={} vdmsid={} mediaid={}", username, vdmsid, mediaid);
-        try {
-            mediaService.deleteMedia(username, vdmsid, mediaid);
-        } catch (Exception e) {
-            log.error("deleteDocumentbyId failed username={} vdmsid={} mediaid={}: {}", username, vdmsid, mediaid, e.getMessage(), e);
-            throw e;
-        }
+        mediaService.deleteMedia(username, vdmsid, mediaid);
     }
-
 
     /**
      * Returns a paginated, optionally filtered set of media items for the given user and VDMS.
@@ -88,15 +102,21 @@ public class MediaController {
      * @param searchkey  optional search filter (default "null")
      * @return the matching media items
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/getmedias")
-    public Page<DocumentMediaDTO> getMedias(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize, @RequestParam(defaultValue = "null") String searchkey) {
+    @Operation(summary = "Get media items",
+            description = "Returns a paginated, optionally filtered set of media items for the given user and VDMS.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Media items returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/getmedias")
+    public Page<DocumentMediaDTO> getMedias(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Number of media items per page") @RequestParam(defaultValue = "5") Integer pagesize,
+            @Parameter(description = "Optional search filter") @RequestParam(defaultValue = "null") String searchkey) {
         log.info("getMedias username={} vdmsid={}", username, vdmsid);
-        try {
-            return PageUtils.toPage(mediaService.getMedias(username, vdmsid, pageno, pagesize, searchkey), pageno, pagesize);
-        } catch (Exception e) {
-            log.error("getMedias failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(mediaService.getMedias(username, vdmsid, pageno, pagesize, searchkey), pageno, pagesize);
     }
 
     /**
@@ -109,17 +129,22 @@ public class MediaController {
      * @param pagesize  number of media items per page (default 5)
      * @return the media items tagged to the device
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/device/{deviceid}/getmediabydeviceid")
-    public Page<DocumentMediaDTO> getMediasByDeviceId(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String deviceid, @RequestParam(defaultValue = "1") Integer pageno, @RequestParam(defaultValue = "5") Integer pagesize) {
+    @Operation(summary = "Get media items for a device",
+            description = "Returns a paginated set of media items tagged to the given device.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Media items returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/device/{deviceid}/getmediabydeviceid")
+    public Page<DocumentMediaDTO> getMediasByDeviceId(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Device whose media items are requested") @PathVariable String deviceid,
+            @Parameter(description = "Page number to return") @RequestParam(defaultValue = "1") Integer pageno,
+            @Parameter(description = "Number of media items per page") @RequestParam(defaultValue = "5") Integer pagesize) {
         log.info("getMediasByDeviceId username={} vdmsid={} deviceid={}", username, vdmsid, deviceid);
-        try {
-            return PageUtils.toPage(mediaService.getMediasByDeviceId(username, vdmsid, deviceid, pageno, pagesize), pageno, pagesize);
-        } catch (Exception e) {
-            log.error("getMediasByDeviceId failed username={} vdmsid={} deviceid={}: {}", username, vdmsid, deviceid, e.getMessage(), e);
-            throw e;
-        }
+        return PageUtils.toPage(mediaService.getMediasByDeviceId(username, vdmsid, deviceid, pageno, pagesize), pageno, pagesize);
     }
-
 
     /**
      * Tags the given media items to one or more devices.
@@ -129,17 +154,22 @@ public class MediaController {
      * @param share_method  how the media items are shared/tagged (default "add")
      * @param media         media items to tag
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/tagmediatodevice")
-    public void tagMediaToDevice(@RequestParam String username, @RequestParam String vdmsid, @RequestParam(defaultValue = "add") String share_method, @RequestBody Set<DocumentMediaDTO> media) {
+    @Operation(summary = "Tag media to devices",
+            description = "Tags the given media items to one or more devices.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Media tagged"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/tagmediatodevice")
+    public void tagMediaToDevice(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "How the media items are shared/tagged") @RequestParam(defaultValue = "add") String share_method,
+            @RequestBody Set<DocumentMediaDTO> media) {
         log.info("tagMediaToDevice username={} vdmsid={} share_method={}", username, vdmsid, share_method);
-        try {
-            mediaService.tagMediaToDevice(username, vdmsid, share_method, media);
-        } catch (Exception e) {
-            log.error("tagMediaToDevice failed username={} vdmsid={} share_method={}: {}", username, vdmsid, share_method, e.getMessage(), e);
-            throw e;
-        }
+        mediaService.tagMediaToDevice(username, vdmsid, share_method, media);
     }
-
 
     /**
      * Removes the device tagging for the given media items.
@@ -148,15 +178,20 @@ public class MediaController {
      * @param vdmsid    owning VDMS id
      * @param media     media items to untag
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/untagmediatodevice")
-    public void untagMediaToDevice(@RequestParam String username, @RequestParam String vdmsid, @RequestBody Set<DocumentMediaDTO> media) {
+    @Operation(summary = "Untag media from devices",
+            description = "Removes the device tagging for the given media items.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Media untagged"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/untagmediatodevice")
+    public void untagMediaToDevice(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @RequestBody Set<DocumentMediaDTO> media) {
         log.info("untagMediaToDevice username={} vdmsid={}", username, vdmsid);
-        try {
-            mediaService.untagMediaToDevice(username, vdmsid, media);
-        } catch (Exception e) {
-            log.error("untagMediaToDevice failed username={} vdmsid={}: {}", username, vdmsid, e.getMessage(), e);
-            throw e;
-        }
+        mediaService.untagMediaToDevice(username, vdmsid, media);
     }
 
 

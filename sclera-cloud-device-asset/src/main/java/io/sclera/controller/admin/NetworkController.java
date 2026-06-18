@@ -1,6 +1,11 @@
 package io.sclera.controller.admin;
 
 import io.sclera.service.UserActionLogService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
@@ -21,6 +26,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
+@Tag(name = "Networks", description = "List networks, add a network and move/touch devices between networks for a VDMS.")
 public class NetworkController {
 
     private static final Logger log = LoggerFactory.getLogger(NetworkController.class);
@@ -34,10 +40,24 @@ public class NetworkController {
         this.userActionLogService = userActionLogService;
     }
 
+    /**
+     * Lists the networks (dockers) configured for the given VDMS.
+     *
+     * @param vdmsId owning VDMS id
+     * @return list of networks with their gateway and status fields
+     */
+    @Operation(summary = "List networks for a VDMS",
+            description = "Returns the networks (dockers) configured for the given VDMS with their gateway and status fields.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Networks returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping("/networks")
     @Transactional(readOnly = true)
     @SuppressWarnings("unchecked")
-    public List<Map<String, Object>> list(@RequestParam("vdms_id") String vdmsId) {
+    public List<Map<String, Object>> list(
+            @Parameter(description = "Owning VDMS id") @RequestParam("vdms_id") String vdmsId) {
+        log.info("list networks vdms_id={}", vdmsId);
         List<Object[]> rows = em.createNativeQuery(
                         "SELECT name, gateway, system_type, internet_status, configuration_status, host " +
                         "FROM docker WHERE vdms_id = :v ORDER BY name")
@@ -56,11 +76,28 @@ public class NetworkController {
         return out;
     }
 
+    /**
+     * Adds a new network (docker) for the given VDMS if one with the same name does not exist.
+     *
+     * @param vdmsId   owning VDMS id
+     * @param username acting user, for the audit log
+     * @param body     request body carrying name, gateway and system_type
+     * @return the resolved network name, gateway and system type
+     */
+    @Operation(summary = "Add a network",
+            description = "Adds a new network (docker) for the given VDMS, unless a network with the same name already exists.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Network added or already existed"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @PostMapping("/network")
     @Transactional
-    public Map<String, Object> add(@RequestParam("vdms_id") String vdmsId,
-                                   @RequestParam(required = false) String username,
-                                   @RequestBody Map<String, String> body) {
+    public Map<String, Object> add(
+            @Parameter(description = "Owning VDMS id") @RequestParam("vdms_id") String vdmsId,
+            @Parameter(description = "Acting user, for the audit log") @RequestParam(required = false) String username,
+            @RequestBody Map<String, String> body) {
+        log.info("add network vdms_id={}", vdmsId);
         String name = body.get("name");
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("name is required");
@@ -88,12 +125,28 @@ public class NetworkController {
         return m;
     }
 
+    /**
+     * Moves a device to a different (existing) network.
+     *
+     * @param deviceId   device to move
+     * @param dockerName target network (docker) name
+     * @param vdms_id    owning VDMS id
+     * @param username   acting user, for the audit log
+     */
+    @Operation(summary = "Move a device to a network",
+            description = "Moves a device to a different existing network by updating its docker_name.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Device moved"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @PostMapping("/device/{device_id}/network")
     @Transactional
-    public void moveDevice(@PathVariable("device_id") String deviceId,
-                           @RequestParam("docker_name") String dockerName,
-                           @RequestParam(required = false) String vdms_id,
-                           @RequestParam(required = false) String username) {
+    public void moveDevice(
+            @Parameter(description = "Device to move") @PathVariable("device_id") String deviceId,
+            @Parameter(description = "Target network (docker) name") @RequestParam("docker_name") String dockerName,
+            @Parameter(description = "Owning VDMS id") @RequestParam(required = false) String vdms_id,
+            @Parameter(description = "Acting user, for the audit log") @RequestParam(required = false) String username) {
+        log.info("moveDevice device_id={} docker_name={}", deviceId, dockerName);
         int n = em.createNativeQuery("UPDATE device SET docker_name = :d, updated_timestamp = :t WHERE id = :id")
                 .setParameter("d", dockerName)
                 .setParameter("t", System.currentTimeMillis())
@@ -103,13 +156,27 @@ public class NetworkController {
                 "Device " + deviceId + " was moved to network " + dockerName, "success", "network", deviceId);
     }
 
-    // Stamp updated_timestamp/updated_email — the editDeviceByDeviceID query does
-    // not touch them, so the UI calls this after an edit to refresh "Updated Date".
+    /**
+     * Stamps a device's updated_timestamp/updated_email so the UI's "Updated Date"
+     * refreshes after an edit (the editDeviceByDeviceID query does not touch them).
+     *
+     * @param deviceId device to stamp
+     * @param username acting user, used as updated_email (defaults to "admin")
+     * @param vdmsid   owning VDMS id
+     */
+    @Operation(summary = "Touch a device timestamp",
+            description = "Stamps a device's updated_timestamp/updated_email so the UI's \"Updated Date\" refreshes after an edit.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Device touched"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @PostMapping("/device/{device_id}/touch")
     @Transactional
-    public void touch(@PathVariable("device_id") String deviceId,
-                      @RequestParam(required = false) String username,
-                      @RequestParam(required = false) String vdmsid) {
+    public void touch(
+            @Parameter(description = "Device to stamp") @PathVariable("device_id") String deviceId,
+            @Parameter(description = "Acting user, used as updated_email") @RequestParam(required = false) String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam(required = false) String vdmsid) {
+        log.info("touch device_id={}", deviceId);
         String email = (username == null || username.isBlank()) ? "admin" : username;
         em.createNativeQuery("UPDATE device SET updated_timestamp = :t, updated_email = :u WHERE id = :id")
                 .setParameter("t", System.currentTimeMillis())
