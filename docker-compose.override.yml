@@ -4,11 +4,12 @@
 #     (postgres:5432) and is unaffected.
 #  2) daprio/scheduler runs as non-root and can't mkdir in the scheduler-data volume.
 #     Run it as root for the demo so it can create its etcd data dir.
-#
-# NOTE: the JAVA_TOOL_OPTIONS:"" overrides that disabled the OTel javaagent were
-# REMOVED — the agent jar (infra/otel/opentelemetry-javaagent.jar) is now a real
-# 24MB jar, so the base-compose `-javaagent` is re-enabled for full request tracing
-# (every HTTP controller + JDBC + Dapr call shows up in Jaeger).
+#  3) The OTel javaagent jar (infra/otel/opentelemetry-javaagent.jar) is currently a
+#     1-byte stub, so `-javaagent:/otel/agent.jar` aborts every JVM at startup
+#     ("Error opening zip file or JAR manifest missing"). JAVA_TOOL_OPTIONS is blanked
+#     for each Java service so they boot WITHOUT the agent. Trade-off: no distributed
+#     tracing to Jaeger. To re-enable: drop a real opentelemetry-javaagent.jar at
+#     infra/otel/ and delete the JAVA_TOOL_OPTIONS overrides below.
 services:
   postgres:
     ports:
@@ -16,3 +17,40 @@ services:
 
   dapr-scheduler:
     user: "0:0"
+
+  app:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  vdms-service:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-audit:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-identity:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-alerts:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-inventory:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-workorders:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-inspection:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-integrations:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-edge:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  api-gateway:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
+  sclera-scheduler:
+    environment:
+      JAVA_TOOL_OPTIONS: ""
