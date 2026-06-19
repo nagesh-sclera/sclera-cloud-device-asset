@@ -4208,9 +4208,6 @@ public class DeviceService implements DeviceServiceInterface {
         Integer assigned_status = f[5];
         Integer offset = pagesize * (pageno - 1);
 
-        Integer asset_match_status = null;
-        Integer onboard_status = 123;
-        Integer assigned_status = null;
 
         log.debug("{}", "outside all" + virtual_device_type + status + monitor + offset + pageno);
 

@@ -94,7 +94,7 @@ public class DocumentController {
      * @param description   the document description (optional)
      * @param documentFile  the uploaded file (required, non-empty)
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/device/{deviceid}/uploaddocument")
+    @PostMapping("/device/{deviceid}/uploaddocument")
     public void uploadDocument(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String deviceid,
                                @RequestParam String name, @RequestParam(required = false) String category,
                                @RequestParam(required = false) String description,
