@@ -12,6 +12,6 @@ EXPOSE 8085
 # Image store served back by ResourceConfigs (/images/** -> file:/home/sclera/images/).
 # addFileToServer() uses Files.write, which does not create parent dirs, so the asset image
 # directories must exist. Created here so they also seed a fresh named volume on first mount.
-RUN mkdir -p /home/sclera/images/assets/ocr
+RUN mkdir -p /home/sclera/images/assets/ocr /home/sclera/images/document
 COPY --from=build /build/sclera-cloud-device-asset/target/sclera.jar app.jar
 ENTRYPOINT ["java","-jar","/app/app.jar"]

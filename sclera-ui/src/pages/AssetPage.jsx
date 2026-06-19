@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Icon from '../components/Icon.jsx'
 import { RowSkeleton, Spinner } from '../components/Skeleton.jsx'
 import ContextMenu from '../components/ContextMenu.jsx'
@@ -124,6 +124,11 @@ export default function AssetPage({ search, onSearch }) {
         if (id === reqId.current) setFilterCount(res.length)
       } else if (debounced) {
         res = await api.listDevices({ ...scope, condition: filter, searchKey: debounced, pageno: page, pagesize: PAGE_SIZE })
+      } else if (onboardFilter !== 'all') {
+        // Onboarded / Not-Onboarded: filter server-side so the list is drawn from the same
+        // global population as the tab count (and paginates), instead of refining only the
+        // current page client-side. onboard_status: 3 = onboarded, 210 = not onboarded.
+        res = await api.searchSortFilter({}, { ...scope, condition: filter, onboard_status: onboardFilter === 'onboarded' ? 3 : 210, pageno: page, pagesize: PAGE_SIZE })
       } else {
         res = await api.listParentDevices({ ...scope, condition: filter, pageno: page, pagesize: PAGE_SIZE })
       }
@@ -135,18 +140,30 @@ export default function AssetPage({ search, onSearch }) {
     } finally {
       if (id === reqId.current) setLoading(false)
     }
-  }, [ctx, filter, debounced, page, adv, network, loadCounts])
+  }, [ctx, filter, debounced, page, adv, network, onboardFilter, loadCounts])
 
   useEffect(() => { load() }, [load])
-  useEffect(() => { setPage(1) }, [filter, debounced, adv, network])
+  useEffect(() => { setPage(1) }, [filter, debounced, adv, network, onboardFilter])
   // Clear the multi-update selection whenever the visible row set changes.
   useEffect(() => { setSelected(new Set()) }, [filter, debounced, adv, network, page, onboardFilter])
 
-  // Onboarded / Not Onboarded are client-side refinements (the parent-list endpoint has no onboard condition).
-  const displayRows = useMemo(
-    () => rows.filter((d) => onboardFilter === 'all' || (onboardFilter === 'onboarded' ? d.onboard_status === 3 : d.onboard_status !== 3)),
-    [rows, onboardFilter]
-  )
+  // Onboarded / Not-Onboarded are now filtered server-side in load() (see the searchSortFilter
+  // branch), so the list matches the global tab count and paginates. No client-side row
+  // refinement is needed — render the rows the server returned as-is.
+  const displayRows = rows
+
+  // The paginated list's totalElements is only offset+slice (see backend PageUtils.toPage), so the
+  // real per-view total comes from the counts endpoint we already fetch. Use it to show
+  // "N assets · Page X of Y" and gate Next exactly. Search / advanced-filter views have no matching
+  // count, so they keep the slice-size heuristic (Next while a full page came back).
+  const activeTab = onboardFilter !== 'all'
+    ? TABS.find((t) => t.onboard === onboardFilter)
+    : TABS.find((t) => t.key === filter && !t.onboard)
+  const viewTotal = (adv || debounced || !activeTab || !Number.isFinite(counts[activeTab.countKey]))
+    ? null
+    : counts[activeTab.countKey]
+  const totalPages = viewTotal != null ? Math.max(1, Math.ceil(viewTotal / PAGE_SIZE)) : null
+  const hasNext = totalPages != null ? page < totalPages : rows.length >= PAGE_SIZE
 
   const remove = async (device) => {
     if (!confirm(`Delete asset "${device.user_data_name || device.display_name || device.id}"?`)) return
@@ -188,6 +205,19 @@ export default function AssetPage({ search, onSearch }) {
       toast.success(`Updated ${n} asset${n === 1 ? '' : 's'}`)
       setMu(false); clearSelection(); load()
     } catch (e) { toast.error(`Multi update failed: ${e.message}`) }
+    finally { setMuBusy(false) }
+  }
+
+  const doMultiDelete = async () => {
+    const ids = [...selected]
+    if (ids.length === 0) { toast.error('Select one or more assets first (checkboxes)'); return }
+    if (!confirm(`Delete ${ids.length} selected asset${ids.length === 1 ? '' : 's'}? This cannot be undone.`)) return
+    setMuBusy(true)
+    try {
+      await api.deleteDevices(ids, { ...ctx, docker: network })
+      toast.success(`Deleted ${ids.length} asset${ids.length === 1 ? '' : 's'}`)
+      clearSelection(); load()
+    } catch (e) { toast.error(`Multi delete failed: ${e.message}`) }
     finally { setMuBusy(false) }
   }
 
@@ -295,6 +325,7 @@ export default function AssetPage({ search, onSearch }) {
               <>
                 <span className="sel-count">{selected.size} selected</span>
                 <button className="btn btn-primary sm" onClick={openMultiUpdate}><Icon name="sliders" size={14} /> Multi Update</button>
+                <button className="btn btn-danger sm" onClick={doMultiDelete} disabled={muBusy}>{muBusy ? <Spinner size={14} /> : <Icon name="trash" size={14} />} Delete</button>
                 <button className="btn btn-ghost sm" onClick={clearSelection}>Clear</button>
               </>
             ) : <span className="muted">Select assets to bulk-edit (Multi Update)</span>}
@@ -336,8 +367,10 @@ export default function AssetPage({ search, onSearch }) {
       {!loading && !error && (
         <div className="pagination">
           <button className="icon-btn" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>‹ Prev</button>
-          <span className="page-ind">Page {page}</span>
-          <button className="icon-btn" disabled={rows.length < PAGE_SIZE} onClick={() => setPage((p) => p + 1)}>Next ›</button>
+          <span className="page-ind">
+            {viewTotal != null ? `${viewTotal} asset${viewTotal === 1 ? '' : 's'} · Page ${page} of ${totalPages}` : `Page ${page}`}
+          </span>
+          <button className="icon-btn" disabled={!hasNext} onClick={() => setPage((p) => p + 1)}>Next ›</button>
         </div>
       )}
 

@@ -619,6 +619,55 @@ public class DeviceService implements DeviceServiceInterface {
     }
 
     /**
+     * Builds a human-readable summary of curated, user-facing fields that changed between the
+     * pre-edit ({@code oldD}) and post-edit ({@code newD}) device state, e.g.
+     * {@code "Building: 'Tower A' -> 'Tower B'; Operational Status: 'Working' -> 'Faulty'"}.
+     * Returns an empty string when no tracked field changed. Location/floor/building compare by name
+     * because both DTOs come from {@code getDeviceByDeviceId} (which resolves those joins).
+     */
+    private String editChangeSummary(DeviceDTO oldD, DeviceDTO newD) {
+        java.util.List<String> changes = new java.util.ArrayList<>();
+        addEditChange(changes, "Display Name", editDisplayName(oldD), editDisplayName(newD));
+        addEditChange(changes, "Vendor", editVendor(oldD), editVendor(newD));
+        addEditChange(changes, "Model", editModel(oldD), editModel(newD));
+        addEditChange(changes, "Type", oldD.getType(), newD.getType());
+        addEditChange(changes, "Category", oldD.getCategory(), newD.getCategory());
+        addEditChange(changes, "Sub-category", oldD.getSub_category(), newD.getSub_category());
+        addEditChange(changes, "Asset Group", oldD.getAsset_group(), newD.getAsset_group());
+        addEditChange(changes, "Operational Status", oldD.getOperational_status(), newD.getOperational_status());
+        addEditChange(changes, "Assignee", oldD.getAssigned_user_email(), newD.getAssigned_user_email());
+        addEditChange(changes, "Cost", editCost(oldD), editCost(newD));
+        addEditChange(changes, "Description", oldD.getDescription(), newD.getDescription());
+        addEditChange(changes, "Warranty", oldD.getWarranty(), newD.getWarranty());
+        addEditChange(changes, "Serial Number", oldD.getSerial_number(), newD.getSerial_number());
+        addEditChange(changes, "Building", oldD.getBuilding(), newD.getBuilding());
+        addEditChange(changes, "Floor", oldD.getFloor(), newD.getFloor());
+        addEditChange(changes, "Location", oldD.getLocation(), newD.getLocation());
+        addEditChange(changes, "Email Alert", editOnOff(oldD.getEmail_alert()), editOnOff(newD.getEmail_alert()));
+        addEditChange(changes, "SMS Alert", editOnOff(oldD.getSms_alert()), editOnOff(newD.getSms_alert()));
+        addEditChange(changes, "Remote Access", editOnOff(oldD.getRemote_access()), editOnOff(newD.getRemote_access()));
+        addEditChange(changes, "Do Not Disturb", editOnOffBool(oldD.getIs_dnd_enabled()), editOnOffBool(newD.getIs_dnd_enabled()));
+        return String.join("; ", changes);
+    }
+
+    private static void addEditChange(java.util.List<String> out, String label, String oldV, String newV) {
+        String o = editNorm(oldV), n = editNorm(newV);
+        // Only report real value changes. Skip blank -> value: the edit form auto-fills defaults
+        // (operational_status='Working', type/category='Generic', cost_unit='USD', ...) for empty
+        // fields, which would otherwise log "'' -> default" noise the user never actually changed.
+        if (o != null && !java.util.Objects.equals(o, n)) {
+            out.add(label + ": '" + o + "' -> '" + (n == null ? "" : n) + "'");
+        }
+    }
+    private static String editNorm(String v) { return (v == null || v.isBlank()) ? null : v.trim(); }
+    private static String editDisplayName(DeviceDTO d) { return d.getUser_data_name() != null && !d.getUser_data_name().isBlank() ? d.getUser_data_name() : d.getDisplay_name(); }
+    private static String editVendor(DeviceDTO d) { return d.getUser_data_vendor() != null && !d.getUser_data_vendor().isBlank() ? d.getUser_data_vendor() : d.getVendor(); }
+    private static String editModel(DeviceDTO d) { return d.getUser_data_model() != null && !d.getUser_data_model().isBlank() ? d.getUser_data_model() : d.getModel(); }
+    private static String editCost(DeviceDTO d) { return d.getCost_value() == null ? null : d.getCost_value() + (d.getCost_unit() != null ? " " + d.getCost_unit() : ""); }
+    private static String editOnOff(Integer v) { return v == null ? null : (v != 0 ? "On" : "Off"); }
+    private static String editOnOffBool(Boolean v) { return v == null ? null : (v ? "On" : "Off"); }
+
+    /**
      * Edits a device's editable fields, reconciling product, location/geolocation, asset-match and
      * onboarding status, recording lifecycle history on assignment or operational-status changes,
      * refreshing dependent counts and port status, and returning the updated device.
@@ -766,7 +815,12 @@ public class DeviceService implements DeviceServiceInterface {
             }
             log.info("device id : {}", devicedto.getId());
             log.info("device location : {}", devicedto.getLocation_id());
-            userActionLogService.addUserAction(username, "asset", "UPDATE", "A Device name: " + device_name + " and id: " + devicedto.getId() + " is updated for network " + devicedto.getDocker_name() + (devicedto.getLocation_id() != null && devicedto.getLocation() != null ? ", Location id: " + devicedto.getLocation_id() + ", Location name: " + devicedto.getLocation() : ""), "success", "asset_info", devicedto.getId());
+            DeviceDTO updatedDevice = this.getDeviceByDeviceId(username, vdmsid, dockername, device_id);
+            String changeSummary = (existingDevice != null && updatedDevice != null) ? editChangeSummary(existingDevice, updatedDevice) : "";
+            String updateMessage = (changeSummary != null && !changeSummary.isEmpty())
+                    ? "Asset '" + device_name + "' updated — " + changeSummary
+                    : "A Device name: " + device_name + " and id: " + devicedto.getId() + " is updated for network " + devicedto.getDocker_name() + (devicedto.getLocation_id() != null && devicedto.getLocation() != null ? ", Location id: " + devicedto.getLocation_id() + ", Location name: " + devicedto.getLocation() : "");
+            userActionLogService.addUserAction(username, "asset", "UPDATE", updateMessage, "success", "asset_info", devicedto.getId());
 
         } catch (Exception e) {
             log.error("Exception. Params: devicedto: {}, endpoint : {}", devicedto, httpServletRequest.getRequestURI(), e);
@@ -4091,6 +4145,42 @@ public class DeviceService implements DeviceServiceInterface {
         return this.getAllSubsystemDevicesByPagination(username, vdmsid, dockername, null, condition, pageno, pagesize, assignee);
     }
 
+    /**
+     * Maps a browse-list {@code condition} to the filter params shared by the subsystem-parent slice and
+     * count queries: {@code [virtual_device_type, status, monitor, asset_match_status, onboard_status,
+     * assigned_status]}. Kept in one place so the page slice and its total can never drift apart.
+     */
+    private static Integer[] conditionToFilters(String condition) {
+        Integer virtual_device_type = null, status = null, monitor = 123, asset_match_status = null,
+                onboard_status = 123, assigned_status = null;
+        if ("unmonitored".equals(condition)) { monitor = 0; }
+        else if ("online".equals(condition)) { monitor = 1; status = 1; }
+        else if ("offline".equals(condition)) { monitor = 1; status = 0; }
+        else if ("other".equals(condition)) { virtual_device_type = 123; }
+        else if ("matched".equals(condition)) { asset_match_status = 1; }
+        else if ("unmatched".equals(condition)) { asset_match_status = 0; }
+        else if ("verified".equals(condition)) { asset_match_status = 2; }
+        else if ("archived".equals(condition)) { asset_match_status = 3; }
+        else if ("onboarded".equals(condition)) { onboard_status = 3; }
+        else if ("notonboarded".equals(condition)) { onboard_status = 210; }
+        else if ("assigned".equals(condition)) { assigned_status = 1; }
+        else if ("unassigned".equals(condition)) { assigned_status = 0; }
+        // "all" (and any unknown) keeps the defaults
+        return new Integer[]{ virtual_device_type, status, monitor, asset_match_status, onboard_status, assigned_status };
+    }
+
+    /**
+     * Total number of subsystem-parent devices matching the docker + condition filters — the accurate
+     * {@code totalElements} for the paginated browse response. Uses the same {@link #conditionToFilters}
+     * mapping as {@link #getSubsystemParentDevicesByPagination}, so the total always matches the slice.
+     */
+    public long getSubsystemParentDevicesCount(String username, String vdmsid, String dockername,
+                                               String condition, String assignee) {
+        Integer[] f = conditionToFilters(condition);
+        return deviceRepository.countSubsystemParentDevicesByPagination(
+                vdmsid, dockername, f[0], f[1], f[2], f[3], f[4], f[5], assignee);
+    }
+
     //new get method with subsystem devices get
     /**
      * Returns a page of subsystem devices under the given parent device, filtered by status condition.
@@ -4109,10 +4199,15 @@ public class DeviceService implements DeviceServiceInterface {
     public Set<DeviceDTO> getAllSubsystemDevicesByPagination(String username, String vdmsid, String dockername,
                                                              String device_id, String condition, Integer pageno, Integer pagesize, String assignee) {
         Set<DeviceDTO> devices;
-        Integer virtual_device_type = null;
-        Integer status = null;
-        Integer monitor = 123;
+        Integer[] f = conditionToFilters(condition);
+        Integer virtual_device_type = f[0];
+        Integer status = f[1];
+        Integer monitor = f[2];
+        Integer asset_match_status = f[3];
+        Integer onboard_status = f[4];
+        Integer assigned_status = f[5];
         Integer offset = pagesize * (pageno - 1);
+
         Integer asset_match_status = null;
         Integer onboard_status = 123;
         Integer assigned_status = null;

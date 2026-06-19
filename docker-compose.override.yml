@@ -4,7 +4,14 @@
 #     (postgres:5432) and is unaffected.
 #  2) daprio/scheduler runs as non-root and can't mkdir in the scheduler-data volume.
 #     Run it as root for the demo so it can create its etcd data dir.
-#  3) The OTel javaagent jar (infra/otel/opentelemetry-javaagent.jar) is currently a
+#  3) DB-PER-SERVICE: each stateful service points at its OWN database (true
+#     microservice DB isolation) instead of sharing sclera_assets via schemas.
+#     The original sclera_assets DB is left intact as the rollback path.
+#     TO REVERT: delete the `DB_URL` blocks below (3) and run
+#       docker compose up -d   (services fall back to sclera_assets from base compose)
+#     then force-recreate the dapr sidecars. The new *_db databases can stay or be dropped.
+#     (sclera-workorders already targets its own workorder_db via the base compose.)
+#  4) The OTel javaagent jar (infra/otel/opentelemetry-javaagent.jar) is currently a
 #     1-byte stub, so `-javaagent:/otel/agent.jar` aborts every JVM at startup
 #     ("Error opening zip file or JAR manifest missing"). JAVA_TOOL_OPTIONS is blanked
 #     for each Java service so they boot WITHOUT the agent. Trade-off: no distributed
@@ -18,12 +25,15 @@ services:
   dapr-scheduler:
     user: "0:0"
 
-  app:
+  # --- Java services: blank JAVA_TOOL_OPTIONS (4); DB-per-service DB_URL (3) where applicable ---
+  app:                       # sclera-cloud-device-asset  (was: sclera_assets / public)
     environment:
       JAVA_TOOL_OPTIONS: ""
-  vdms-service:
+      DB_URL: jdbc:postgresql://postgres:5432/device_asset_db
+  vdms-service:              # (was: sclera_assets / vdms_svc)  schema env unchanged
     environment:
       JAVA_TOOL_OPTIONS: ""
+      DB_URL: jdbc:postgresql://postgres:5432/vdms_db
   sclera-audit:
     environment:
       JAVA_TOOL_OPTIONS: ""
@@ -39,18 +49,21 @@ services:
   sclera-workorders:
     environment:
       JAVA_TOOL_OPTIONS: ""
-  sclera-inspection:
+  sclera-inspection:         # (was: sclera_assets / inspection_svc)
     environment:
       JAVA_TOOL_OPTIONS: ""
-  sclera-integrations:
+      DB_URL: jdbc:postgresql://postgres:5432/inspection_db
+  sclera-integrations:       # (was: sclera_assets / integrations_svc)
     environment:
       JAVA_TOOL_OPTIONS: ""
+      DB_URL: jdbc:postgresql://postgres:5432/integrations_db
   sclera-edge:
     environment:
       JAVA_TOOL_OPTIONS: ""
   api-gateway:
     environment:
       JAVA_TOOL_OPTIONS: ""
-  sclera-scheduler:
+  sclera-scheduler:          # (was: sclera_assets / sclera_scheduler)
     environment:
       JAVA_TOOL_OPTIONS: ""
+      DB_URL: jdbc:postgresql://postgres:5432/scheduler_db

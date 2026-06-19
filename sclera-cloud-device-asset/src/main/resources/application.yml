@@ -75,6 +75,8 @@ sclera:
   server-asset-images-absolute-path: /home/sclera/images/assets/
   server-asset-ocr-images-url: http://localhost:8888/images/assets/ocr/
   server-asset-ocr-images-absolute-path: /home/sclera/images/assets/ocr/
+  server-document-url: http://localhost:8888/images/document/
+  server-document-absolute-path: /home/sclera/images/document/
   server-app-url: https://app.sclera.com/
   auth-server-app-url: https://accounts.sclera.com/sclera
   backup-path: /home/sclera/backup

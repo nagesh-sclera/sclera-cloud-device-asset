@@ -1,6 +1,7 @@
 package io.sclera.service;
 import io.sclera.client.APICallClient;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
@@ -24,6 +25,7 @@ import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.uuid.Generators;
 
@@ -60,6 +62,9 @@ public class DocumentService implements DocumentServiceInterface {
 
     @Autowired
     AuthenticationUtils authenticationUtils;
+
+    @Autowired
+    UserActionLogService userActionLogService;
 
 //	public void upsertDocument(String username, String vdmsid, DocumentMediaDTO document, MultipartFile documentFile) {
 //		
@@ -170,17 +175,82 @@ public class DocumentService implements DocumentServiceInterface {
     }
 
     /**
-     * Removes a document along with all of its device tag records.
+     * Uploads a document file for an asset: stores the file, creates the document record, tags it to the
+     * device, and refreshes the device's document count. The stored file's public URL becomes the
+     * document's {@code link}; the PDF encryption type is derived from that link as in {@link #upsertDocument}.
+     *
+     * @param username the acting user
+     * @param vdmsid the VDMS identifier scoping the request
+     * @param deviceid the device/asset to attach the document to
+     * @param name the document name
+     * @param category the document category (may be null)
+     * @param description the document description (may be null)
+     * @param documentFile the uploaded file (required, non-empty)
+     * @param httpServletRequest the request, used to read the {@code Authorization} header for the encryption check
+     */
+    public void uploadDocument(String username, String vdmsid, String deviceid, String name, String category,
+                               String description, MultipartFile documentFile, HttpServletRequest httpServletRequest) {
+
+        String id = Generators.timeBasedGenerator().generate().toString();
+        BigInteger createdTimestamp = BigInteger.valueOf(System.currentTimeMillis());
+
+        String extension = getFileExtension(documentFile.getOriginalFilename());
+        String fileName = extension.isEmpty() ? id : id + "." + extension;
+
+        String link;
+        try {
+            link = fileUtils.addDocumentToServer(fileName, documentFile);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store document file for device " + deviceid, e);
+        }
+
+        DocumentMediaDTO document = new DocumentMediaDTO();
+        document.setId(id);
+        document.setLink(link);
+        Integer encryptedType = checkEncryptedType(document, httpServletRequest.getHeader("Authorization"));
+
+        documentRepository.upsertDocument(id, name, category, description, link, username, createdTimestamp, encryptedType);
+        documentRepository.tagDocumentToDevice(id, deviceid);
+        deviceService.updateDeviceDocumentsCountByDeviceId(deviceid);
+        userActionLogService.addUserAction(username, "document", "TAG",
+                "Document '" + name + "' tagged to device " + deviceid, "success", "document", deviceid);
+    }
+
+    /** Returns the file extension (without the dot) of a filename, or "" if there is none. */
+    private String getFileExtension(String filename) {
+        if (filename == null) {
+            return "";
+        }
+        int dot = filename.lastIndexOf('.');
+        return (dot >= 0 && dot < filename.length() - 1) ? filename.substring(dot + 1) : "";
+    }
+
+    /** Extracts the stored file name (the segment after the last {@code /}) from a document link URL. */
+    static String getFileNameFromLink(String link) {
+        return link.substring(link.lastIndexOf('/') + 1);
+    }
+
+    /**
+     * Removes a document along with its stored file and all of its device tag records.
      *
      * @param username the acting user
      * @param vdmsid the VDMS identifier scoping the request
      * @param documentid the id of the document to delete
      */
     public void deleteDocument(String username, String vdmsid, String documentid) {
-
-//		fileUtils.removeDocumentFromServer(documentid + ".pdf");
+        java.util.List<String> taggedDeviceIds = documentRepository.getDocumentByDeviceId(documentid);
+        String link = documentRepository.getDocumentLinkByDocumentId(documentid);
+        if (link != null && !link.isBlank()) {
+            fileUtils.removeDocumentFromServer(getFileNameFromLink(link));
+        }
         deleteTagRecordByDocumentId(documentid);
         documentRepository.deleteDocumentById(documentid);
+        if (taggedDeviceIds != null) {
+            for (String deviceId : taggedDeviceIds) {
+                userActionLogService.addUserAction(username, "document", "DELETE",
+                        "Document " + documentid + " deleted from device " + deviceId, "success", "document", deviceId);
+            }
+        }
     }
 
 //	public void deleteDocumentFilebyId(String username, String vdmsid, String documentid) {
@@ -254,6 +324,10 @@ public class DocumentService implements DocumentServiceInterface {
                 log.info("Tagging document ID: {} to device ID: {}", document.getId(), document.getDevice_id());
                 documentRepository.tagDocumentToDevice(document.getId(), document.getDevice_id());
                 deviceService.updateDeviceDocumentsCountByDeviceId(document.getDevice_id());
+                String docLabel = document.getName() != null ? document.getName() : document.getId();
+                userActionLogService.addUserAction(username, "document", "TAG",
+                        "Document '" + docLabel + "' tagged to device " + document.getDevice_id(),
+                        "success", "document", document.getDevice_id());
             } catch (Exception e) {
                 log.error("Error tagging document to device. Document ID: {}, Device ID: {}, Error: {}", document.getId(), document.getDevice_id(), e.getMessage());
             }

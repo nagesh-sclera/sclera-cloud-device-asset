@@ -155,7 +155,15 @@ public class DeviceController {
             @Parameter(description = "Number of devices per page") @RequestParam(defaultValue = "10") Integer pagesize,
             @Parameter(description = "Assignee to filter by") @RequestParam(defaultValue = "all") String assignee) {
         log.info("getSubsystemParentDevicesByPagination username={} vdmsid={} dockername={}", username, vdmsid, dockername);
-        return PageUtils.toPage(deviceService.getSubsystemParentDevicesByPagination(username, vdmsid, dockername, condition, pageno, pagesize, assignee), pageno, pagesize);
+        try {
+            var slice = deviceService.getSubsystemParentDevicesByPagination(username, vdmsid, dockername, condition, pageno, pagesize, assignee);
+            long total = deviceService.getSubsystemParentDevicesCount(username, vdmsid, dockername, condition, assignee);
+            return PageUtils.toPage(slice, pageno, pagesize, total);
+        } catch (Exception e) {
+            log.error("getSubsystemParentDevicesByPagination failed username={} vdmsid={} dockername={}: {}", username, vdmsid, dockername, e.getMessage(), e);
+            throw e;
+        }
+
     }
 
     //new get method with subsystem devices get
