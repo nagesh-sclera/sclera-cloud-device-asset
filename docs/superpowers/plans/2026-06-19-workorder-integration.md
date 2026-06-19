@@ -521,6 +521,8 @@ git commit -m "feat(dapr): subscribe sclera-workorders to scheduler.trigger; upd
 
 Compose service names (verified): device-asset = `app` (sidecar `app-dapr`), vdms = `vdms-service` (`vdms-dapr`), scheduler = `sclera-scheduler` (`sclera-scheduler-dapr`), workorder = `sclera-workorders` (`sclera-workorders-dapr`). Sidecars use empty placement (`--placement-host-address ""`), so there is no `placement` service to start.
 
+Build source note: `app` and `vdms-service` build from the repo-root reactor (`COPY . .` + `mvn -pl <module> -am package`), so these images recompile the changed `dapr-commons` (UserActionLogEvent) and their new code from committed source — no host `mvn install` needed inside Docker. `sclera-workorders` builds from its own module context (`./sclera-workorders`) and has no `dapr-commons` dependency.
+
 Run:
 ```bash
 docker compose build sclera-workorders app vdms-service
@@ -556,9 +558,9 @@ Expected: VDMS details returned (proves `VdmsClient` service-invocation succeeds
 Emit a `scheduler.trigger` event with `data.owner = "workorder"` (publish to the `pubsub` component, e.g. via the scheduler's normal flow or `dapr publish`).
 Expected: `docker compose logs --tail=30 sclera-workorders | grep "scheduler-demo"` → "workorder job fired … hello from sclera-cloud-workorder".
 
-- [ ] **Step 5: Confirm tracing routes through sidecars**
+- [ ] **Step 5: Confirm calls route through the Dapr sidecars**
 
-Open Jaeger at `http://localhost:16686`, select service `sclera-workorders`, and confirm the upsert trace shows spans crossing into `vdms-service` and `sclera-cloud-device-asset` via the Dapr sidecars (not direct app-to-app).
+NOTE: distributed tracing to Jaeger is DISABLED in this dev stack — the OTel javaagent jar is a 1-byte stub and `docker-compose.override.yml` blanks `JAVA_TOOL_OPTIONS` for every Java service, so there are no Jaeger spans. Verify the sidecar routing from logs instead: `docker compose logs --tail=80 sclera-workorders-dapr` (and `app-dapr`, `vdms-dapr`) should show the `invoke`/`publish` activity for the smoke calls, and the fact that the cross-service effects in Steps 2–3 occur at all proves the path `app → local sidecar → remote sidecar → remote app` (the apps only know their local sidecar). If you want span-level tracing, drop a real `opentelemetry-javaagent.jar` into `infra/otel/` and remove the override's `JAVA_TOOL_OPTIONS: ""` lines — out of scope here.
 
 - [ ] **Step 6: Regression — changed modules still green**
 
