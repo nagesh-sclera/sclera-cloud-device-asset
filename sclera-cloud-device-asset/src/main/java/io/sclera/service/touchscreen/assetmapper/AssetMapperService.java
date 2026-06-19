@@ -3,11 +3,13 @@ package io.sclera.service.touchscreen.assetmapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sclera.Repository.AssetRepository;
+import io.sclera.Repository.DeviceRepository;
 import io.sclera.dto.DeviceDTO;
 import io.sclera.dto.touchscreen.assetmapper.AssetDTO;
 import io.sclera.models.Asset;
 import io.sclera.dto.touchscreen.VdmsDetailsDTO;
 import io.sclera.service.DeviceService;
+import io.sclera.service.UserActionLogService;
 import io.sclera.service.touchscreen.VdmsService;
 import org.springframework.data.domain.PageRequest;
 import org.apache.poi.ss.usermodel.Cell;
@@ -56,6 +58,12 @@ public class AssetMapperService {
 
     @Autowired
     private DeviceService deviceService;
+
+    @Autowired
+    private DeviceRepository deviceRepository;
+
+    @Autowired
+    private UserActionLogService userActionLogService;
 
     @Autowired
     private VdmsService vdmsService;
@@ -322,9 +330,16 @@ public class AssetMapperService {
                 device.setDocker_name(dockerName);
                 device.setVdms_id(vdmsId);
 
+                boolean isNew = !deviceRepository.existsById(device.getId());
                 deviceService.upsertVirtualDeviceByAssetMapper(device, username);
                 assetRepository.deleteById(a.getId());
                 saved++;
+                if (isNew) {
+                    String assetLabel = device.getUser_data_name() != null ? device.getUser_data_name() : device.getId();
+                    userActionLogService.addUserAction(username, "asset", "IMPORT",
+                            "Asset imported: " + assetLabel + " (id: " + device.getId() + ")",
+                            "success", "asset_info", device.getId());
+                }
             } catch (Exception e) {
                 failed++;
                 log.warn("saveAssets failed for asset {}: {}", a.getId(), e.getMessage());

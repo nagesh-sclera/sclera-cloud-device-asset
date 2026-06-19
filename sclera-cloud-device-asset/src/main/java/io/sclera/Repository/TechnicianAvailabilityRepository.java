@@ -1,10 +1,12 @@
 package io.sclera.Repository;
 
 import io.sclera.dto.TechnicianAvailabilityDTO;
+import io.sclera.mapper.TechnicianAvailabilityMapperHolder;
 import io.sclera.models.TechnicianAvailability;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -100,14 +102,28 @@ public interface TechnicianAvailabilityRepository extends JpaRepository<Technici
     List<TechnicianAvailabilityDTO> getAllTechnicianAvailability();
 
     /**
-     * Returns the availability record with the given id.
+     * Loads the availability entity with the given id.
      *
      * @param id availability identifier
-     * @return the matching availability projection
+     * @return the matching entity, or null if none exists
      */
-    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with @SqlResultSetMapping; plain SELECT already PG-compatible
-    @Query(nativeQuery = true)
-    TechnicianAvailabilityDTO getTechnicianAvailabilityById(String id);
+    @Query("SELECT t FROM TechnicianAvailability t WHERE t.id = :id")
+    TechnicianAvailability findEntityById(@Param("id") String id);
+
+    /**
+     * Returns the availability record with the given id.
+     *
+     * <p>CONVERTED: native {@code @NamedNativeQuery} projection replaced by a JPQL entity load plus a
+     * MapStruct mapping ({@link io.sclera.mapper.TechnicianAvailabilityDtoMapper}) that reproduces the
+     * old {@code technicianAvailabilityMapping} @ConstructorResult byte-for-byte.
+     *
+     * @param id availability identifier
+     * @return the matching availability projection, or null if none exists
+     */
+    default TechnicianAvailabilityDTO getTechnicianAvailabilityById(String id) {
+        TechnicianAvailability entity = findEntityById(id);
+        return entity == null ? null : TechnicianAvailabilityMapperHolder.MAPPER.toDto(entity);
+    }
 
     /**
      * Deletes the availability row with the given id.

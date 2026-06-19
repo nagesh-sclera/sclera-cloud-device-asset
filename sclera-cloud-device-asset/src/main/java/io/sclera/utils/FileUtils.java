@@ -1,5 +1,6 @@
 package io.sclera.utils;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,44 +16,47 @@ import java.nio.file.Paths;
  */
 @Component
 public class FileUtils {
-	
-	private static final String ABSOLUTE_DOCUMENT_PATH =  "/home/sclera/images/document/";
-	private static final String DIRECTORY_DOCUMENT_PATH =  "http://localhost:8888/images/document/";
-	
+
+	// Document storage is config-driven so the served URL matches the active profile's port
+	// (e.g. :8085 under the docker profile) instead of a hard-coded host. Defaults preserve the
+	// previous values for profiles that do not set them.
+	@Value("${sclera.server-document-absolute-path:/home/sclera/images/document/}")
+	private String absoluteDocumentPath;
+
+	@Value("${sclera.server-document-url:http://localhost:8085/images/document/}")
+	private String documentUrl;
+
 	private static final String ABSOLUTE_MEDIA_PATH =  "/home/sclera/images/media/";
 	private static final String DIRECTORY_MEDIA_PATH =  "http://localhost:8888/images/media/";
-	
-	
-	
-	
+
+
+
+
 	/**
 	 * Writes the given document file to the document storage path and returns its public URL, or null
-	 * if the inputs are missing.
+	 * if the inputs are missing. Creates the storage directory if absent and propagates write failures
+	 * so callers can abort before persisting a dangling record.
 	 */
-	public String addDocumentToServer(String fileName, MultipartFile documentFile)
+	public String addDocumentToServer(String fileName, MultipartFile documentFile) throws IOException
 	{
 		if(fileName != null && documentFile != null)
 		{
-			Path filePath = Paths.get(ABSOLUTE_DOCUMENT_PATH + fileName);
-			try {
-				Files.write(filePath, documentFile.getBytes());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block0
-				System.out.println(e);
-			}
-            return DIRECTORY_DOCUMENT_PATH + fileName;
+			Path filePath = Paths.get(absoluteDocumentPath + fileName);
+			Files.createDirectories(filePath.getParent());
+			Files.write(filePath, documentFile.getBytes());
+            return documentUrl + fileName;
 
 		}
 		return null;
 	}
-	
-	
+
+
 	/**
 	 * Deletes the named document file from the document storage path if it exists.
 	 */
 	public void removeDocumentFromServer(String fileName)
 	{
-		File file = new File(ABSOLUTE_DOCUMENT_PATH + fileName);
+		File file = new File(absoluteDocumentPath + fileName);
 		if (file.exists()) {
             if (file.delete()) {
                 System.out.println("File deleted successfully");
@@ -63,8 +67,8 @@ public class FileUtils {
             System.out.println("File does not exist");
         }
 	}
-	
-	
+
+
 	/**
 	 * Writes the given media file to the media storage path and returns its public URL, or null if the
 	 * inputs are missing.
@@ -85,8 +89,8 @@ public class FileUtils {
 		}
 		return null;
 	}
-	
-	
+
+
 	/**
 	 * Deletes the named media file from the media storage path if it exists.
 	 */

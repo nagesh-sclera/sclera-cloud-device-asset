@@ -26,6 +26,7 @@ export const NAV_ITEMS = [
   { key: 'users', label: 'User List', icon: 'users' },
   { key: 'proxy', label: 'Proxy Networks', icon: 'network' },
   { key: 'inventory', label: 'Inventory', icon: 'layers' },
+  { key: 'onboarding', label: 'Asset Onboarding', icon: 'upload' },
   { key: 'adc', label: 'Asset Data Collection', icon: 'database' },
   { key: 'portal', label: 'Client Portal', icon: 'portal' },
   { key: 'config', label: 'Global Configuration', icon: 'globe' },

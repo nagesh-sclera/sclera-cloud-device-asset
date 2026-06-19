@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Icon from './Icon.jsx'
 import { Skeleton, Spinner } from './Skeleton.jsx'
 import { useApp } from '../context/AppContext.jsx'
@@ -8,7 +8,7 @@ import api from '../services/api.js'
 import { getLocalImage, setLocalImage } from '../services/localImages.js'
 import { firstAssetImage } from '../services/assetImage.js'
 import ImagePreview from './ImagePreview.jsx'
-import { inspectionsFor, workOrdersFor, inventoryFor, alertsFor, documentsFor } from '../services/mock.js'
+import { inspectionsFor, workOrdersFor, inventoryFor, alertsFor } from '../services/mock.js'
 
 const dash = (v) => (v === 0 ? '0' : v ? String(v) : '—')
 function fmtDate(ts) {
@@ -72,12 +72,17 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
   const [preview, setPreview] = useState(false)   // asset-image lightbox
   const [imgBusy, setImgBusy] = useState(false)
 
-  // real sensors (called directly on the main service via the gateway)
+  // real sensors (added/listed on the integrations service; deviceId relates them)
   const [sensors, setSensors] = useState(null)
   const [sensorBusy, setSensorBusy] = useState(false)
+  // sensor count fetched by cloud-device-asset via Dapr from sclera-integrations (other DB)
+  const [sensorCount, setSensorCount] = useState(null)
   // real notes
   const [notes, setNotes] = useState(null)
   const [noteBusy, setNoteBusy] = useState(false)
+  // real documents
+  const [documents, setDocuments] = useState(null)
+  const [docBusy, setDocBusy] = useState(false)
   // networks (for moving the device between gateways during edit)
   const [networks, setNetworks] = useState([])
   // Building -> Floor -> Location cascade options
@@ -92,7 +97,7 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
   useEffect(() => {
     if (!deviceId) return
     let alive = true
-    setLoading(true); setError(null); setSub('Info'); setEditing(false); setSensors(null); setNotes(null)
+    setLoading(true); setError(null); setSub('Info'); setEditing(false); setSensors(null); setSensorCount(null); setNotes(null); setDocuments(null)
     setFloors([]); setLocations([])
     api.getDevice(deviceId, ctx)
       .then((d) => {
@@ -114,7 +119,15 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
       .catch(() => setLogs([]))
   }, [sub]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const loadSensors = () => api.listSensors(deviceId, ctx).then((s) => setSensors(Array.isArray(s) ? s : [])).catch(() => setSensors([]))
+  // Sensor list (integrations service, via gateway) + the live count fetched by cloud-device-asset
+  // over Dapr from sclera-integrations (separate service + integrations_svc DB).
+  const loadSensorCount = () => api.sensorCount(deviceId)
+    .then((r) => setSensorCount(typeof r?.count === 'number' ? r.count : null))
+    .catch(() => setSensorCount(null))
+  const loadSensors = () => {
+    api.listSensors(deviceId, ctx).then((s) => setSensors(Array.isArray(s) ? s : [])).catch(() => setSensors([]))
+    loadSensorCount()
+  }
   // Eager-load sensors on open so the Sensors count/badge is correct without first opening the tab.
   // Guarded so a slow fetch for a previous asset can't overwrite the newly-opened one's sensors.
   useEffect(() => {
@@ -123,11 +136,17 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
     api.listSensors(deviceId, ctx)
       .then((s) => { if (alive) setSensors(Array.isArray(s) ? s : []) })
       .catch(() => { if (alive) setSensors([]) })
+    api.sensorCount(deviceId)
+      .then((r) => { if (alive) setSensorCount(typeof r?.count === 'number' ? r.count : null) })
+      .catch(() => { if (alive) setSensorCount(null) })
     return () => { alive = false }
   }, [deviceId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadNotes = () => api.listNotes(deviceId, ctx).then((n) => setNotes(Array.isArray(n) ? n : [])).catch(() => setNotes([]))
   useEffect(() => { if (sub === 'Notes' && notes == null) loadNotes() }, [sub]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadDocuments = () => api.listDocuments(deviceId, ctx).then((d) => setDocuments(Array.isArray(d) ? d : [])).catch(() => setDocuments([]))
+  useEffect(() => { if (sub === 'Documents' && documents == null) loadDocuments() }, [sub]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const name = device?.user_data_name || device?.display_name || device?.name || deviceId
   const st = device ? statusInfo(device) : null
@@ -140,7 +159,6 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
   const workorders = useMemo(() => (device ? workOrdersFor(device) : []), [device])
   const inventory = useMemo(() => (device ? inventoryFor(device) : null), [device])
   const alerts = useMemo(() => (device ? alertsFor(device) : []), [device])
-  const documents = useMemo(() => (device ? documentsFor(device) : []), [device])
   const bldOptions = useMemo(() => buildings.map((b) => ({ id: b.id || b.building_id, name: b.name })), [buildings])
   const floorOptions = useMemo(() => floors.map((f) => ({ id: f.id || f.floor_id, name: f.name || f.floor_name || f.id })), [floors])
   const locOptions = useMemo(() => locations.map((l) => ({ id: l.id || l.location_id, name: l.name || l.location_name || l.id })), [locations])
@@ -287,6 +305,19 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
     finally { setNoteBusy(false) }
   }
 
+  const addDocument = async ({ file, name }) => {
+    setDocBusy(true)
+    try { await api.uploadDocument(deviceId, { file, name }, ctx); toast.success('Document uploaded'); await loadDocuments(); onChanged?.() }
+    catch (e) { toast.error(`Upload failed: ${e.message}`) }
+    finally { setDocBusy(false) }
+  }
+  const removeDocument = async (id) => {
+    setDocBusy(true)
+    try { await api.deleteDocument(id, ctx); toast.success('Document deleted'); await loadDocuments(); onChanged?.() }
+    catch (e) { toast.error(`Delete failed: ${e.message}`) }
+    finally { setDocBusy(false) }
+  }
+
   const counts = device ? [
     ['Sensors', sensors?.length ?? (device.snmp_count || 0)], ['Inspections', inspections.length], ['Work Orders', workorders.length],
     ['Alerts', alerts.length], ['Tickets', device.ticket_count || 0], ['Notes', device.notes_count || 0],
@@ -342,13 +373,13 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
           ) : sub === 'Info' ? (
             editing ? <EditForm form={form} set={set} setFlag={setFlag} networks={networks} bldOptions={bldOptions} floorOptions={floorOptions} locOptions={locOptions} onBuilding={onBuilding} onFloor={onFloor} /> : <InfoView device={device} name={name} st={st} onboarded={onboarded} counts={counts} />
           ) : sub === 'Sensors' ? (
-            <SensorsView sensors={sensors} busy={sensorBusy} onAdd={addSensor} onRemove={removeSensor} onRefresh={loadSensors} />
+            <SensorsView sensors={sensors} count={sensorCount} busy={sensorBusy} onAdd={addSensor} onRemove={removeSensor} onRefresh={loadSensors} />
           ) : sub === 'Notes' ? (
             <NotesView notes={notes} busy={noteBusy} onAdd={addNote} onRemove={removeNote} onRefresh={loadNotes} />
           ) : sub === 'Inspections' ? <InspectionsView items={inspections} />
             : sub === 'Work Orders' ? <WorkOrdersView items={workorders} />
             : sub === 'Inventory' ? <InventoryView inv={inventory} />
-            : sub === 'Documents' ? <DocumentsView docs={documents} />
+            : sub === 'Documents' ? <DocumentsView docs={documents} busy={docBusy} onAdd={addDocument} onRemove={removeDocument} onRefresh={loadDocuments} />
             : <ActivityList logs={logs} />}
         </div>
 
@@ -533,7 +564,7 @@ function EditForm({ form, set, setFlag, networks = [], bldOptions = [], floorOpt
   )
 }
 
-function SensorsView({ sensors, busy, onAdd, onRemove, onRefresh }) {
+function SensorsView({ sensors, count, busy, onAdd, onRemove, onRefresh }) {
   const [show, setShow] = useState(false)
   const [f, setF] = useState({ name: '', type: 'Temperature', value: '', unit: '°C', status: 'ok', protocol: 'BACnet' })
   const sf = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }))
@@ -546,11 +577,21 @@ function SensorsView({ sensors, busy, onAdd, onRemove, onRefresh }) {
   return (
     <>
       <div className="svc-head">
-        <span className="svc-note">Real sensors — fetched &amp; added on the device-asset service</span>
+        <span className="svc-note">Sensors live in the <b>sclera-integrations</b> service (its own <b>integrations_svc</b> DB)</span>
         <div className="svc-head-actions">
           <button className="icon-btn" onClick={onRefresh} title="Refresh"><Icon name="refresh" size={14} /></button>
           <button className="btn btn-primary sm" onClick={() => setShow((s) => !s)}><Icon name="plus" size={13} /> Add Sensor</button>
         </div>
+      </div>
+
+      <div style={{
+        marginBottom: 12, padding: '10px 12px', borderRadius: 8, fontSize: 12, lineHeight: 1.5,
+        border: '1px solid var(--border, #334155)', borderLeft: '3px solid var(--accent, #4f46e5)',
+        background: 'rgba(79,70,229,0.08)', color: 'var(--text, #e2e8f0)',
+      }}>
+        <b style={{ fontSize: 15 }}>{count == null ? '—' : count}</b> sensor{count === 1 ? '' : 's'} for this asset —
+        counted by <b>cloud-device-asset → Dapr → sclera-integrations</b> from the{' '}
+        <b>integrations_svc</b> database. Add one below and watch this count update from the other service.
       </div>
 
       {show && (
@@ -668,11 +709,45 @@ function InventoryView({ inv }) {
       <div className="svc-row" key={p.id}><div className="svc-row-main"><div className="svc-row-title">{p.name}</div><div className="svc-row-meta">Qty {p.qty}</div></div><span className={`badge tone-${p.status === 'In Stock' ? 'online' : 'offline'}`}>{p.status}</span></div>
     ))}</Section></>)
 }
-function DocumentsView({ docs }) {
-  if (!docs.length) return <Empty icon="upload" label="No documents" />
-  return (<div className="log-list">{docs.map((d) => (
-    <div className="svc-row" key={d.id}><div className="svc-row-main"><div className="svc-row-title"><Icon name="upload" size={14} /> {d.name}</div><div className="svc-row-meta">{d.kind} · {d.size}</div></div><button className="btn btn-ghost sm">Open</button></div>
-  ))}</div>)
+function DocumentsView({ docs, busy, onAdd, onRemove, onRefresh }) {
+  const fileRef = useRef(null)
+  const onPick = (e) => {
+    const file = (e.target.files || [])[0]
+    if (file) onAdd({ file, name: file.name })
+    e.target.value = '' // allow re-selecting the same file
+  }
+  return (
+    <>
+      <div className="svc-head">
+        <span className="svc-note">Documents — stored on the device-asset service</span>
+        <button className="icon-btn" onClick={onRefresh} title="Refresh"><Icon name="refresh" size={14} /></button>
+      </div>
+      <div className="note-form-foot" style={{ marginBottom: 10 }}>
+        <button className="btn btn-primary sm" disabled={busy} onClick={() => fileRef.current?.click()}>
+          {busy ? <Spinner size={13} /> : <Icon name="plus" size={13} />} Upload Document
+        </button>
+        <input ref={fileRef} type="file" hidden onChange={onPick} />
+      </div>
+      {docs == null ? (
+        <div className="log-list"><Skeleton w="100%" h={50} /><Skeleton w="100%" h={50} /></div>
+      ) : docs.length === 0 ? (
+        <Empty icon="upload" label="No documents yet — upload the first one" />
+      ) : (
+        <div className="log-list">{docs.map((d) => (
+          <div className="svc-row" key={d.id}>
+            <div className="svc-row-main">
+              <div className="svc-row-title"><Icon name="upload" size={14} /> {d.name}</div>
+              <div className="svc-row-meta">{d.category || 'Document'}</div>
+            </div>
+            <div className="svc-row-side">
+              {d.link ? <a className="btn btn-ghost sm" href={d.link} target="_blank" rel="noreferrer">Open</a> : null}
+              <button className="icon-btn danger" style={{ width: 24, height: 24 }} disabled={busy} onClick={() => onRemove(d.id)} title="Delete"><Icon name="trash" size={12} /></button>
+            </div>
+          </div>
+        ))}</div>
+      )}
+    </>
+  )
 }
 function ActivityList({ logs }) {
   if (logs == null) return <div className="dp-fields"><Skeleton w="100%" h={40} /><Skeleton w="100%" h={40} /></div>

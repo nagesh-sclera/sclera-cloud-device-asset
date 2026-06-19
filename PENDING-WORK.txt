@@ -1,0 +1,177 @@
+==============================================================================
+ SCLERA 2.0 — PENDING / NOT-DONE WORK  (whole platform)
+ Generated: 2026-06-16
+==============================================================================
+
+HOW TO READ THIS
+  - DONE / PARTIAL / SKELETON / STUBBED are used throughout:
+      DONE      = real DB + logic, working.
+      PARTIAL   = DB + entities exist, but most controller/service logic still
+                  returns hardcoded defaults / TODO.
+      SKELETON  = service boots and answers with hardcoded defaults; no DB,
+                  no logic.
+      STUBBED   = a method in cloud-device-asset that is a safe no-op
+                  (returns 0/empty/null/false, logs one WARN, never throws).
+  - SECTION 1 reflects the CURRENT running stack (verified this session).
+  - The per-feature stub detail comes from migration-notes/stub-inventory.md
+    (snapshot 2026-05-19, "70 stubs") cross-checked with live exploration;
+    a few items may have moved since — verify per item before acting.
+
+==============================================================================
+ SECTION 1 — SERVICE / PLATFORM STATUS
+==============================================================================
+
+DONE (verified — do NOT re-do):
+  [x] Java 21 + Spring Boot 4.0.6 (all active modules)
+  [x] MySQL 8 -> PostgreSQL 16, schema-per-service
+  [x] dapr-commons shared lib (publisher, subscriber base, idempotency, DLQ)
+  [x] sclera-scheduler  (8098) — Dapr Jobs, trigger/result, run history, DB
+  [x] sclera-vdms-service (8089) — VDMS data + audit-log subscribers, DB
+  [x] Observability (OTel -> Jaeger / Prometheus / Grafana / Loki)
+  [x] API gateway routing for all services
+  [x] cloud-device-asset Dapr CLIENTS scaffolded (QrCodeClient, BacnetClient,
+      AlertClient, HistoryClient, etc. — they DO call the remote services,
+      falling back to safe defaults when the remote returns nothing)
+
+PARTIAL (DB-backed but business logic incomplete):
+  [~] sclera-integrations (8096) — 20 entities/repos exist. Only Bacnet &
+        MyDevices controllers partially wired; Ecobee, Daintree, Disruptive,
+        Monnit, Modbus, Pelican, Lorawan, KNX, MQTT, PolyLens, Siemens, SNMP
+        controllers still return defaults / TODO. No pub/sub wired.
+  [~] sclera-inspection (8095) — 7 entities + basic CRUD, but no inspection
+        workflow, checklist scoring, or condition evaluation. No pub/sub.
+
+NOT DONE — still "walking skeletons" (no DB, no logic):
+  [ ] sclera-audit      (8090) — subscribes device.audit-recorded but handler
+                                 is a no-op log; nothing persisted.
+  [ ] sclera-identity   (8091) — declares it PUBLISHES identity.org-renamed /
+                                 identity.user-deactivated, but no publisher
+                                 exists. All endpoints return defaults.
+  [ ] sclera-alerts     (8092) — declares SUB device.alert-condition-fired &
+                                 PUB alerts.notification-dispatched ("future");
+                                 neither implemented.
+  [ ] sclera-inventory  (8093) — 3 no-op controller methods (product_details
+                                 separation started — see Section 4).
+  [ ] sclera-workorders (8094) — Ticket/Corrigo/PMS/MyDevices return defaults.
+  [ ] sclera-edge       (8097) — 60+ ApiCall methods + docker/remote/socket
+                                 controllers all hardcoded stubs.
+
+==============================================================================
+ SECTION 2 — STUBBED FEATURES (cloud-device-asset side)  ["QR code etc."]
+ device-asset calls the remote service via a Dapr client, but because the
+ remote is skeleton/partial the result is empty/0/null today. Grouped by the
+ owning microservice.
+==============================================================================
+
+QR CODE / NFC / BAR CODE  (-> integrations/edge)                  [NOT WORKING]
+  [ ] QR counts on assets always show 0 (QrCodeService / QrCodeClient,
+      ClientQrCodeService, GlobalQrcodeService)
+  [ ] NFC counts always 0; tagging & sync do nothing (NfcService/NfcClient,
+      ClientNfcService)
+  [ ] Device/location <-> tag associations: empty
+  [ ] Bar code sync (ClientBarCode): empty
+
+SENSOR / PROTOCOL INTEGRATIONS  (-> sclera-integrations)          [NOT WORKING]
+  [ ] BACnet, Daintree, Disruptive, Ecobee, KNX, Lorawan, Modbus, Monnit,
+      Mqtt, Pelican, PolyLens, Siemens, SNMP — device lookup, sensor lists,
+      counts, alert-status all return empty/0/null; updates are no-ops.
+
+ALERTS / CONDITIONS  (-> sclera-alerts)                           [NOT WORKING]
+  [ ] No alerts actually sent (AlertService/AlertClient send* are no-ops)
+  [ ] Alert profiles return null; downtime check returns false
+  [ ] Call-flow rules (CallFlowRule / CallFlowRuleCondition) no-op
+
+INSPECTION / CHECKLISTS  (-> sclera-inspection)                   [NOT WORKING]
+  [ ] Checklist/inspection counts return 0; record CRUD no-op
+  [ ] Global inspection / checklist relations no-op
+
+WORK ORDERS / TICKETS  (-> sclera-workorders)                     [NOT WORKING]
+  [ ] Ticket count defaults to 1, open-ticket false
+  [ ] Corrigo sync / work-order pull: null/no-op
+  [ ] MyDevices (entire company+sensor CRUD): empty/no-op
+
+HISTORY / AUDIT  (-> sclera-audit)                                [NOT WORKING]
+  [ ] Device status history NOT recorded (HistoryService.* no-op)
+  [ ] Archived-record batch update, syslog exclude: warn/empty
+
+IDENTITY (users/orgs/vendors)  (-> sclera-identity)               [NOT WORKING]
+  [ ] Entire User CRUD stubbed (lookup, list, roles, master user): empty/null
+  [ ] Phonebook, vendor admin, customer-org upsert/delete: no-op
+
+INVENTORY  (-> sclera-inventory)                                  [PARTIAL]
+  [ ] retire / upsert inventory device: warn/empty
+  [ ] product images (image_url_1..3, global): empty (DB column gap, Sec 3)
+
+AI / CALL FLOW
+  [ ] AiCallService rule execution depends on still-stubbed CallFlow + edge
+      APICall clients; "replace with Dapr call when device-technician module
+      ready" TODO outstanding.
+
+EDGE-ONLY (Bucket-D — intentionally NOT extracted; leave stubbed):
+  APICallService (~70 methods), ProxyService, RabbitmqService, DockerService,
+  IOCService, JobSchedulerService, SocketService/WebSocket, WebClientService
+  (image/floor upload), MonitorService, RemoteAccess/RemoteDesktop.
+
+==============================================================================
+ SECTION 3 — DATABASE / SCHEMA GAPS (PostgreSQL)
+ NOTE: phase3-schema-gaps.md was marked "FIXED 2026-06-05" — these may already
+ be resolved; VERIFY against the live DB before acting. Reported by exploration:
+==============================================================================
+  Possibly-missing tables (referenced by JOINs/FKs):
+    [ ] alert_profile            (conditions / device_conditions FK)
+    [ ] vendor                   (4 JOINs)
+    [ ] report_attributes        (4 LEFT JOINs)
+    [ ] location_global_checklist(3 JOINs)
+    [ ] customer_organisation    (2 LEFT JOINs)
+  Possibly-missing columns:
+    [ ] product_details.image_url_1/2/3, global_image_url_1  (~35 query refs)
+    [ ] conditions.* (~40 columns)                            (~22 query refs)
+    [ ] user.customer_org_id                                  (~15 query refs)
+
+==============================================================================
+ SECTION 4 — PLAN ITEMS: PARTIAL / PENDING
+==============================================================================
+  [ ] DB-per-service separation — 1 of 6 foreign tables done.
+        Done:  product_details -> sclera-inventory
+        TODO:  customer_organisation, alert_profile, report_attributes,
+               location_global_checklist, vendor
+  [ ] Pagination totals — backend Page.totalElements fixed for the BROWSE
+        endpoint this session. TODO: same COUNT fix for getfilterdevice
+        (search) and searchsortfilterdevices (onboard/advanced); then have the
+        UI read totalElements/last directly (drop the counts workaround).
+  [ ] Swagger/OpenAPI metadata bean — design done, code not confirmed.
+  [ ] Device Conditions service tests (Testcontainers) — pending.
+  [ ] AssetRepository native-SQL -> JPA Criteria — pending.
+  [ ] Cursor-based pagination for large lists — pending (optimization).
+  [ ] Scheduler UI (catalog / run history / run-now) — verify if built.
+
+==============================================================================
+ SECTION 5 — DAPR ROUTING LIMITATION (needs POST upgrade)
+ These client calls carry a DTO/Set/file body but use GET-only routing, so the
+ body is lost in transit. Upgrade to POST when the remote service is built:
+==============================================================================
+  [ ] QrCodeClient.upsertQrCodesInBatch  (loses Set<QrCodeDTO>)
+  [ ] CorrigoClient.updateCorrigoAssets / getWorkordersByAssetIdForBot
+  [ ] GlobalInspectionRecordClient.updateGlobalInspectionRelation* (loses Set)
+  [ ] AlertClient.sendDeviceConditionsAlertInfo / sendSensorAlertInfo /
+      sendDownloadEmail  (loses DTO/file)
+
+==============================================================================
+ SECTION 6 — SUGGESTED PRIORITY (for a real, not-demo platform)
+==============================================================================
+  1. Finish sclera-integrations controllers + fix GET->POST routing so
+     sensor/QR/NFC counts and lists become real instead of 0/empty.
+  2. Build out the skeletons that own already-stubbed data:
+     identity (users), audit (history), alerts, workorders.
+  3. Resolve/verify the DB schema gaps (Section 3).
+  4. Finish the 5 remaining db-per-service separations.
+  5. Finish pagination-total backend fix on the other 2 list endpoints.
+  6. Smaller: OpenAPI bean, conditions tests, AssetRepository JPA, cursor pg.
+
+==============================================================================
+ Sources:
+   migration-notes/stub-inventory.md (70 stubs, 2026-05-19)
+   migration-notes/phase3-schema-gaps.md  (marked FIXED 2026-06-05 — verify)
+   dapr/APP_IDS.md ; docs/superpowers/plans|specs/*
+   Live exploration of all service modules (2026-06-16)
+==============================================================================

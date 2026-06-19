@@ -8,6 +8,7 @@ export default function Sidebar({ collapsed, onToggle }) {
   const go = (key) => {
     setNav(key)
     if (key === 'properties') setView('properties')
+    if (key === 'onboarding') setView('onboarding')
   }
 
   return (

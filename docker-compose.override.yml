@@ -4,11 +4,12 @@
 #     (postgres:5432) and is unaffected.
 #  2) daprio/scheduler runs as non-root and can't mkdir in the scheduler-data volume.
 #     Run it as root for the demo so it can create its etcd data dir.
-#
-# NOTE: the JAVA_TOOL_OPTIONS:"" overrides that disabled the OTel javaagent were
-# REMOVED — the agent jar (infra/otel/opentelemetry-javaagent.jar) is now a real
-# 24MB jar, so the base-compose `-javaagent` is re-enabled for full request tracing
-# (every HTTP controller + JDBC + Dapr call shows up in Jaeger).
+#  3) DB-PER-SERVICE: each stateful service points at its OWN database (true
+#     microservice DB isolation) instead of sharing sclera_assets via schemas.
+#     The original sclera_assets DB is left intact as the rollback path.
+#     TO REVERT: delete the `DB_URL` blocks below (3) and run
+#       docker compose up -d   (services fall back to sclera_assets from base compose)
+#     then force-recreate the dapr sidecars. The new *_db databases can stay or be dropped.
 services:
   postgres:
     ports:
@@ -16,3 +17,24 @@ services:
 
   dapr-scheduler:
     user: "0:0"
+
+  # --- (3) DB-per-service: own database per service ---------------------------
+  app:                       # sclera-cloud-device-asset  (was: sclera_assets / public)
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/device_asset_db
+
+  vdms-service:              # (was: sclera_assets / vdms_svc)  schema env unchanged
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/vdms_db
+
+  sclera-integrations:       # (was: sclera_assets / integrations_svc)
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/integrations_db
+
+  sclera-inspection:         # (was: sclera_assets / inspection_svc)
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/inspection_db
+
+  sclera-scheduler:          # (was: sclera_assets / sclera_scheduler)
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/scheduler_db
