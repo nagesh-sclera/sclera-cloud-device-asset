@@ -48,7 +48,7 @@ class VdmsClientTest {
 
     @Test
     void getVdmsId_returnsIdFromJsonResponse() {
-        mockServer.expect(requestTo("http://localhost:3501/v1.0/invoke/vdms-service/method/api/v1/vdms-service/vdms/id"))
+        mockServer.expect(requestTo("http://localhost:3501/v1.0/invoke/vdms-service/method/vdms/id"))
                 .andExpect(method(GET))
                 .andRespond(withSuccess("{\"vdmsId\":\"v-123\"}", MediaType.APPLICATION_JSON));
 
@@ -57,7 +57,7 @@ class VdmsClientTest {
 
     @Test
     void getVdmsId_returnsNullOnServerError() {
-        mockServer.expect(requestTo("http://localhost:3501/v1.0/invoke/vdms-service/method/api/v1/vdms-service/vdms/id"))
+        mockServer.expect(requestTo("http://localhost:3501/v1.0/invoke/vdms-service/method/vdms/id"))
                 .andRespond(withServerError());
 
         assertThat(client.getVdmsId()).isNull();
@@ -67,7 +67,7 @@ class VdmsClientTest {
 
     @Test
     void getVdmsDetails_returnsDtoOn200() {
-        mockServer.expect(requestTo("http://localhost:3501/v1.0/invoke/vdms-service/method/api/v1/vdms-service/vdms/v1"))
+        mockServer.expect(requestTo("http://localhost:3501/v1.0/invoke/vdms-service/method/vdms/details"))
                 .andExpect(method(org.springframework.http.HttpMethod.GET))
                 .andRespond(withSuccess(
                         "{\"id\":\"v1\",\"name\":\"Site A\",\"status\":\"ACTIVE\"}",
@@ -83,7 +83,7 @@ class VdmsClientTest {
 
     @Test
     void getVdmsDetails_returnsEmptyOn404() {
-        mockServer.expect(requestTo("http://localhost:3501/v1.0/invoke/vdms-service/method/api/v1/vdms-service/vdms/missing"))
+        mockServer.expect(requestTo("http://localhost:3501/v1.0/invoke/vdms-service/method/vdms/details"))
                 .andRespond(withStatus(HttpStatus.NOT_FOUND));
 
         Optional<VdmsDetailsDTO> result = client.getVdmsDetails("missing");
@@ -93,7 +93,7 @@ class VdmsClientTest {
 
     @Test
     void getVdmsDetails_throwsUnavailableOn500() {
-        mockServer.expect(requestTo("http://localhost:3501/v1.0/invoke/vdms-service/method/api/v1/vdms-service/vdms/v1"))
+        mockServer.expect(requestTo("http://localhost:3501/v1.0/invoke/vdms-service/method/vdms/details"))
                 .andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR));
 
         assertThatThrownBy(() -> client.getVdmsDetails("v1"))

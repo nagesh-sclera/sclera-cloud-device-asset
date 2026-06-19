@@ -44,7 +44,7 @@ public class VdmsClient {
             @SuppressWarnings("unchecked")
             java.util.Map<String, Object> resp = daprRestClient
                     .get()
-                    .uri("/invoke/{appId}/method/api/v1/vdms-service/vdms/id", props.getVdmsAppId())
+                    .uri("/invoke/{appId}/method/vdms/id", props.getVdmsAppId())
                     .retrieve()
                     .body(java.util.Map.class);
             return resp != null ? (String) resp.get("vdmsId") : null;
@@ -55,7 +55,9 @@ public class VdmsClient {
     }
 
     /**
-     * Fetches VDMS details by id from vdms-service.
+     * Fetches the current VDMS details from vdms-service.
+     * vdms-service exposes a single current-details endpoint ({@code GET /vdms/details}) with
+     * no by-id lookup, so {@code vdmsId} is used only for log correlation.
      * Returns {@link Optional#empty()} when vdms-service returns 404.
      * Throws {@link VdmsUnavailableException} when the Dapr sidecar cannot reach
      * the downstream (sidecar down, app down, transport error).
@@ -65,7 +67,7 @@ public class VdmsClient {
         try {
             VdmsDetailsDTO resp = daprRestClient
                     .get()
-                    .uri("/invoke/{appId}/method/api/v1/vdms-service/vdms/{id}", props.getVdmsAppId(), vdmsId)
+                    .uri("/invoke/{appId}/method/vdms/details", props.getVdmsAppId())
                     .retrieve()
                     .body(VdmsDetailsDTO.class);
             return Optional.ofNullable(resp);
