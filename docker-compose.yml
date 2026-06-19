@@ -319,11 +319,17 @@ services:
 
   sclera-workorders:
     build:
-      context: .
-      dockerfile: sclera-workorders/Dockerfile
+      context: ./sclera-workorders
+      dockerfile: Dockerfile
     container_name: sclera-workorders
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      APP_PORT: "8094"
+      DB_URL: jdbc:postgresql://postgres:5432/workorder_db
+      DB_USER: root
+      DB_PASSWORD: mypass123
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
       DAPR_HTTP_PORT: "3500"
       DAPR_GRPC_PORT: "50001"
       MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
@@ -340,6 +346,7 @@ services:
     ports: ["8094:8094"]
     networks: [sclera-net]
     restart: on-failure
+    depends_on: [postgres, redis]
 
   sclera-workorders-dapr:
     image: daprio/daprd:1.12.0
