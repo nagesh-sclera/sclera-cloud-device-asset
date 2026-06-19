@@ -46,13 +46,13 @@ public class UserActionLogVdmsSubscriber extends DaprEventSubscriber<UserActionL
     protected void handleEvent(UserActionLogEvent data) {
         UserActionLog entry = new UserActionLog();
         entry.setId(UUID.randomUUID().toString());
-        entry.setVdmsId(data.vdmsId() != null ? data.vdmsId() : "");
-        entry.setUserEmail(data.email() != null ? data.email() : "system");
-        entry.setType(data.type() != null ? data.type() : "workorder");
-        entry.setAction(data.action() != null ? data.action() : "UNKNOWN");
-        entry.setStatus(data.status() != null ? data.status() : "success");
-        entry.setMessage(data.message() != null ? data.message() : "");
-        entry.setAffectedRecordId(data.primaryId() != null ? data.primaryId() : "");
+        entry.setVdmsId(data.vdmsId());
+        entry.setUserEmail(data.email());
+        entry.setType(data.type());
+        entry.setAction(data.action());
+        entry.setStatus(data.status());
+        entry.setMessage(data.message());
+        entry.setAffectedRecordId(data.primaryId());
         entry.setCreatedAt(LocalDateTime.now());
         repo.save(entry);
         log.info("[Audit] Logged {}.{} for vdms={} primaryId={}",
