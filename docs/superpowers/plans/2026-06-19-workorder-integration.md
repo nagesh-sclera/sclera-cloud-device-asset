@@ -519,16 +519,18 @@ git commit -m "feat(dapr): subscribe sclera-workorders to scheduler.trigger; upd
 
 - [ ] **Step 1: Rebuild the three changed images & bring up the slice**
 
+Compose service names (verified): device-asset = `app` (sidecar `app-dapr`), vdms = `vdms-service` (`vdms-dapr`), scheduler = `sclera-scheduler` (`sclera-scheduler-dapr`), workorder = `sclera-workorders` (`sclera-workorders-dapr`). Sidecars use empty placement (`--placement-host-address ""`), so there is no `placement` service to start.
+
 Run:
 ```bash
-docker compose build sclera-workorders sclera-cloud-device-asset vdms-service
-docker compose up -d postgres redis placement \
-  sclera-cloud-device-asset sclera-cloud-device-asset-dapr \
+docker compose build sclera-workorders app vdms-service
+docker compose up -d postgres redis \
+  app app-dapr \
   vdms-service vdms-dapr \
   sclera-scheduler sclera-scheduler-dapr \
   sclera-workorders sclera-workorders-dapr
 ```
-Expected: all containers reach healthy/running. (Use the exact sidecar service names from `docker-compose.yml`; the device-asset sidecar block is the one with `--app-id sclera-cloud-device-asset`.)
+Expected: all containers reach healthy/running. **Sidecar gotcha:** if you recreate an app container, immediately `docker compose up -d --force-recreate <app>-dapr` (its sidecar binds to the app's network namespace; a recreated app orphans the old sidecar). After a Docker restart, `postgres`/`redis` have no restart policy — bring them up first and wait for the postgres healthcheck.
 
 - [ ] **Step 2: Smoke — upsert a ticket (proves publish→subscribe AND invoke→remote app)**
 
@@ -542,7 +544,7 @@ Expected: HTTP 200/201 with the persisted ticket.
 Then assert each Dapr hop:
 - Ticket row: `docker compose exec postgres psql -U root -d workorder_db -c "select id, device_id from ticket order by created_at desc limit 3;"` → the new ticket.
 - **Publish→subscribe (workorder→vdms):** `docker compose logs --tail=50 vdms-service | grep "\[Audit\] Logged"` → an audit line; confirm the row lands wherever vdms persists `user_action_log`.
-- **Invoke→remote app (workorder→device-asset):** `docker compose logs --tail=50 sclera-cloud-device-asset | grep "\[ticket-sync\]"` → "recomputing ticket count/status for device=device-123".
+- **Invoke→remote app (workorder→device-asset):** `docker compose logs --tail=50 app | grep "\[ticket-sync\]"` → "recomputing ticket count/status for device=device-123".
 
 - [ ] **Step 3: Smoke — VDMS service-invocation (workorder→vdms-service)**
 
