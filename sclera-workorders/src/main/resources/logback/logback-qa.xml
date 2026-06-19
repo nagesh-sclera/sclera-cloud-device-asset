@@ -1,0 +1,168 @@
+<configuration scan="true">
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+    <property name="LOG_PATH" value="/home/sclera/logs/sclera_backend/services"/>
+
+    <!--    Console Config    -->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d{ISO8601} [%X{requestId:-}] %-5level [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--    MaximoService    -->
+    <appender name="MaximoServiceDebugLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/MaximoService/Debug/MaximoServiceDebug.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/MaximoService/Debug/MaximoServiceDebug.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <MaxFileSize>10MB</MaxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>30MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d %-4relative [%thread] [%X{requestId:-}] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="MaximoServiceErrorLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/MaximoService/Error/MaximoServiceError.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/MaximoService/Error/MaximoServiceError.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <MaxFileSize>10MB</MaxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>30MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d %-4relative [%thread] [%X{requestId:-}] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <!--    TicketHistoryService    -->
+    <appender name="TicketHistoryServiceDebugLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/TicketHistoryService/Debug/TicketHistoryServiceDebug.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/TicketHistoryService/Debug/TicketHistoryServiceDebug.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <MaxFileSize>10MB</MaxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>30MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d %-4relative [%thread] [%X{requestId:-}] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="TicketHistoryServiceErrorLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/TicketHistoryService/Error/TicketHistoryServiceError.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/TicketHistoryService/Error/TicketHistoryServiceError.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <MaxFileSize>10MB</MaxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>30MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d %-4relative [%thread] [%X{requestId:-}] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <!--    TicketService    -->
+    <appender name="TicketServiceDebugLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/TicketService/Debug/TicketServiceDebug.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/TicketService/Debug/TicketServiceDebug.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <MaxFileSize>10MB</MaxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>30MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d %-4relative [%thread] [%X{requestId:-}] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="TicketServiceErrorLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/TicketService/Error/TicketServiceError.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/TicketService/Error/TicketServiceError.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <MaxFileSize>10MB</MaxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>30MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d %-4relative [%thread] [%X{requestId:-}] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <!--    UserActionLogService    -->
+    <appender name="UserActionLogServiceDebugLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/UserActionLogService/Debug/UserActionLogServiceDebug.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/UserActionLogService/Debug/UserActionLogServiceDebug.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <MaxFileSize>10MB</MaxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>30MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d %-4relative [%thread] [%X{requestId:-}] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="UserActionLogServiceErrorLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/UserActionLogService/Error/UserActionLogServiceError.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/UserActionLogService/Error/UserActionLogServiceError.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <MaxFileSize>10MB</MaxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>30MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d %-4relative [%thread] [%X{requestId:-}] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--    Per-class file logging (also reaches Console via additivity)    -->
+    <logger name="io.sclera.workorder.service.impl.MaximoServiceImpl" additivity="true">
+        <appender-ref ref="MaximoServiceDebugLogger"/>
+        <appender-ref ref="MaximoServiceErrorLogger"/>
+    </logger>
+    <logger name="io.sclera.workorder.service.impl.TicketHistoryServiceImpl" additivity="true">
+        <appender-ref ref="TicketHistoryServiceDebugLogger"/>
+        <appender-ref ref="TicketHistoryServiceErrorLogger"/>
+    </logger>
+    <logger name="io.sclera.workorder.service.impl.TicketServiceImpl" additivity="true">
+        <appender-ref ref="TicketServiceDebugLogger"/>
+        <appender-ref ref="TicketServiceErrorLogger"/>
+    </logger>
+    <logger name="io.sclera.workorder.service.impl.UserActionLogServiceImpl" additivity="true">
+        <appender-ref ref="UserActionLogServiceDebugLogger"/>
+        <appender-ref ref="UserActionLogServiceErrorLogger"/>
+    </logger>
+
+    <root level="info">
+        <appender-ref ref="Console"/>
+    </root>
+</configuration>
