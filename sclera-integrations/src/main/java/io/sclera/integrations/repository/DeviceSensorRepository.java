@@ -11,4 +11,7 @@ import java.util.List;
 public interface DeviceSensorRepository extends JpaRepository<DeviceSensor, String> {
     @Query("SELECT s FROM DeviceSensor s WHERE s.device_id = ?1 ORDER BY s.created_timestamp DESC")
     List<DeviceSensor> findForDevice(String deviceId);
+
+    @Query("SELECT COUNT(s) FROM DeviceSensor s WHERE s.device_id = ?1")
+    long countForDevice(String deviceId);
 }

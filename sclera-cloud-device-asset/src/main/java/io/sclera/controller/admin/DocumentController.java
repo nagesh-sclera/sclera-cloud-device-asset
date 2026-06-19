@@ -83,6 +83,36 @@ public class DocumentController {
 
 
     /**
+     * Uploads a document file and attaches it to the given device/asset: stores the file, creates the
+     * document record, tags it to the device, and refreshes the device's document count.
+     *
+     * @param username      owning user
+     * @param vdmsid        owning VDMS id
+     * @param deviceid      the device/asset to attach the document to
+     * @param name          the document name
+     * @param category      the document category (optional)
+     * @param description   the document description (optional)
+     * @param documentFile  the uploaded file (required, non-empty)
+     */
+    @RequestMapping(method = RequestMethod.POST, value = "/device/{deviceid}/uploaddocument")
+    public void uploadDocument(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String deviceid,
+                               @RequestParam String name, @RequestParam(required = false) String category,
+                               @RequestParam(required = false) String description,
+                               @RequestParam("documentFile") MultipartFile documentFile, HttpServletRequest httpServletRequest) {
+        log.info("uploadDocument username={} vdmsid={} deviceid={}", username, vdmsid, deviceid);
+        try {
+            if (documentFile == null || documentFile.isEmpty()) {
+                throw new IllegalArgumentException("documentFile is required and must not be empty");
+            }
+            documentService.uploadDocument(username, vdmsid, deviceid, name, category, description, documentFile, httpServletRequest);
+        } catch (Exception e) {
+            log.error("uploadDocument failed username={} vdmsid={} deviceid={}: {}", username, vdmsid, deviceid, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+
+    /**
      * Deletes the document identified by the given id.
      *
      * @param username    owning user

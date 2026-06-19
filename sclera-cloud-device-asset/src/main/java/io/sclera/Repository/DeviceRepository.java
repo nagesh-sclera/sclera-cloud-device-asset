@@ -64,9 +64,57 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @return the matching device projection
      */
-    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
-    @Query(nativeQuery = true)
-    DeviceDTO getDeviceByDeviceId(String device_id);
+    /**
+     * Raw projection rows for {@link #getDeviceByDeviceId(String)}: the Device entity plus the
+     * association-FK ids and LEFT-JOINed location/floor/building/onboard/inventory scalars.
+     * Element [0] is the managed Device; the rest are scalars in DeviceDetailRow order.
+     */
+    @Query("""
+            SELECT d, dk.name, v.id,
+                   l.name, l.id, f.name, f.id, b.name, b.id,
+                   lv.id, gv.id, ov1.id, ov2.id, ov3.id,
+                   u.email,
+                   dos.id, dos.assignee_email, dos.image_status, dos.geolocation_status,
+                   dos.tag_status, dos.field_status, ind.tracking_id
+            FROM Device d
+            LEFT JOIN d.docker dk
+            LEFT JOIN dk.vdms v
+            LEFT JOIN d.location l
+            LEFT JOIN l.floor f
+            LEFT JOIN f.building b
+            LEFT JOIN d.local_vendor lv
+            LEFT JOIN d.global_vendor gv
+            LEFT JOIN d.other_vendor_1 ov1
+            LEFT JOIN d.other_vendor_2 ov2
+            LEFT JOIN d.other_vendor_3 ov3
+            LEFT JOIN d.user u
+            LEFT JOIN DeviceOnboardStatus dos ON dos.device = d
+            LEFT JOIN InventoryDevice ind ON ind.device = d
+            WHERE d.id = :deviceId
+            """)
+    java.util.List<Object[]> findDeviceDetailRows(@org.springframework.data.repository.query.Param("deviceId") String deviceId);
+
+    /**
+     * Returns the device projection for the given id, or {@code null} if none — same contract as
+     * the previous native query. Assembles the row into {@link io.sclera.dto.projection.DeviceDetailRow}
+     * and maps it to {@link DeviceDTO} via {@link io.sclera.mapper.DeviceDtoMapper}.
+     */
+    default DeviceDTO getDeviceByDeviceId(String device_id) {
+        java.util.List<Object[]> rows = findDeviceDetailRows(device_id);
+        if (rows == null || rows.isEmpty()) {
+            return null;
+        }
+        Object[] r = rows.get(0);
+        io.sclera.dto.projection.DeviceDetailRow row = new io.sclera.dto.projection.DeviceDetailRow(
+                (io.sclera.models.Device) r[0],
+                (String) r[1],  (String) r[2],  (String) r[3],  (String) r[4],
+                (String) r[5],  (String) r[6],  (String) r[7],  (String) r[8],
+                (String) r[9],  (String) r[10], (String) r[11], (String) r[12],
+                (String) r[13], (String) r[14], (String) r[15], (String) r[16],
+                (Integer) r[17], (Integer) r[18], (Integer) r[19], (Integer) r[20],
+                (String) r[21]);
+        return io.sclera.mapper.DeviceRepositoryMapperHolder.MAPPER.toDto(row);
+    }
 
     /**
      * Counts devices matching the given MAC address within the given VDMS and docker.
@@ -771,6 +819,26 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     @Query(nativeQuery = true)
     Set<DeviceDTO> getSubsystemParentDevicesByPagination(String vdmsid, String dockername, Integer virtual_device_type,
                                                          Integer status, Integer monitor, Integer asset_match_status, Integer pagesize, Integer offset, Integer onboard_status, Integer assigned_status, String assignee);
+
+    /**
+     * Total number of subsystem-parent devices matching the same filters as
+     * {@link #getSubsystemParentDevicesByPagination} (no LIMIT/OFFSET). Used to populate the accurate
+     * {@code totalElements} of the paginated browse response. The WHERE clause is kept byte-for-byte in sync
+     * with the {@code Device.getSubsystemParentDevicesByPagination} named query — change both together.
+     *
+     * @return the total count of matching parent devices
+     */
+    @Query(value = "SELECT COUNT(*) FROM device d"
+            + " WHERE d.subsystem_parent_id IS NULL"
+            + " AND ((?7 = 123) OR CASE WHEN ?7 = 210 THEN (d.onboard_status IS NULL OR d.onboard_status = 0 OR d.onboard_status = 1 OR d.onboard_status = 2) ELSE ?7 = d.onboard_status END)"
+            + " AND (?1 = 'null' or d.docker_vdms_id = ?1) AND (?2 = 'all' or d.docker_name = ?2)"
+            + " AND (?3 IS NULL or CASE WHEN ?3 = 123 THEN (d.virtual_device_type IS NOT NULL AND (d.virtual_device_type != 0 AND d.virtual_device_type != 1)) ELSE NULL END)"
+            + " AND (?4 IS NULL or ?4 = d.status) AND (?5 = 123 or CASE WHEN ?5 = 1 THEN ?5 = d.monitor ELSE d.monitor IS NULL or ?5 = d.monitor END)"
+            + " AND ((?6 IS NULL and d.asset_match_status != 3) or CASE WHEN ?6 = 3 THEN d.asset_match_status = ?6 ELSE (d.asset_match_status = ?6 and d.asset_match_status != 3) END)"
+            + " AND (?8 IS NULL or CASE WHEN ?8 = 0 THEN (d.assigned_user_email IS NULL or d.assigned_user_email = 'null') ELSE (d.assigned_user_email IS NOT NULL or d.assigned_user_email != 'null') END)"
+            + " AND CASE WHEN 'all' = ?9 THEN true ELSE d.assigned_user_email = ?9 END", nativeQuery = true)
+    long countSubsystemParentDevicesByPagination(String vdmsid, String dockername, Integer virtual_device_type,
+                                                 Integer status, Integer monitor, Integer asset_match_status, Integer onboard_status, Integer assigned_status, String assignee);
 
     /**
      * Returns the subsystem parent devices matching the given filters.
@@ -2212,9 +2280,55 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param device_id the device identifier
      * @return the matching device projection
      */
-    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
-    @Query(nativeQuery = true)
-    DeviceDTO getDeviceByDeviceIdNew(String device_id);
+    /**
+     * Raw projection rows for {@link #getDeviceByDeviceIdNew(String)}: the Device entity plus the
+     * association-FK ids and LEFT-JOINed location/floor/building/onboard scalars. Unlike
+     * {@link #findDeviceDetailRows(String)}, this query does NOT join {@code user} or
+     * {@code inventory_device}, so the email/tracking-id scalars are absent.
+     * Element [0] is the managed Device; the rest are scalars in DeviceOnboardRow order.
+     */
+    @Query("""
+            SELECT d, dk.name, v.id,
+                   l.name, l.id, f.name, f.id, b.name, b.id,
+                   lv.id, gv.id, ov1.id, ov2.id, ov3.id,
+                   dos.id, dos.assignee_email, dos.image_status, dos.geolocation_status,
+                   dos.tag_status, dos.field_status
+            FROM Device d
+            LEFT JOIN d.docker dk
+            LEFT JOIN dk.vdms v
+            LEFT JOIN d.location l
+            LEFT JOIN l.floor f
+            LEFT JOIN f.building b
+            LEFT JOIN d.local_vendor lv
+            LEFT JOIN d.global_vendor gv
+            LEFT JOIN d.other_vendor_1 ov1
+            LEFT JOIN d.other_vendor_2 ov2
+            LEFT JOIN d.other_vendor_3 ov3
+            LEFT JOIN DeviceOnboardStatus dos ON dos.device = d
+            WHERE d.id = :deviceId
+            """)
+    java.util.List<Object[]> findDeviceOnboardRows(@org.springframework.data.repository.query.Param("deviceId") String deviceId);
+
+    /**
+     * Returns the device projection for the given id, or {@code null} if none — same contract as
+     * the previous native query. Assembles the row into {@link io.sclera.dto.projection.DeviceOnboardRow}
+     * and maps it to {@link DeviceDTO} via {@link io.sclera.mapper.DeviceOnboardDtoMapper}.
+     */
+    default DeviceDTO getDeviceByDeviceIdNew(String device_id) {
+        java.util.List<Object[]> rows = findDeviceOnboardRows(device_id);
+        if (rows == null || rows.isEmpty()) {
+            return null;
+        }
+        Object[] r = rows.get(0);
+        io.sclera.dto.projection.DeviceOnboardRow row = new io.sclera.dto.projection.DeviceOnboardRow(
+                (io.sclera.models.Device) r[0],
+                (String) r[1],  (String) r[2],  (String) r[3],  (String) r[4],
+                (String) r[5],  (String) r[6],  (String) r[7],  (String) r[8],
+                (String) r[9],  (String) r[10], (String) r[11], (String) r[12],
+                (String) r[13], (String) r[14], (String) r[15],
+                (Integer) r[16], (Integer) r[17], (Integer) r[18], (Integer) r[19]);
+        return io.sclera.mapper.DeviceRepositoryMapperHolder.ONBOARD_MAPPER.toDto(row);
+    }
 
     /**
      * Updates the coordinates, position, and location of a device.
@@ -2381,9 +2495,33 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
      * @param measuringInstrumentId the measuring instrument identifier
      * @return the matching device projection
      */
-    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
-    @Query(nativeQuery = true)
-    DeviceDTO getDeviceByMeasuringInstrumentId(String measuringInstrumentId);
+    @Query("""
+            SELECT d, dk.name, l.id
+            FROM Device d
+            JOIN MeasuringInstrument mi ON mi.device = d
+            LEFT JOIN d.docker dk
+            LEFT JOIN d.location l
+            WHERE mi.id = :measuringInstrumentId
+            """)
+    java.util.List<Object[]> findDeviceByInstrumentRows(@org.springframework.data.repository.query.Param("measuringInstrumentId") String measuringInstrumentId);
+
+    /**
+     * Returns the device associated with the given measuring instrument, or {@code null} if none —
+     * same contract as the previous native query. Assembles the row into
+     * {@link io.sclera.dto.projection.DeviceByInstrumentRow} and maps it to {@link DeviceDTO} via
+     * {@link io.sclera.mapper.DeviceByInstrumentDtoMapper}.
+     */
+    default DeviceDTO getDeviceByMeasuringInstrumentId(String measuringInstrumentId) {
+        java.util.List<Object[]> rows = findDeviceByInstrumentRows(measuringInstrumentId);
+        if (rows == null || rows.isEmpty()) {
+            return null;
+        }
+        Object[] r = rows.get(0);
+        io.sclera.dto.projection.DeviceByInstrumentRow row = new io.sclera.dto.projection.DeviceByInstrumentRow(
+                (io.sclera.models.Device) r[0],
+                (String) r[1], (String) r[2]);
+        return io.sclera.mapper.DeviceRepositoryMapperHolder.INSTRUMENT_MAPPER.toDto(row);
+    }
 
 
     /**
@@ -2480,14 +2618,43 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
 
 
     /**
-     * Returns device information for the given device.
-     *
-     * @param deviceId the device identifier
-     * @return the matching device projection
+     * Raw projection rows for {@link #getDeviceInfoFromDb(String)}: the managed Device entity plus
+     * the docker association FK scalars and the LEFT-JOINed location/floor/building name+id scalars
+     * the call-status read selects. Element [0] is the Device; the rest are scalars in
+     * {@link io.sclera.dto.projection.DeviceInfoRow} order (which mirrors the old
+     * {@code devicedetailesforcallstatusmapping} @ConstructorResult column order).
      */
-    // NOT CONVERTED — stays native (PG-translation track): multi-join DeviceDTO projection (named-query delegation to Device.java @NamedNativeQuery)
-    @Query(nativeQuery = true)
-    DeviceDTO getDeviceInfoFromDb(String deviceId);
+    @Query("""
+            SELECT d, dk.name, v.id,
+                   b.id, b.name, f.id, f.name, l.id, l.name
+            FROM Device d
+            LEFT JOIN d.docker dk
+            LEFT JOIN dk.vdms v
+            LEFT JOIN d.location l
+            LEFT JOIN l.floor f
+            LEFT JOIN f.building b
+            WHERE d.id = :deviceId
+            """)
+    java.util.List<Object[]> findDeviceInfoRows(@org.springframework.data.repository.query.Param("deviceId") String deviceId);
+
+    /**
+     * Returns the call-status device projection for the given id, or {@code null} if none — same
+     * contract as the previous native query. Assembles the row into
+     * {@link io.sclera.dto.projection.DeviceInfoRow} and maps it to {@link DeviceDTO} via
+     * {@link io.sclera.mapper.DeviceInfoDtoMapper}.
+     */
+    default DeviceDTO getDeviceInfoFromDb(String deviceId) {
+        java.util.List<Object[]> rows = findDeviceInfoRows(deviceId);
+        if (rows == null || rows.isEmpty()) {
+            return null;
+        }
+        Object[] r = rows.get(0);
+        io.sclera.dto.projection.DeviceInfoRow row = new io.sclera.dto.projection.DeviceInfoRow(
+                (io.sclera.models.Device) r[0],
+                (String) r[1], (String) r[2], (String) r[3], (String) r[4],
+                (String) r[5], (String) r[6], (String) r[7], (String) r[8]);
+        return io.sclera.mapper.DeviceRepositoryMapperHolder.INFO_MAPPER.toDto(row);
+    }
 
 
     /**

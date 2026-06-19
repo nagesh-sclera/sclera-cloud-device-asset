@@ -696,34 +696,6 @@ import io.sclera.dto.touchscreen.SensorValueDTO;
 )
 
 
-@SqlResultSetMapping(
-        name = "instrumentmapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = MeasuringInstrumentDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "type", type = String.class),
-                                @ColumnResult(name = "name", type = String.class),
-                                @ColumnResult(name = "calculation_type", type = String.class),
-                                @ColumnResult(name = "category", type = String.class),
-                                @ColumnResult(name = "value", type = String.class),
-                                @ColumnResult(name = "unit", type = String.class),
-                                @ColumnResult(name = "device_id", type = String.class),
-                                @ColumnResult(name = "sensor_type", type = String.class),
-
-                        })
-        })
-@NamedNativeQuery(
-        name = "MeasuringInstrument.getInstrumentByInstrumentId",
-        query = "SELECT mi.id , mi.type, mi.name,  mi.calculation_type,  mi.category , mi.value , mi.unit, mi.device_id,  mi.sensor_type " +
-                " FROM measuring_instrument mi " +
-                " WHERE mi.id = ?1",
-        resultSetMapping = "instrumentmapping"
-
-)
-
-
 /**
  * JPA entity representing a measuring instrument or sensor tied to a device, holding its
  * latest reading, metadata, and alert state for monitoring across the asset-management domain.

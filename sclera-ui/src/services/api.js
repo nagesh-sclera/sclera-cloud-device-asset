@@ -124,6 +124,11 @@ export const api = {
       method: 'POST', body: sensor,
     }),
 
+  // Sensor count fetched by cloud-device-asset via Dapr from sclera-integrations (separate
+  // service + separate DB, integrations_svc). Demonstrates inter-service Dapr communication.
+  sensorCount: (deviceId) =>
+    request(asset(`/device/${encodeURIComponent(deviceId)}/sensors/count`)),
+
   deleteSensor: (deviceId, sensorId, { vdmsId = DEMO.vdmsId, user = DEMO.user } = {}) =>
     request(integrations(`/sensors/device/${encodeURIComponent(deviceId)}/${encodeURIComponent(sensorId)}${qs({ username: user, vdmsid: vdmsId })}`), {
       method: 'DELETE',
@@ -139,6 +144,44 @@ export const api = {
   deleteNote: (deviceId, noteId, { docker = DEMO.docker, ...ctx } = {}) =>
     request(asset(`/docker/${encodeURIComponent(docker)}/device/${encodeURIComponent(deviceId)}/note/${encodeURIComponent(noteId)}${qs(scope(ctx))}`), {
       method: 'DELETE',
+    }),
+
+  // ---- Documents (real, device-asset service) ----
+  // List documents tagged to a device (Page envelope -> content array).
+  listDocuments: (deviceId, { ...ctx } = {}) =>
+    unwrapPage(request(asset(`/device/${encodeURIComponent(deviceId)}/getdocumentbydeviceid${qs({ ...scope(ctx), pageno: 1, pagesize: 200 })}`))),
+  // Upload a document file and attach it to the device (multipart). Metadata travels as query params;
+  // only the file goes in the form body (matches the backend @RequestParam + documentFile part).
+  uploadDocument: async (deviceId, { file, name, category = '', description = '' }, { ...ctx } = {}) => {
+    const fd = new FormData()
+    fd.append('documentFile', file)
+    const url = asset(`/device/${encodeURIComponent(deviceId)}/uploaddocument${qs({ ...scope(ctx), name: name || file.name, category, description })}`)
+    const res = await fetch(url, { method: 'POST', mode: 'cors', body: fd })
+    if (!res.ok) {
+      const t = await res.text().catch(() => '')
+      throw new Error(`Upload failed: HTTP ${res.status}${t ? ` — ${t.slice(0, 200)}` : ''}`)
+    }
+    return true
+  },
+  // Delete a document: removes the stored file + record + all device tags.
+  deleteDocument: (documentId, { ...ctx } = {}) =>
+    request(asset(`/documentid/${encodeURIComponent(documentId)}/deletedocument${qs(scope(ctx))}`), { method: 'DELETE' }),
+
+  // ---- Asset onboarding ----
+  // Assets not yet "managed" (onboard_status != 3). Mirrors the Not-Onboarded filter (onboard_status=210).
+  listOnboardingAssets: ({ docker = DEMO.docker, ...ctx } = {}) =>
+    unwrapPage(request(asset(`/docker/${encodeURIComponent(docker)}/searchsortfilterdevices${qs({ ...scope(ctx), condition: 'all', pageno: 1, pagesize: 200, onboard_status: 210 })}`), {
+      method: 'POST', body: {},
+    })),
+  // Managed assets (onboard_status = 3) — the destination of the onboarding flow.
+  listManagedAssets: ({ docker = DEMO.docker, ...ctx } = {}) =>
+    unwrapPage(request(asset(`/docker/${encodeURIComponent(docker)}/searchsortfilterdevices${qs({ ...scope(ctx), condition: 'all', pageno: 1, pagesize: 200, onboard_status: 3 })}`), {
+      method: 'POST', body: {},
+    })),
+  // Update a device's onboarding step statuses (image/geolocation/tag/field) + assignee.
+  updateAssetOnboardData: (deviceId, statusObj, { ...ctx } = {}) =>
+    request(asset(`/device/${encodeURIComponent(deviceId)}/updateassetonboarddata${qs(scope(ctx))}`), {
+      method: 'POST', body: statusObj,
     }),
 
   deviceCount: ({ docker = DEMO.docker, ...ctx } = {}) =>

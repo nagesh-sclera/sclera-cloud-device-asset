@@ -7,7 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -31,6 +33,23 @@ public class DeviceSensorController {
                                    @RequestParam(required = false) String username,
                                    @RequestParam(required = false) String vdmsid) {
         return repo.findForDevice(deviceId);
+    }
+
+    /**
+     * Live count of this device's sensors, read straight from the integrations_svc DB.
+     * Called by cloud-device-asset over Dapr to prove cross-service / cross-DB counting.
+     */
+    @GetMapping("/device/{device_id}/count")
+    public Map<String, Object> count(@PathVariable("device_id") String deviceId,
+                                     @RequestParam(required = false) String username,
+                                     @RequestParam(required = false) String vdmsid) {
+        long count = repo.countForDevice(deviceId);
+        log.info("sensor count for device_id={} -> {} (integrations_svc.device_sensor)", deviceId, count);
+        Map<String, Object> result = new HashMap<>();
+        result.put("device_id", deviceId);
+        result.put("count", count);
+        result.put("source", "integrations_svc.device_sensor");
+        return result;
     }
 
     @PostMapping("/device/{device_id}")

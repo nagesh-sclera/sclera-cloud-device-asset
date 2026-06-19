@@ -129,9 +129,15 @@ public interface MeasuringInstrumentRepository extends JpaRepository<MeasuringIn
      * @param id the instrument identifier
      * @return the matching instrument
      */
-    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection (instrumentmapping — subset of fields).
-    @Query(nativeQuery = true)
-    MeasuringInstrumentDTO getInstrumentByInstrumentId(String id);
+    // CONVERTED to JPQL + MapStruct: single-table projection (instrumentmapping subset);
+    // load the entity, then map only the previously-projected columns via MapStruct.
+    @Query("SELECT mi FROM MeasuringInstrument mi WHERE mi.id = :id")
+    MeasuringInstrument findEntityById(@org.springframework.data.repository.query.Param("id") String id);
+
+    default MeasuringInstrumentDTO getInstrumentByInstrumentId(String id) {
+        MeasuringInstrument mi = findEntityById(id);
+        return mi == null ? null : io.sclera.mapper.MeasuringInstrumentMapperHolder.MAPPER.toDto(mi);
+    }
 
 
     /**

@@ -225,36 +225,6 @@ import java.util.Set;
 )
 
 
-@NamedNativeQuery(
-        name = "Device.getDeviceByDeviceId",
-        query = "SELECT  d.id, d.status, d.display_name, d.last_seen_on, d.mac_address, d.vendor, d.model,"
-                + " d.type , d.ip_address, d.monitor, l.name as location, d.network_layer, d.user_data_model ,"
-                + " d.user_data_vendor, d.user_data_name, d.parent, d.snmp_parent,  d.docker_vdms_id AS vdms_id, d.docker_name,"
-                + " d.type AS system_type, d.remote_access, b.name as building, f.name as floor, d.local_vendor_id, "
-                + " d.global_vendor_id, d.other_vendor_1_id, d.other_vendor_2_id, d.other_vendor_3_id,"
-                + " d.product_id, d.alarm, d.virtual_device_type, d.warranty, d.quick_link_name, d.quick_link_url,  l.id AS location_id, d.email_alert, d.sms_alert,"
-                + " d.popup_notification, d.snmp_count, d.snmp_status, d.interface_count, d.notes_count, d.ticket_count, d.ticket_status, d.serial_number,"
-                + " d.bacnet_count, d.bacnet_status, d.lorawan_count, d.lorawan_status, d.disruptive_count, d.disruptive_status, d.my_devices_count,"
-                + " d.my_devices_status, d.local_vendor_email_alert, d.local_vendor_sms_alert, d.monnit_count, d.monnit_status,"
-                + " d.pelican_count, d.pelican_status,d.knx_count,d.knx_status, d.subsystem_parent_id, d.subsystem_count, d.custom_fields, d.description, "
-                + " d.asset_match_status, d.matched_product_ids, d.latitude, d.longitude,d.measuring_instrument_count,d.document_count,d.media_count,"
-                + " d.checklist_template_count, d.snmp_object_count,d.snmp_object_status, d.position, d.measuring_instrument_status,"
-                + " d.record_checklist_count, d.record_checklist_status, d.daintree_count, d.daintree_status,  d.asset_image_url, d.created_timestamp,"
-                + " d.ecobee_count, d.ecobee_status, d.modbus_count, d.modbus_status, f.id as floor_id, d.created_email,d.asset_group, b.id as building_id, d.updated_email,"
-                + " d.updated_timestamp, d.onboard_status  , dos.id as device_onboard_status_id, dos.assignee_email, dos.image_status, dos.geolocation_status,"
-                + " dos.tag_status, dos.field_status, d.asset_ocr_image_url, d.category, d.sub_category, d.location_status, d.digital_twin_image_url, d.poly_lens_count, d.cost_value,"
-                + " d.assigned_user_email, d.ai_call, d.cost_unit, d.is_dnd_enabled, d.operational_status , ind.tracking_id AS inventory_tracking_id,   "
-                + " d.adc_json, d.system_type_id, d.system_type_name, d.asset_type_id, d.asset_type_name, d.asset_sub_type_id, d.asset_sub_type_name, d.source_type, d.asset_tag_images_url "
-                + " FROM device d"
-                + " LEFT JOIN device_onboard_status dos ON d.id = dos.device_id "
-                + " LEFT JOIN inventory_device ind ON d.id = ind.device_id "
-                + " LEFT JOIN location l ON d.location_id = l.id"
-                + " LEFT JOIN floor f ON l.floor_id = f.id"
-                + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE d.id = ?1",
-        resultSetMapping = "devicedtomapping"
-)
-
 @SqlResultSetMapping(
         name = "devicemapping",
         classes = {
@@ -2096,157 +2066,6 @@ import java.util.Set;
 )
 
 @SqlResultSetMapping(
-        name = "deviceonboardmapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = DeviceDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "status", type = Integer.class),
-                                @ColumnResult(name = "display_name", type = String.class),
-                                @ColumnResult(name = "last_seen_on", type = String.class),
-                                @ColumnResult(name = "mac_address", type = String.class),
-                                @ColumnResult(name = "vendor", type = String.class),
-                                @ColumnResult(name = "model", type = String.class),
-                                @ColumnResult(name = "type", type = String.class),
-                                @ColumnResult(name = "ip_address", type = String.class),
-                                @ColumnResult(name = "monitor", type = Integer.class),
-                                @ColumnResult(name = "location", type = String.class),
-                                @ColumnResult(name = "network_layer", type = String.class),
-                                @ColumnResult(name = "user_data_model", type = String.class),
-                                @ColumnResult(name = "user_data_vendor", type = String.class),
-                                @ColumnResult(name = "user_data_name", type = String.class),
-                                @ColumnResult(name = "parent", type = String.class),
-                                @ColumnResult(name = "snmp_parent", type = String.class),
-                                @ColumnResult(name = "vdms_id", type = String.class),
-                                @ColumnResult(name = "docker_name", type = String.class),
-                                @ColumnResult(name = "system_type", type = String.class),
-                                @ColumnResult(name = "remote_access", type = Integer.class),
-                                @ColumnResult(name = "building", type = String.class),
-                                @ColumnResult(name = "floor", type = String.class),
-                                @ColumnResult(name = "local_vendor_id", type = String.class),
-                                @ColumnResult(name = "global_vendor_id", type = String.class),
-                                @ColumnResult(name = "other_vendor_1_id", type = String.class),
-                                @ColumnResult(name = "other_vendor_2_id", type = String.class),
-                                @ColumnResult(name = "other_vendor_3_id", type = String.class),
-                                @ColumnResult(name = "product_id", type = String.class),
-                                @ColumnResult(name = "alarm", type = String.class),
-                                @ColumnResult(name = "virtual_device_type", type = Integer.class),
-                                @ColumnResult(name = "warranty", type = String.class),
-                                @ColumnResult(name = "quick_link_name", type = String.class),
-                                @ColumnResult(name = "quick_link_url", type = String.class),
-                                @ColumnResult(name = "location_id", type = String.class),
-                                @ColumnResult(name = "email_alert", type = Integer.class),
-                                @ColumnResult(name = "sms_alert", type = Integer.class),
-                                @ColumnResult(name = "popup_notification", type = Integer.class),
-                                @ColumnResult(name = "snmp_count", type = Integer.class),
-                                @ColumnResult(name = "snmp_status", type = String.class),
-                                @ColumnResult(name = "interface_count", type = Integer.class),
-                                @ColumnResult(name = "notes_count", type = Integer.class),
-                                @ColumnResult(name = "ticket_count", type = Integer.class),
-                                @ColumnResult(name = "ticket_status", type = String.class),
-                                @ColumnResult(name = "serial_number", type = String.class),
-                                @ColumnResult(name = "bacnet_count", type = Integer.class),
-                                @ColumnResult(name = "bacnet_status", type = String.class),
-                                @ColumnResult(name = "lorawan_count", type = Integer.class),
-                                @ColumnResult(name = "lorawan_status", type = String.class),
-                                @ColumnResult(name = "disruptive_count", type = Integer.class),
-                                @ColumnResult(name = "disruptive_status", type = String.class),
-                                @ColumnResult(name = "my_devices_count", type = Integer.class),
-                                @ColumnResult(name = "my_devices_status", type = String.class),
-                                @ColumnResult(name = "local_vendor_email_alert", type = Integer.class),
-                                @ColumnResult(name = "local_vendor_sms_alert", type = Integer.class),
-                                @ColumnResult(name = "monnit_count", type = Integer.class),
-                                @ColumnResult(name = "monnit_status", type = String.class),
-                                @ColumnResult(name = "pelican_count", type = Integer.class),
-                                @ColumnResult(name = "pelican_status", type = String.class),
-                                @ColumnResult(name = "knx_count", type = Integer.class),
-                                @ColumnResult(name = "knx_status", type = String.class),
-                                @ColumnResult(name = "subsystem_parent_id", type = String.class),
-                                @ColumnResult(name = "subsystem_count", type = Integer.class),
-                                @ColumnResult(name = "custom_fields", type = String.class),
-                                @ColumnResult(name = "description", type = String.class),
-                                @ColumnResult(name = "asset_match_status", type = Integer.class),
-                                @ColumnResult(name = "matched_product_ids", type = String.class),
-                                @ColumnResult(name = "latitude", type = String.class),
-                                @ColumnResult(name = "longitude", type = String.class),
-                                @ColumnResult(name = "measuring_instrument_count", type = Integer.class),
-                                @ColumnResult(name = "document_count", type = Integer.class),
-                                @ColumnResult(name = "media_count", type = Integer.class),
-                                @ColumnResult(name = "checklist_template_count", type = Integer.class),
-                                @ColumnResult(name = "snmp_object_count", type = Integer.class),
-                                @ColumnResult(name = "snmp_object_status", type = String.class),
-                                @ColumnResult(name = "position", type = String.class),
-                                @ColumnResult(name = "measuring_instrument_status", type = String.class),
-                                @ColumnResult(name = "record_checklist_count", type = Integer.class),
-                                @ColumnResult(name = "record_checklist_status", type = String.class),
-                                @ColumnResult(name = "daintree_count", type = Integer.class),
-                                @ColumnResult(name = "daintree_status", type = String.class),
-                                @ColumnResult(name = "asset_image_url", type = String.class),
-                                @ColumnResult(name = "created_timestamp", type = BigInteger.class),
-                                @ColumnResult(name = "ecobee_count", type = Integer.class),
-                                @ColumnResult(name = "ecobee_status", type = String.class),
-                                @ColumnResult(name = "modbus_count", type = Integer.class),
-                                @ColumnResult(name = "modbus_status", type = String.class),
-                                @ColumnResult(name = "floor_id", type = String.class),
-                                @ColumnResult(name = "created_email", type = String.class),
-                                @ColumnResult(name = "asset_group", type = String.class),
-                                @ColumnResult(name = "building_id", type = String.class),
-                                @ColumnResult(name = "updated_email", type = String.class),
-                                @ColumnResult(name = "updated_timestamp", type = BigInteger.class),
-                                @ColumnResult(name = "onboard_status", type = Integer.class),
-                                @ColumnResult(name = "assignee_email", type = String.class),
-                                @ColumnResult(name = "image_status", type = Integer.class),
-                                @ColumnResult(name = "geolocation_status", type = Integer.class),
-                                @ColumnResult(name = "tag_status", type = Integer.class),
-                                @ColumnResult(name = "field_status", type = Integer.class),
-                                @ColumnResult(name = "asset_ocr_image_url", type = String.class),
-                                @ColumnResult(name = "category", type = String.class),
-                                @ColumnResult(name = "sub_category", type = String.class),
-                                @ColumnResult(name = "location_status", type = String.class),
-                                @ColumnResult(name = "device_onboard_status_id", type = String.class),
-                                @ColumnResult(name = "poly_lens_count", type = Integer.class),
-                                @ColumnResult(name = "adc_json", type = String.class),
-                                @ColumnResult(name = "system_type_id", type = String.class),
-                                @ColumnResult(name = "system_type_name", type = String.class),
-                                @ColumnResult(name = "asset_type_id", type = String.class),
-                                @ColumnResult(name = "asset_type_name", type = String.class),
-                                @ColumnResult(name = "asset_sub_type_id", type = String.class),
-                                @ColumnResult(name = "asset_sub_type_name", type = String.class),
-                                @ColumnResult(name = "source_type", type = String.class)
-                        }
-                )
-        }
-)
-
-@NamedNativeQuery(
-        name = "Device.getDeviceByDeviceIdNew",
-        query = "SELECT  d.id, d.status, d.display_name, d.last_seen_on, d.mac_address, d.vendor, d.model,"
-                + " d.type , d.ip_address, d.monitor, l.name as location, d.network_layer, d.user_data_model ,"
-                + " d.user_data_vendor, d.user_data_name, d.parent, d.snmp_parent,  d.docker_vdms_id AS vdms_id, d.docker_name,"
-                + " d.type AS system_type, d.remote_access, b.name as building, f.name as floor, d.local_vendor_id, "
-                + " d.global_vendor_id, d.other_vendor_1_id, d.other_vendor_2_id, d.other_vendor_3_id,"
-                + " d.product_id, d.alarm, d.virtual_device_type, d.warranty, d.quick_link_name, d.quick_link_url,  l.id AS location_id, d.email_alert, d.sms_alert,"
-                + " d.popup_notification, d.snmp_count, d.snmp_status, d.interface_count, d.notes_count, d.ticket_count, d.ticket_status, d.serial_number,"
-                + " d.bacnet_count, d.bacnet_status, d.lorawan_count, d.lorawan_status, d.disruptive_count, d.disruptive_status, d.my_devices_count,"
-                + " d.my_devices_status, d.local_vendor_email_alert, d.local_vendor_sms_alert, d.monnit_count, d.monnit_status,"
-                + " d.pelican_count, d.pelican_status,d.knx_count,d.knx_status, d.subsystem_parent_id, d.subsystem_count, d.custom_fields, d.description, "
-                + " d.asset_match_status, d.matched_product_ids, d.latitude, d.longitude,d.measuring_instrument_count,d.document_count,d.media_count,"
-                + " d.checklist_template_count, d.snmp_object_count,d.snmp_object_status, d.position, d.measuring_instrument_status,"
-                + " d.record_checklist_count, d.record_checklist_status, d.daintree_count, d.daintree_status,  d.asset_image_url, d.created_timestamp,"
-                + " d.ecobee_count, d.ecobee_status, d.modbus_count, d.modbus_status, f.id as floor_id, d.created_email,d.asset_group, b.id as building_id, d.updated_email,"
-                + " d.updated_timestamp, d.onboard_status  , dos.assignee_email, dos.image_status, dos.geolocation_status, dos.tag_status, dos.field_status, d.asset_ocr_image_url, d.category, d.sub_category, d.location_status, dos.id AS device_onboard_status_id, d.poly_lens_count,  "
-                + " d.adc_json, d.system_type_id, d.system_type_name, d.asset_type_id, d.asset_type_name, d.asset_sub_type_id, d.asset_sub_type_name, d.source_type "
-                + " FROM device d"
-                + " LEFT JOIN device_onboard_status dos ON d.id = dos.device_id "
-                + " LEFT JOIN location l ON d.location_id = l.id"
-                + " LEFT JOIN floor f ON l.floor_id = f.id"
-                + " LEFT JOIN building b ON f.building_id = b.id"
-                + " WHERE d.id = ?1",
-        resultSetMapping = "deviceonboardmapping"
-)
-
-@SqlResultSetMapping(
         name = "deviceDetailsMapping",
         classes = {
                 @ConstructorResult(
@@ -2345,54 +2164,6 @@ import java.util.Set;
                 "AND (?5 = 'null'  or LOWER(REGEXP_REPLACE(CONCAT_WS('', d.display_name, d.user_data_name, d.ip_address, d.mac_address, l.name, d.docker_name, d.vendor, d.user_data_vendor,d.latitude, d.longitude, d.warranty, b.name, f.name, d.model, d.user_data_model, d.serial_number, d.custom_fields,d.type, d.description), '[ -.!\t_+#~`@$%^&*()=;:<>?,/{}|\\\\ ]' , '')) LIKE CONCAT('%',?5,'%')) " +
                 "LIMIT ?4 OFFSET ?3 ",
         resultSetMapping = "deviceAiCallFlowMapping"
-)
-
-@SqlResultSetMapping(
-        name = "devicedetailesforcallstatusmapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = DeviceDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "alarm", type = String.class),
-                                @ColumnResult(name = "user_data_name", type = String.class),
-                                @ColumnResult(name = "display_name", type = String.class),
-                                @ColumnResult(name = "ip_address", type = String.class),
-                                @ColumnResult(name = "mac_address", type = String.class),
-                                @ColumnResult(name = "last_seen_on", type = String.class),
-                                @ColumnResult(name = "model", type = String.class),
-                                @ColumnResult(name = "user_data_model", type = String.class),
-                                @ColumnResult(name = "user_data_vendor", type = String.class),
-                                @ColumnResult(name = "vendor", type = String.class),
-                                @ColumnResult(name = "warranty", type = String.class),
-                                @ColumnResult(name = "serial_number", type = String.class),
-                                @ColumnResult(name = "docker_name", type = String.class),
-                                @ColumnResult(name = "parent", type = String.class),
-                                @ColumnResult(name = "description", type = String.class),
-                                @ColumnResult(name = "category", type = String.class),
-                                @ColumnResult(name = "sub_category", type = String.class),
-                                @ColumnResult(name = "docker_vdms_id", type = String.class),
-                                @ColumnResult(name = "building_id", type = String.class),
-                                @ColumnResult(name = "building", type = String.class),
-                                @ColumnResult(name = "floor_id", type = String.class),
-                                @ColumnResult(name = "floor", type = String.class),
-                                @ColumnResult(name = "location_id", type = String.class),
-                                @ColumnResult(name = "location", type = String.class)
-                        }
-                )
-        }
-)
-
-
-@NamedNativeQuery(
-        name = "Device.getDeviceInfoFromDb",
-        query = "SELECT d.id, d.alarm, d.user_data_name, d.display_name, d.ip_address, d.mac_address, d.last_seen_on, d.model, d.user_data_model, d.user_data_vendor, d.vendor, d.warranty, d.serial_number, d.docker_name, d.parent, d.description, d.category, d.sub_category, d.docker_vdms_id, f.building_id, b.name AS building, l.floor_id, f.name AS floor, d.location_id, l.name AS location " +
-                "FROM device d " +
-                "LEFT JOIN location l ON d.location_id = l.id " +
-                "LEFT JOIN floor f ON l.floor_id = f.id " +
-                "LEFT JOIN building b ON f.building_id = b.id " +
-                "WHERE d.id = ?1",
-        resultSetMapping = "devicedetailesforcallstatusmapping"
 )
 
 @SqlResultSetMapping(
@@ -2551,33 +2322,9 @@ import java.util.Set;
         resultSetMapping = "deviceCustomDetailsMapping"
 )
 
-@SqlResultSetMapping(
-        name = "deviceforiaqMapping",
-        classes = {
-                @ConstructorResult(
-                        targetClass = DeviceDTO.class,
-                        columns = {
-                                @ColumnResult(name = "id", type = String.class),
-                                @ColumnResult(name = "asset_group", type = String.class),
-                                @ColumnResult(name = "docker_name", type = String.class),
-                                @ColumnResult(name = "location_id", type = String.class),
-                                @ColumnResult(name = "user_data_name", type = String.class),
-                                @ColumnResult(name = "display_name", type = String.class),
-                                @ColumnResult(name = "onboard_status", type = Integer.class)
-                        }
-                )
-        }
-)
-
-//for IAQ
-@NamedNativeQuery(
-        name = "Device.getDeviceByMeasuringInstrumentId",
-        query = "SELECT  d.id, d.asset_group, d.docker_name, d.location_id , d.user_data_name , d.display_name , d.onboard_status "
-                + " FROM device d"
-                + " LEFT JOIN measuring_instrument mi ON d.id = mi.device_id"
-                + " WHERE mi.id = ?1",
-        resultSetMapping = "deviceforiaqMapping"
-)
+//for IAQ — CONVERTED to JPQL + MapStruct: see DeviceRepository.getDeviceByMeasuringInstrumentId
+// (findDeviceByInstrumentRows) + DeviceByInstrumentRow/DeviceByInstrumentDtoMapper. The
+// deviceforiaqMapping @SqlResultSetMapping was unreferenced elsewhere and removed with it.
 
 
 @SqlResultSetMapping(
@@ -4522,5 +4269,44 @@ public class Device {
 
     public void setAsset_tag_images_url(String asset_tag_images_url) {
         this.asset_tag_images_url = asset_tag_images_url;
+    }
+
+    // Read accessors required by DeviceDtoMapper (MapStruct). These fields previously
+    // had no getter and were read only via field-level Hibernate access for the native
+    // queries; the getters are pure field reads and do not change any response value.
+    public String getProduct_id() {
+        return product_id;
+    }
+
+    public String getAdc_json() {
+        return adc_json;
+    }
+
+    public String getSystem_type_id() {
+        return system_type_id;
+    }
+
+    public String getSystem_type_name() {
+        return system_type_name;
+    }
+
+    public String getAsset_type_id() {
+        return asset_type_id;
+    }
+
+    public String getAsset_type_name() {
+        return asset_type_name;
+    }
+
+    public String getAsset_sub_type_id() {
+        return asset_sub_type_id;
+    }
+
+    public String getAsset_sub_type_name() {
+        return asset_sub_type_name;
+    }
+
+    public String getSource_type() {
+        return source_type;
     }
 }

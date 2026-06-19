@@ -714,6 +714,13 @@ ALTER TABLE device ADD COLUMN IF NOT EXISTS local_vendor_email_alert      INTEGE
 ALTER TABLE device ADD COLUMN IF NOT EXISTS local_vendor_sms_alert        INTEGER;
 ALTER TABLE device ADD COLUMN IF NOT EXISTS network_layer                 VARCHAR(64);
 
+-- inventory_device: associates an inventory tracking id with a device (@OneToOne Device via device_id FK)
+-- tracking_id is the @Id; device_id is the default join column for the owning @OneToOne relation.
+CREATE TABLE IF NOT EXISTS inventory_device (
+    tracking_id  VARCHAR(255) PRIMARY KEY,
+    device_id    VARCHAR(255) REFERENCES device(id)
+);
+
 -- phonebook: FK target for device.global_vendor / local_vendor / other_vendor_1/2/3 (@ManyToOne Phonebook)
 -- Minimal stub — only the columns referenced by the eager join from Device entity load.
 CREATE TABLE IF NOT EXISTS phonebook (

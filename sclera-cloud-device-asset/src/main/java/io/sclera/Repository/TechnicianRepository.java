@@ -16,26 +16,34 @@ import java.util.Set;
  * Manages persistence and querying of {@link Technician} records and their device tags.
  */
 @Repository
-public interface TechnicianRepository extends JpaRepository<Technician,String> {
+public interface TechnicianRepository extends JpaRepository<Technician,String>, TechnicianRepositoryCustom {
 
     /**
-     * Returns the technician record with the given id.
+     * Fetches the managed {@link Technician} entity for the given id (single-table read), or
+     * {@code null} if none. Backs {@link #getTechnicianById(String)} below.
      *
      * @param id technician identifier
-     * @return the matching technician projection
+     * @return the matching technician entity, or {@code null}
      */
-    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with @SqlResultSetMapping; plain SELECT already PG-compatible
-    @Query(nativeQuery = true)
-    TechnicianDTO getTechnicianById(String id);
+    @Query("SELECT t FROM Technician t WHERE t.id = :id")
+    Technician findTechnicianEntityById(@Param("id") String id);
 
     /**
-     * Returns all technician records.
+     * Returns the technician projection with the given id, or {@code null} if none — same contract
+     * as the previous native {@code Technician.getTechnicianById} query. Fetches the entity via
+     * {@link #findTechnicianEntityById(String)} and maps it to {@link TechnicianDTO} via
+     * {@link io.sclera.mapper.TechnicianDtoMapper}.
      *
-     * @return the list of technician projections
+     * @param id technician identifier
+     * @return the matching technician projection, or {@code null}
      */
-    // NOT CONVERTED — stays native (PG-translation track): @NamedNativeQuery projection with @SqlResultSetMapping; plain SELECT already PG-compatible
-    @Query(nativeQuery = true)
-    List<TechnicianDTO> getAllTechnician();
+    default TechnicianDTO getTechnicianById(String id) {
+        Technician t = findTechnicianEntityById(id);
+        if (t == null) {
+            return null;
+        }
+        return io.sclera.mapper.TechnicianMapperHolder.MAPPER.toDto(t);
+    }
 
     /**
      * Inserts a new technician row with the given values.
