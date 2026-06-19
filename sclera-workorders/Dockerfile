@@ -29,5 +29,5 @@ RUN mkdir -p /home/sclera/logs/sclera_backend/services \
     && chown -R spring:spring /app /home/sclera
 USER spring:spring
 
-EXPOSE 8081
+EXPOSE 8094
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

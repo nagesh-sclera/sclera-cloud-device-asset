@@ -1,13 +1,23 @@
 # CLAUDE.md — sclera-workorders
 
 ## Project identity
-Walking-skeleton microservice scaffolded by `tools/skeleton-template/scaffold-skeleton.sh`. Spring Boot 2.6.5, Java 17. Hosts the future real `sclera-workorders` service's Dapr surface.
+The real workorder microservice (tickets + Maximo integration + user-action audit),
+integrated from the `sclera-cloud-workorder` delivery. Java 21, Spring Boot 4.0.6,
+PostgreSQL (`workorder_db`), package root `io.sclera.workorder.*`. Runs under Dapr
+app-id `sclera-workorders` on HTTP port 8094; context-path `/api/v1/workorder-service`.
+
+Replaced the original walking-skeleton stub on 2026-06-19 (see the integration spec/plan
+below).
 
 ## Rules
-- No database, no Flyway, no JPA. All endpoints return hardcoded defaults from `defaults/Defaults.java`.
-- Endpoints generated from `sclera-cloud-device-asset/migration-notes/stub-inventory.md` — do not edit by hand. Re-run the scaffold script to regenerate.
-- Pub/sub subscriptions are no-op handlers that log the event and return 200.
+- Schema is managed by Hibernate `ddl-auto=update` (no Flyway yet) — tables are created on
+  first boot against `workorder_db`.
+- Cross-service calls go through the local Dapr sidecar: `DeviceAssetClient`,
+  `VdmsClient`, `SchedulerClient` (service-invocation) and `UserActionLogClient`
+  (publishes audit entries to the `user-action-log-events` topic, consumed by vdms-service).
+- `MaximoApiClient` talks directly to the external Maximo server (NOT through Dapr).
 
 ## See also
-- Spec: `docs/superpowers/specs/2026-05-19-walking-skeleton-extraction-design.md`
-- Plan: `docs/superpowers/plans/2026-05-19-walking-skeleton-poc.md`
+- Service README: `README.md`
+- Integration spec: `docs/superpowers/specs/2026-06-19-workorder-integration-design.md`
+- Integration plan: `docs/superpowers/plans/2026-06-19-workorder-integration.md`
