@@ -29,6 +29,8 @@ import java.util.Set;
 @Service
 public class DeviceLifecycleHistoryService implements DeviceLifecycleHistoryServiceInterface {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(DeviceLifecycleHistoryService.class);
+
     @Autowired
     private DeviceLifeCycleHistoryRepository deviceLifeCycleHistoryRepository;
 
@@ -136,7 +138,7 @@ public class DeviceLifecycleHistoryService implements DeviceLifecycleHistoryServ
         if ("true".equalsIgnoreCase(retireStatus)){
             DeviceDTO deviceDTO = deviceService.getDeviceDetailsByDeviceId(device_id);
             if(deviceDTO.getInventory_tracking_id() != null){
-                System.out.println("Please make device archive based on Inventory_tracking_id");
+                log.debug("{}", "Please make device archive based on Inventory_tracking_id");
                 deviceService.archiveDevicesForInventoryDevice(username, vdmsid, 1, Collections.singleton(device_id));
                 inventoryDeviceClient.retireInventoryDevice(vdmsid, device_id, username, description, deviceDTO.getInventory_tracking_id());
 

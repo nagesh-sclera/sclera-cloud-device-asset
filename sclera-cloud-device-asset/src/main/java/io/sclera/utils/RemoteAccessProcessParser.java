@@ -2,6 +2,8 @@ package io.sclera.utils;
 
 import io.sclera.dto.touchscreen.RemoteAccessSessionDTO;
 import io.sclera.client.RemoteAccessSessionClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.BufferedReader;
@@ -15,6 +17,8 @@ import java.util.stream.Collectors;
  * port forwards and reconcile them against persisted remote-access sessions.
  */
 public class RemoteAccessProcessParser {
+
+    private static final Logger log = LoggerFactory.getLogger(RemoteAccessProcessParser.class);
 
     @Autowired
     Utils utils;
@@ -31,7 +35,7 @@ public class RemoteAccessProcessParser {
      */
     public void formatData() {
         String[] splitData = this.data.toString().split("\n");
-        System.out.println(Arrays.toString(splitData));
+        log.debug("{}", Arrays.toString(splitData));
         for (var sd : splitData) {
             if (sd.contains("isDockerProcess")) {
                 this.dockerProcess.add(sd);
@@ -86,7 +90,7 @@ public class RemoteAccessProcessParser {
         }
 
         finalProcessList.addAll(processMap.values());
-        System.out.println("FINAL PROCESS!!!!" + (finalProcessList));
+        log.debug("{}", "FINAL PROCESS!!!!" + (finalProcessList));
     }
 
     /**
@@ -105,18 +109,18 @@ public class RemoteAccessProcessParser {
      */
     public void performRemoteAccessCleanup(String vdms_id, RemoteAccessSessionClient remoteAccessSessionService) {
         StringBuilder cmd = new StringBuilder("ps -e -o command | less | grep tcptunnel | grep -v \"127.0.0.1\" | grep -v \"grep\" | grep -v \"docker\"");
-        System.out.println(cmd.toString());
+        log.debug("{}", cmd.toString());
         try {
             Process p = Runtime.getRuntime().exec(new String[]{"bash" ,"-c", cmd.toString()});
             BufferedReader stdIn = new BufferedReader(new InputStreamReader(p.getInputStream()));
             BufferedReader stdErr = new BufferedReader(new InputStreamReader(p.getErrorStream()));
             String error = stdErr.lines().collect(Collectors.joining("\n"));
             String result = stdIn.lines().collect(Collectors.joining("\n"));
-            System.out.println("ERROR FROM COMMAND: "+error);
-            System.out.println("RESULT FROM COMMAND: "+result);
+            log.debug("{}", "ERROR FROM COMMAND: "+error);
+            log.debug("{}", "RESULT FROM COMMAND: "+result);
             this.fillData(result);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
 
         this.formatData();
@@ -127,7 +131,7 @@ public class RemoteAccessProcessParser {
         if (remoteAccessSessionDTOList != null) {
             for (RemoteAccessSessionDTO remoteAccessSessionDTO : remoteAccessSessionDTOList) {
                 for (ProcessData aliveProcess : aliveProcesses) {
-                    System.out.println(remoteAccessSessionDTO.getPublic_port()+" "+aliveProcess.getLocalPort());
+                    log.debug("{}", remoteAccessSessionDTO.getPublic_port()+" "+aliveProcess.getLocalPort());
                     if (remoteAccessSessionDTO.getPublic_port().equals(aliveProcess.getLocalPort())) {
                         remoteAccessSessionDTO.setIsAlive(true);
                     }
@@ -165,7 +169,7 @@ public class RemoteAccessProcessParser {
             }
             return concurrentHashMap;
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
             concurrentHashMap.put("success", false);
             return concurrentHashMap;
         }
@@ -175,10 +179,10 @@ public class RemoteAccessProcessParser {
      * Resolves and returns the IP address of the Sclera VDMS network gateway bridge.
      */
     public String getScleraBridgeIp() {
-        System.out.println("getScleraBridgeIp start");
+        log.debug("{}", "getScleraBridgeIp start");
         String cmd = "getent hosts scleravdmsnetworkgateway | awk {'print $1'}";
         var result = this.execCmd(new String[]{"bash", "-c", cmd});
-        System.out.println("getScleraBridgeIp exit");
+        log.debug("{}", "getScleraBridgeIp exit");
         return result.get("result").toString();
     }
 }

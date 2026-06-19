@@ -5,6 +5,8 @@ import com.itextpdf.text.pdf.ColumnText;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfPageEventHelper;
 import com.itextpdf.text.pdf.PdfWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -14,6 +16,8 @@ import java.net.MalformedURLException;
  * generated PDF document.
  */
 public class HeaderFooterPageEvent extends PdfPageEventHelper {
+
+    private static final Logger log = LoggerFactory.getLogger(HeaderFooterPageEvent.class);
 
     /**
      * Invoked at the end of each PDF page to render the logo image and the page number.
@@ -25,17 +29,17 @@ public class HeaderFooterPageEvent extends PdfPageEventHelper {
             PdfContentByte cb = writer.getDirectContent();
             image = Image.getInstance(img);
             image.scaleToFit(50,50);
-            System.out.println("document : " + document.getPageSize().getWidth() + " " + document.getPageSize().getHeight());
+            log.debug("{}", "document : " + document.getPageSize().getWidth() + " " + document.getPageSize().getHeight());
             image.setAbsolutePosition(510, 810);
             cb.addImage(image);
         } catch (MalformedURLException e) {
-            System.out.println(e);
+            log.debug("{}", e);
         } catch (BadElementException e) {
-            System.out.println(e);
+            log.debug("{}", e);
         } catch (DocumentException e) {
-            System.out.println(e);
+            log.debug("{}", e);
         } catch (IOException e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         ColumnText.showTextAligned(writer.getDirectContent(), Element.ALIGN_CENTER, new Phrase(document.getPageNumber()), 550, 30, 0);
 

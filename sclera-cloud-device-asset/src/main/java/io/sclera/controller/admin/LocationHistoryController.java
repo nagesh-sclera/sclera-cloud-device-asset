@@ -2,6 +2,11 @@ package io.sclera.controller.admin;
 
 import io.sclera.dto.LocationHistoryDTO;
 import io.sclera.service.LocationHistoryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +21,7 @@ import java.util.Set;
 @RestController
 @CrossOrigin(allowedHeaders = "*", origins = "*")
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
+@Tag(name = "Location History", description = "Record and retrieve the change history of a location.")
 public class LocationHistoryController {
 
     private static final Logger log = LoggerFactory.getLogger(LocationHistoryController.class);
@@ -30,17 +36,21 @@ public class LocationHistoryController {
      * @param vdmsid          owning VDMS id
      * @param locationHistory history entry to record
      */
-    @RequestMapping(method = RequestMethod.POST, value = "/addlocationhistory")
-    public void addLocationHistory(@RequestParam String username, @RequestParam String vdmsid, @RequestBody LocationHistoryDTO locationHistory) {
+    @Operation(summary = "Add a location history entry",
+            description = "Appends a history entry describing a location change.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "History entry recorded"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @PostMapping("/addlocationhistory")
+    public void addLocationHistory(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @RequestBody LocationHistoryDTO locationHistory) {
         log.info("addLocationHistory username={} vdmsid={}", username, vdmsid);
-        try {
-            locationHistoryService.addLocationHistory(username, vdmsid, locationHistory);
-        } catch (Exception e) {
-            log.error("addLocationHistory failed username={}: {}", username, e.getMessage(), e);
-            throw e;
-        }
+        locationHistoryService.addLocationHistory(username, vdmsid, locationHistory);
     }
-
 
     /**
      * Returns the recorded history for the given location.
@@ -50,14 +60,19 @@ public class LocationHistoryController {
      * @param location_id location whose history is fetched
      * @return set of history entries for the location
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/location/{location_id}/getlocationhistory")
-    public Set<LocationHistoryDTO> getLocationHistory(@RequestParam String username, @RequestParam String vdmsid, @PathVariable String location_id) {
+    @Operation(summary = "Get location history",
+            description = "Returns the recorded history for the given location.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "History returned"),
+            @ApiResponse(responseCode = "404", description = "Location not found"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
+    @GetMapping("/location/{location_id}/getlocationhistory")
+    public Set<LocationHistoryDTO> getLocationHistory(
+            @Parameter(description = "Owning user") @RequestParam String username,
+            @Parameter(description = "Owning VDMS id") @RequestParam String vdmsid,
+            @Parameter(description = "Location whose history is fetched") @PathVariable String location_id) {
         log.info("getLocationHistory username={} vdmsid={} location_id={}", username, vdmsid, location_id);
-        try {
-            return locationHistoryService.getLocationHistory(username, vdmsid, location_id);
-        } catch (Exception e) {
-            log.error("getLocationHistory failed username={} location_id={}: {}", username, location_id, e.getMessage(), e);
-            throw e;
-        }
+        return locationHistoryService.getLocationHistory(username, vdmsid, location_id);
     }
 }

@@ -829,9 +829,9 @@ public class MeasuringInstrumentService implements MeasuringInstrumentServiceInt
                 } else {
                     index = measuringInstruments.size() - 1;
                 }
-                System.out.println("index: " + index);
+                log.debug("{}", "index: " + index);
                 List<MeasuringInstrument> batchInstruments = measuringInstruments.subList(i, index);
-                System.out.println(batchInstruments.toString());
+                log.debug("{}", batchInstruments.toString());
                 measuingInstrumentRepository.saveAll(batchInstruments);
             }
         }

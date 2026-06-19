@@ -1,5 +1,10 @@
 package io.sclera.controller.admin;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
@@ -21,6 +26,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v1/sclera-cloud-device-asset-service")
+@Tag(name = "Device Metadata", description = "Distinct device-type, asset-group and category lookups for the asset filter dropdowns.")
 public class DeviceMetadataController {
 
     private static final Logger log = LoggerFactory.getLogger(DeviceMetadataController.class);
@@ -28,25 +34,74 @@ public class DeviceMetadataController {
     @PersistenceContext
     private EntityManager em;
 
+    /**
+     * Returns the distinct device types for the VDMS.
+     *
+     * @param vdms_id      owning VDMS id
+     * @param username     acting user (unused filter context)
+     * @param network_name network filter context (unused)
+     * @param floor_id     floor filter context (unused)
+     * @return distinct device type values
+     */
+    @Operation(summary = "Get unique device types",
+            description = "Returns the distinct device types for the VDMS.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Device types returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping("/getuniquedevicetypes")
-    public List<String> getUniqueDeviceTypes(@RequestParam(required = false) String vdms_id,
-                                             @RequestParam(required = false) String username,
-                                             @RequestParam(required = false) String network_name,
-                                             @RequestParam(required = false) String floor_id) {
+    public List<String> getUniqueDeviceTypes(
+            @Parameter(description = "Owning VDMS id") @RequestParam(required = false) String vdms_id,
+            @Parameter(description = "Acting user") @RequestParam(required = false) String username,
+            @Parameter(description = "Network filter context") @RequestParam(required = false) String network_name,
+            @Parameter(description = "Floor filter context") @RequestParam(required = false) String floor_id) {
+        log.info("getUniqueDeviceTypes vdms_id={}", vdms_id);
         return distinct("type", vdms_id);
     }
 
+    /**
+     * Returns the distinct asset groups for the VDMS.
+     *
+     * @param vdms_id      owning VDMS id
+     * @param username     acting user (unused filter context)
+     * @param network_name network filter context (unused)
+     * @return distinct asset group values
+     */
+    @Operation(summary = "Get unique asset groups",
+            description = "Returns the distinct asset groups for the VDMS.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Asset groups returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping("/getuniqueassetgroups")
-    public List<String> getUniqueAssetGroups(@RequestParam(required = false) String vdms_id,
-                                             @RequestParam(required = false) String username,
-                                             @RequestParam(required = false) String network_name) {
+    public List<String> getUniqueAssetGroups(
+            @Parameter(description = "Owning VDMS id") @RequestParam(required = false) String vdms_id,
+            @Parameter(description = "Acting user") @RequestParam(required = false) String username,
+            @Parameter(description = "Network filter context") @RequestParam(required = false) String network_name) {
+        log.info("getUniqueAssetGroups vdms_id={}", vdms_id);
         return distinct("asset_group", vdms_id);
     }
 
+    /**
+     * Returns the distinct categories for the VDMS.
+     *
+     * @param vdms_id      owning VDMS id
+     * @param username     acting user (unused filter context)
+     * @param network_name network filter context (unused)
+     * @return distinct category values
+     */
+    @Operation(summary = "Get unique categories",
+            description = "Returns the distinct categories for the VDMS.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Categories returned"),
+            @ApiResponse(responseCode = "500", description = "Unexpected server error")
+    })
     @GetMapping("/getuniquecategory")
-    public List<String> getUniqueCategory(@RequestParam(required = false) String vdms_id,
-                                          @RequestParam(required = false) String username,
-                                          @RequestParam(required = false) String network_name) {
+    public List<String> getUniqueCategory(
+            @Parameter(description = "Owning VDMS id") @RequestParam(required = false) String vdms_id,
+            @Parameter(description = "Acting user") @RequestParam(required = false) String username,
+            @Parameter(description = "Network filter context") @RequestParam(required = false) String network_name) {
+        log.info("getUniqueCategory vdms_id={}", vdms_id);
         return distinct("category", vdms_id);
     }
 

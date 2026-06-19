@@ -91,6 +91,20 @@ public class PerVdmsRegistrar {
         log.info("Deactivated VDMS {} — per-VDMS jobs torn down", vdmsId);
     }
 
+    /** Edit-timezone path: update the registry tz and re-arm ONLY ENABLED instances with the new
+     *  CRON_TZ. Paused/snoozed/disabled instances keep their state (and their torn-down Dapr jobs). */
+    @Transactional
+    public void reregister(String vdmsId, String timezone) {
+        registry.findById(vdmsId).ifPresent(v -> { v.setTimezone(timezone); registry.save(v); });
+        for (JobInstanceEntity inst : instances.findByVdmsId(vdmsId)) {
+            if (inst.getState() == JobInstanceState.ENABLED) {
+                jobs.findById(inst.getJobName()).ifPresent(job ->
+                    scheduler.schedule(new JobSchedule(inst.getDaprJobName(), job.getSchedule(), timezone)));
+            }
+        }
+        log.info("Re-registered VDMS {} ENABLED instances with timezone {}", vdmsId, timezone);
+    }
+
     // Idempotent: upsert the instance row, then (re-)register with Dapr. Isolated per call.
     private boolean registerInstance(JobEntity job, String vdmsId, String timezone) {
         String daprName = daprName(job.getName(), vdmsId);

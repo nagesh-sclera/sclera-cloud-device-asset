@@ -235,7 +235,7 @@ public class DeviceConditionsService implements DeviceConditionsServiceInterface
                 }
                 if (shareConditions.getCondition_method() != null && (shareConditions.getCondition_method().equals("add") || shareConditions.getCondition_method().equals("replace"))) {
                     Set<DeviceConditionsDTO> newDeviceConditionsList = new HashSet<>();
-                    System.out.println(shareConditions.getDeviceConditions().size());
+                    log.debug("{}", shareConditions.getDeviceConditions().size());
 
                     for (DeviceConditionsDTO deviceCondition : shareConditions.getDeviceConditions()) {
                         DeviceConditionsDTO deviceConditions = new DeviceConditionsDTO(deviceCondition.getAlert_condition(), device.getId(),
@@ -245,13 +245,13 @@ public class DeviceConditionsService implements DeviceConditionsServiceInterface
                     try {
                         this.upsertDeviceConditions(username, vdmsid, dockername, newDeviceConditionsList);
                     } catch (Exception e) {
-                        System.out.println("Error in upsert the share the device_condition " + e);
-                        System.out.println(e);
+                        log.debug("{}", "Error in upsert the share the device_condition " + e);
+                        log.debug("{}", e);
                     }
                 }
             } catch (Exception e) {
-                System.out.println("Error in share device_conditions " + e);
-                System.out.println(e);
+                log.debug("{}", "Error in share device_conditions " + e);
+                log.debug("{}", e);
             }
         }
 
@@ -305,10 +305,10 @@ public class DeviceConditionsService implements DeviceConditionsServiceInterface
                 if (id == null) {
                     String device_condition_id = Generators.timeBasedGenerator().generate().toString();
                     device_condition.setId(device_condition_id);
-                    System.out.println("Adding new device condition with ID: " + device_condition_id);
+                    log.debug("{}", "Adding new device condition with ID: " + device_condition_id);
                     deviceConditionsRepository.addDeviceConditions(device_condition.getId(), device_condition.getAlert_condition(), device_condition.getDevice_id(),
                             device_condition.getAlert_profile_id(), device_condition.getTrigger_time(), device_condition.getPriority(), device_condition.getStart_time(), device_condition.getEnd_time(), device_condition.getMax_alert_count(), device_condition.getAlert_count_enabled(), device_condition.getSchedule(), device_condition.getSchedule_conditions(), device_condition.getAlert_count_time(), false, device_condition.getAlert_message());
-                    System.out.println("New device condition added successfully.");
+                    log.debug("{}", "New device condition added successfully.");
                 } else {
                     log.info("Device condition ID {} not null",id);
                     int alertCount = this.getAlertCount(device_condition.getDevice_id());
@@ -375,9 +375,9 @@ public class DeviceConditionsService implements DeviceConditionsServiceInterface
      * @return the matching AI-call condition
      */
     public DeviceConditionsDTO getDeviceConditionsByIdForAiCall(String username, String vdmsid, String device_condition_id) {
-        System.out.println("Fetching device conditions for AI call with ID: " + device_condition_id);
+        log.debug("{}", "Fetching device conditions for AI call with ID: " + device_condition_id);
         DeviceConditionsDTO deviceConditions = deviceConditionsRepository.getDeviceConditionsByIdForAiCall(device_condition_id);
-        System.out.println("Device conditions fetched: " + deviceConditions);
+        log.debug("{}", "Device conditions fetched: " + deviceConditions);
         return deviceConditions;
     }
 
@@ -391,7 +391,7 @@ public class DeviceConditionsService implements DeviceConditionsServiceInterface
         if(id!=null && alertCount > 0) {
             deviceConditionsRepository.updateAlertCountByConditionId(id,alertCount);
         } else {
-            System.out.println("Invalid condition ID or alert count.");
+            log.debug("{}", "Invalid condition ID or alert count.");
         }
     }
 }

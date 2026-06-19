@@ -14,6 +14,8 @@ import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,8 @@ import me.xdrop.fuzzywuzzy.FuzzySearch;
  */
 @Service
 public class DeviceSearchService implements DeviceSearchServiceInterface {
+
+    private static final Logger log = LoggerFactory.getLogger(DeviceSearchService.class);
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -241,15 +245,15 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
             Integer offset = pageSize * (pageNo - 1);
 
             if (condition.equals("all")) {
-                System.out.println("inside all" + virtual_device_type + status + monitor + offset + pageNo);
+                log.debug("{}", "inside all" + virtual_device_type + status + monitor + offset + pageNo);
             } else if (condition.equals("unmonitored")) {
-                System.out.println("outsidxse all" + virtual_device_type + status + monitor + offset + pageNo);
+                log.debug("{}", "outsidxse all" + virtual_device_type + status + monitor + offset + pageNo);
                 monitor = 0;
             } else if (condition.equals("online")) {
 
                 monitor = 1;
                 status = 1;
-                System.out.println("Inside Online" + monitor + status);
+                log.debug("{}", "Inside Online" + monitor + status);
 
             } else if (condition.equals("offline")) {
                 monitor = 1;
@@ -385,7 +389,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
 
             return null;
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
             return null;
         }
     }
@@ -529,14 +533,14 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
             Integer asset_match_status = null;
 
             if (condition.equals("all")) {
-                System.out.println("inside all");
+                log.debug("{}", "inside all");
             } else if (condition.equals("unmonitored")) {
                 monitor = 0;
             } else if (condition.equals("online")) {
 
                 monitor = 1;
                 status = 1;
-                System.out.println("Inside Online" + monitor + status);
+                log.debug("{}", "Inside Online" + monitor + status);
 
             } else if (condition.equals("offline")) {
                 monitor = 1;
@@ -576,11 +580,11 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                         + "ORDER BY (jsonb_path_query_first(custom_fields::jsonb, '$[*].\"" + searchColumn + "\"') #>> '{}' IS NULL OR jsonb_path_query_first(custom_fields::jsonb, '$[*].\"" + searchColumn + "\"') #>> '{}' = ''), "
                         + "jsonb_path_query_first(custom_fields::jsonb, '$[*].\"" + searchColumn + "\"') #>> '{}' LIMIT " + pagesize + " OFFSET " + offset;
 
-                System.out.println("SORT QUERY WITH CUSTOM COLUMN " + query);
+                log.debug("{}", "SORT QUERY WITH CUSTOM COLUMN " + query);
 
                 var queryResult = jdbcTemplate.queryForList(query);
                 for (Map<String, Object> stringObjectMap : queryResult) {
-                    System.out.println(stringObjectMap);
+                    log.debug("{}", stringObjectMap);
                     device_ids.add(String.valueOf(stringObjectMap.get("id")));
                 }
             } else {
@@ -613,18 +617,18 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                         + "ORDER BY " + updatedSearchColumn
                         + "LIMIT " + pagesize + " OFFSET " + offset;
 
-                System.out.println("SORT QUERY WITH SIMPLE COLUMN " + query);
+                log.debug("{}", "SORT QUERY WITH SIMPLE COLUMN " + query);
 
                 var queryResult = jdbcTemplate.queryForList(query);
                 for (Map<String, Object> stringObjectMap : queryResult) {
-                    System.out.println(stringObjectMap);
+                    log.debug("{}", stringObjectMap);
                     device_ids.add(String.valueOf(stringObjectMap.get("id")));
                 }
             }
 
             return deviceService.getDevicesByIdList(vdmsid, device_ids);
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return null;
     }
@@ -644,14 +648,14 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
             Integer asset_match_status = null;
 
             if (condition.equals("all")) {
-                System.out.println("inside all");
+                log.debug("{}", "inside all");
             } else if (condition.equals("unmonitored")) {
                 monitor = 0;
             } else if (condition.equals("online")) {
 
                 monitor = 1;
                 status = 1;
-                System.out.println("Inside Online" + monitor + status);
+                log.debug("{}", "Inside Online" + monitor + status);
 
             } else if (condition.equals("offline")) {
                 monitor = 1;
@@ -688,17 +692,17 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                     + generateMultiConditionStmt(filter_details, vdmsid, dockername)
                     + "LIMIT " + pagesize + " OFFSET " + offset;
 
-            System.out.println("CONSTRUCTED QUERY: " + query);
+            log.debug("{}", "CONSTRUCTED QUERY: " + query);
 
             var queryResult = jdbcTemplate.queryForList(query);
             for (Map<String, Object> stringObjectMap : queryResult) {
-                System.out.println(stringObjectMap);
+                log.debug("{}", stringObjectMap);
                 device_ids.add(String.valueOf(stringObjectMap.get("id")));
             }
             return deviceService.getDevicesByIdList(vdmsid, device_ids);
 
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return null;
     }
@@ -892,7 +896,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                 field.setAccessible(true);
                 fuzzy_result.put(entry.getValue(), this.getFuzzyValueByBaseStringAndSearchString(field.get(device), search_string));
             } catch (Exception e) {
-                System.out.println(e);
+                log.debug("{}", e);
             }
         }
 
@@ -908,13 +912,13 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                                 Object value = json_object.get(key.toString());
                                 fuzzy_result.put(key.toString(), this.getFuzzyValueByBaseStringAndSearchString(value, search_string));
                             } catch (Exception e) {
-                                System.out.println(e);
+                                log.debug("{}", e);
                             }
                         });
                     }
                 }
             } catch (Exception e) {
-                System.out.println(e);
+                log.debug("{}", e);
             }
 
         }
@@ -959,7 +963,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                 return FuzzySearch.ratio(search_string.toString().toLowerCase().trim(), base_string.toString().toLowerCase().trim());
             }
         } catch (Exception e) {
-            System.out.println("Failed to Fetch the fuzzy Score");
+            log.debug("{}", "Failed to Fetch the fuzzy Score");
         }
         return 0;
     }
@@ -977,7 +981,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                 return devices;
             }
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return devices;
     }
@@ -1013,7 +1017,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                                         }
                                     }
                                 } catch (Exception e) {
-                                    System.out.println(e);
+                                    log.debug("{}", e);
                                 }
 
                             }
@@ -1068,7 +1072,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                     }
                 }
             } catch (Exception e) {
-                System.out.println(e);
+                log.debug("{}", e);
             }
         }
 
@@ -1096,7 +1100,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
 
         var queryResult = jdbcTemplate.queryForList(query);
 
-        System.out.println(queryResult);
+        log.debug("{}", queryResult);
 
         List<DeviceDTO> devices = new ArrayList<>();
 
@@ -1104,7 +1108,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
             try {
                 devices.add(deviceService.getDeviceByDeviceId(username, vdmsid, dockername, String.valueOf(stringObjectMap.get("id"))));
             } catch (Exception e) {
-                System.out.println(e);
+                log.debug("{}", e);
             }
         }
 
@@ -1131,7 +1135,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
             Integer asset_match_status = null;
             switch (condition) {
                 case "all":
-                    System.out.println("inside all");
+                    log.debug("{}", "inside all");
                     break;
                 case "unmonitored":
                     monitor = 0;
@@ -1139,7 +1143,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                 case "online":
                     monitor = 1;
                     status = 1;
-                    System.out.println("Inside Online" + monitor + status);
+                    log.debug("{}", "Inside Online" + monitor + status);
                     break;
                 case "offline":
                     monitor = 1;
@@ -1211,7 +1215,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                     + searchAndFilterCustomQuery
                     + ") " + sortQuery
                     + " LIMIT " + pagesize + " OFFSET " + offset;
-            System.out.println("CONSTRUCTED QUERY: " + query);
+            log.debug("{}", "CONSTRUCTED QUERY: " + query);
             var queryResult = jdbcTemplate.queryForList(query);
             for (Map<String, Object> stringObjectMap : queryResult) {
                 device_ids.add(String.valueOf(stringObjectMap.get("id")));
@@ -1239,7 +1243,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
 
             }
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return null;
     }
@@ -1616,7 +1620,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                     break;
                 }
                 default:
-                    System.out.println("Entered default case in search condition");
+                    log.debug("{}", "Entered default case in search condition");
                     break;
             }
         }
@@ -1684,7 +1688,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                     break;
                 }
                 default:
-                    System.out.println("Entered default case in search condition");
+                    log.debug("{}", "Entered default case in search condition");
                     break;
             }
         }
@@ -1761,13 +1765,13 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
             Integer asset_match_status = null;
             Integer assigned_status = null;
             if (condition.equals("all")) {
-                System.out.println("inside all");
+                log.debug("{}", "inside all");
             } else if (condition.equals("unmonitored")) {
                 monitor = 0;
             } else if (condition.equals("online")) {
                 monitor = 1;
                 status = 1;
-                System.out.println("Inside Online" + monitor + status);
+                log.debug("{}", "Inside Online" + monitor + status);
 
             } else if (condition.equals("offline")) {
                 monitor = 1;
@@ -1826,7 +1830,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                     + generateDeviceIdsFilterCustomQuery
                     + searchAndFilterCustomQuery
                     + ") " + sortQuery;
-            System.out.println("CONSTRUCTED QUERY: " + query);
+            log.debug("{}", "CONSTRUCTED QUERY: " + query);
             var queryResult = jdbcTemplate.queryForList(query);
             for (Map<String, Object> stringObjectMap : queryResult) {
                 device_ids.add(String.valueOf(stringObjectMap.get("id")));
@@ -1853,7 +1857,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                 }
             }
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return null;
     }
@@ -1874,14 +1878,14 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
             Integer assigned_status = null;
 
             if (condition.equals("all")) {
-                System.out.println("inside all");
+                log.debug("{}", "inside all");
             } else if (condition.equals("unmonitored")) {
                 monitor = 0;
             } else if (condition.equals("online")) {
 
                 monitor = 1;
                 status = 1;
-                System.out.println("Inside Online" + monitor + status);
+                log.debug("{}", "Inside Online" + monitor + status);
 
             } else if (condition.equals("offline")) {
                 monitor = 1;
@@ -1948,7 +1952,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                     + generateDeviceIdsFilterCustomQuery
                     + searchAndFilterCustomQuery;
 
-            System.out.println("CONSTRUCTED COUNT QUERY: " + query);
+            log.debug("{}", "CONSTRUCTED COUNT QUERY: " + query);
 
             var queryResult = jdbcTemplate.queryForList(query);
 
@@ -1956,7 +1960,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                 return String.valueOf(stringObjectMap.get("count"));
             }
         } catch (Exception e) {
-            System.out.println(e);
+            log.debug("{}", e);
         }
         return null;
     }
@@ -2013,7 +2017,7 @@ public class DeviceSearchService implements DeviceSearchServiceInterface {
                     break;
                 }
                 default:
-                    System.out.println("Entered default case in search condition");
+                    log.debug("{}", "Entered default case in search condition");
                     break;
             }
         }
