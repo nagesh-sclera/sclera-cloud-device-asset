@@ -462,8 +462,8 @@ git commit -m "feat(vdms): subscribe to user-action-log-events and persist audit
 ### Task 5: Scheduler-trigger subscription + Dapr registry update
 
 **Files:**
-- Create: `dapr/components/subscription-scheduler-trigger-workorder.yaml`
-- Modify: `dapr/APP_IDS.md` (Subscribes/Publishes for `sclera-workorders`)
+- Create: `sclera-cloud-device-asset/dapr/components/subscription-scheduler-trigger-workorder.yaml` (this is the LIVE resources dir mounted into every sidecar via `./sclera-cloud-device-asset/dapr:/dapr` + `--resources-path /dapr/components`; the root `dapr/components/` tree is NOT mounted)
+- Modify: `dapr/APP_IDS.md` (Subscribes/Publishes for `sclera-workorders` — this is a doc, root path is correct)
 
 **Interfaces:**
 - Consumes: the received `io.sclera.workorder.scheduler.SchedulerTriggerSubscriber` route `POST /api/v1/workorder-service/internal/scheduler-demo` (filters events to `owner == "workorder"`).
@@ -476,7 +476,7 @@ Expected: `@PostMapping("/internal/scheduler-demo")`. With the service context-p
 
 - [ ] **Step 2: Create the declarative subscription**
 
-Create `dapr/components/subscription-scheduler-trigger-workorder.yaml`:
+Create `sclera-cloud-device-asset/dapr/components/subscription-scheduler-trigger-workorder.yaml` (the live, sidecar-mounted components dir):
 
 ```yaml
 apiVersion: dapr.io/v2alpha1
