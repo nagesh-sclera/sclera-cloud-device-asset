@@ -9,7 +9,7 @@
 | `sclera-identity` | sclera-identity (skeleton) | 8091 | — | identity.org-renamed, identity.user-deactivated | platform |
 | `sclera-alerts` | sclera-alerts (skeleton) | 8092 | device.alert-condition-fired (future) | alerts.notification-dispatched (future) | platform |
 | `sclera-inventory` | sclera-inventory (skeleton) | 8093 | — | — | platform |
-| `sclera-workorders` | sclera-workorders (skeleton) | 8094 | — | — | platform |
+| `sclera-workorders` | sclera-workorders | 8094 | scheduler.trigger | user-action-log-events | platform |
 | `sclera-inspection` | sclera-inspection (skeleton) | 8095 | — | — | platform |
 | `sclera-integrations` | sclera-integrations (skeleton) | 8096 | — | — | platform |
 | `sclera-edge` | sclera-edge (skeleton) | 8097 | — | — | platform |
@@ -41,6 +41,7 @@ Resources path loads:
 - `vdms.*` — VDMS-related events between cloud-device-asset and vdms-service
 - `scheduler.trigger` — published by sclera-scheduler when a job fires; consumed by the job's owning service (initially the monolith dispatcher). DLQ: `scheduler.trigger.dlq`.
 - `scheduler.result` — published by the owning service after running the job; consumed by sclera-scheduler to record the outcome. DLQ: `scheduler.result.dlq`.
+- `user-action-log-events` — published by sclera-workorders; consumed by vdms-service (persists user_action_log).
 
 ## Dapr Scheduler control plane (sclera-scheduler only)
 `sclera-scheduler` uses the Dapr Jobs API (`v1.0-alpha1/jobs`), which requires the Dapr
