@@ -8,16 +8,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.util.Map;
-import java.util.UUID;
 
 /**
- * Demo: schedules a one-time job (via the central scheduler) that fires after {@code seconds}.
- * Served at /api/v1/workorder-service/demo/schedule-onetime. The fire is printed by
- * {@code SchedulerTriggerSubscriber} when the trigger comes back.
+ * Demo: asks the central scheduler to fire the workorder-owned catalog job once after
+ * {@code seconds}. Served at /api/v1/workorder-service/demo/schedule-onetime. When the
+ * trigger comes back on {@code scheduler.trigger}, {@code SchedulerTriggerSubscriber}
+ * prints it (the event's owner is "workorder").
  */
 @RestController
 @RequestMapping("/demo")
 public class SchedulerDemoController {
+
+    /** The workorder-owned recurring job registered in the scheduler catalog (jobs.yaml). */
+    static final String WORKORDER_JOB = "workorderTicketSync";
 
     private final SchedulerClient scheduler;
 
@@ -27,9 +30,8 @@ public class SchedulerDemoController {
 
     @PostMapping("/schedule-onetime")
     public Map<String, String> scheduleOneTime(@RequestParam(defaultValue = "15") long seconds) {
-        String name = "demoWorkorderOnce-" + UUID.randomUUID().toString().substring(0, 8);
         Instant dueAt = Instant.now().plusSeconds(seconds);
-        scheduler.scheduleOneTime(name, "workorder", dueAt);
-        return Map.of("scheduledJob", name, "dueAt", dueAt.toString());
+        scheduler.scheduleOnce(WORKORDER_JOB, dueAt);
+        return Map.of("scheduledJob", WORKORDER_JOB, "dueAt", dueAt.toString());
     }
 }

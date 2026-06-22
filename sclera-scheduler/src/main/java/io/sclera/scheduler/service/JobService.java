@@ -95,14 +95,30 @@ public class JobService {
      * so a transient broker hiccup does not surface as an error to the operator.
      */
     public void runNow(String name) {
-        require(name);
+        JobEntity job = require(name);
         UUID runId = UUID.randomUUID();
         recorder.recordFired(name, runId, true);
         var result = publisher.publish(pubsubName, triggerTopic,
-            new SchedulerTriggerEvent(name, runId.toString(), System.currentTimeMillis()));
+            new SchedulerTriggerEvent(name, runId.toString(), null, job.getOwner(), System.currentTimeMillis()));
         if (!result.success()) {
             log.error("run-now publish failed job={} error={}", name, result.error());
         }
+    }
+
+    /**
+     * Schedule a single future run of an existing GLOBAL job at {@code at}; does not touch
+     * the recurring schedule. The GLOBAL analog of {@link #runAtInstance}. The one-shot Dapr
+     * job name keeps the catalog job as its first segment so the fire callback resolves the
+     * owner and the job_run FK holds.
+     */
+    @Transactional(readOnly = true)
+    public void runAtGlobal(String name, Instant at) {
+        if (at == null || at.isBefore(Instant.now())) {
+            throw new IllegalArgumentException("run-at 'at' must be in the future");
+        }
+        require(name);
+        String oneShotName = name + "::once-" + UUID.randomUUID();
+        scheduler.scheduleOnce(oneShotName, at);
     }
 
     private JobEntity require(String name) {

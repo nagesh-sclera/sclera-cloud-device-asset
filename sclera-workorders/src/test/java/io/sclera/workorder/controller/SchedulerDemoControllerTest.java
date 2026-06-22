@@ -22,7 +22,7 @@ class SchedulerDemoControllerTest {
     void scheduleOneTime_returnsJobNameAndInvokesClient() throws Exception {
         mvc.perform(post("/demo/schedule-onetime").param("seconds", "20"))
            .andExpect(status().isOk())
-           .andExpect(jsonPath("$.scheduledJob").value(org.hamcrest.Matchers.startsWith("demoWorkorderOnce-")));
-        verify(scheduler).scheduleOneTime(startsWith("demoWorkorderOnce-"), eq("workorder"), any());
+           .andExpect(jsonPath("$.scheduledJob").value("workorderTicketSync"));
+        verify(scheduler).scheduleOnce(eq("workorderTicketSync"), any());
     }
 }

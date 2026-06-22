@@ -175,6 +175,32 @@ class JobServiceTest {
     }
 
     @Test
+    void runAtGlobalRegistersOneShotForExistingJob() {
+        when(jobs.findById("workorderTicketSync")).thenReturn(Optional.of(
+                new JobEntity("workorderTicketSync", "0 0 */6 * * *", "workorder",
+                        "scheduler.trigger", JobState.ENABLED)));
+        Instant at = Instant.now().plusSeconds(3600);
+        service().runAtGlobal("workorderTicketSync", at);
+        // GLOBAL one-shot name has no vdms segment: {job}::once-{id}
+        verify(scheduler).scheduleOnce(startsWith("workorderTicketSync::once-"), eq(at));
+    }
+
+    @Test
+    void runAtGlobalUnknownJobThrows() {
+        when(jobs.findById("nope")).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service().runAtGlobal("nope", Instant.now().plusSeconds(60)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void runAtGlobalInPastIsRejected() {
+        // Time check precedes the catalog lookup, so no job stub is needed.
+        assertThatThrownBy(() -> service().runAtGlobal(
+                "workorderTicketSync", Instant.parse("2000-01-01T00:00:00Z")))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void unknownInstanceThrows() {
         when(instances.findById(new JobInstanceId("vdmsSystemHealth", "nope")))
                 .thenReturn(Optional.empty());

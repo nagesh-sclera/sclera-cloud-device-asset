@@ -11,13 +11,15 @@ import java.util.Map;
 
 /**
  * Consumer of the scheduler's {@code scheduler.trigger} topic for workorder. Wired by the declarative
- * subscription {@code components-docker/subscription-scheduler-demo-workorder.yaml}, which routes the
- * event to {@code /api/v1/workorder-service/internal/scheduler-demo}.
+ * subscription {@code sclera-cloud-device-asset/dapr/components/subscription-scheduler-trigger-workorder.yaml}
+ * (the live, sidecar-mounted components dir), which routes the event to
+ * {@code /api/v1/workorder-service/internal/scheduler-demo}.
  *
  * <p>Every subscribing app receives every trigger, so this handler routes by the event's {@code owner}
- * field: it prints for any job (recurring or one-time) owned by {@code workorder}, whatever its name,
- * and ignores the rest. It only prints — the scheduler's TriggerSimulatorSubscriber records the
- * SUCCESS for non-device-asset jobs in dev/docker.
+ * field: it prints for any job (recurring or one-time) owned by {@code workorder} — e.g. the recurring
+ * {@code workorderTicketSync} catalog job or a one-time fire of it — and ignores the rest. It only
+ * prints; the scheduler's TriggerSimulatorSubscriber records the SUCCESS for non-device-asset jobs in
+ * dev/docker.
  */
 @RestController
 public class SchedulerTriggerSubscriber {

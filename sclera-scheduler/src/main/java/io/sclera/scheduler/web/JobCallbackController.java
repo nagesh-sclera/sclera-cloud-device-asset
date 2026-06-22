@@ -3,6 +3,8 @@ package io.sclera.scheduler.web;
 import io.sclera.dapr.DaprEventPublisher;
 import io.sclera.dapr.PublishResult;
 import io.sclera.dapr.events.SchedulerTriggerEvent;
+import io.sclera.scheduler.domain.JobEntity;
+import io.sclera.scheduler.domain.JobRepository;
 import io.sclera.scheduler.service.RunRecorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,13 +32,15 @@ public class JobCallbackController {
 
     private final RunRecorder recorder;
     private final DaprEventPublisher publisher;
+    private final JobRepository jobs;
 
     @Value("${scheduler.pubsub-name}") private String pubsubName;
     @Value("${scheduler.trigger-topic}") private String triggerTopic;
 
-    public JobCallbackController(RunRecorder recorder, DaprEventPublisher publisher) {
+    public JobCallbackController(RunRecorder recorder, DaprEventPublisher publisher, JobRepository jobs) {
         this.recorder = recorder;
         this.publisher = publisher;
+        this.jobs = jobs;
     }
 
     void setPubsubName(String v) { this.pubsubName = v; }
@@ -45,16 +49,23 @@ public class JobCallbackController {
     @PostMapping("/job/{name}")
     public ResponseEntity<Void> onJobFired(@PathVariable("name") String name) {
         // Dapr job names: "{jobName}" (global), "{jobName}::{vdmsId}" (per-VDMS),
-        // or "{jobName}::{vdmsId}::once-{id}" (one-shot delayed run).
+        // "{jobName}::{vdmsId}::once-{id}" (per-VDMS one-shot), or
+        // "{jobName}::once-{id}" (global one-shot). The one-shot marker is always the
+        // last segment, so detect it from the tail rather than a fixed index.
         String[] parts = name.split("::");
         String jobName = parts[0];
-        String vdmsId = parts.length >= 2 ? parts[1] : null;
-        boolean oneShot = parts.length >= 3 && parts[2].startsWith("once-");
+        boolean oneShot = parts.length >= 2 && parts[parts.length - 1].startsWith("once-");
+        String vdmsId = oneShot
+            ? (parts.length >= 3 ? parts[1] : null)   // {job}::{vdms}::once-{id} vs {job}::once-{id}
+            : (parts.length >= 2 ? parts[1] : null);   // {job}::{vdms}
+
+        // owner drives subscriber routing; resolve it from the catalog (null if unknown).
+        String owner = jobs.findById(jobName).map(JobEntity::getOwner).orElse(null);
 
         UUID runId = UUID.randomUUID();
         recorder.recordFired(jobName, runId, oneShot, vdmsId);
         PublishResult result = publisher.publish(pubsubName, triggerTopic,
-            new SchedulerTriggerEvent(jobName, runId.toString(), vdmsId, System.currentTimeMillis()));
+            new SchedulerTriggerEvent(jobName, runId.toString(), vdmsId, owner, System.currentTimeMillis()));
         if (!result.success()) {
             log.error("Trigger publish failed job={} vdmsId={} runId={} error={}",
                 jobName, vdmsId, runId, result.error());

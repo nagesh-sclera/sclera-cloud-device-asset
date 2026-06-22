@@ -70,6 +70,12 @@ public class SchedulerApiController {
     @PostMapping("/{name}/run")
     public void run(@PathVariable String name) { jobService.runNow(name); }
 
+    /** Fire an existing GLOBAL job exactly once at {@code at} (ISO-8601). */
+    @PostMapping("/{name}/run-at")
+    public void runAtGlobal(@PathVariable String name, @RequestParam("at") String at) {
+        jobService.runAtGlobal(name, Instant.parse(at));
+    }
+
     @GetMapping("/{name}/instances")
     public List<JobInstanceView> instances(@PathVariable String name) {
         return jobInstances.findByJobName(name).stream().map(i -> new JobInstanceView(

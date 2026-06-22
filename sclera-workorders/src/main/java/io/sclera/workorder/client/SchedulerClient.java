@@ -3,12 +3,10 @@ package io.sclera.workorder.client;
 import io.sclera.workorder.config.DaprProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import java.time.Instant;
-import java.util.Map;
 
 /**
  * Calls the central sclera-scheduler to create a one-time job, through the local Dapr sidecar's
@@ -27,14 +25,21 @@ public class SchedulerClient {
         this.props = props;
     }
 
-    /** Ask the scheduler to fire a one-time job named {@code name} once at {@code dueAt}. */
-    public void scheduleOneTime(String name, String owner, Instant dueAt) {
+    /**
+     * Ask the central scheduler to fire an existing catalog job exactly once at {@code dueAt}.
+     * Targets the scheduler's global run-at endpoint
+     * ({@code POST /api/jobs/{jobName}/run-at?at=...}); the job's owner is resolved by the
+     * scheduler from its catalog, so the resulting trigger reaches this service's
+     * {@code SchedulerTriggerSubscriber} when {@code jobName} is workorder-owned.
+     */
+    public void scheduleOnce(String jobName, Instant dueAt) {
         daprRestClient.post()
-            .uri("/invoke/{appId}/method/api/jobs/onetime", props.getSchedulerAppId())
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(Map.of("name", name, "owner", owner, "dueAt", dueAt.toString()))
+            .uri(uriBuilder -> uriBuilder
+                .path("/invoke/{appId}/method/api/jobs/{jobName}/run-at")
+                .queryParam("at", dueAt.toString())
+                .build(props.getSchedulerAppId(), jobName))
             .retrieve()
             .toBodilessEntity();
-        log.info("Requested one-time job name={} owner={} dueAt={}", name, owner, dueAt);
+        log.info("Requested one-time fire of job={} dueAt={}", jobName, dueAt);
     }
 }

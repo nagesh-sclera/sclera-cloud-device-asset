@@ -28,17 +28,15 @@ class SchedulerClientTest {
     }
 
     @Test
-    void scheduleOneTime_invokesSchedulerOnetimeEndpoint() {
+    void scheduleOnce_invokesSchedulerGlobalRunAtEndpoint() {
         Instant due = Instant.parse("2026-06-20T14:00:00Z");
-        mockServer.expect(requestTo(
-                "http://localhost:3501/v1.0/invoke/sclera-scheduler/method/api/jobs/onetime"))
+        mockServer.expect(requestTo(org.hamcrest.Matchers.containsString(
+                "/invoke/sclera-scheduler/method/api/jobs/workorderTicketSync/run-at")))
             .andExpect(method(POST))
-            .andExpect(jsonPath("$.name").value("demoWorkorderOnce-x"))
-            .andExpect(jsonPath("$.owner").value("workorder"))
-            .andExpect(jsonPath("$.dueAt").value("2026-06-20T14:00:00Z"))
+            .andExpect(queryParam("at", "2026-06-20T14:00:00Z"))
             .andRespond(withSuccess());
 
-        client.scheduleOneTime("demoWorkorderOnce-x", "workorder", due);
+        client.scheduleOnce("workorderTicketSync", due);
         mockServer.verify();
     }
 }

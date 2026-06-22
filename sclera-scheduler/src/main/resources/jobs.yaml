@@ -74,6 +74,10 @@ scheduler:
       - name: userActionLog
         schedule: "0 0 * * * *"
         owner: device-asset
+      # Recurring ticket reconciliation owned by sclera-workorders. Every 6h.
+      - name: workorderTicketSync
+        schedule: "0 0 */6 * * *"
+        owner: workorder
       - name: deviceDndEnable
         schedule: "0 0/30 * * * *"
         owner: device-asset

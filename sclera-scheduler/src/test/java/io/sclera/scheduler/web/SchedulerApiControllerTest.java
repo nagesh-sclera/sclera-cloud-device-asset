@@ -176,6 +176,13 @@ class SchedulerApiControllerTest extends AbstractPostgresTest {
     }
 
     @Test
+    void runAtGlobalEndpointDelegatesToService() {
+        controller().runAtGlobal("workorderTicketSync", "2026-06-20T14:00:00Z");
+        verify(jobService).runAtGlobal("workorderTicketSync",
+                java.time.Instant.parse("2026-06-20T14:00:00Z"));
+    }
+
+    @Test
     void pauseInstanceEndpointDelegatesToService() {
         controller().pauseInstance("vdmsSystemHealth", "vdms-1");
         verify(jobService).pauseInstance("vdmsSystemHealth", "vdms-1");
