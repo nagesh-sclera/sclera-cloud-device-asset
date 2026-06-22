@@ -483,7 +483,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>-Duser.timezone=UTC</argLine>
+                    <!-- @{argLine} is the late-bound property JaCoCo's prepare-agent populates with
+                         the coverage javaagent; keep it so coverage data is actually recorded. -->
+                    <argLine>@{argLine} -Duser.timezone=UTC</argLine>
                 </configuration>
             </plugin>
             <plugin>
@@ -491,6 +493,36 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <includeSystemScope>true</includeSystemScope>
+                </configuration>
+            </plugin>
+            <!-- Code-coverage: attaches the JaCoCo agent during the test phase and writes an
+                 HTML/CSV/XML report to target/site/jacoco. Excludes the bootstrap class plus
+                 plain data holders (dto/enums/models) that carry no testable logic. -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <excludes>
+                        <exclude>io/sclera/ScleraCloudDeviceAssetApplication.class</exclude>
+                        <exclude>io/sclera/dto/**</exclude>
+                        <exclude>io/sclera/enums/**</exclude>
+                        <exclude>io/sclera/models/**</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
             <plugin>
