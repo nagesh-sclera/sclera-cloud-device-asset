@@ -105,4 +105,42 @@ public class TicketController {
     public TicketDTO getTicketDetailsById(@RequestParam(value = "loggedInUser") String loggedInUser, @RequestParam(value = "vdms_id") String vdms_id, @PathVariable String ticket_id) {
         return ticketService.getNativeTicketDetailsById(ticket_id);
     }
+
+    /**
+     * Internal read-back endpoint: number of non-deleted tickets for a device.
+     *
+     * <p>Invoked by sclera-cloud-device-asset (via Dapr) from {@code DeviceService.updateDeviceTicketCount}.
+     *
+     * @param device_id the device id
+     * @return the ticket count
+     */
+    @RequestMapping(method = RequestMethod.GET, value = "/device/{device_id}/ticketcount")
+    public Integer getTicketCountByDeviceId(@PathVariable String device_id) {
+        return ticketService.getTicketCountByDeviceId(device_id);
+    }
+
+    /**
+     * Internal read-back endpoint: whether a device has any open (non-closed) ticket.
+     *
+     * <p>Invoked by sclera-cloud-device-asset (via Dapr) from {@code DeviceService.updateDeviceTicketStatus}.
+     *
+     * @param device_id the device id
+     * @return {@code true} when the device has at least one open ticket
+     */
+    @RequestMapping(method = RequestMethod.GET, value = "/device/{device_id}/openticketstatus")
+    public Boolean getOpenTicketStatus(@PathVariable String device_id) {
+        return ticketService.getOpenTicketStatus(device_id);
+    }
+
+    /**
+     * Internal endpoint: bulk-clears the assignee on all tickets currently assigned to the e-mail.
+     *
+     * <p>Invoked by sclera-cloud-device-asset (via Dapr) when a user is deleted.
+     *
+     * @param email the assignee's e-mail
+     */
+    @RequestMapping(method = RequestMethod.POST, value = "/assignee/{email}/synctickets")
+    public void syncTicketAssignee(@PathVariable String email) {
+        ticketService.updateTicketAssigneeByUserEmail(email);
+    }
 }

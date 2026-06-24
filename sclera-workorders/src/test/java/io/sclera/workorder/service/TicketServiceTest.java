@@ -617,6 +617,36 @@ class TicketServiceTest {
         verify(ticketRepository).updateTicketAssigneeByUserEmail("user@test.com");
     }
 
+    // ── getTicketCountByDeviceId / getOpenTicketStatus (device-asset read-back) ─
+
+    @Test
+    void getTicketCountByDeviceId_delegatesToRepository() {
+        when(ticketRepository.getTicketCountByDeviceId("dev-1")).thenReturn(5);
+
+        assertThat(ticketService.getTicketCountByDeviceId("dev-1")).isEqualTo(5);
+    }
+
+    @Test
+    void getOpenTicketStatus_trueWhenOpenTicketsExist() {
+        when(ticketRepository.getOpenTicketStatus("dev-1")).thenReturn(2);
+
+        assertThat(ticketService.getOpenTicketStatus("dev-1")).isTrue();
+    }
+
+    @Test
+    void getOpenTicketStatus_falseWhenNoOpenTickets() {
+        when(ticketRepository.getOpenTicketStatus("dev-1")).thenReturn(0);
+
+        assertThat(ticketService.getOpenTicketStatus("dev-1")).isFalse();
+    }
+
+    @Test
+    void getOpenTicketStatus_falseWhenRepositoryReturnsNull() {
+        when(ticketRepository.getOpenTicketStatus("dev-1")).thenReturn(null);
+
+        assertThat(ticketService.getOpenTicketStatus("dev-1")).isFalse();
+    }
+
     // ── helpers ────────────────────────────────────────────────────────────────
 
     private TicketDTO newTicketDto(String id, String category) {

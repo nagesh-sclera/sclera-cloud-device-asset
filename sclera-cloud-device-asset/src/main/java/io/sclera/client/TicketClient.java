@@ -6,21 +6,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * Thin Dapr client delegating to the sclera-workorders microservice (AP-C3).
+ * Thin Dapr client delegating to the sclera-workorders microservice.
  *
- * Replaces the stub {@code io.sclera.service.TicketService}.
- * Methods with return values return the documented stub default on sidecar failure;
- * void methods swallow exceptions with a WARN log.
+ * <p>Replaces the stub {@code io.sclera.service.TicketService}. Targets the workorder
+ * service's REST endpoints under its servlet context-path {@code /api/v1/workorder-service}
+ * — the context-path is part of the Dapr method string because Dapr forwards the invoke
+ * to {@code http://<workorder-app>/<method>}.
+ *
+ * <p>Read methods deserialize the real response; on sidecar failure they fall back to a
+ * safe default (count {@code 0}, status {@code false}) and the void method swallows the
+ * exception with a WARN log.
  */
 @Component
 public class TicketClient {
 
     private static final Logger log = LoggerFactory.getLogger(TicketClient.class);
     private static final String APP_ID = "sclera-workorders";
+    /** Workorder ticket API base, including the service servlet context-path. */
+    private static final String BASE = "api/v1/workorder-service/ticket";
 
     private final DaprClient dapr;
 
@@ -30,32 +34,32 @@ public class TicketClient {
 
     /**
      * Mirrors {@code TicketService#getTicketCountByDeviceId}.
-     * Maps to GET sclera-workorders/ticket/getTicketCountByDeviceId.
-     * Returns stub default 1 on sidecar failure.
+     * GET {base}/device/{deviceId}/ticketcount → the device's ticket count.
+     * Returns 0 on sidecar failure.
      */
     public Integer getTicketCountByDeviceId(String deviceId) {
-        Map<String, String> payload = new HashMap<>();
-        payload.put("deviceId", deviceId);
         try {
-            dapr.invokeMethod(APP_ID, "ticket/getTicketCountByDeviceId", payload, HttpExtension.GET).block();
-            return 1;
+            Integer count = dapr.invokeMethod(APP_ID,
+                    BASE + "/device/" + deviceId + "/ticketcount",
+                    null, HttpExtension.GET, Integer.class).block();
+            return count != null ? count : 0;
         } catch (Exception e) {
             log.warn("TicketClient.getTicketCountByDeviceId failed; returning stub default: {}", e.getMessage());
-            return 1;
+            return 0;
         }
     }
 
     /**
      * Mirrors {@code TicketService#getOpenTicketStatus}.
-     * Maps to GET sclera-workorders/ticket/getOpenTicketStatus.
-     * Returns stub default false on sidecar failure.
+     * GET {base}/device/{deviceId}/openticketstatus → whether the device has an open ticket.
+     * Returns false on sidecar failure.
      */
     public Boolean getOpenTicketStatus(String deviceId) {
-        Map<String, String> payload = new HashMap<>();
-        payload.put("deviceId", deviceId);
         try {
-            dapr.invokeMethod(APP_ID, "ticket/getOpenTicketStatus", payload, HttpExtension.GET).block();
-            return false;
+            Boolean open = dapr.invokeMethod(APP_ID,
+                    BASE + "/device/" + deviceId + "/openticketstatus",
+                    null, HttpExtension.GET, Boolean.class).block();
+            return open != null && open;
         } catch (Exception e) {
             log.warn("TicketClient.getOpenTicketStatus failed; returning stub default: {}", e.getMessage());
             return false;
@@ -64,13 +68,13 @@ public class TicketClient {
 
     /**
      * Mirrors {@code TicketService#updateTicketAssigneeByUserEmail}.
-     * Maps to GET sclera-workorders/ticket/updateTicketAssigneeByUserEmail.
+     * POST {base}/assignee/{email}/synctickets. Fire-and-forget: logs a warning on failure.
      */
     public void updateTicketAssigneeByUserEmail(String email) {
-        Map<String, String> payload = new HashMap<>();
-        payload.put("email", email);
         try {
-            dapr.invokeMethod(APP_ID, "ticket/updateTicketAssigneeByUserEmail", payload, HttpExtension.POST).block();
+            dapr.invokeMethod(APP_ID,
+                    BASE + "/assignee/" + email + "/synctickets",
+                    null, HttpExtension.POST).block();
         } catch (Exception e) {
             log.warn("TicketClient.updateTicketAssigneeByUserEmail failed; swallowing: {}", e.getMessage());
         }

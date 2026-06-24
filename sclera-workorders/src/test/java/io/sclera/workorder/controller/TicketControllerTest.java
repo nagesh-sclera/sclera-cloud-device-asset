@@ -28,6 +28,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -225,6 +226,42 @@ class TicketControllerTest {
                         .param("loggedInUser", "alice")
                         .param("vdms_id", "v1"))
                 .andExpect(status().isOk());
+    }
+
+    // ── GET /ticket/device/{device_id}/ticketcount (device-asset read-back) ──
+
+    @Test
+    void getTicketCountByDeviceId_returns200WithCount() throws Exception {
+        when(ticketService.getTicketCountByDeviceId("dev-1")).thenReturn(7);
+
+        mvc.perform(get("/ticket/device/dev-1/ticketcount"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("7"));
+
+        verify(ticketService).getTicketCountByDeviceId("dev-1");
+    }
+
+    // ── GET /ticket/device/{device_id}/openticketstatus ──────────────────────
+
+    @Test
+    void getOpenTicketStatus_returns200WithTrue() throws Exception {
+        when(ticketService.getOpenTicketStatus("dev-1")).thenReturn(true);
+
+        mvc.perform(get("/ticket/device/dev-1/openticketstatus"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
+
+        verify(ticketService).getOpenTicketStatus("dev-1");
+    }
+
+    // ── POST /ticket/assignee/{email}/synctickets ────────────────────────────
+
+    @Test
+    void syncTicketAssignee_returns200AndDelegates() throws Exception {
+        mvc.perform(post("/ticket/assignee/user@test.com/synctickets"))
+                .andExpect(status().isOk());
+
+        verify(ticketService).updateTicketAssigneeByUserEmail("user@test.com");
     }
 
     // ── Negative cases: mandatory params & body validation ────────────────────

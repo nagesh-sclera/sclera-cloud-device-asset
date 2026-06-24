@@ -16,6 +16,15 @@ import static org.mockito.Mockito.when;
 
 class TicketClientTest {
 
+    private static final String APP_ID = "sclera-workorders";
+    // Full Dapr method strings include the workorder service servlet context-path.
+    private static final String COUNT_PATH =
+            "api/v1/workorder-service/ticket/device/device-001/ticketcount";
+    private static final String STATUS_PATH =
+            "api/v1/workorder-service/ticket/device/device-001/openticketstatus";
+    private static final String ASSIGNEE_PATH =
+            "api/v1/workorder-service/ticket/assignee/user@test.com/synctickets";
+
     @Test
     void clientConstructsCleanly() {
         DaprClient dapr = mock(DaprClient.class);
@@ -23,87 +32,89 @@ class TicketClientTest {
         assertThat(client).isNotNull();
     }
 
-    // ── happy-path: exact path and verb assertions ────────────────────────────
+    // ── happy-path: the real sidecar response is deserialized and returned ─────
 
     @Test
-    void getTicketCountByDeviceId_usesCorrectPathAndVerb() {
+    void getTicketCountByDeviceId_returnsDeserializedCountFromSidecar() {
         DaprClient dapr = mock(DaprClient.class);
-        when(dapr.invokeMethod(
-                eq("sclera-workorders"),
-                eq("ticket/getTicketCountByDeviceId"),
-                any(),
-                any(HttpExtension.class)))
-            .thenReturn(Mono.empty());
+        when(dapr.invokeMethod(eq(APP_ID), eq(COUNT_PATH), any(),
+                any(HttpExtension.class), eq(Integer.class)))
+            .thenReturn(Mono.just(7));
 
         TicketClient client = new TicketClient(dapr);
         Integer result = client.getTicketCountByDeviceId("device-001");
 
-        ArgumentCaptor<HttpExtension> extCaptor = ArgumentCaptor.forClass(HttpExtension.class);
-        verify(dapr).invokeMethod(
-                eq("sclera-workorders"),
-                eq("ticket/getTicketCountByDeviceId"),
-                any(),
-                extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
-        assertThat(result).isEqualTo(1);
+        ArgumentCaptor<HttpExtension> ext = ArgumentCaptor.forClass(HttpExtension.class);
+        verify(dapr).invokeMethod(eq(APP_ID), eq(COUNT_PATH), any(),
+                ext.capture(), eq(Integer.class));
+        assertThat(ext.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
+        assertThat(result).isEqualTo(7);
     }
 
     @Test
-    void getOpenTicketStatus_usesCorrectPathAndVerb() {
+    void getOpenTicketStatus_returnsDeserializedBooleanFromSidecar() {
         DaprClient dapr = mock(DaprClient.class);
-        when(dapr.invokeMethod(
-                eq("sclera-workorders"),
-                eq("ticket/getOpenTicketStatus"),
-                any(),
-                any(HttpExtension.class)))
-            .thenReturn(Mono.empty());
+        when(dapr.invokeMethod(eq(APP_ID), eq(STATUS_PATH), any(),
+                any(HttpExtension.class), eq(Boolean.class)))
+            .thenReturn(Mono.just(true));
 
         TicketClient client = new TicketClient(dapr);
         Boolean result = client.getOpenTicketStatus("device-001");
 
-        ArgumentCaptor<HttpExtension> extCaptor = ArgumentCaptor.forClass(HttpExtension.class);
-        verify(dapr).invokeMethod(
-                eq("sclera-workorders"),
-                eq("ticket/getOpenTicketStatus"),
-                any(),
-                extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
-        assertThat(result).isFalse();
+        ArgumentCaptor<HttpExtension> ext = ArgumentCaptor.forClass(HttpExtension.class);
+        verify(dapr).invokeMethod(eq(APP_ID), eq(STATUS_PATH), any(),
+                ext.capture(), eq(Boolean.class));
+        assertThat(ext.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.GET);
+        assertThat(result).isTrue();
     }
 
     @Test
-    void updateTicketAssigneeByUserEmail_usesCorrectPathAndVerb() {
+    void updateTicketAssigneeByUserEmail_postsToAssigneeSyncPath() {
         DaprClient dapr = mock(DaprClient.class);
-        when(dapr.invokeMethod(
-                eq("sclera-workorders"),
-                eq("ticket/updateTicketAssigneeByUserEmail"),
-                any(),
+        when(dapr.invokeMethod(eq(APP_ID), eq(ASSIGNEE_PATH), any(),
                 any(HttpExtension.class)))
             .thenReturn(Mono.empty());
 
         TicketClient client = new TicketClient(dapr);
         client.updateTicketAssigneeByUserEmail("user@test.com");
 
-        ArgumentCaptor<HttpExtension> extCaptor = ArgumentCaptor.forClass(HttpExtension.class);
-        verify(dapr).invokeMethod(
-                eq("sclera-workorders"),
-                eq("ticket/updateTicketAssigneeByUserEmail"),
-                any(),
-                extCaptor.capture());
-        assertThat(extCaptor.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.POST);
+        ArgumentCaptor<HttpExtension> ext = ArgumentCaptor.forClass(HttpExtension.class);
+        verify(dapr).invokeMethod(eq(APP_ID), eq(ASSIGNEE_PATH), any(), ext.capture());
+        assertThat(ext.getValue().getMethod()).isEqualTo(DaprHttp.HttpMethods.POST);
     }
 
-    // ── resilience: exception swallowing ─────────────────────────────────────
+    // ── resilience: safe defaults on sidecar failure ──────────────────────────
 
     @Test
-    void clientReturnsDocumentedDefaultOnDaprException() {
+    void getTicketCountByDeviceId_returnsZeroOnDaprException() {
         DaprClient dapr = mock(DaprClient.class);
-        when(dapr.invokeMethod(any(String.class), any(String.class), any(), any(HttpExtension.class)))
+        when(dapr.invokeMethod(any(String.class), any(String.class), any(),
+                any(HttpExtension.class), eq(Integer.class)))
             .thenReturn(Mono.error(new RuntimeException("sidecar down")));
 
         TicketClient client = new TicketClient(dapr);
-        assertThat(client.getTicketCountByDeviceId("device-001")).isEqualTo(1);
+        assertThat(client.getTicketCountByDeviceId("device-001")).isZero();
+    }
+
+    @Test
+    void getOpenTicketStatus_returnsFalseOnDaprException() {
+        DaprClient dapr = mock(DaprClient.class);
+        when(dapr.invokeMethod(any(String.class), any(String.class), any(),
+                any(HttpExtension.class), eq(Boolean.class)))
+            .thenReturn(Mono.error(new RuntimeException("sidecar down")));
+
+        TicketClient client = new TicketClient(dapr);
         assertThat(client.getOpenTicketStatus("device-001")).isFalse();
+    }
+
+    @Test
+    void updateTicketAssigneeByUserEmail_swallowsDaprException() {
+        DaprClient dapr = mock(DaprClient.class);
+        when(dapr.invokeMethod(any(String.class), any(String.class), any(),
+                any(HttpExtension.class)))
+            .thenReturn(Mono.error(new RuntimeException("sidecar down")));
+
+        TicketClient client = new TicketClient(dapr);
         client.updateTicketAssigneeByUserEmail("user@test.com"); // must not throw
     }
 }

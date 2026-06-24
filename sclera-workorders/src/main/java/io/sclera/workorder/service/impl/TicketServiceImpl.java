@@ -466,5 +466,20 @@ public class TicketServiceImpl implements TicketService {
         ticketRepository.updateTicketAssigneeByUserEmail(assignee_user_email);
 
     }
+
+    /** {@inheritDoc} */
+    @Override
+    @Transactional(readOnly = true)
+    public Integer getTicketCountByDeviceId(String device_id) {
+        return ticketRepository.getTicketCountByDeviceId(device_id);
+    }
+
+    /** {@inheritDoc} Derived from the non-closed ticket count (&gt; 0 ⇒ open). */
+    @Override
+    @Transactional(readOnly = true)
+    public Boolean getOpenTicketStatus(String device_id) {
+        Integer openCount = ticketRepository.getOpenTicketStatus(device_id);
+        return openCount != null && openCount > 0;
+    }
 }
 

@@ -91,4 +91,16 @@ public interface TicketService {
      * @param assignee_user_email the new assignee's e-mail
      */
     void updateTicketAssigneeByUserEmail(String assignee_user_email);
+
+    /**
+     * @param device_id the device id
+     * @return the number of non-deleted tickets logged against the device
+     */
+    Integer getTicketCountByDeviceId(String device_id);
+
+    /**
+     * @param device_id the device id
+     * @return {@code true} when the device has at least one non-closed ticket
+     */
+    Boolean getOpenTicketStatus(String device_id);
 }
