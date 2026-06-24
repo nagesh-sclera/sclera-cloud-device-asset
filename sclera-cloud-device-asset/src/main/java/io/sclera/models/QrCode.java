@@ -5,11 +5,32 @@ import io.sclera.dto.QrCodeDTO;
 import jakarta.persistence.*;
 import java.math.BigInteger;
 
-@SqlResultSetMapping(name = "qrcodedetails", classes = {@ConstructorResult(targetClass = QrCodeDTO.class, columns = {@ColumnResult(name = "id", type = String.class), @ColumnResult(name = "device_id", type = String.class), @ColumnResult(name = "location_id", type = String.class), @ColumnResult(name = "updated_by", type = String.class), @ColumnResult(name = "updated_time", type = String.class)})})
-@NamedNativeQuery(name = "QrCode.getQrCodesByDeviceIds", query = "(SELECT qc.id, qc.device_id, qc.location_id, qc.updated_by, qc.updated_time FROM qr_code qc WHERE qc.device_id IN (?1))\n" + "UNION ALL \n" + "(SELECT cqc.id, cqc.device_id, cqc.location_id, cqc.updated_by, cqc.updated_at as updated_time FROM client_qr_code cqc WHERE cqc.device_id IN (?1))\n", resultSetMapping = "qrcodedetails")
-@NamedNativeQuery(name = "QrCode.getQrCodesByLocationIds", query = "(SELECT qc.id, qc.device_id, qc.location_id, qc.updated_by, qc.updated_time FROM qr_code qc WHERE qc.location_id IN ?1)\n" + "UNION ALL \n" + "(SELECT cqc.id, cqc.device_id, cqc.location_id, cqc.updated_by, cqc.updated_at as updated_time FROM client_qr_code cqc WHERE cqc.location_id IN ?1)\n", resultSetMapping = "qrcodedetails")
-@NamedNativeQuery(name = "QrCode.getQrCodeDetailsByIds", query = "(SELECT qc.id, qc.device_id, qc.location_id, qc.updated_by, qc.updated_time FROM qr_code qc WHERE qc.id IN ?1)\n", resultSetMapping = "qrcodedetails")
-@NamedNativeQuery(name = "QrCode.getClientQrCodeDetailsByIds", query = "(SELECT cqc.id, cqc.device_id, cqc.location_id, cqc.updated_by, cqc.updated_at as updated_time FROM client_qr_code cqc WHERE cqc.id IN ?1)", resultSetMapping = "qrcodedetails")
+@SqlResultSetMappings({
+    @SqlResultSetMapping(name = "qrcodedetails", classes = {@ConstructorResult(targetClass = QrCodeDTO.class, columns = {@ColumnResult(name = "id", type = String.class), @ColumnResult(name = "device_id", type = String.class), @ColumnResult(name = "location_id", type = String.class), @ColumnResult(name = "updated_by", type = String.class), @ColumnResult(name = "updated_time", type = String.class)})}),
+    @SqlResultSetMapping(name = "qrCodeFullDetails", classes = {@ConstructorResult(targetClass = QrCodeDTO.class, columns = {
+        @ColumnResult(name = "id", type = String.class),
+        @ColumnResult(name = "image_url", type = String.class),
+        @ColumnResult(name = "location_id", type = String.class),
+        @ColumnResult(name = "vdms_id", type = String.class),
+        @ColumnResult(name = "device_id", type = String.class),
+        @ColumnResult(name = "created_by", type = String.class),
+        @ColumnResult(name = "creation_time", type = BigInteger.class),
+        @ColumnResult(name = "batch_id", type = String.class),
+        @ColumnResult(name = "qr_code_link", type = String.class),
+        @ColumnResult(name = "updated_time", type = String.class),
+        @ColumnResult(name = "updated_by", type = String.class),
+        @ColumnResult(name = "is_deleted", type = Boolean.class)
+    })})
+})
+@NamedNativeQueries({
+    @NamedNativeQuery(name = "QrCode.getQrCodesByDeviceIds", query = "(SELECT qc.id, qc.device_id, qc.location_id, qc.updated_by, qc.updated_time FROM qr_code qc WHERE qc.device_id IN (?1))\n" + "UNION ALL \n" + "(SELECT cqc.id, cqc.device_id, cqc.location_id, cqc.updated_by, cqc.updated_at as updated_time FROM client_qr_code cqc WHERE cqc.device_id IN (?1))\n", resultSetMapping = "qrcodedetails"),
+    @NamedNativeQuery(name = "QrCode.getQrCodesByLocationIds", query = "(SELECT qc.id, qc.device_id, qc.location_id, qc.updated_by, qc.updated_time FROM qr_code qc WHERE qc.location_id IN ?1)\n" + "UNION ALL \n" + "(SELECT cqc.id, cqc.device_id, cqc.location_id, cqc.updated_by, cqc.updated_at as updated_time FROM client_qr_code cqc WHERE cqc.location_id IN ?1)\n", resultSetMapping = "qrcodedetails"),
+    @NamedNativeQuery(name = "QrCode.getQrCodeDetailsByIds", query = "(SELECT qc.id, qc.device_id, qc.location_id, qc.updated_by, qc.updated_time FROM qr_code qc WHERE qc.id IN ?1)\n", resultSetMapping = "qrcodedetails"),
+    @NamedNativeQuery(name = "QrCode.getClientQrCodeDetailsByIds", query = "(SELECT cqc.id, cqc.device_id, cqc.location_id, cqc.updated_by, cqc.updated_at as updated_time FROM client_qr_code cqc WHERE cqc.id IN ?1)", resultSetMapping = "qrcodedetails"),
+    @NamedNativeQuery(name = "QrCode.getQrCodeDetailsByQrCodeId", query = "SELECT id, image_url, location_id, vdms_id, device_id, created_by, creation_time, batch_id, qr_code_link, updated_time, updated_by, is_deleted FROM qr_code WHERE id = ?1", resultSetMapping = "qrCodeFullDetails"),
+    @NamedNativeQuery(name = "QrCode.getQrCodeDetailsByVdmsIdAndDeviceId", query = "SELECT id, image_url, location_id, vdms_id, device_id, created_by, creation_time, batch_id, qr_code_link, updated_time, updated_by, is_deleted FROM qr_code WHERE vdms_id = ?1 AND device_id = ?2", resultSetMapping = "qrCodeFullDetails"),
+    @NamedNativeQuery(name = "QrCode.getQrCodeDetailsByVdmsIdAndLocationId", query = "SELECT id, image_url, location_id, vdms_id, device_id, created_by, creation_time, batch_id, qr_code_link, updated_time, updated_by, is_deleted FROM qr_code WHERE vdms_id = ?1 AND location_id = ?2", resultSetMapping = "qrCodeFullDetails")
+})
 /**
  * JPA entity representing a QR code associated with a device and location, used to enable
  * code-based identification and scanning within the asset-management domain.
@@ -31,6 +52,8 @@ public class QrCode {
     @ManyToOne
     private Location location;
     private Boolean isDeleted;
+    private String customerOrgId;
+    private Integer adcQrCodeCheck;
 
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
@@ -174,6 +197,30 @@ public class QrCode {
     @lombok.Generated
     public void setIsDeleted(final Boolean isDeleted) {
         this.isDeleted = isDeleted;
+    }
+
+    @java.lang.SuppressWarnings("all")
+    @lombok.Generated
+    public String getCustomerOrgId() {
+        return this.customerOrgId;
+    }
+
+    @java.lang.SuppressWarnings("all")
+    @lombok.Generated
+    public void setCustomerOrgId(final String customerOrgId) {
+        this.customerOrgId = customerOrgId;
+    }
+
+    @java.lang.SuppressWarnings("all")
+    @lombok.Generated
+    public Integer getAdcQrCodeCheck() {
+        return this.adcQrCodeCheck;
+    }
+
+    @java.lang.SuppressWarnings("all")
+    @lombok.Generated
+    public void setAdcQrCodeCheck(final Integer adcQrCodeCheck) {
+        this.adcQrCodeCheck = adcQrCodeCheck;
     }
 
     @java.lang.Override

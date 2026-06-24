@@ -16,7 +16,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import io.sclera.Repository.VdmsRepository;
 import io.sclera.client.PmsClient;
-import io.sclera.client.PropertyQrcodeClient;
+import io.sclera.service.PropertyQrcodeService;
 import io.sclera.dto.*;
 import io.sclera.dto.touchscreen.settings.VdmsDTO;
 import io.sclera.integration.dto.LocationIntegrationDTO;
@@ -52,10 +52,10 @@ public class LocationService implements LocationServiceInterface {
     io.sclera.client.RecordChecklistClient recordChecklistService;
 
     @Autowired
-    PropertyQrcodeClient propertyQrcodeService;
+    PropertyQrcodeService propertyQrcodeService;
 
     @Autowired
-    io.sclera.client.GlobalQrcodeClient globalQrcodeService;
+    io.sclera.service.GlobalQrcodeService globalQrcodeService;
 
     @Autowired
     DeviceService deviceService;
@@ -79,10 +79,10 @@ public class LocationService implements LocationServiceInterface {
     Utils utils;
 
     @Autowired
-    io.sclera.client.QrCodeClient qrCodeService;
+    io.sclera.service.QrCodeService qrCodeService;
 
     @Autowired
-    io.sclera.client.ClientQrCodeClient clientQrCodeService;
+    io.sclera.service.ClientQrCodeService clientQrCodeService;
 
     @Autowired
     io.sclera.client.NfcClient nfcService;

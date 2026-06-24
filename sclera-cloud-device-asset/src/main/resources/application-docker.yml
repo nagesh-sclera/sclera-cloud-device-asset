@@ -73,10 +73,18 @@ sclera:
   p2p-web-socket-url: ws://localhost/wsvdms
   integration-web-socket-url: ws://localhost/wsintegration
   health-server-url: http://localhost/health
+  aws:
+    s3:
+      bucket: ${QR_S3_BUCKET:sclera-qrcodes}
+      region: ${QR_S3_REGION:us-east-1}
+      qrcode-prefix: qrcodes/
+      template-prefix: qrcode-templates/
   services-cloud-server-url: http://localhost
   global-qrcode-server-url: http://localhost
   server-qrcode-images-url: http://localhost:8085/images/qrcodes/
-  server-qrcode-images-absolute-path: /tmp/sclera/images/qrcodes/
+  # Must live under /home/sclera/images (the volume-backed dir served at /images/**) so generated
+  # QR images are both persisted across recreates and reachable at server-qrcode-images-url.
+  server-qrcode-images-absolute-path: /home/sclera/images/qrcodes/
   server-floor-images-url: http://localhost:8085/images/floors/
   server-floor-images-absolute-path: /tmp/sclera/images/floors/
   server-checklist-images-url: http://localhost:8085/images/checklist/

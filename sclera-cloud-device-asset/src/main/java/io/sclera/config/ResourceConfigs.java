@@ -47,6 +47,15 @@ public class ResourceConfigs implements WebMvcConfigurer {
 	                .resourceChain(true)
 	                .addResolver(new PathResourceResolver());
 
+	        // Serves the bundled QR-code manual test harness (classpath:/static/qr-test/) under
+	        // /qr-test/**. Explicit handler required because @EnableWebMvc disables the default
+	        // classpath:/static/ mapping. Developer/QA testing page only.
+	        registry.addResourceHandler("/qr-test/**")
+	                .addResourceLocations("classpath:/static/qr-test/")
+	                .setCacheControl(CacheControl.noCache().cachePrivate())
+	                .resourceChain(true)
+	                .addResolver(new PathResourceResolver());
+
 	    }
 	    
 	    

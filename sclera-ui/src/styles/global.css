@@ -486,3 +486,27 @@ input, select, textarea { font-family: inherit; }
   .asset-badges { display: none; }
   .conn-badge { display: none; }
 }
+
+/* ---------- work orders page (Task 6) ---------- */
+.wo-page .page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.wo-page .page-head h1 { flex: 1; }
+.wo-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.wo-filters .status-chips { display: flex; gap: 6px; }
+.wo-filters .chip { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border, #2a3344); background: transparent; color: inherit; cursor: pointer; font-size: 12px; }
+.wo-filters .chip.active { background: var(--accent, #3b82f6); border-color: var(--accent, #3b82f6); color: #fff; }
+.wo-filters .wo-search { flex: 1; min-width: 120px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border, #2a3344); background: transparent; color: inherit; }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th, .data-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border, #2a3344); font-size: 13px; }
+.data-table tr.clickable { cursor: pointer; }
+.data-table tr.clickable:hover { background: rgba(255,255,255,0.03); }
+.pager { display: flex; align-items: center; gap: 12px; justify-content: flex-end; margin-top: 12px; font-size: 13px; }
+.drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 60; display: flex; justify-content: flex-end; }
+.drawer { width: 420px; max-width: 92vw; height: 100%; overflow-y: auto; background: var(--panel, #131a26); padding: 18px; box-shadow: -8px 0 24px rgba(0,0,0,0.4); }
+.drawer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.drawer-title { font-weight: 600; margin-bottom: 6px; }
+.drawer-actions { display: flex; gap: 6px; }
+.fld { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; font-size: 13px; }
+.fld > span { opacity: 0.75; }
+.fld input, .fld select, .fld textarea { padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border, #2a3344); background: transparent; color: inherit; font: inherit; }
+/* modal-backdrop: used by TicketModal (Task 4) — not previously defined */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 80; display: grid; place-items: center; padding: 24px; }

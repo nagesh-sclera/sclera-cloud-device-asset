@@ -1,0 +1,183 @@
+sclera:
+  resourceLocations: https://dev-cdn.sclera.com/sclera-dev-resource/
+  pathPatterns: /sclera-dev-resource/**
+
+  floor:
+    lambda-function-name: sclera-tiles-DEV
+    image:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/vdms/%s/floor/images/
+      directory: sclera-dev-resource/vdms/%s/floor/images/
+      tilesDirectory: sclera-dev-resource/vdms/%s/floor/images/%s/
+
+  integration:
+    image:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/integration/images/
+      directory: sclera-dev-resource/integration/images/
+  fx:
+    app:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/app/
+      directory: sclera-dev-resource/app/
+  user:
+    image:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/profile/images/
+      directory: sclera-dev-resource/profile/images/
+  vdms:
+    image:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/vdms/images/
+      directory: sclera-dev-resource/vdms/images/
+    sql:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/vdms/
+      directory: sclera-dev-resource/vdms/
+
+  feature:
+    image:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/feature/images/
+      directory: sclera-dev-resource/feature/images/
+
+  qrcode:
+    url: https://dev-app.sclera.com/vdms/sclera-dev-resource/qr-code/%s_%s.png
+    directory: sclera-dev-resource/qr-code/%s_%s.png
+    dataUrl: https://dev-app.sclera.com/qrcode?id=%s
+    emailLink: https://dev-app.sclera.com/vdms/api/touchscreen/qrCode/email
+    file:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/qr-code/temp/
+      directory: sclera-dev-resource/qr-code/temp/
+      txtDirectory: sclera-dev-resource/qr-code/temp/qrcode_%s_%s.%s
+      zipDirectory: sclera-dev-resource/qr-code/temp/qrcode_%s_%s.%s
+      pdfDirectory: sclera-dev-resource/qr-code/temp/qrcode_%s_%sx%s_%s.%s
+      errorPage: https://dev-app.sclera.com/error-498.html
+    template:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/organisations/%s/qr-code/templates/
+      directory: sclera-dev-resource/organisations/%s/qr-code/templates/
+    templateLogo:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/organisations/%s/qr-code/templates/templateLogo/
+      directory: sclera-dev-resource/organisations/%s/qr-code/templates/templateLogo/
+
+  digitalTwinTemplate:
+    image:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/digitalTwinTemplate/images/
+      directory: sclera-dev-resource/digitalTwinTemplate/images/
+  category:
+    image:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/category/images/
+      directory: sclera-dev-resource/category/images/
+  subCategory:
+    image:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/subCategory/images/
+      directory: sclera-dev-resource/subCategory/images/
+  device:
+    url: https://dev-app.sclera.com/vdms/sclera-dev-resource/vdms/%s/device/images/
+    directory: sclera-dev-resource/vdms/%s/device/images/
+
+  sensorCategory:
+    image:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/sensor/category/images/
+      directory: sclera-dev-resource/sensor/category/images/
+
+  sensorSubCategory:
+    image:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/sensor/subCategory/images/
+      directory: sclera-dev-resource/sensor/subCategory/images/
+
+  assetType:
+    image:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/assetType/images/
+      directory: sclera-dev-resource/assetType/images/
+
+  procedure:
+    image:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/procedure/images/
+      directory: sclera-dev-resource/procedure/images/
+
+  globalInspectionReport:
+    file:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/reports/globalInspectionReport/
+      directory: sclera-dev-resource/reports/globalInspectionReport/
+      folderDirectory: sclera-dev-resource/reports/globalInspectionReport/%s/
+
+  inventory:
+    file:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/reports/inventoryReport/
+      directory: sclera-dev-resource/reports/inventoryReport/
+      folderDirectory: sclera-dev-resource/reports/inventoryReport/%s/
+
+  inspectionReport:
+    file:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/reports/inspectionReport/
+      directory: sclera-dev-resource/reports/inspectionReport/
+      folderDirectory: sclera-dev-resource/reports/inspectionReport/%s/
+
+  sensorReport:
+    file:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/reports/sensorReport/
+      directory: sclera-dev-resource/reports/sensorReport/
+      folderDirectory: sclera-dev-resource/reports/sensorReport/%s/
+
+  onboardedAssetReport:
+    file:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/reports/onboardedAssetReport/
+      directory: sclera-dev-resource/reports/onboardedAssetReport/
+      folderDirectory: sclera-dev-resource/reports/onboardedAssetReport/%s/
+
+  locationCreateServiceReport:
+    file:
+      url: https://dev-app.sclera.com/vdms/sclera-dev-resource/reports/locationCreateServiceReport/
+      directory: sclera-dev-resource/reports/locationCreateServiceReport/
+      folderDirectory: sclera-dev-resource/reports/locationCreateServiceReport/%s/
+
+  reports:
+    emailLink: https://dev-app.sclera.com/vdms/api/touchscreen/validatePreSignLink
+
+
+
+  server:
+    cors:
+      allowedOrigin: "*"
+    login:
+      url: http://sclera-login-server:50000
+    bff:
+      url: http://sclera-bff-server:8000
+    vendor:
+      url: http://sclera-vendor-server:50002
+    stores:
+      url: http://sclera-stores-server:50003
+    health:
+      url: http://sclera-health-server:50004
+    payment:
+      url: http://sclera-payment-server:8081
+    alert:
+      url: http://sclera-alert-server:50009
+    inventory:
+      url: http://sclera-inventory-server:50008
+    mongodb:
+      url: http://sclera-product-node-server:2000
+    multitenancy:
+      usUrl: https://dev-tenant.sclera.com
+      londonUrl: https://dev-tenant.sclera.com
+
+
+stun:
+  ip: dev-app.sclera.com
+  port: 7676
+
+turn:
+  ip: dev-app.sclera.com
+  port: 6767
+
+aws:
+  s3:
+    region: us-east-1
+    bucketName: sclera-dev-bucket
+  secretsmanager:
+    region: ap-south-1
+    aws: sclera/dev/cloud/sclera-vdms-server/credential/aws-key
+    database: sclera/dev/cloud/sclera-vdms-server/credential/mysql
+    ip-api: sclera/dev/cloud/sclera-vdms-server/credential/ip-api
+
+run-pod:
+  url: https://api.runpod.ai/v2/uw6vyygajw6o31
+  api-key: UBNJYMS8YJZM49TGD5IEID9OXBC6693LTSD8S8F2
+
+server:
+  domain: https://dev-app.sclera.com
+

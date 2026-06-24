@@ -26,7 +26,8 @@ export const NAV_ITEMS = [
   { key: 'users', label: 'User List', icon: 'users' },
   { key: 'proxy', label: 'Proxy Networks', icon: 'network' },
   { key: 'inventory', label: 'Inventory', icon: 'layers' },
-  { key: 'onboarding', label: 'Asset Onboarding', icon: 'upload' },
+  { key: 'workorders', label: 'Work Orders', icon: 'clipboard' },
+  { key: 'qrcodes', label: 'QR Codes', icon: 'qrcode' },
   { key: 'adc', label: 'Asset Data Collection', icon: 'database' },
   { key: 'portal', label: 'Client Portal', icon: 'portal' },
   { key: 'config', label: 'Global Configuration', icon: 'globe' },
@@ -36,6 +37,17 @@ export const NAV_FOOTER = [
   { key: 'barcode', label: 'Scan Bar Code', icon: 'barcode' },
   { key: 'qrcode', label: 'Scan QR Code', icon: 'qrcode' },
 ]
+
+// Ticket status vocabulary (matches the workorders service count-map keys).
+export const TICKET_STATUSES = ['new', 'open', 'on_hold', 'closed']
+export const statusLabel = (s) => ({ new: 'New', open: 'Open', on_hold: 'On Hold', closed: 'Closed' }[s] || s || '—')
+export const statusTone = (s) => ({ new: 'default', open: 'online', on_hold: 'default', closed: 'muted' }[s] || 'default')
+
+// Ticket category IS the type discriminator the workorders service requires: it drives the
+// ticket-number prefix (incident_request -> INC-, service_request -> SRN-) and the derived
+// name. A missing/unknown category makes upsertticket 500, so the UI must send one of these.
+export const TICKET_CATEGORIES = ['incident_request', 'service_request']
+export const categoryLabel = (c) => ({ incident_request: 'Incident Request', service_request: 'Service Request' }[c] || c || '—')
 
 // status int -> {label, color-token}
 export function statusInfo(device) {

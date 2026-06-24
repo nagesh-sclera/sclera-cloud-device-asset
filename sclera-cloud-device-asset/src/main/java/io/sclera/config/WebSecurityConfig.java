@@ -213,6 +213,11 @@ public class WebSecurityConfig {
             return true;
         }
 
+        // QR-code manual test harness (developer/QA only), served at /qr-test/** (see ResourceConfigs).
+        if (request.getServletPath().startsWith("/qr-test")) {
+            return true;
+        }
+
         String enableAuthHeader = request.getHeader("X-Enable-Auth");
         log.debug("{}", "X-Enable-Auth " + enableAuthHeader);
         if ((!request.getServletPath().contains("/ws")) && "true".equalsIgnoreCase(enableAuthHeader)) {

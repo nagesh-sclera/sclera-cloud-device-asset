@@ -58,6 +58,12 @@ const asset = (p) => `${BASE_URL}${ASSET_PREFIX}${p}`
 const vdms = (p) => `${BASE_URL}${VDMS_PREFIX}${p}`
 // Sensors are owned by the integrations service (gateway /integrations/** route).
 const integrations = (p) => `${BASE_URL}/integrations${p}`
+// Workorders service (gateway /workorders/** route, StripPrefix=1). NOTE: this service
+// uses loggedInUser + vdms_id query params, NOT the device API's username/vdmsid.
+const workorder = (p) => `${BASE_URL}/workorders/api/v1/workorder-service${p}`
+function woScope({ user = DEMO.user, vdmsId = DEMO.vdmsId } = {}) {
+  return { loggedInUser: user, vdms_id: vdmsId }
+}
 
 // Scope params present on nearly every device call.
 function scope({ user = DEMO.user, vdmsId = DEMO.vdmsId } = {}) {
@@ -167,21 +173,24 @@ export const api = {
   deleteDocument: (documentId, { ...ctx } = {}) =>
     request(asset(`/documentid/${encodeURIComponent(documentId)}/deletedocument${qs(scope(ctx))}`), { method: 'DELETE' }),
 
-  // ---- Asset onboarding ----
-  // Assets not yet "managed" (onboard_status != 3). Mirrors the Not-Onboarded filter (onboard_status=210).
-  listOnboardingAssets: ({ docker = DEMO.docker, ...ctx } = {}) =>
-    unwrapPage(request(asset(`/docker/${encodeURIComponent(docker)}/searchsortfilterdevices${qs({ ...scope(ctx), condition: 'all', pageno: 1, pagesize: 200, onboard_status: 210 })}`), {
-      method: 'POST', body: {},
-    })),
-  // Managed assets (onboard_status = 3) — the destination of the onboarding flow.
-  listManagedAssets: ({ docker = DEMO.docker, ...ctx } = {}) =>
-    unwrapPage(request(asset(`/docker/${encodeURIComponent(docker)}/searchsortfilterdevices${qs({ ...scope(ctx), condition: 'all', pageno: 1, pagesize: 200, onboard_status: 3 })}`), {
-      method: 'POST', body: {},
-    })),
-  // Update a device's onboarding step statuses (image/geolocation/tag/field) + assignee.
-  updateAssetOnboardData: (deviceId, statusObj, { ...ctx } = {}) =>
-    request(asset(`/device/${encodeURIComponent(deviceId)}/updateassetonboarddata${qs(scope(ctx))}`), {
-      method: 'POST', body: statusObj,
+  // ---- QR code tagging on an asset/device ----
+  // QR codes currently tagged to this device (returns ResponseDTO; unwrap .data).
+  qrCodesForDevice: (deviceId, { vdmsId = DEMO.vdmsId } = {}) =>
+    request(asset(`/vdms/${encodeURIComponent(vdmsId)}/deviceId/${encodeURIComponent(deviceId)}/getQrCodeDetailsByVdmsIdAndDeviceId`))
+      .then((r) => r?.data ?? []),
+  // Pool of untagged QR code ids (generated but not yet assigned to a device/location).
+  untaggedQrCodes: ({ vdmsId = DEMO.vdmsId, user = DEMO.user, pageNo = 1, pageSize = 200 } = {}) =>
+    request(asset(`/vdms/${encodeURIComponent(vdmsId)}/getUnTaggedQrCode${qs({ loggedInUser: user, pageNo, pageSize })}`))
+      .then((r) => r?.data ?? []),
+  // Tag an existing QR code id to this device (sets device_id + vdms_id on the qr_code row).
+  tagQrCodeToDevice: (qrCodeId, deviceId, { vdmsId = DEMO.vdmsId, user = DEMO.user } = {}) =>
+    request(asset(`/qrCode/updateQrCode${qs({ loggedInUser: user })}`), {
+      method: 'POST', body: { id: qrCodeId, deviceId, vdmsId },
+    }),
+  // Untag: clear device/location on the qr_code row.
+  untagQrCodeFromDevice: (qrCodeId, { vdmsId = DEMO.vdmsId, user = DEMO.user } = {}) =>
+    request(asset(`/qrCode/updateQrCode${qs({ loggedInUser: user })}`), {
+      method: 'POST', body: { id: qrCodeId, deviceId: null, locationId: null, vdmsId },
     }),
 
   deviceCount: ({ docker = DEMO.docker, ...ctx } = {}) =>
@@ -214,12 +223,6 @@ export const api = {
     request(asset(`/deleteassetimages${qs(scope(ctx))}`), {
       method: 'DELETE',
       body: [{ id: deviceId, asset_image_url: JSON.stringify(imageUrls || []) }],
-    }),
-
-  // Onboard / un-onboard a device (status 3 = onboarded, 0 = not onboarded).
-  onboard: (deviceId, { docker = DEMO.docker, status = 3, ...ctx } = {}) =>
-    request(asset(`/docker/${encodeURIComponent(docker)}/device/${encodeURIComponent(deviceId)}/onboard${qs({ ...scope(ctx), status })}`), {
-      method: 'POST',
     }),
 
   deleteDevices: (ids, { docker = DEMO.docker, ...ctx } = {}) =>
@@ -313,6 +316,28 @@ export const api = {
 
   addLocation: (floorId, name, { vdmsId = DEMO.vdmsId, user = DEMO.user } = {}) =>
     request(asset(`/floor/${encodeURIComponent(floorId)}/upsertlocations${qs({ username: user, vdms_id: vdmsId })}`), { method: 'POST', body: [{ name }] }),
+
+  // ---- Work Orders (tickets) — sclera-workorders service ----
+  ticketCounts: (filter = {}, ctx = {}) =>
+    request(workorder(`/ticket/getticketcount${qs(woScope(ctx))}`), { method: 'POST', body: filter }),
+
+  listTickets: (filter = {}, { searchkey = 'null', pageno = 1, pagesize = 10, ...ctx } = {}) =>
+    request(workorder(`/ticket/getalltickets${qs({ ...woScope(ctx), searchkey, pageno, pagesize })}`), { method: 'POST', body: filter }),
+
+  getTicket: (id, ctx = {}) =>
+    request(workorder(`/ticket/${encodeURIComponent(id)}/getticketdetailsbyid${qs(woScope(ctx))}`)),
+
+  upsertTicket: (dto, ctx = {}) =>
+    request(workorder(`/ticket/upsertticket${qs(woScope(ctx))}`), { method: 'POST', body: dto }),
+
+  deleteTicket: (id, ctx = {}) =>
+    request(workorder(`/ticket/${encodeURIComponent(id)}/deleteticket${qs(woScope(ctx))}`), { method: 'DELETE' }),
+
+  ticketHistory: (id, ctx = {}) =>
+    request(workorder(`/ticket/${encodeURIComponent(id)}/gettickethistory${qs(woScope(ctx))}`)),
+
+  ticketsByDevice: (deviceId, filter = {}, { pageno = 1, pagesize = 50, ...ctx } = {}) =>
+    request(workorder(`/ticket/device/${encodeURIComponent(deviceId)}/getallticketsbydeviceid${qs({ ...woScope(ctx), pageno, pagesize })}`), { method: 'POST', body: filter }),
 }
 
 export default api

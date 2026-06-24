@@ -4,9 +4,16 @@ import { DEMO } from '../config.js'
 const AppCtx = createContext(null)
 
 // Lightweight app-wide state. Persists selected nav/property to localStorage.
+// Views the app can render. A persisted view outside this set (e.g. the removed
+// 'onboarding') falls back to 'properties' so the content area never renders blank.
+const KNOWN_VIEWS = ['properties', 'dashboard', 'assets', 'location', 'activity', 'networks', 'workorders', 'qrcodes']
+
 export function AppProvider({ children }) {
   const [nav, setNav] = useState(() => localStorage.getItem('sclera.nav') || 'properties')
-  const [view, setView] = useState(() => localStorage.getItem('sclera.view') || 'properties') // properties | dashboard | assets
+  const [view, setView] = useState(() => {
+    const saved = localStorage.getItem('sclera.view')
+    return KNOWN_VIEWS.includes(saved) ? saved : 'properties'
+  })
   const [property, setProperty] = useState(() => {
     try { return JSON.parse(localStorage.getItem('sclera.property')) } catch { return null }
   })

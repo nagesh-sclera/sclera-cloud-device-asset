@@ -883,6 +883,7 @@
 //
 //    /***********************************Update Product Details By Model and Mac Vendor - Model Detection Script**************************************/
 //
+//    // QR sync removed: device-asset owns QR locally (no VDMS sync).
 //    public void syncQrCodeNfcBarCode(String vdmsId, VdmsSyncDTO vdmsSyncDTO, String message) {
 //        log.info("syncQrCodeNfcBarCode on {}", message);
 //        if (vdmsSyncDTO.getQr_sync() != null) {

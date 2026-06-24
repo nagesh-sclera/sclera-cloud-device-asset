@@ -63,6 +63,7 @@ public class DeviceAssetJobHandlers {
     /** Mirrors {@code SchedularService#scheduleQrcodeNFCBarcodeSync}.
      *  STUB: requires essentialService.syncQrCodeNfcBarCode() which is fully
      *  commented-out in this service's EssentialService. */
+    // QR is owned locally by device-asset; no cloud QR sync. Intentionally a no-op.
     public void qrcodeNfcBarcodeSync()     { stub("qrcodeNfcBarcodeSync"); }
 
     /** Mirrors {@code SchedularService#syncAssetCountToCloud}.

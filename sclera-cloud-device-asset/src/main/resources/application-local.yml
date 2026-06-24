@@ -64,6 +64,12 @@ sclera:
   p2p-web-socket-url: ws://localhost/wsvdms
   integration-web-socket-url: ws://localhost/wsintegration
   health-server-url: http://localhost/health
+  aws:
+    s3:
+      bucket: ${QR_S3_BUCKET:sclera-qrcodes}
+      region: ${QR_S3_REGION:us-east-1}
+      qrcode-prefix: qrcodes/
+      template-prefix: qrcode-templates/
   services-cloud-server-url: http://localhost
   global-qrcode-server-url: http://localhost
   server-qrcode-images-url: http://localhost:8085/images/qrcodes/

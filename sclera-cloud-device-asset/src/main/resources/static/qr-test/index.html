@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>QR Code Test Harness — sclera-cloud-device-asset</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#1a212b; --panel2:#222c38; --line:#2d3a48;
+    --txt:#e6edf3; --muted:#8b98a5; --accent:#4a9eff; --ok:#3fb950; --err:#f85149; --warn:#d29922;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--txt)}
+  header{position:sticky;top:0;z-index:10;background:var(--panel);border-bottom:1px solid var(--line);padding:12px 18px}
+  header h1{margin:0 0 8px;font-size:16px}
+  .common{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;align-items:end}
+  .common label{display:block;font-size:11px;color:var(--muted);margin-bottom:2px}
+  .common input{width:100%}
+  .layout{display:flex;gap:0}
+  nav{position:sticky;top:128px;align-self:flex-start;width:230px;min-width:230px;height:calc(100vh - 128px);overflow:auto;border-right:1px solid var(--line);padding:12px}
+  nav a{display:block;color:var(--muted);text-decoration:none;padding:4px 8px;border-radius:6px;font-size:13px}
+  nav a:hover{background:var(--panel2);color:var(--txt)}
+  nav .grp{margin-top:10px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);padding:4px 8px}
+  main{flex:1;padding:18px;max-width:1100px}
+  h2.group{margin:28px 0 8px;padding-bottom:6px;border-bottom:2px solid var(--accent);font-size:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:14px 0;overflow:hidden}
+  .card>summary{cursor:pointer;list-style:none;padding:12px 14px;display:flex;align-items:center;gap:10px}
+  .card>summary::-webkit-details-marker{display:none}
+  .verb{font-weight:700;font-size:11px;padding:3px 8px;border-radius:5px;min-width:54px;text-align:center}
+  .GET{background:#1f6feb33;color:#79c0ff} .POST{background:#3fb95033;color:#7ee787}
+  .PUT{background:#d2992233;color:#e3b341} .DELETE{background:#f8514933;color:#ff7b72}
+  .path{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:var(--txt)}
+  .desc{color:var(--muted);font-size:12px;margin-left:auto;text-align:right;max-width:42%}
+  .body{padding:0 14px 14px;border-top:1px solid var(--line)}
+  .row{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin:12px 0}
+  .fld label{display:block;font-size:11px;color:var(--muted);margin-bottom:2px}
+  .fld .req{color:var(--err)}
+  .fld .hint{color:var(--muted);font-size:10.5px}
+  input,select,textarea{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 8px;font:inherit}
+  input:focus,select:focus,textarea:focus{outline:1px solid var(--accent);border-color:var(--accent)}
+  textarea{width:100%;min-height:96px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+  .actions{display:flex;gap:8px;align-items:center;margin-top:6px}
+  button{background:var(--accent);color:#fff;border:0;border-radius:6px;padding:8px 16px;font-weight:600;cursor:pointer}
+  button.sec{background:var(--panel2);color:var(--txt);border:1px solid var(--line);font-weight:500}
+  button:active{transform:translateY(1px)}
+  .resp{margin-top:10px;border-radius:8px;border:1px solid var(--line);background:#0b0f14;display:none}
+  .resp.show{display:block}
+  .resp .meta{padding:6px 10px;border-bottom:1px solid var(--line);font-size:12px;display:flex;gap:12px;align-items:center}
+  .resp pre{margin:0;padding:10px;max-height:420px;overflow:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;white-space:pre-wrap;word-break:break-word}
+  .pill{padding:2px 8px;border-radius:10px;font-weight:700;font-size:11px}
+  .pill.ok{background:#3fb95022;color:var(--ok)} .pill.err{background:#f8514922;color:var(--err)}
+  .note{background:#d2992211;border:1px solid #d2992244;color:#e3b341;padding:8px 12px;border-radius:8px;font-size:12.5px;margin:10px 0}
+  code{background:var(--panel2);padding:1px 5px;border-radius:4px;font-size:12px}
+  a.imglink{color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <h1>QR Code Test Harness <span style="color:var(--muted);font-weight:400">· sclera-cloud-device-asset</span></h1>
+  <div class="common">
+    <div><label>Base URL</label><input id="baseUrl" placeholder="auto"/></div>
+    <div><label>orgId</label><input data-common="orgId"/></div>
+    <div><label>email</label><input data-common="email"/></div>
+    <div><label>loggedInUser</label><input data-common="loggedInUser"/></div>
+    <div><label>vdmsId / vdmsid</label><input data-common="vdmsId"/></div>
+    <div><label>username</label><input data-common="username"/></div>
+    <div><label>deviceId</label><input data-common="deviceId"/></div>
+    <div><label>locationId</label><input data-common="locationId"/></div>
+    <div style="align-self:end"><button class="sec" id="applyCommon">Apply common to all forms</button></div>
+  </div>
+</header>
+<div class="layout">
+  <nav id="nav"></nav>
+  <main id="main">
+    <div class="note">
+      Served same-origin from the app at <code>/qr-test/</code> — requests use the Base URL
+      (default <span id="originHint"></span>). On localhost no auth token is required.
+      Binary endpoints (QR export / PDF) open in a new tab as downloads.
+    </div>
+  </main>
+</div>
+<script>
+// ---- common values (persisted) ----
+const COMMON_KEYS = ["orgId","email","loggedInUser","vdmsId","username","deviceId","locationId"];
+const common = JSON.parse(localStorage.getItem("qrtest.common")||"{}");
+function saveCommon(){ localStorage.setItem("qrtest.common", JSON.stringify(common)); }
+// vdmsid (global controller casing) aliases vdmsId
+function commonFor(name){
+  if(name==="vdmsid") return common.vdmsId||"";
+  return common[name]||"";
+}
+
+const BASE_DEFAULT = location.origin + "/api/v1/sclera-cloud-device-asset-service";
+document.getElementById("originHint").textContent = BASE_DEFAULT;
+function baseUrl(){ return (document.getElementById("baseUrl").value.trim() || BASE_DEFAULT).replace(/\/$/,""); }
+
+// ---- endpoint catalog ----
+// q: query params {n:name, d:default, r:required, hint}
+// p: path vars (auto-detected from {x}); pd: path var defaults map
+// body: {type:'json'|'string'|'none', ex:example}
+// multipart: [{n:partName, type:'file'|'text', ex}]
+// download:true => GET binary, open as download
+const EP = [
+ {g:"QrCode", t:"Generate & download QR codes (≤1000)", m:"GET", path:"/qrCode/generateQRCode", download:true,
+  q:[{n:"orgId",r:1},{n:"email",r:1},{n:"count",d:"1",hint:"1–1000"},{n:"width",d:"2.75"},{n:"height",d:"4.0"},
+     {n:"type",d:"pdf",r:1,hint:"zip | pdf | txt"},{n:"brand",d:"true"},{n:"defaultTemplate",d:"false"},{n:"templateUrl"}],
+  desc:"Streams a pdf/zip/txt bundle of generated QR codes."},
+
+ {g:"QrCode", t:"Generate bulk QR codes (>1000, async email)", m:"POST", path:"/qrCode/generateBulkQRCode",
+  q:[{n:"orgId",r:1},{n:"email",r:1},{n:"count",d:"1001",hint:"1001–50000"},{n:"width",d:"2.75"},{n:"height",d:"4.0"},
+     {n:"type",d:"pdf",r:1,hint:"zip | pdf | txt"},{n:"brand",d:"true"},{n:"defaultTemplate",d:"false"},{n:"templateUrl"}],
+  body:{type:"string",ex:"recipient@example.com"},
+  desc:"Body = raw emailTo string. Generates asynchronously; link logged."},
+
+ {g:"QrCode", t:"Update / tag a QR code", m:"POST", path:"/qrCode/updateQrCode",
+  q:[{n:"loggedInUser",r:1}],
+  body:{type:"json",ex:{id:"QR123",deviceId:"DEV1",locationId:"LOC1",vdmsId:"VDMS1"}},
+  desc:"Upserts a QR code tag assignment (QrCodeDTO)."},
+
+ {g:"QrCode", t:"Get QR code details by id", m:"GET", path:"/qrCode/{qrCodeId}/getQrCodeDetailsByQrCodeId",
+  pd:{qrCodeId:"QR123"}, desc:"Full QR code details for one id."},
+
+ {g:"QrCode", t:"QR codes by vdmsId + deviceId", m:"GET",
+  path:"/vdms/{vdmsId}/deviceId/{deviceId}/getQrCodeDetailsByVdmsIdAndDeviceId",
+  pd:{deviceId:"DEV1"}, desc:"List<QrCodeDTO> for a device."},
+
+ {g:"QrCode", t:"QR codes by vdmsId + locationId", m:"GET",
+  path:"/vdms/{vdmsId}/locationId/{locationId}/getQrCodeDetailsByVdmsIdAndLocationId",
+  pd:{locationId:"LOC1"}, desc:"List<QrCodeDTO> for a location."},
+
+ {g:"QrCode", t:"List untagged QR codes (paged)", m:"GET", path:"/vdms/{vdmsId}/getUnTaggedQrCode",
+  q:[{n:"loggedInUser",r:1},{n:"pageNo",d:"1"},{n:"pageSize",d:"1000"}],
+  desc:"Untagged QR ids for a vdms."},
+
+ {g:"QrCode", t:"Count QR codes since lastSyncTime", m:"GET", path:"/vdms/{vdmsId}/getQrCodeCounts",
+  q:[{n:"lastSyncTime",r:1,d:"0",hint:"epoch millis"}], desc:"Count updated after lastSyncTime."},
+
+ {g:"QrCode", t:"ADC / tagged check by id", m:"GET", path:"/qrCode/{qrCodeId}/getQrCodeCheckById",
+  pd:{qrCodeId:"QR123"}, desc:"isTagged (0/1/2) + isAdc."},
+
+ {g:"QrCode", t:"Update details for a list of QR codes", m:"PUT", path:"/vdms/{vdmsId}/updateQrCodeDetails",
+  body:{type:"json",ex:[{id:"QR123",deviceId:"DEV1",locationId:"LOC1"}]},
+  desc:"Body = List<QrCodeDTO>."},
+
+ // ---- ClientQrCode ----
+ {g:"ClientQrCode", t:"Tag / re-tag a client QR code", m:"POST", path:"/clientQrCode",
+  q:[{n:"orgId",r:1},{n:"email",r:1},{n:"loggedInUser",r:1}],
+  body:{type:"json",ex:{clientQrCodeId:"CQR1",deviceId:"DEV1",locationId:"LOC1",vdmsId:"VDMS1"}},
+  desc:"ClientQrCodeDTO. Re-tag dedups by clientQrCodeId."},
+
+ {g:"ClientQrCode", t:"Client QR by clientQrCodeId", m:"GET", path:"/clientQrCode/getClientQrCodeDetailsByClientQrCodeId",
+  q:[{n:"clientQrCodeId",r:1,d:"CQR1"}], desc:"Lookup one client QR record."},
+
+ {g:"ClientQrCode", t:"Client QR by vdmsId + deviceId", m:"GET",
+  path:"/vdms/{vdmsId}/deviceId/{deviceId}/getClientQrCodeDetailsByVdmsIdAndDeviceId",
+  pd:{deviceId:"DEV1"}, desc:"List for a device."},
+
+ {g:"ClientQrCode", t:"Client QR by vdmsId + locationId", m:"GET",
+  path:"/vdms/{vdmsId}/locationId/{locationId}/getClientQrCodeDetailsByVdmsIdAndLocationId",
+  pd:{locationId:"LOC1"}, desc:"List for a location."},
+
+ {g:"ClientQrCode", t:"Import client QR codes (Excel)", m:"POST", path:"/importClientQrCode",
+  q:[{n:"orgId",r:1},{n:"email",r:1},{n:"loggedInUser",r:1}],
+  multipart:[{n:"file",type:"file"}],
+  desc:"XLSX/XLS headers: client_qr_code_id, device_id, location_id, vdms_id."},
+
+ {g:"ClientQrCode", t:"List untagged client QR codes (paged)", m:"GET", path:"/vdms/{vdmsId}/getUnTaggedClientQrCode",
+  q:[{n:"orgId",r:1},{n:"email",r:1},{n:"loggedInUser",r:1},{n:"pageNo",d:"1"},{n:"pageSize",d:"1000"}],
+  desc:"Untagged client QR codes for a vdms."},
+
+ {g:"ClientQrCode", t:"Preview / validate Excel before import", m:"POST", path:"/vdms/{vdmsId}/clientQrCode/preview",
+  q:[{n:"loggedInUser",r:1}], multipart:[{n:"file",type:"file"}],
+  desc:"Structural validation of the upload."},
+
+ {g:"ClientQrCode", t:"ADC check by clientQrCodeId", m:"GET", path:"/clientQrCode/getClientQrCodeCheckById",
+  q:[{n:"clientQrCodeId",r:1,d:"CQR1"}], desc:"ADC tagging status."},
+
+ // ---- GlobalQrcode (note casing: username / vdmsid) ----
+ {g:"GlobalQrcode", t:"List global QR codes by type", m:"POST", path:"/type/{qrcode_type}/getqrcodes",
+  pd:{qrcode_type:"all"},
+  q:[{n:"username",r:1},{n:"vdmsid",r:1},{n:"searchkey",d:"null"},{n:"pageno",d:"1"},{n:"pagesize",d:"10"}],
+  body:{type:"json",ex:{device_types:[],building_id:"",floor_id:""}},
+  desc:"qrcode_type: all | untagged | device | location. Body = filter JSON."},
+
+ {g:"GlobalQrcode", t:"Delete global QR codes", m:"DELETE", path:"/deleteqrcodes",
+  q:[{n:"username",r:1},{n:"vdmsid",r:1}],
+  body:{type:"json",ex:["id1","id2"]},
+  desc:"Body = Set<String> of qr ids."},
+
+ {g:"GlobalQrcode", t:"Export global QR codes to PDF", m:"GET", path:"/exportqrcodes", download:true,
+  q:[{n:"username",r:1},{n:"vdmsid",r:1},{n:"qrcodes",hint:"comma-separated ids"},{n:"type",d:"all"},
+     {n:"dockernames",hint:"comma-separated"},{n:"device_types",hint:"comma-separated"},
+     {n:"building_ids",hint:"comma-separated"},{n:"floor_ids",hint:"comma-separated"},{n:"width",d:"2"},{n:"height",d:"2"}],
+  list:["qrcodes","dockernames","device_types","building_ids","floor_ids"],
+  desc:"Streams a PDF. List params = comma separated (blank ⇒ server default 'all')."},
+
+ {g:"GlobalQrcode", t:"Upsert global QR codes", m:"POST", path:"/upsertglobalqrcode",
+  q:[{n:"username",r:1},{n:"vdmsid",r:1}],
+  body:{type:"json",ex:[{device_id:"DEV1",location_id:"LOC1",qrcode_type:"device"}]},
+  desc:"Set<GlobalQrcodeDTO>. Omit id to create."},
+
+ {g:"GlobalQrcode", t:"Create N untagged QR codes", m:"GET", path:"/count/{count}/createqrcode",
+  pd:{count:"5"}, q:[{n:"username",r:1},{n:"vdmsid",r:1}],
+  desc:"Generates 'count' new untagged QR codes."},
+
+ {g:"GlobalQrcode", t:"Resolve scanned QR to asset detail", m:"POST", path:"/getqrcodedetail",
+  q:[{n:"username",r:1},{n:"vdmsid",r:1}],
+  body:{type:"json",ex:{id:"QR1",location_id:"LOC1",device_id:"DEV1"}},
+  desc:"GlobalQrcodeDTO ⇒ List<GlobalQrcodeDTO>."},
+
+ // ---- QrCodeTemplate ----
+ {g:"QrCodeTemplate", t:"List templates by org (paged)", m:"GET",
+  path:"/organisation/{orgId}/QrCodeTemplate/getAllQrCodeTemplateByOrgId",
+  q:[{n:"loggedInUser"},{n:"pageNo",d:"1"},{n:"pageSize",d:"1000"},{n:"key",d:"all"}],
+  desc:"Paginated, searchable template list."},
+
+ {g:"QrCodeTemplate", t:"Get in-use template URL", m:"GET",
+  path:"/organisation/{orgId}/QrCodeTemplate/getInUseUrlByOrgId", desc:"Currently selected template."},
+
+ {g:"QrCodeTemplate", t:"Get default template", m:"GET", path:"/QrCodeTemplate/getDefaultTemplate",
+  desc:"System default template."},
+
+ {g:"QrCodeTemplate", t:"Add template (multipart)", m:"POST",
+  path:"/organisation/{orgId}/QrCodeTemplate/addQrCodeTemplate",
+  q:[{n:"loggedInUser"}],
+  multipart:[{n:"file",type:"file"},{n:"companyLogo",type:"file"},{n:"body",type:"text",ex:'{"templateName":"My Template"}'}],
+  desc:"file + companyLogo images; body = JSON metadata string (required)."},
+
+ {g:"QrCodeTemplate", t:"Update template (multipart)", m:"PUT",
+  path:"/organisation/{orgId}/QrCodeTemplate/updateQrCodeTemplate",
+  q:[{n:"templateUrl"},{n:"logoUrl"},{n:"loggedInUser"}],
+  multipart:[{n:"file",type:"file"},{n:"companyLogo",type:"file"},{n:"body",type:"text",ex:'{"id":"TPL1","templateName":"Updated"}'}],
+  desc:"body = JSON metadata string (required)."},
+
+ {g:"QrCodeTemplate", t:"Delete templates", m:"DELETE",
+  path:"/organisation/{orgId}/QrCodeTemplate/deleteQrCodeTemplate",
+  body:{type:"json",ex:["TPL1","TPL2"]}, desc:"Body = List<String> of template ids."},
+
+ {g:"QrCodeTemplate", t:"Set in-use / default template", m:"PUT",
+  path:"/organisation/{orgId}/QrCodeTemplate/updateInUseByUrl",
+  q:[{n:"templateUrl"},{n:"isDefault",d:"false"}], desc:"Select active template by URL."},
+
+ // ---- AdcTagging ----
+ {g:"AdcTagging", t:"Tag QR codes by org + vdms (touchscreen)", m:"PUT",
+  path:"/touchscreen/qrCode/organisation/{orgId}/vdms/{vdmsId}/tagQrCodeByVdmsId",
+  body:{type:"json",ex:[{id:"QR1",deviceId:"DEV1",locationId:"LOC1"}]},
+  desc:"Body = List<QrCodeDTO>."}
+];
+
+// ---- rendering ----
+const main=document.getElementById("main"), nav=document.getElementById("nav");
+const groups=[...new Set(EP.map(e=>e.g))];
+const idFor=(e,i)=>"ep"+i;
+
+function pathVars(path){ return [...path.matchAll(/\{(\w+)\}/g)].map(m=>m[1]); }
+
+groups.forEach(g=>{
+  const ga=document.createElement("div"); ga.className="grp"; ga.textContent=g; nav.appendChild(ga);
+  const h=document.createElement("h2"); h.className="group"; h.id="grp-"+g; h.textContent=g; main.appendChild(h);
+  EP.forEach((e,i)=>{
+    if(e.g!==g) return;
+    const a=document.createElement("a"); a.href="#"+idFor(e,i); a.textContent=e.t; nav.appendChild(a);
+    main.appendChild(renderCard(e,i));
+  });
+});
+
+function fld(labelHtml, inputEl){
+  const d=document.createElement("div"); d.className="fld";
+  const l=document.createElement("label"); l.innerHTML=labelHtml; d.appendChild(l); d.appendChild(inputEl); return d;
+}
+
+function renderCard(e,i){
+  const det=document.createElement("details"); det.className="card"; det.id=idFor(e,i);
+  const sum=document.createElement("summary");
+  sum.innerHTML=`<span class="verb ${e.m}">${e.m}</span><span class="path">${e.path}</span><span class="desc">${e.desc||""}</span>`;
+  det.appendChild(sum);
+  const body=document.createElement("div"); body.className="body";
+
+  // path vars
+  const pvs=pathVars(e.path);
+  if(pvs.length){
+    const row=document.createElement("div"); row.className="row";
+    pvs.forEach(pv=>{
+      const inp=document.createElement("input"); inp.dataset.path=pv;
+      inp.value = commonFor(pv) || (e.pd&&e.pd[pv]) || "";
+      row.appendChild(fld(`${pv} <span class="hint">(path)</span>`, inp));
+    });
+    body.appendChild(row);
+  }
+  // query params
+  if(e.q&&e.q.length){
+    const row=document.createElement("div"); row.className="row";
+    e.q.forEach(q=>{
+      const inp=document.createElement("input"); inp.dataset.q=q.n;
+      inp.value = commonFor(q.n) || q.d || "";
+      if(q.hint) inp.placeholder=q.hint;
+      row.appendChild(fld(`${q.n}${q.r?' <span class="req">*</span>':''} ${q.hint?`<span class="hint">${q.hint}</span>`:''}`, inp));
+    });
+    body.appendChild(row);
+  }
+  // multipart
+  if(e.multipart){
+    const row=document.createElement("div"); row.className="row";
+    e.multipart.forEach(mp=>{
+      let inp;
+      if(mp.type==="file"){ inp=document.createElement("input"); inp.type="file"; inp.dataset.file=mp.n; }
+      else { inp=document.createElement("input"); inp.dataset.text=mp.n; inp.value=mp.ex||""; }
+      row.appendChild(fld(`${mp.n} <span class="hint">(${mp.type==="file"?"file part":"text part"})</span>`, inp));
+    });
+    body.appendChild(row);
+  }
+  // json/string body
+  if(e.body && e.body.type!=="none"){
+    const ta=document.createElement("textarea"); ta.dataset.body=e.body.type;
+    ta.value = e.body.type==="json" ? JSON.stringify(e.body.ex,null,2) : (e.body.ex||"");
+    body.appendChild(fld(e.body.type==="json"?"Request body (JSON)":"Request body (raw string)", ta));
+  }
+
+  // actions
+  const act=document.createElement("div"); act.className="actions";
+  const send=document.createElement("button"); send.textContent= e.download?"Send & download":"Send";
+  const url=document.createElement("button"); url.className="sec"; url.textContent="Copy URL";
+  act.appendChild(send); act.appendChild(url); body.appendChild(act);
+
+  // response
+  const resp=document.createElement("div"); resp.className="resp";
+  resp.innerHTML=`<div class="meta"></div><pre></pre>`; body.appendChild(resp);
+
+  det.appendChild(body);
+  send.onclick=()=>doSend(e,det,resp);
+  url.onclick=()=>{ navigator.clipboard.writeText(buildUrl(e,det)); url.textContent="Copied!"; setTimeout(()=>url.textContent="Copy URL",1200); };
+  return det;
+}
+
+function buildUrl(e,det){
+  let p=e.path;
+  pathVars(e.path).forEach(pv=>{
+    const v=det.querySelector(`[data-path="${pv}"]`).value.trim();
+    p=p.replace(`{${pv}}`, encodeURIComponent(v));
+  });
+  const qs=[];
+  (e.q||[]).forEach(q=>{
+    const el=det.querySelector(`[data-q="${q.n}"]`); const v=el?el.value.trim():"";
+    if(v==="") return;
+    if(e.list && e.list.includes(q.n)){
+      v.split(",").map(s=>s.trim()).filter(Boolean).forEach(item=>qs.push(`${encodeURIComponent(q.n)}=${encodeURIComponent(item)}`));
+    } else {
+      qs.push(`${encodeURIComponent(q.n)}=${encodeURIComponent(v)}`);
+    }
+  });
+  return baseUrl()+p+(qs.length?("?"+qs.join("&")):"");
+}
+
+async function doSend(e,det,resp){
+  const url=buildUrl(e,det);
+  const meta=resp.querySelector(".meta"), pre=resp.querySelector("pre");
+  resp.classList.add("show");
+
+  // binary download endpoints
+  if(e.download){
+    meta.innerHTML=`<span class="pill ok">DOWNLOAD</span> <span class="path">${e.m} ${url}</span>`;
+    pre.textContent="Opening download in a new tab…";
+    const a=document.createElement("a"); a.href=url; a.target="_blank"; a.rel="noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+    return;
+  }
+
+  const opt={method:e.m, headers:{}};
+  // body
+  if(e.multipart){
+    const fd=new FormData();
+    e.multipart.forEach(mp=>{
+      if(mp.type==="file"){ const f=det.querySelector(`[data-file="${mp.n}"]`); if(f&&f.files[0]) fd.append(mp.n,f.files[0]); }
+      else { const t=det.querySelector(`[data-text="${mp.n}"]`); fd.append(mp.n, t?t.value:""); }
+    });
+    opt.body=fd; // let browser set multipart boundary
+  } else if(e.body && e.body.type==="json"){
+    const ta=det.querySelector('[data-body="json"]');
+    try{ JSON.parse(ta.value); }catch(err){ meta.innerHTML=`<span class="pill err">BODY ERROR</span>`; pre.textContent="Invalid JSON: "+err.message; return; }
+    opt.headers["Content-Type"]="application/json"; opt.body=ta.value;
+  } else if(e.body && e.body.type==="string"){
+    const ta=det.querySelector('[data-body="string"]');
+    opt.headers["Content-Type"]="text/plain"; opt.body=ta.value;
+  }
+
+  meta.innerHTML=`<span class="pill">…</span> <span class="path">${e.m} ${url}</span>`;
+  pre.textContent="Sending…";
+  const t0=performance.now();
+  try{
+    const res=await fetch(url,opt);
+    const ms=Math.round(performance.now()-t0);
+    const ct=res.headers.get("content-type")||"";
+    let out;
+    if(ct.includes("application/json")){ out=JSON.stringify(await res.json(),null,2); }
+    else { out=await res.text(); if(out==="") out="(empty body)"; }
+    meta.innerHTML=`<span class="pill ${res.ok?"ok":"err"}">${res.status} ${res.statusText}</span>`
+      +`<span style="color:var(--muted)">${ms} ms · ${ct||"no content-type"}</span>`
+      +`<span class="path" style="color:var(--muted)">${e.m} ${url}</span>`;
+    pre.textContent=out;
+  }catch(err){
+    meta.innerHTML=`<span class="pill err">NETWORK ERROR</span> <span class="path">${e.m} ${url}</span>`;
+    pre.textContent=err.message+"\n\nIf this is a TLS/cert error, open "+baseUrl()+" once in the browser and accept the self-signed certificate, then retry.";
+  }
+}
+
+// ---- common values wiring ----
+document.querySelectorAll("[data-common]").forEach(inp=>{
+  const k=inp.dataset.common; inp.value=common[k]||"";
+  inp.addEventListener("input",()=>{ common[k]=inp.value; saveCommon(); });
+});
+document.getElementById("applyCommon").onclick=()=>{
+  document.querySelectorAll("input[data-path],input[data-q]").forEach(inp=>{
+    const name=inp.dataset.path||inp.dataset.q;
+    const v=commonFor(name);
+    if(v) inp.value=v;
+  });
+};
+</script>
+</body>
+</html>

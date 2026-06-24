@@ -60,15 +60,6 @@ public class FileUtils {
 			Files.write(filePath, documentFile.getBytes());
             return documentUrl + fileName;
 
-			Path filePath = Paths.get(ABSOLUTE_DOCUMENT_PATH + fileName);
-			try {
-				Files.write(filePath, documentFile.getBytes());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block0
-				log.debug("{}", e);
-			}
-            return DIRECTORY_DOCUMENT_PATH + fileName;
-
 
 		}
 		return null;

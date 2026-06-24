@@ -1,0 +1,42 @@
+server:
+  port: 50001
+  error:
+    whitelabel:
+      enabled: false
+    path: /error
+
+spring:
+  main:
+    allow-circular-references: true
+  datasource:
+    hikari:
+      auto-commit: true
+      minimum-idle: 1
+      maximum-pool-size: 10
+      idle-timeout: 600000
+      pool-name: SpringBootJPAHikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
+  servlet:
+    multipart:
+      max-file-size: 1024MB
+      max-request-size: 1024MB
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: io.sclera.config.MySQLCustomDialect
+        jdbc:
+          batch_size: 250
+        order_inserts: true
+        order_updates: true
+
+sclera:
+  super-admin:
+    email: super.admin@sclera.com
+    password: scleraadmin

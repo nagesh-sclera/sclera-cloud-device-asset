@@ -8,7 +8,8 @@ import AssetPage from './pages/AssetPage.jsx'
 import LocationPage from './pages/LocationPage.jsx'
 import UserActivityPage from './pages/UserActivityPage.jsx'
 import NetworkPage from './pages/NetworkPage.jsx'
-import AssetOnboardingPage from './pages/AssetOnboardingPage.jsx'
+import WorkOrdersPage from './pages/WorkOrdersPage.jsx'
+import QrCodesPage from './pages/QrCodesPage.jsx'
 import { useApp } from './context/AppContext.jsx'
 
 export default function App() {
@@ -32,7 +33,8 @@ export default function App() {
             {view === 'location' && <LocationPage />}
             {view === 'activity' && <UserActivityPage />}
             {view === 'networks' && <NetworkPage />}
-            {view === 'onboarding' && <AssetOnboardingPage />}
+            {view === 'workorders' && <WorkOrdersPage />}
+            {view === 'qrcodes' && <QrCodesPage />}
           </ErrorBoundary>
         </main>
       </div>

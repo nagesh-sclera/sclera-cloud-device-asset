@@ -12,7 +12,6 @@ const SORT_OPTIONS = [
 ]
 
 const FEATURES = ['QR Code', 'NFC', 'Asset Images', 'Sensor Alerts', 'Bar Code', 'Documents', 'Sensor', 'Procedures']
-const ONBOARD_DETAILS = ['Image Status', 'Tag Status', 'Field Status', 'Geolocation Status']
 const FIELDS = ['ID', 'Display Name', 'Manufacturer', 'Model', 'IP Address', 'Mac Address', 'Location', 'Floor', 'Building', 'Latitude', 'Longitude', 'Serial Number', 'Warranty', 'Created Timestamp', 'Updated Email', 'Updated Timestamp', 'Description', 'Assigned User Email', 'Cost Value', 'Pc Location', 'Isp Location', 'Username']
 
 export default function FilterModal({ initial, onClose, onApply }) {
@@ -21,13 +20,11 @@ export default function FilterModal({ initial, onClose, onApply }) {
   const [sortBy, setSortBy] = useState(initial?.sortBy || 'none')
   const [assignee, setAssignee] = useState(initial?.assignee || '')
   const [alertMessage, setAlertMessage] = useState(initial?.alertMessage || '')
-  const [onboardState, setOnboardState] = useState(initial?.onboard || 'any') // any | onboarded | notonboarded
   const [assetTypes, setAssetTypes] = useState(new Set(initial?.assetTypes || []))
   const [assetGroups, setAssetGroups] = useState(new Set(initial?.assetGroups || []))
   const [category, setCategory] = useState(initial?.category || '')
   const [typesContains, setTypesContains] = useState(initial?.typesContains ?? true)
   const [features, setFeatures] = useState(new Set(initial?.features || []))
-  const [onboardDetails, setOnboardDetails] = useState(new Set(initial?.onboardDetails || []))
   const [fields, setFields] = useState(new Set())
   const [osType, setOsType] = useState(initial?.osType || '')
   const [source, setSource] = useState(initial?.source || false)
@@ -79,7 +76,7 @@ export default function FilterModal({ initial, onClose, onApply }) {
 
   const activeCount =
     assetTypes.size + assetGroups.size + (category ? 1 : 0) + (assignee ? 1 : 0) +
-    (sortBy !== 'none' ? 1 : 0) + (onboardState !== 'any' ? 1 : 0) + features.size
+    (sortBy !== 'none' ? 1 : 0) + features.size
 
   const buildAndApply = () => {
     const column_details = []
@@ -93,23 +90,21 @@ export default function FilterModal({ initial, onClose, onApply }) {
     const sort = SORT_OPTIONS.find((s) => s.key === sortBy)
     if (sort && sort.column) criteria.sort_details = { column: sort.column, custom: false, order: sort.order }
 
-    const onboard_status = onboardState === 'onboarded' ? 3 : onboardState === 'notonboarded' ? 210 : 123
-
     onApply({
-      criteria, onboard_status,
+      criteria,
       // echo selections so we can re-open with state + show chips + client-refine
       meta: {
-        searchBy, sortBy, assignee, alertMessage, onboard: onboardState, network,
+        searchBy, sortBy, assignee, alertMessage, network,
         assetTypes: [...assetTypes], assetGroups: [...assetGroups], category, typesContains,
-        features: [...features], onboardDetails: [...onboardDetails], osType, source,
+        features: [...features], osType, source,
       },
     })
   }
 
   const clearAll = () => {
     setAssetTypes(new Set()); setAssetGroups(new Set()); setCategory(''); setAssignee('')
-    setSortBy('none'); setOnboardState('any'); setFeatures(new Set()); setAlertMessage('')
-    setOnboardDetails(new Set()); setFields(new Set()); setOsType(''); setSource(false); setNetwork('all')
+    setSortBy('none'); setFeatures(new Set()); setAlertMessage('')
+    setFields(new Set()); setOsType(''); setSource(false); setNetwork('all')
   }
 
   return (
@@ -151,19 +146,6 @@ export default function FilterModal({ initial, onClose, onApply }) {
               </select>
             </Group>
           </div>
-
-          <Section title="Onboarded Details">
-            <div className="chk-grid">
-              {ONBOARD_DETAILS.map((o) => (
-                <label key={o} className="chk"><input type="checkbox" checked={onboardDetails.has(o)} onChange={() => toggle(setOnboardDetails)(o)} /> {o}</label>
-              ))}
-            </div>
-            <div className="radio-row" style={{ marginTop: 10 }}>
-              {[['any', 'Any'], ['onboarded', 'Onboarded'], ['notonboarded', 'Not Onboarded']].map(([v, l]) => (
-                <label key={v} className="radio"><input type="radio" name="onb" checked={onboardState === v} onChange={() => setOnboardState(v)} /> {l}</label>
-              ))}
-            </div>
-          </Section>
 
           <Section title="Specification Filter">
             <Group label="OS type">

@@ -257,7 +257,7 @@ public class DeviceService implements DeviceServiceInterface {
     DaintreeClient daintreeService;
 
     @Autowired
-    io.sclera.client.GlobalQrcodeClient globalQrcodeService;
+    io.sclera.service.GlobalQrcodeService globalQrcodeService;
 
     @Autowired
     DeviceConditionsService deviceConditionsService;
@@ -332,10 +332,10 @@ public class DeviceService implements DeviceServiceInterface {
     MqttClient mqttService;
 
     @Autowired
-    io.sclera.client.QrCodeClient qrCodeService;
+    io.sclera.service.QrCodeService qrCodeService;
 
     @Autowired
-    io.sclera.client.ClientQrCodeClient clientQrCodeService;
+    io.sclera.service.ClientQrCodeService clientQrCodeService;
 
     @Autowired
     io.sclera.client.NfcClient nfcService;
@@ -362,10 +362,10 @@ public class DeviceService implements DeviceServiceInterface {
     io.sclera.client.GlobalChecklistConditionsClient globalChecklistConditionsService;
 
     @Autowired
-    private io.sclera.client.QrCodeClient qrCodeRepository;
+    private io.sclera.service.QrCodeService qrCodeRepository;
 
     @Autowired
-    private io.sclera.client.ClientQrCodeClient clientQrCodeRepository;
+    private io.sclera.service.ClientQrCodeService clientQrCodeRepository;
 
     @Autowired
     private DeviceTypesRepository deviceTypesRepository;
@@ -4207,10 +4207,6 @@ public class DeviceService implements DeviceServiceInterface {
         Integer onboard_status = f[4];
         Integer assigned_status = f[5];
         Integer offset = pagesize * (pageno - 1);
-
-        Integer asset_match_status = null;
-        Integer onboard_status = 123;
-        Integer assigned_status = null;
 
         log.debug("{}", "outside all" + virtual_device_type + status + monitor + offset + pageno);
 

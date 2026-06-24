@@ -33,8 +33,6 @@ function refineRows(rows, meta) {
     Procedures: (d) => (d.checklist_template_count || 0) > 0,
   }
   ;(meta.features || []).forEach((f) => { if (FEAT[f]) out = out.filter(FEAT[f]) })
-  const OB = { 'Image Status': 'image_status', 'Tag Status': 'tag_status', 'Field Status': 'field_status', 'Geolocation Status': 'geolocation_status' }
-  ;(meta.onboardDetails || []).forEach((o) => { const k = OB[o]; if (k) out = out.filter((d) => d[k] === 1) })
   if (meta.source) out = out.filter((d) => (d.source_type || '').toLowerCase().includes('adc') || (d.source_type || '').toLowerCase().includes('collection'))
   return out
 }
@@ -45,9 +43,6 @@ const TABS = [
   { key: 'unmonitored', label: 'Unmonitored', countKey: 'unmonitor_device_count' },
   { key: 'online', label: 'Online', countKey: 'online_device_count' },
   { key: 'offline', label: 'Offline', countKey: 'offline_device_count' },
-  // Onboarded / Not Onboarded are client-side refinements on onboard_status (counts come from getdevicecount).
-  { key: 'onboarded', label: 'Onboarded', countKey: 'onboarded_device_count', onboard: 'onboarded' },
-  { key: 'notonboarded', label: 'Not Onboarded', countKey: 'notonboarded_device_count', onboard: 'notonboarded' },
 ]
 const PAGE_SIZE = 12
 
@@ -71,7 +66,6 @@ export default function AssetPage({ search, onSearch }) {
   const [network, setNetwork] = useState('all') // selected gateway/network (docker)
   const [networks, setNetworks] = useState(['all'])
   const [counts, setCounts] = useState({})
-  const [onboardFilter, setOnboardFilter] = useState('all') // client-side onboard tab: all | onboarded | notonboarded
   const [selected, setSelected] = useState(() => new Set()) // checked asset ids for multi-update
   const [mu, setMu] = useState(false)        // multi-update modal open
   const [muBusy, setMuBusy] = useState(false)
@@ -116,20 +110,20 @@ export default function AssetPage({ search, onSearch }) {
       const scope = { ...ctx, docker: activeNetwork } // 'all' scopes across gateways
       let res
       if (adv) {
-        // Advanced filter → the real searchsortfilterdevices (+ count). img_9
-        res = await api.searchSortFilter(adv.criteria, { ...scope, condition: filter, onboard_status: adv.onboard_status, pageno: page, pagesize: 50 })
+        // Filter applied → the dedicated searchsortfilterdevices API (+ count). img_9
+        res = await api.searchSortFilter(adv.criteria, { ...scope, condition: filter, pageno: page, pagesize: 50 })
         // fire the real count call too (img_9 fidelity), then refine client-side
-        api.searchSortFilterCount(adv.criteria, { ...scope, condition: filter, onboard_status: adv.onboard_status }).catch(() => {})
+        api.searchSortFilterCount(adv.criteria, { ...scope, condition: filter }).catch(() => {})
         res = refineRows(Array.isArray(res) ? res : [], adv.meta)
         if (id === reqId.current) setFilterCount(res.length)
       } else if (debounced) {
+        // Text search → getfilterdevice.
         res = await api.listDevices({ ...scope, condition: filter, searchKey: debounced, pageno: page, pagesize: PAGE_SIZE })
-      } else if (onboardFilter !== 'all') {
-        // Onboarded / Not-Onboarded: filter server-side so the list is drawn from the same
-        // global population as the tab count (and paginates), instead of refining only the
-        // current page client-side. onboard_status: 3 = onboarded, 210 = not onboarded.
-        res = await api.searchSortFilter({}, { ...scope, condition: filter, onboard_status: onboardFilter === 'onboarded' ? 3 : 210, pageno: page, pagesize: PAGE_SIZE })
       } else {
+        // Default (no filter, no search) → the canonical paginated list
+        // (getsubsystemparentdevicesbypagination) so newly added/edited assets always appear.
+        // searchsortfilter is used ONLY when an advanced filter is applied. condition (filter)
+        // still applies the monitor-state tab on top.
         res = await api.listParentDevices({ ...scope, condition: filter, pageno: page, pagesize: PAGE_SIZE })
       }
       if (id !== reqId.current) return
@@ -140,25 +134,20 @@ export default function AssetPage({ search, onSearch }) {
     } finally {
       if (id === reqId.current) setLoading(false)
     }
-  }, [ctx, filter, debounced, page, adv, network, onboardFilter, loadCounts])
+  }, [ctx, filter, debounced, page, adv, network, loadCounts])
 
   useEffect(() => { load() }, [load])
-  useEffect(() => { setPage(1) }, [filter, debounced, adv, network, onboardFilter])
+  useEffect(() => { setPage(1) }, [filter, debounced, adv, network])
   // Clear the multi-update selection whenever the visible row set changes.
-  useEffect(() => { setSelected(new Set()) }, [filter, debounced, adv, network, page, onboardFilter])
+  useEffect(() => { setSelected(new Set()) }, [filter, debounced, adv, network, page])
 
-  // Onboarded / Not-Onboarded are now filtered server-side in load() (see the searchSortFilter
-  // branch), so the list matches the global tab count and paginates. No client-side row
-  // refinement is needed — render the rows the server returned as-is.
   const displayRows = rows
 
   // The paginated list's totalElements is only offset+slice (see backend PageUtils.toPage), so the
   // real per-view total comes from the counts endpoint we already fetch. Use it to show
   // "N assets · Page X of Y" and gate Next exactly. Search / advanced-filter views have no matching
   // count, so they keep the slice-size heuristic (Next while a full page came back).
-  const activeTab = onboardFilter !== 'all'
-    ? TABS.find((t) => t.onboard === onboardFilter)
-    : TABS.find((t) => t.key === filter && !t.onboard)
+  const activeTab = TABS.find((t) => t.key === filter)
   const viewTotal = (adv || debounced || !activeTab || !Number.isFinite(counts[activeTab.countKey]))
     ? null
     : counts[activeTab.countKey]
@@ -266,10 +255,8 @@ export default function AssetPage({ search, onSearch }) {
         <div className="filter-tabs">
           {TABS.map((t) => {
             const c = counts[t.countKey]
-            const active = t.onboard ? onboardFilter === t.onboard : (filter === t.key && onboardFilter === 'all')
-            const onTab = () => { if (t.onboard) { setFilter('all'); setOnboardFilter(t.onboard) } else { setFilter(t.key); setOnboardFilter('all') } }
             return (
-              <button key={t.key} className={`tab ${active ? 'active' : ''}`} onClick={onTab}>
+              <button key={t.key} className={`tab ${filter === t.key ? 'active' : ''}`} onClick={() => setFilter(t.key)}>
                 {t.label}{c != null && <span className="tab-count">{c}</span>}
               </button>
             )
@@ -298,7 +285,6 @@ export default function AssetPage({ search, onSearch }) {
           {adv.meta?.category && <span className="chip">category: {adv.meta.category}</span>}
           {adv.meta?.assignee && <span className="chip">assignee: {adv.meta.assignee}</span>}
           {adv.meta?.sortBy && adv.meta.sortBy !== 'none' && <span className="chip">sorted</span>}
-          {adv.meta?.onboard && adv.meta.onboard !== 'any' && <span className="chip">{adv.meta.onboard}</span>}
           <button className="chip-clear" onClick={() => { setAdv(null); setFilterCount(null) }}>Clear ✕</button>
         </div>
       )}
@@ -349,7 +335,6 @@ export default function AssetPage({ search, onSearch }) {
                 </div>
                 <div className="asset-badges">
                   <span className={`badge tone-${st.tone}`}><span className={`dot ${st.tone}`} /> {st.label}</span>
-                  {d.onboard_status === 3 ? <span className="badge tone-online">Onboarded</span> : null}
                 </div>
                 <div className="asset-row-actions" onClick={(e) => e.stopPropagation()}>
                   <button className="icon-btn" title="Edit" onClick={() => setModal({ open: true, editing: d })}><Icon name="edit" size={15} /></button>

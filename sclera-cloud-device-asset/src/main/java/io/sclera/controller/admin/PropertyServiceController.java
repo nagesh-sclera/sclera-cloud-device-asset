@@ -1,7 +1,7 @@
 package io.sclera.controller.admin;
 
 import io.sclera.dto.*;
-import io.sclera.client.PropertyQrcodeClient;
+import io.sclera.service.PropertyQrcodeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,7 +17,7 @@ import java.util.Set;
 /**
  * REST endpoints for managing property services, their tagged locations, service requests/responses
  * and QR-code zone maps.
- * Delegates all persistence and business logic to {@link PropertyQrcodeClient}.
+ * Delegates all persistence and business logic to {@link PropertyQrcodeService}.
  */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
@@ -27,7 +27,7 @@ public class PropertyServiceController {
     private static final Logger log = LoggerFactory.getLogger(PropertyServiceController.class);
 
     @Autowired
-    PropertyQrcodeClient propertyQrcodeService;
+    PropertyQrcodeService propertyQrcodeService;
 
     // Upsert Property service and Property Service Requests
     /**

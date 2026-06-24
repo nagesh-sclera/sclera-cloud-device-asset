@@ -747,3 +747,115 @@ ALTER TABLE device ADD COLUMN IF NOT EXISTS local_vendor_id    VARCHAR(255);
 ALTER TABLE device ADD COLUMN IF NOT EXISTS other_vendor_1_id  VARCHAR(255);
 ALTER TABLE device ADD COLUMN IF NOT EXISTS other_vendor_2_id  VARCHAR(255);
 ALTER TABLE device ADD COLUMN IF NOT EXISTS other_vendor_3_id  VARCHAR(255);
+
+-- ── QR-code tables ──────────────────────────────────────────────────────────
+-- Placed after device/location/floor/building so FK references are valid.
+
+-- qr_code: Sclera-generated QR codes linked to a device and/or location.
+-- customerOrgId (String) → VARCHAR; adcQrCodeCheck (Integer) → INTEGER.
+-- creationTime (BigInteger) → NUMERIC (mirrors BigInteger Hibernate mapping).
+CREATE TABLE IF NOT EXISTS qr_code (
+    id               VARCHAR(255) PRIMARY KEY,
+    image_url        VARCHAR(512),
+    vdms_id          VARCHAR(64),
+    created_by       VARCHAR(255),
+    creation_time    NUMERIC,
+    batch_id         VARCHAR(255),
+    qr_code_link     VARCHAR(512),
+    updated_time     VARCHAR(255),
+    updated_by       VARCHAR(255),
+    is_deleted       BOOLEAN      DEFAULT false,
+    customer_org_id  VARCHAR(64),
+    adc_qr_code_check INTEGER,
+    device_id        VARCHAR(255) REFERENCES device(id),
+    location_id      VARCHAR(255) REFERENCES location(id)
+);
+
+-- client_qr_code: Client-supplied QR codes linked to a device and/or location.
+-- addedAt (String) → VARCHAR; updatedAt (BigInteger) → NUMERIC.
+-- adcClientQrCodeCheck (Integer) → INTEGER.
+CREATE TABLE IF NOT EXISTS client_qr_code (
+    id                      VARCHAR(255) PRIMARY KEY,
+    added_at                VARCHAR(255),
+    added_by                VARCHAR(255),
+    client_qr_code_id       VARCHAR(255),
+    updated_at              NUMERIC,
+    updated_by              VARCHAR(255),
+    vdms_id                 VARCHAR(64),
+    batch_id                VARCHAR(255),
+    is_deleted              BOOLEAN      DEFAULT false,
+    adc_client_qr_code_check INTEGER,
+    device_id               VARCHAR(255) REFERENCES device(id),
+    location_id             VARCHAR(255) REFERENCES location(id)
+);
+
+-- global_qrcode: Globally managed QR codes; optionally bound to one device OR one location.
+-- Field image_url is already snake_case in the entity (private String image_url).
+-- @OneToOne Device → device_id; @OneToOne Location → location_id.
+CREATE TABLE IF NOT EXISTS global_qrcode (
+    id           VARCHAR(255) PRIMARY KEY,
+    image_url    VARCHAR(512),
+    device_id    VARCHAR(255) REFERENCES device(id),
+    location_id  VARCHAR(255) REFERENCES location(id)
+);
+
+-- property_service: Property-service definition (e.g. cleaning, maintenance) scoped to a tenant.
+-- vdms_id is a plain scalar (no FK — no cross-service Vdms join in device-asset).
+CREATE TABLE IF NOT EXISTS property_service (
+    id       VARCHAR(255) PRIMARY KEY,
+    name     VARCHAR(255),
+    vdms_id  VARCHAR(64)
+);
+
+-- property_qrcode: QR code bound to a property_service and a location.
+-- image_url is already snake_case in the entity.
+-- @ManyToOne PropertyService property_service → property_service_id FK.
+-- @ManyToOne Location location → location_id FK.
+CREATE TABLE IF NOT EXISTS property_qrcode (
+    id                  VARCHAR(255) PRIMARY KEY,
+    image_url           VARCHAR(512),
+    property_service_id VARCHAR(255) REFERENCES property_service(id),
+    location_id         VARCHAR(255) REFERENCES location(id)
+);
+
+-- property_service_request: A single input field (question) in a property-service form.
+-- @ManyToOne PropertyService property_service → property_service_id FK.
+CREATE TABLE IF NOT EXISTS property_service_request (
+    id                  VARCHAR(255) PRIMARY KEY,
+    label               VARCHAR(512),
+    type                VARCHAR(128),
+    options             TEXT,
+    property_service_id VARCHAR(255) REFERENCES property_service(id)
+);
+
+-- property_service_response: A submitted answer during a QR-scan inspection.
+-- timestamp (BigInteger) → NUMERIC; alert BOOLEAN mirrors @Column(columnDefinition).
+-- @ManyToOne PropertyQrcode property_qrcode → property_qrcode_id FK.
+-- @ManyToOne PropertyServiceRequest property_service_request → property_service_request_id FK.
+CREATE TABLE IF NOT EXISTS property_service_response (
+    id                          VARCHAR(255) PRIMARY KEY,
+    value                       TEXT,
+    alert                       BOOLEAN      DEFAULT false,
+    timestamp                   NUMERIC,
+    property_qrcode_id          VARCHAR(255) REFERENCES property_qrcode(id),
+    property_service_request_id VARCHAR(255) REFERENCES property_service_request(id)
+);
+
+-- qr_code_template: QR code visual/layout templates scoped to a customer org.
+-- qrTemplateJson → TEXT (mirrors @Column(columnDefinition = "TEXT")).
+-- inUse / isDefault → INTEGER DEFAULT 0 (mirrors @Column(columnDefinition = "integer default 0")).
+-- creationTimestamp / updatedTimestamp (BigInteger) → NUMERIC.
+CREATE TABLE IF NOT EXISTS qr_code_template (
+    id                   VARCHAR(255) PRIMARY KEY,
+    name                 VARCHAR(255),
+    qr_template_json     TEXT,
+    qr_code_template_url VARCHAR(512),
+    qr_code_logo_url     VARCHAR(512),
+    customer_org_id      VARCHAR(64),
+    creation_timestamp   NUMERIC,
+    added_by             VARCHAR(255),
+    updated_timestamp    NUMERIC,
+    updated_by           VARCHAR(255),
+    in_use               INTEGER      DEFAULT 0,
+    is_default           INTEGER      DEFAULT 0
+);

@@ -40,6 +40,15 @@ public class ResourceUrlConfig {
     @Value("${sclera.global-qrcode-server-url}")
     private String global_qrcode_server_url;
 
+    @Value("${sclera.server-qrcode-images-url}")
+    private String server_qrcode_images_url;
+
+    @Value("${sclera.server-qrcode-images-absolute-path}")
+    private String server_qrcode_images_absolute_path;
+
+    @Value("${sclera.services-cloud-server-url:https://app.sclera.com}")
+    private String services_cloud_server_url;
+
 
     public String getBackup_path() {
         return backup_path;
@@ -113,6 +122,30 @@ public class ResourceUrlConfig {
 
     public void setGlobal_qrcode_server_url(String global_qrcode_server_url) {
         this.global_qrcode_server_url = global_qrcode_server_url;
+    }
+
+    public String getServer_qrcode_images_url() {
+        return server_qrcode_images_url;
+    }
+
+    public void setServer_qrcode_images_url(String server_qrcode_images_url) {
+        this.server_qrcode_images_url = server_qrcode_images_url;
+    }
+
+    public String getServer_qrcode_images_absolute_path() {
+        return server_qrcode_images_absolute_path;
+    }
+
+    public void setServer_qrcode_images_absolute_path(String server_qrcode_images_absolute_path) {
+        this.server_qrcode_images_absolute_path = server_qrcode_images_absolute_path;
+    }
+
+    public String getServices_cloud_server_url() {
+        return services_cloud_server_url;
+    }
+
+    public void setServices_cloud_server_url(String services_cloud_server_url) {
+        this.services_cloud_server_url = services_cloud_server_url;
     }
 
 }

@@ -227,6 +227,33 @@ public class ClientQrCodeDTO {
         return "ClientQrCodeDTO(id=" + this.getId() + ", addedAt=" + this.getAddedAt() + ", addedBy=" + this.getAddedBy() + ", clientQrCodeId=" + this.getClientQrCodeId() + ", deviceId=" + this.getDeviceId() + ", locationId=" + this.getLocationId() + ", updatedTime=" + this.getUpdatedTime() + ", updatedBy=" + this.getUpdatedBy() + ", vdmsId=" + this.getVdmsId() + ", batchId=" + this.getBatchId() + ")";
     }
 
+    // -------------------------------------------------------------------------
+    // Preview / validation transient fields (not persisted)
+    // -------------------------------------------------------------------------
+
+    /** 1 = validated OK; 0 = not yet validated / failed. */
+    private int is_validated;
+    /** Human-readable validation message populated by previewExcelSheet. */
+    private String validationMessage;
+    /**
+     * ADC tagging state: 0 = not checked, 1 = tagged, 2 = QR code not in DB.
+     */
+    private int isTagged;
+    /** True when this QR code is an ADC-managed QR code. */
+    private boolean isAdc;
+
+    public int getIs_validated() { return is_validated; }
+    public void setIs_validated(int is_validated) { this.is_validated = is_validated; }
+
+    public String getValidationMessage() { return validationMessage; }
+    public void setValidationMessage(String validationMessage) { this.validationMessage = validationMessage; }
+
+    public int getIsTagged() { return isTagged; }
+    public void setIsTagged(int isTagged) { this.isTagged = isTagged; }
+
+    public boolean isIsAdc() { return isAdc; }
+    public void setIsAdc(boolean isAdc) { this.isAdc = isAdc; }
+
     @java.lang.SuppressWarnings("all")
     @lombok.Generated
     public ClientQrCodeDTO() {

@@ -16,8 +16,7 @@ const FEATURES = [
   { label: 'Location', icon: 'device' }, { label: 'User Activity', icon: 'users' },
   { label: 'Networks', icon: 'network' },
   { label: 'ITAM Inventory', icon: 'layers' }, { label: 'Inventory', icon: 'box' },
-  { label: 'Asset Data Collection AI', icon: 'database' }, { label: 'Asset Onboarding AI', icon: 'device' },
-  { label: 'Asset Onboarding', icon: 'upload' }, { label: 'Skill Profile', icon: 'users' },
+  { label: 'Asset Data Collection AI', icon: 'database' }, { label: 'Skill Profile', icon: 'users' },
   { label: 'Resources', icon: 'grid' }, { label: 'Phonebook', icon: 'portal' },
 ]
 
@@ -72,7 +71,7 @@ export default function DashboardPage() {
               else if (f.label === 'Location') setView('location')
               else if (f.label === 'User Activity') setView('activity')
               else if (f.label === 'Networks') setView('networks')
-              else if (f.label.startsWith('ITAM') || f.label === 'Asset Onboarding') setView('assets')
+              else if (f.label.startsWith('ITAM')) setView('assets')
             }} />
         ))}
       </div>

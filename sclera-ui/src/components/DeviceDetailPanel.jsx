@@ -8,7 +8,10 @@ import api from '../services/api.js'
 import { getLocalImage, setLocalImage } from '../services/localImages.js'
 import { firstAssetImage } from '../services/assetImage.js'
 import ImagePreview from './ImagePreview.jsx'
-import { inspectionsFor, workOrdersFor, inventoryFor, alertsFor } from '../services/mock.js'
+import { inspectionsFor, inventoryFor, alertsFor } from '../services/mock.js'
+import TicketModal from './TicketModal.jsx'
+import TicketDetailDrawer from './TicketDetailDrawer.jsx'
+import { statusLabel, statusTone, categoryLabel } from '../config.js'
 
 const dash = (v) => (v === 0 ? '0' : v ? String(v) : '—')
 function fmtDate(ts) {
@@ -22,7 +25,7 @@ function fmtDate(ts) {
 }
 const money = (d) => (d?.cost_value == null || d.cost_value === '' ? '—' : `${d.cost_value} ${d.cost_unit || ''}`.trim())
 
-const SUBTABS = ['Info', 'Sensors', 'Notes', 'Inspections', 'Work Orders', 'Inventory', 'Documents', 'Activity']
+const SUBTABS = ['Info', 'Sensors', 'Notes', 'Inspections', 'Work Orders', 'QR Code', 'Inventory', 'Documents', 'Activity']
 
 // ALL editable text/select fields (img.png / img_2).
 const EDITABLE = [
@@ -83,12 +86,20 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
   // real documents
   const [documents, setDocuments] = useState(null)
   const [docBusy, setDocBusy] = useState(false)
+  // QR code tagging (this asset)
+  const [qrTags, setQrTags] = useState(null)
+  const [qrUntagged, setQrUntagged] = useState([])
+  const [qrBusy, setQrBusy] = useState(false)
   // networks (for moving the device between gateways during edit)
   const [networks, setNetworks] = useState([])
   // Building -> Floor -> Location cascade options
   const [buildings, setBuildings] = useState([])
   const [floors, setFloors] = useState([])
   const [locations, setLocations] = useState([])
+  const [workorders, setWorkorders] = useState(null)
+  const [woModal, setWoModal] = useState(false)
+  const [woOpenId, setWoOpenId] = useState(null)
+  const [woEditTicket, setWoEditTicket] = useState(null)
   useEffect(() => {
     api.listNetworks({ vdmsId: ctx.vdmsId }).then((l) => setNetworks((Array.isArray(l) ? l : []).map((n) => n.name).filter(Boolean))).catch(() => {})
     api.getBuildings(ctx).then((b) => setBuildings(Array.isArray(b) ? b : [])).catch(() => {})
@@ -97,7 +108,7 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
   useEffect(() => {
     if (!deviceId) return
     let alive = true
-    setLoading(true); setError(null); setSub('Info'); setEditing(false); setSensors(null); setSensorCount(null); setNotes(null); setDocuments(null)
+    setLoading(true); setError(null); setSub('Info'); setEditing(false); setSensors(null); setSensorCount(null); setNotes(null); setDocuments(null); setWorkorders(null)
     setFloors([]); setLocations([])
     api.getDevice(deviceId, ctx)
       .then((d) => {
@@ -148,15 +159,43 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
   const loadDocuments = () => api.listDocuments(deviceId, ctx).then((d) => setDocuments(Array.isArray(d) ? d : [])).catch(() => setDocuments([]))
   useEffect(() => { if (sub === 'Documents' && documents == null) loadDocuments() }, [sub]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const loadWorkorders = () => api.ticketsByDevice(deviceId, {}, ctx)
+    .then((t) => setWorkorders(Array.isArray(t) ? t : [])).catch(() => setWorkorders([]))
+  useEffect(() => { if (sub === 'Work Orders' && workorders == null) loadWorkorders() }, [sub]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadQrTags = async () => {
+    try {
+      const [tags, untagged] = await Promise.all([
+        api.qrCodesForDevice(deviceId, ctx),
+        api.untaggedQrCodes(ctx),
+      ])
+      setQrTags(Array.isArray(tags) ? tags : [])
+      setQrUntagged(Array.isArray(untagged) ? untagged : [])
+    } catch (e) { setQrTags([]); toast.error(`Load QR codes failed: ${e.message}`) }
+  }
+  useEffect(() => { if (sub === 'QR Code' && qrTags == null) loadQrTags() }, [sub]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const tagQr = async (qrCodeId) => {
+    if (!qrCodeId) { toast.error('Select or paste a QR code id'); return }
+    setQrBusy(true)
+    try { await api.tagQrCodeToDevice(qrCodeId, deviceId, ctx); toast.success(`Tagged QR ${qrCodeId}`); setQrTags(null); await loadQrTags(); onChanged?.() }
+    catch (e) { toast.error(`Tag failed: ${e.message}`) }
+    finally { setQrBusy(false) }
+  }
+  const untagQr = async (qrCodeId) => {
+    setQrBusy(true)
+    try { await api.untagQrCodeFromDevice(qrCodeId, ctx); toast.success(`Untagged QR ${qrCodeId}`); setQrTags(null); await loadQrTags(); onChanged?.() }
+    catch (e) { toast.error(`Untag failed: ${e.message}`) }
+    finally { setQrBusy(false) }
+  }
+
   const name = device?.user_data_name || device?.display_name || device?.name || deviceId
   const st = device ? statusInfo(device) : null
-  const onboarded = device?.onboard_status === 3
   // Stored (backend) image vs a session-only local one added at create time.
   const storedImg = firstAssetImage(device?.asset_image_url)
   const assetImg = storedImg || getLocalImage(deviceId)
 
   const inspections = useMemo(() => (device ? inspectionsFor(device) : []), [device])
-  const workorders = useMemo(() => (device ? workOrdersFor(device) : []), [device])
   const inventory = useMemo(() => (device ? inventoryFor(device) : null), [device])
   const alerts = useMemo(() => (device ? alertsFor(device) : []), [device])
   const bldOptions = useMemo(() => buildings.map((b) => ({ id: b.id || b.building_id, name: b.name })), [buildings])
@@ -252,18 +291,6 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
     finally { setImgBusy(false) }
   }
 
-  const doOnboard = async () => {
-    setBusy(true)
-    try {
-      await api.onboard(deviceId, { ...ctx, status: onboarded ? 0 : 3 })
-      toast.success(onboarded ? 'Asset set to not onboarded' : 'Asset onboarded')
-      const fresh = await api.getDevice(deviceId, ctx)
-      setDevice(fresh); setForm(toForm(fresh))
-      onChanged?.()
-    } catch (e) { toast.error(`Onboard failed: ${e.message}`) }
-    finally { setBusy(false) }
-  }
-
   const act = async (kind) => {
     const verb = kind === 'archive' ? 'Archive' : 'Delete'
     if (!confirm(`${verb} asset "${name}"?`)) return
@@ -319,7 +346,7 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
   }
 
   const counts = device ? [
-    ['Sensors', sensors?.length ?? (device.snmp_count || 0)], ['Inspections', inspections.length], ['Work Orders', workorders.length],
+    ['Sensors', sensors?.length ?? (device.snmp_count || 0)], ['Inspections', inspections.length], ['Work Orders', workorders?.length ?? 0],
     ['Alerts', alerts.length], ['Tickets', device.ticket_count || 0], ['Notes', device.notes_count || 0],
   ] : []
 
@@ -338,7 +365,7 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
           </div>
           <div className="dp-head-actions">
             <button className="dp-icontext"><Icon name="barcode" size={16} /><span>{editing ? 'Re-assign Bar Code' : 'Tag Bar Code'}</span></button>
-            <button className="dp-icontext"><Icon name="qrcode" size={16} /><span>{editing ? 'Re-assign' : 'Tag Asset'}</span></button>
+            <button className="dp-icontext" onClick={() => setSub('QR Code')} title="Tag a QR code to this asset"><Icon name="qrcode" size={16} /><span>{editing ? 'Re-assign' : 'Tag Asset'}</span></button>
             <button className="icon-btn" onClick={onClose} aria-label="Close"><Icon name="x" size={16} /></button>
           </div>
         </div>
@@ -352,9 +379,6 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
         </div>
 
         <div className="dp-toolbar">
-          <button className={`btn sm ${onboarded ? 'btn-ghost' : 'btn-primary'}`} disabled={busy} onClick={doOnboard} title={onboarded ? 'Click to un-onboard' : 'Onboard this asset'}>
-            <Icon name="upload" size={14} /> {onboarded ? 'Onboarded ✓' : 'Onboard'}
-          </button>
           <button className="btn btn-ghost sm"><Icon name="plus" size={14} /> Add Digital Twin</button>
           <span className="push-right" />
           {sub === 'Info' && !editing && device && (
@@ -371,13 +395,14 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
           ) : error ? (
             <div className="empty-state"><Icon name="info" size={24} /><p>Couldn't load asset</p><span className="muted">{error.message}</span></div>
           ) : sub === 'Info' ? (
-            editing ? <EditForm form={form} set={set} setFlag={setFlag} networks={networks} bldOptions={bldOptions} floorOptions={floorOptions} locOptions={locOptions} onBuilding={onBuilding} onFloor={onFloor} /> : <InfoView device={device} name={name} st={st} onboarded={onboarded} counts={counts} />
+            editing ? <EditForm form={form} set={set} setFlag={setFlag} networks={networks} bldOptions={bldOptions} floorOptions={floorOptions} locOptions={locOptions} onBuilding={onBuilding} onFloor={onFloor} /> : <InfoView device={device} name={name} st={st} counts={counts} />
           ) : sub === 'Sensors' ? (
             <SensorsView sensors={sensors} count={sensorCount} busy={sensorBusy} onAdd={addSensor} onRemove={removeSensor} onRefresh={loadSensors} />
           ) : sub === 'Notes' ? (
             <NotesView notes={notes} busy={noteBusy} onAdd={addNote} onRemove={removeNote} onRefresh={loadNotes} />
           ) : sub === 'Inspections' ? <InspectionsView items={inspections} />
-            : sub === 'Work Orders' ? <WorkOrdersView items={workorders} />
+            : sub === 'Work Orders' ? <WorkOrdersView items={workorders} onAdd={() => { setWoEditTicket(null); setWoModal(true) }} onOpen={setWoOpenId} />
+            : sub === 'QR Code' ? <QrCodeTagView tags={qrTags} untagged={qrUntagged} busy={qrBusy} onTag={tagQr} onUntag={untagQr} onRefresh={() => { setQrTags(null); loadQrTags() }} />
             : sub === 'Inventory' ? <InventoryView inv={inventory} />
             : sub === 'Documents' ? <DocumentsView docs={documents} busy={docBusy} onAdd={addDocument} onRemove={removeDocument} onRefresh={loadDocuments} />
             : <ActivityList logs={logs} />}
@@ -404,6 +429,20 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
         onClose={() => setPreview(false)}
         onDelete={assetImg ? deleteImage : undefined}
         deleting={imgBusy}
+      />
+      <TicketModal
+        open={woModal}
+        ticket={woEditTicket}
+        deviceId={deviceId}
+        dockerName={device?.docker_name || ctx.docker}
+        onClose={() => { setWoModal(false); setWoEditTicket(null) }}
+        onSaved={loadWorkorders}
+      />
+      <TicketDetailDrawer
+        ticketId={woOpenId}
+        onClose={() => setWoOpenId(null)}
+        onChanged={loadWorkorders}
+        onEdit={(t) => { setWoOpenId(null); setWoEditTicket(t); setWoModal(true) }}
       />
     </>
   )
@@ -432,7 +471,7 @@ function flattenCustomFields(arr) {
   return out
 }
 
-function InfoView({ device, name, st, onboarded, counts }) {
+function InfoView({ device, name, st, counts }) {
   const d = device
   const customFields = parseCustomFields(d.custom_fields)
   return (
@@ -443,7 +482,6 @@ function InfoView({ device, name, st, onboarded, counts }) {
         ))}
       </div>
       <div className="dp-fields">
-        <Row k="Onboard status" v={onboarded ? 'Onboarded' : 'Not Onboarded'} accent />
         <Row k="Asset Name" v={name} />
         <Row k="Display Name" v={dash(d.display_name)} />
         <Row k="Model" v={dash(d.user_data_model || d.model)} />
@@ -691,16 +729,81 @@ function InspectionsView({ items }) {
       </div>
     ))}</div></>)
 }
-function WorkOrdersView({ items }) {
-  if (!items.length) return <Empty icon="list" label="No work orders" />
-  return (<><div className="svc-note">From the workorders service</div><div className="log-list">
-    {items.map((w) => (
-      <div className="svc-row" key={w.id}>
-        <div className="svc-row-main"><div className="svc-row-title">{w.id} · {w.title}</div><div className="svc-row-meta">Assignee {w.assignee} · due {w.due}</div></div>
-        <div className="svc-row-side"><span className={`badge tone-${w.priority === 'Critical' || w.priority === 'High' ? 'offline' : 'default'}`}>{w.priority}</span><span className="badge">{w.status}</span></div>
+function WorkOrdersView({ items, onAdd, onOpen }) {
+  return (
+    <>
+      <div className="svc-head">
+        <span className="svc-note">Tickets from the workorders service for this asset</span>
+        <button className="btn btn-primary sm" onClick={onAdd}><Icon name="plus" size={13} /> Raise ticket</button>
       </div>
-    ))}</div></>)
+      {items == null ? (
+        <div className="log-list"><Skeleton w="100%" h={44} /><Skeleton w="100%" h={44} /></div>
+      ) : items.length === 0 ? (
+        <Empty icon="clipboard" label="No work orders for this asset" />
+      ) : (
+        <div className="log-list">
+          {items.map((w) => (
+            <div className="svc-row clickable" key={w.id} onClick={() => onOpen(w.id)}>
+              <div className="svc-row-main">
+                <div className="svc-row-title">{w.number ? `${w.number} · ` : ''}{w.name || 'Work order'}</div>
+                <div className="svc-row-meta">Assignee {w.assignee_user_email || '—'} · {w.category ? categoryLabel(w.category) : '—'}</div>
+              </div>
+              <div className="svc-row-side"><span className={`badge tone-${statusTone(w.status)}`}>{statusLabel(w.status)}</span></div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  )
 }
+function QrCodeTagView({ tags, untagged, busy, onTag, onUntag, onRefresh }) {
+  const [sel, setSel] = useState('')
+  const [manual, setManual] = useState('')
+  const idToTag = (manual.trim() || sel).trim()
+  return (
+    <>
+      <div className="svc-head">
+        <span className="svc-note">QR codes tagged to this asset</span>
+        <button className="icon-btn" onClick={onRefresh} title="Refresh"><Icon name="refresh" size={14} /></button>
+      </div>
+
+      <div className="svc-row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <select value={sel} onChange={(e) => { setSel(e.target.value); setManual('') }} style={{ minWidth: 200 }}>
+          <option value="">{untagged.length ? `Select untagged QR (${untagged.length})` : 'No untagged QR codes'}</option>
+          {untagged.map((id) => <option key={id} value={id}>{id}</option>)}
+        </select>
+        <span className="muted">or</span>
+        <input placeholder="paste QR code id" value={manual} onChange={(e) => { setManual(e.target.value); setSel('') }} style={{ minWidth: 180 }} />
+        <button className="btn btn-primary sm" disabled={busy || !idToTag} onClick={() => onTag(idToTag)}>
+          {busy ? <Spinner size={13} /> : <Icon name="qrcode" size={14} />} Tag
+        </button>
+      </div>
+
+      {tags == null ? (
+        <div className="log-list"><Skeleton w="100%" h={44} /><Skeleton w="100%" h={44} /></div>
+      ) : tags.length === 0 ? (
+        <Empty icon="qrcode" label="No QR codes tagged to this asset yet" />
+      ) : (
+        <div className="log-list">
+          {tags.map((q) => (
+            <div className="svc-row" key={q.id}>
+              <div className="svc-row-main" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {(q.imageUrl || q.image_url)
+                  ? <img src={q.imageUrl || q.image_url} alt="" style={{ width: 30, height: 30, borderRadius: 4, background: '#fff' }} />
+                  : <Icon name="qrcode" size={18} />}
+                <code style={{ fontSize: 11 }}>{q.id}</code>
+              </div>
+              <div className="svc-row-side">
+                <button className="btn btn-ghost sm" disabled={busy} onClick={() => onUntag(q.id)}><Icon name="x" size={13} /> Untag</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
 function InventoryView({ inv }) {
   if (!inv) return <Empty icon="box" label="No inventory" />
   return (<><div className="svc-note">From the inventory service</div>

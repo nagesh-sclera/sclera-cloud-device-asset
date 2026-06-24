@@ -11,12 +11,12 @@
 #       docker compose up -d   (services fall back to sclera_assets from base compose)
 #     then force-recreate the dapr sidecars. The new *_db databases can stay or be dropped.
 #     (sclera-workorders already targets its own workorder_db via the base compose.)
-#  4) The OTel javaagent jar (infra/otel/opentelemetry-javaagent.jar) is currently a
-#     1-byte stub, so `-javaagent:/otel/agent.jar` aborts every JVM at startup
-#     ("Error opening zip file or JAR manifest missing"). JAVA_TOOL_OPTIONS is blanked
-#     for each Java service so they boot WITHOUT the agent. Trade-off: no distributed
-#     tracing to Jaeger. To re-enable: drop a real opentelemetry-javaagent.jar at
-#     infra/otel/ and delete the JAVA_TOOL_OPTIONS overrides below.
+#  4) The OTel javaagent jar (infra/otel/opentelemetry-javaagent.jar) is now a REAL
+#     24MB agent (was a 1-byte stub). The agent is RE-ENABLED for `app`
+#     (sclera-cloud-device-asset) and `api-gateway` so the full frontend request trace
+#     (gateway SERVER span → device-asset HTTP server span → SQL + internal Dapr calls)
+#     reaches Jaeger. The remaining Java services keep JAVA_TOOL_OPTIONS blanked to save
+#     RAM; remove their override below to also capture their internal spans.
 services:
   postgres:
     ports:
@@ -28,7 +28,8 @@ services:
   # --- Java services: blank JAVA_TOOL_OPTIONS (4); DB-per-service DB_URL (3) where applicable ---
   app:                       # sclera-cloud-device-asset  (was: sclera_assets / public)
     environment:
-      JAVA_TOOL_OPTIONS: ""
+      # OTel agent RE-ENABLED here (real 24MB jar now present) → inbound HTTP server
+      # spans + SQL + request/response bodies for the full front-to-back request trace.
       DB_URL: jdbc:postgresql://postgres:5432/device_asset_db
   vdms-service:              # (was: sclera_assets / vdms_svc)  schema env unchanged
     environment:
@@ -60,9 +61,8 @@ services:
   sclera-edge:
     environment:
       JAVA_TOOL_OPTIONS: ""
-  api-gateway:
-    environment:
-      JAVA_TOOL_OPTIONS: ""
+  # api-gateway: OTel agent RE-ENABLED (no override) so the gateway SERVER span is the
+  # root of each frontend request and links down into sclera-cloud-device-asset.
   sclera-scheduler:          # (was: sclera_assets / sclera_scheduler)
     environment:
       JAVA_TOOL_OPTIONS: ""
