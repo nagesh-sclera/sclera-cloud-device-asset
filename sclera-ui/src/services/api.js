@@ -193,6 +193,30 @@ export const api = {
       method: 'POST', body: { id: qrCodeId, deviceId: null, locationId: null, vdmsId },
     }),
 
+  // ---- Client QR codes (externally-supplied / scanned-from-anywhere codes) ----
+  // A scanned code that isn't a Sclera-generated qr_code row is a "client QR": it lives in
+  // the separate client_qr_code table and is tagged via /clientQrCode (which inserts if new).
+  // True if the scanned id is a Sclera-generated code already in the qr_code table (data != null).
+  // Resilient: any lookup failure is treated as "not a Sclera code" so we fall back to the client path.
+  qrCodeExistsInDb: (qrCodeId) =>
+    request(asset(`/qrCode/${encodeURIComponent(qrCodeId)}/getQrCodeDetailsByQrCodeId`))
+      .then((r) => !!(r && r.data))
+      .catch(() => false),
+  // Client QR codes currently tagged to this device.
+  clientQrCodesForDevice: (deviceId, { vdmsId = DEMO.vdmsId } = {}) =>
+    request(asset(`/vdms/${encodeURIComponent(vdmsId)}/deviceId/${encodeURIComponent(deviceId)}/getClientQrCodeDetailsByVdmsIdAndDeviceId`))
+      .then((r) => r?.data ?? []),
+  // Tag (or re-tag) a client QR code to this device; the backend inserts the row if it's new.
+  tagClientQrCode: (clientQrCodeId, deviceId, { vdmsId = DEMO.vdmsId, user = DEMO.user, orgId = DEMO.vdmsId, email = DEMO.user } = {}) =>
+    request(asset(`/clientQrCode${qs({ orgId, email, loggedInUser: user })}`), {
+      method: 'POST', body: { clientQrCodeId, deviceId, vdmsId },
+    }),
+  // Untag a client QR code: clear device/location by re-tagging with nulls.
+  untagClientQrCode: (clientQrCodeId, { vdmsId = DEMO.vdmsId, user = DEMO.user, orgId = DEMO.vdmsId, email = DEMO.user } = {}) =>
+    request(asset(`/clientQrCode${qs({ orgId, email, loggedInUser: user })}`), {
+      method: 'POST', body: { clientQrCodeId, deviceId: null, locationId: null, vdmsId },
+    }),
+
   deviceCount: ({ docker = DEMO.docker, ...ctx } = {}) =>
     request(asset(`/docker/${encodeURIComponent(docker)}/getdevicecount${qs({ ...scope(ctx), assignee: 'all' })}`)),
 

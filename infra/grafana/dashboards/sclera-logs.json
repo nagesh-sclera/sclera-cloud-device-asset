@@ -7,8 +7,9 @@
   "tags": ["sclera", "logs"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "time": { "from": "now-15m", "to": "now" },
-  "refresh": "5s",
+  "time": { "from": "now-5m", "to": "now" },
+  "refresh": "1s",
+  "liveNow": true,
   "templating": {
     "list": [
       {

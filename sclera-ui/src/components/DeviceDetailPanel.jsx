@@ -11,6 +11,8 @@ import ImagePreview from './ImagePreview.jsx'
 import { inspectionsFor, inventoryFor, alertsFor } from '../services/mock.js'
 import TicketModal from './TicketModal.jsx'
 import TicketDetailDrawer from './TicketDetailDrawer.jsx'
+import QrScanModal from './QrScanModal.jsx'
+import DigitalTwinModal from './DigitalTwinModal.jsx'
 import { statusLabel, statusTone, categoryLabel } from '../config.js'
 
 const dash = (v) => (v === 0 ? '0' : v ? String(v) : '—')
@@ -100,6 +102,7 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
   const [woModal, setWoModal] = useState(false)
   const [woOpenId, setWoOpenId] = useState(null)
   const [woEditTicket, setWoEditTicket] = useState(null)
+  const [twinOpen, setTwinOpen] = useState(false)   // digital-twin editor/viewer
   useEffect(() => {
     api.listNetworks({ vdmsId: ctx.vdmsId }).then((l) => setNetworks((Array.isArray(l) ? l : []).map((n) => n.name).filter(Boolean))).catch(() => {})
     api.getBuildings(ctx).then((b) => setBuildings(Array.isArray(b) ? b : [])).catch(() => {})
@@ -165,11 +168,20 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
 
   const loadQrTags = async () => {
     try {
-      const [tags, untagged] = await Promise.all([
+      const [tags, untagged, clientTags] = await Promise.all([
         api.qrCodesForDevice(deviceId, ctx),
         api.untaggedQrCodes(ctx),
+        // Client QRs are a bonus — don't let their failure blank the whole panel.
+        api.clientQrCodesForDevice(deviceId, ctx).catch(() => []),
       ])
-      setQrTags(Array.isArray(tags) ? tags : [])
+      // Merge Sclera-generated (qr_code) and client (client_qr_code) codes into one list;
+      // mark client rows so untag routes to the right endpoint.
+      const sclera = Array.isArray(tags) ? tags : []
+      const client = (Array.isArray(clientTags) ? clientTags : []).map((c) => ({
+        id: c.clientQrCodeId || c.client_qr_code_id || c.id,
+        _client: true,
+      }))
+      setQrTags([...sclera, ...client])
       setQrUntagged(Array.isArray(untagged) ? untagged : [])
     } catch (e) { setQrTags([]); toast.error(`Load QR codes failed: ${e.message}`) }
   }
@@ -178,13 +190,24 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
   const tagQr = async (qrCodeId) => {
     if (!qrCodeId) { toast.error('Select or paste a QR code id'); return }
     setQrBusy(true)
-    try { await api.tagQrCodeToDevice(qrCodeId, deviceId, ctx); toast.success(`Tagged QR ${qrCodeId}`); setQrTags(null); await loadQrTags(); onChanged?.() }
+    try {
+      // A Sclera-generated code exists in the qr_code table → tag it there. Anything else
+      // (e.g. a QR scanned from online) isn't in the DB → tag it as a client QR instead.
+      const known = await api.qrCodeExistsInDb(qrCodeId)
+      if (known) await api.tagQrCodeToDevice(qrCodeId, deviceId, ctx)
+      else await api.tagClientQrCode(qrCodeId, deviceId, ctx)
+      toast.success(`Tagged QR ${qrCodeId}`); setQrTags(null); await loadQrTags(); onChanged?.()
+    }
     catch (e) { toast.error(`Tag failed: ${e.message}`) }
     finally { setQrBusy(false) }
   }
-  const untagQr = async (qrCodeId) => {
+  const untagQr = async (qrCodeId, isClient) => {
     setQrBusy(true)
-    try { await api.untagQrCodeFromDevice(qrCodeId, ctx); toast.success(`Untagged QR ${qrCodeId}`); setQrTags(null); await loadQrTags(); onChanged?.() }
+    try {
+      if (isClient) await api.untagClientQrCode(qrCodeId, ctx)
+      else await api.untagQrCodeFromDevice(qrCodeId, ctx)
+      toast.success(`Untagged QR ${qrCodeId}`); setQrTags(null); await loadQrTags(); onChanged?.()
+    }
     catch (e) { toast.error(`Untag failed: ${e.message}`) }
     finally { setQrBusy(false) }
   }
@@ -379,7 +402,7 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
         </div>
 
         <div className="dp-toolbar">
-          <button className="btn btn-ghost sm"><Icon name="plus" size={14} /> Add Digital Twin</button>
+          <button className="btn btn-ghost sm" disabled={!device} onClick={() => setTwinOpen(true)}><Icon name="layers" size={14} /> Digital Twin</button>
           <span className="push-right" />
           {sub === 'Info' && !editing && device && (
             <button className="icon-btn" onClick={() => setEditing(true)} title="Edit"><Icon name="edit" size={15} /></button>
@@ -444,6 +467,9 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
         onChanged={loadWorkorders}
         onEdit={(t) => { setWoOpenId(null); setWoEditTicket(t); setWoModal(true) }}
       />
+      {twinOpen && device && (
+        <DigitalTwinModal device={device} sensors={sensors} onClose={() => setTwinOpen(false)} />
+      )}
     </>
   )
 }
@@ -756,12 +782,36 @@ function WorkOrdersView({ items, onAdd, onOpen }) {
     </>
   )
 }
+// Sclera QR codes encode "<server_url>/<qrCodeId>" (see backend QrCodeService), but
+// tagging uses the raw id. So if the scan yields a URL, take its last path segment;
+// otherwise (a plain id, e.g. a client QR) use the text as-is.
+function qrIdFromText(text) {
+  const t = (text || '').trim()
+  if (!t) return ''
+  if (/^https?:\/\//i.test(t)) {
+    try {
+      const segs = new URL(t).pathname.split('/').filter(Boolean)
+      if (segs.length) return decodeURIComponent(segs[segs.length - 1])
+    } catch { /* not a parseable URL — fall through */ }
+  }
+  return t
+}
+
 function QrCodeTagView({ tags, untagged, busy, onTag, onUntag, onRefresh }) {
   const [sel, setSel] = useState('')
   const [manual, setManual] = useState('')
+  const [scanning, setScanning] = useState(false)
   const idToTag = (manual.trim() || sel).trim()
+  // A scanned QR encodes its id — drop it into the same field the paste box uses,
+  // so it flows through the existing tag logic. Works for generated or client QRs.
+  const onScanned = (text) => {
+    setScanning(false)
+    const id = qrIdFromText(text)
+    if (id) { setSel(''); setManual(id) }
+  }
   return (
     <>
+      {scanning && <QrScanModal onResult={onScanned} onClose={() => setScanning(false)} title="Scan QR to tag this asset" />}
       <div className="svc-head">
         <span className="svc-note">QR codes tagged to this asset</span>
         <button className="icon-btn" onClick={onRefresh} title="Refresh"><Icon name="refresh" size={14} /></button>
@@ -774,6 +824,9 @@ function QrCodeTagView({ tags, untagged, busy, onTag, onUntag, onRefresh }) {
         </select>
         <span className="muted">or</span>
         <input placeholder="paste QR code id" value={manual} onChange={(e) => { setManual(e.target.value); setSel('') }} style={{ minWidth: 180 }} />
+        <button className="btn btn-ghost sm" disabled={busy} onClick={() => setScanning(true)} title="Scan a QR code with the camera or an image">
+          <Icon name="camera" size={14} /> Scan
+        </button>
         <button className="btn btn-primary sm" disabled={busy || !idToTag} onClick={() => onTag(idToTag)}>
           {busy ? <Spinner size={13} /> : <Icon name="qrcode" size={14} />} Tag
         </button>
@@ -794,7 +847,7 @@ function QrCodeTagView({ tags, untagged, busy, onTag, onUntag, onRefresh }) {
                 <code style={{ fontSize: 11 }}>{q.id}</code>
               </div>
               <div className="svc-row-side">
-                <button className="btn btn-ghost sm" disabled={busy} onClick={() => onUntag(q.id)}><Icon name="x" size={13} /> Untag</button>
+                <button className="btn btn-ghost sm" disabled={busy} onClick={() => onUntag(q.id, q._client)}><Icon name="x" size={13} /> Untag</button>
               </div>
             </div>
           ))}
