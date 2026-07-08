@@ -6,7 +6,6 @@ import io.sclera.Repository.VdmsRepository;
 import io.sclera.dto.touchscreen.settings.VdmsDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -17,7 +16,6 @@ import java.util.Map;
  * Replaces {@code io.sclera.stubs.VdmsRepositoryStub}.
  */
 @Component
-@Primary
 public class VdmsRepoClient implements VdmsRepository {
 
     private static final Logger log = LoggerFactory.getLogger(VdmsRepoClient.class);

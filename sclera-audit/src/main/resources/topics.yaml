@@ -1,7 +1,0 @@
-# Pub/sub contract for sclera-audit
-# Filled in per service by scaffold-skeleton.sh
-publishes: []
-subscribes:
-  - topic: device.audit-recorded
-    pubsub: pubsub
-    handler: /internal/device-audit

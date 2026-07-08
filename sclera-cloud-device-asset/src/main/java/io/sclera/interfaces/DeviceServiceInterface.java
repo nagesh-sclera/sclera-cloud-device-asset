@@ -232,8 +232,8 @@ public interface DeviceServiceInterface {
     String getDeviceRebootStatus(String username, String vdmsid, String deviceid);
     void updateDeviceRebootStatus(String device_id, String status);
     Set<DeviceDTO> getAllDevicesByGroup(String username, String vdmsid, JSONObject filterObject, String global_checklist_id, String global_inspection_record_id, String group);
-    List<String> getDeviceIdsByFilter(List<String> dockerNames, List<String> types, String searchKey, List<String> virtual_device_types, Boolean isTaggedToQrCode, Boolean isTaggedToNfc, List<String> locationIds);
-    List<DeviceDTO> getDevicesByFilter(List<String> dockerNames, List<String> types, String searchKey, List<String> virtual_device_types, Boolean isTaggedToQrCode, Boolean isTaggedToNfc, List<String> locationIds, List<String> deviceIds);
+    List<String> getDeviceIdsByFilter(String vdms_id, List<String> dockerNames, List<String> types, String searchKey, List<String> virtual_device_types, Boolean isTaggedToQrCode, Boolean isTaggedToNfc, List<String> locationIds);
+    List<DeviceDTO> getDevicesByFilter(String vdms_id, List<String> dockerNames, List<String> types, String searchKey, List<String> virtual_device_types, Boolean isTaggedToQrCode, Boolean isTaggedToNfc, List<String> locationIds, List<String> deviceIds);
     void addAssetOnboardedDevices(String username, String vdmsid, List<DeviceDTO> deviceDTOS);
     void upsertOnboardedAssetImages(String username, String vdms_id, String device_id, List<String> asset_image_urls);
     void upsertOnboardAssets(String username, String vdmsid, JSONObject onboard_asset_data);

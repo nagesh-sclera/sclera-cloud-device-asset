@@ -12,6 +12,7 @@ import { inspectionsFor, inventoryFor, alertsFor } from '../services/mock.js'
 import TicketModal from './TicketModal.jsx'
 import TicketDetailDrawer from './TicketDetailDrawer.jsx'
 import QrScanModal from './QrScanModal.jsx'
+import BarcodeScanModal from './BarcodeScanModal.jsx'
 import DigitalTwinModal from './DigitalTwinModal.jsx'
 import { statusLabel, statusTone, categoryLabel } from '../config.js'
 
@@ -27,7 +28,7 @@ function fmtDate(ts) {
 }
 const money = (d) => (d?.cost_value == null || d.cost_value === '' ? '—' : `${d.cost_value} ${d.cost_unit || ''}`.trim())
 
-const SUBTABS = ['Info', 'Sensors', 'Notes', 'Inspections', 'Work Orders', 'QR Code', 'Inventory', 'Documents', 'Activity']
+const SUBTABS = ['Info', 'Sensors', 'Notes', 'Inspections', 'Work Orders', 'QR Code', 'Barcode', 'NFC', 'Inventory', 'Documents', 'Activity']
 
 // ALL editable text/select fields (img.png / img_2).
 const EDITABLE = [
@@ -92,6 +93,14 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
   const [qrTags, setQrTags] = useState(null)
   const [qrUntagged, setQrUntagged] = useState([])
   const [qrBusy, setQrBusy] = useState(false)
+  // Bar code tagging (this asset)
+  const [barcodeTags, setBarcodeTags] = useState(null)
+  const [barcodeUntagged, setBarcodeUntagged] = useState([])
+  const [barcodeBusy, setBarcodeBusy] = useState(false)
+  // NFC tagging (this asset)
+  const [nfcTags, setNfcTags] = useState(null)
+  const [nfcUntagged, setNfcUntagged] = useState([])
+  const [nfcBusy, setNfcBusy] = useState(false)
   // networks (for moving the device between gateways during edit)
   const [networks, setNetworks] = useState([])
   // Building -> Floor -> Location cascade options
@@ -112,6 +121,7 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
     if (!deviceId) return
     let alive = true
     setLoading(true); setError(null); setSub('Info'); setEditing(false); setSensors(null); setSensorCount(null); setNotes(null); setDocuments(null); setWorkorders(null)
+    setQrTags(null); setQrUntagged([]); setBarcodeTags(null); setBarcodeUntagged([]); setNfcTags(null); setNfcUntagged([])
     setFloors([]); setLocations([])
     api.getDevice(deviceId, ctx)
       .then((d) => {
@@ -210,6 +220,87 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
     }
     catch (e) { toast.error(`Untag failed: ${e.message}`) }
     finally { setQrBusy(false) }
+  }
+
+  // Bar codes are all client-style: no generated pool routing — tag always inserts-if-new.
+  const loadBarcodeTags = async () => {
+    try {
+      const [tags, untagged] = await Promise.all([
+        api.barcodesForDevice(deviceId, ctx),
+        api.untaggedBarcodes(ctx).catch(() => []),
+      ])
+      // Bar codes are all client codes: the API returns full ClientBarCode rows. Normalise
+      // to the clientBarCodeId (the scannable value) so the list/untag use that — not the
+      // internal row UUID — and the untagged dropdown renders strings, not objects.
+      const bcId = (o) => (typeof o === 'string' ? o : (o.clientBarCodeId || o.client_bar_code_id || o.id))
+      setBarcodeTags((Array.isArray(tags) ? tags : []).map((c) => ({ ...c, id: bcId(c) })))
+      setBarcodeUntagged((Array.isArray(untagged) ? untagged : []).map(bcId).filter(Boolean))
+    } catch (e) { setBarcodeTags([]); toast.error(`Load bar codes failed: ${e.message}`) }
+  }
+  useEffect(() => { if (sub === 'Barcode' && barcodeTags == null) loadBarcodeTags() }, [sub]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const tagBarcode = async (barcodeId) => {
+    if (!barcodeId) { toast.error('Select or paste a bar code id'); return }
+    setBarcodeBusy(true)
+    try {
+      await api.tagBarcodeToDevice(barcodeId, deviceId, ctx)
+      toast.success(`Tagged bar code ${barcodeId}`); setBarcodeTags(null); await loadBarcodeTags(); onChanged?.()
+    }
+    catch (e) { toast.error(`Tag failed: ${e.message}`) }
+    finally { setBarcodeBusy(false) }
+  }
+  const untagBarcode = async (barcodeId) => {
+    setBarcodeBusy(true)
+    try {
+      await api.untagBarcode(barcodeId, ctx)
+      toast.success(`Untagged bar code ${barcodeId}`); setBarcodeTags(null); await loadBarcodeTags(); onChanged?.()
+    }
+    catch (e) { toast.error(`Untag failed: ${e.message}`) }
+    finally { setBarcodeBusy(false) }
+  }
+
+  const loadNfcTags = async () => {
+    try {
+      const [tags, untagged, clientTags] = await Promise.all([
+        api.nfcForDevice(deviceId, ctx),
+        api.untaggedNfc(ctx),
+        // Client NFC tags are a bonus — don't let their failure blank the whole panel.
+        api.clientNfcForDevice(deviceId, ctx).catch(() => []),
+      ])
+      const sclera = Array.isArray(tags) ? tags : []
+      const client = (Array.isArray(clientTags) ? clientTags : []).map((c) => ({
+        id: c.nfcId || c.nfc_id || c.id,
+        _client: true,
+      }))
+      setNfcTags([...sclera, ...client])
+      setNfcUntagged(Array.isArray(untagged) ? untagged : [])
+    } catch (e) { setNfcTags([]); toast.error(`Load NFC tags failed: ${e.message}`) }
+  }
+  useEffect(() => { if (sub === 'NFC' && nfcTags == null) loadNfcTags() }, [sub]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const tagNfc = async (nfcId) => {
+    if (!nfcId) { toast.error('Select or paste an NFC id'); return }
+    setNfcBusy(true)
+    try {
+      // A Sclera-generated NFC exists in the nfc table → tag it there. Anything else
+      // (e.g. an NFC read from an unknown tag) isn't in the DB → tag it as a client NFC.
+      const known = await api.nfcExistsInDb(nfcId)
+      if (known) await api.tagNfcToDevice(nfcId, deviceId, ctx)
+      else await api.tagClientNfc(nfcId, deviceId, ctx)
+      toast.success(`Tagged NFC ${nfcId}`); setNfcTags(null); await loadNfcTags(); onChanged?.()
+    }
+    catch (e) { toast.error(`Tag failed: ${e.message}`) }
+    finally { setNfcBusy(false) }
+  }
+  const untagNfc = async (nfcId, isClient) => {
+    setNfcBusy(true)
+    try {
+      if (isClient) await api.untagClientNfc(nfcId, ctx)
+      else await api.untagNfcFromDevice(nfcId, ctx)
+      toast.success(`Untagged NFC ${nfcId}`); setNfcTags(null); await loadNfcTags(); onChanged?.()
+    }
+    catch (e) { toast.error(`Untag failed: ${e.message}`) }
+    finally { setNfcBusy(false) }
   }
 
   const name = device?.user_data_name || device?.display_name || device?.name || deviceId
@@ -387,7 +478,7 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
             <span className="dp-name" title={name}>{loading ? 'Loading…' : name}</span>
           </div>
           <div className="dp-head-actions">
-            <button className="dp-icontext"><Icon name="barcode" size={16} /><span>{editing ? 'Re-assign Bar Code' : 'Tag Bar Code'}</span></button>
+            <button className="dp-icontext" onClick={() => setSub('Barcode')} title="Tag a bar code to this asset"><Icon name="barcode" size={16} /><span>{editing ? 'Re-assign Bar Code' : 'Tag Bar Code'}</span></button>
             <button className="dp-icontext" onClick={() => setSub('QR Code')} title="Tag a QR code to this asset"><Icon name="qrcode" size={16} /><span>{editing ? 'Re-assign' : 'Tag Asset'}</span></button>
             <button className="icon-btn" onClick={onClose} aria-label="Close"><Icon name="x" size={16} /></button>
           </div>
@@ -426,6 +517,8 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
           ) : sub === 'Inspections' ? <InspectionsView items={inspections} />
             : sub === 'Work Orders' ? <WorkOrdersView items={workorders} onAdd={() => { setWoEditTicket(null); setWoModal(true) }} onOpen={setWoOpenId} />
             : sub === 'QR Code' ? <QrCodeTagView tags={qrTags} untagged={qrUntagged} busy={qrBusy} onTag={tagQr} onUntag={untagQr} onRefresh={() => { setQrTags(null); loadQrTags() }} />
+            : sub === 'Barcode' ? <BarcodeTagView tags={barcodeTags} untagged={barcodeUntagged} busy={barcodeBusy} onTag={tagBarcode} onUntag={untagBarcode} onRefresh={() => { setBarcodeTags(null); loadBarcodeTags() }} />
+            : sub === 'NFC' ? <NfcTagView tags={nfcTags} untagged={nfcUntagged} busy={nfcBusy} onTag={tagNfc} onUntag={untagNfc} onRefresh={() => { setNfcTags(null); loadNfcTags() }} />
             : sub === 'Inventory' ? <InventoryView inv={inventory} />
             : sub === 'Documents' ? <DocumentsView docs={documents} busy={docBusy} onAdd={addDocument} onRemove={removeDocument} onRefresh={loadDocuments} />
             : <ActivityList logs={logs} />}
@@ -782,10 +875,10 @@ function WorkOrdersView({ items, onAdd, onOpen }) {
     </>
   )
 }
-// Sclera QR codes encode "<server_url>/<qrCodeId>" (see backend QrCodeService), but
-// tagging uses the raw id. So if the scan yields a URL, take its last path segment;
-// otherwise (a plain id, e.g. a client QR) use the text as-is.
-function qrIdFromText(text) {
+// Sclera codes (QR / bar code / NFC) can encode "<server_url>/<id>" (see backend
+// QrCodeService), but tagging uses the raw id. So if the scan/read yields a URL, take
+// its last path segment; otherwise (a plain id, e.g. a client code) use the text as-is.
+function codeIdFromText(text) {
   const t = (text || '').trim()
   if (!t) return ''
   if (/^https?:\/\//i.test(t)) {
@@ -796,6 +889,8 @@ function qrIdFromText(text) {
   }
   return t
 }
+// Back-compat alias — QR code paths still call qrIdFromText.
+const qrIdFromText = codeIdFromText
 
 function QrCodeTagView({ tags, untagged, busy, onTag, onUntag, onRefresh }) {
   const [sel, setSel] = useState('')
@@ -844,6 +939,151 @@ function QrCodeTagView({ tags, untagged, busy, onTag, onUntag, onRefresh }) {
                 {(q.imageUrl || q.image_url)
                   ? <img src={q.imageUrl || q.image_url} alt="" style={{ width: 30, height: 30, borderRadius: 4, background: '#fff' }} />
                   : <Icon name="qrcode" size={18} />}
+                <code style={{ fontSize: 11 }}>{q.id}</code>
+              </div>
+              <div className="svc-row-side">
+                <button className="btn btn-ghost sm" disabled={busy} onClick={() => onUntag(q.id, q._client)}><Icon name="x" size={13} /> Untag</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
+function BarcodeTagView({ tags, untagged, busy, onTag, onUntag, onRefresh }) {
+  const [sel, setSel] = useState('')
+  const [manual, setManual] = useState('')
+  const [scanning, setScanning] = useState(false)
+  const idToTag = (manual.trim() || sel).trim()
+  // A scanned bar code encodes its id — drop it into the same field the paste box uses,
+  // so it flows through the existing tag logic.
+  const onScanned = (text) => {
+    setScanning(false)
+    const id = codeIdFromText(text)
+    if (id) { setSel(''); setManual(id) }
+  }
+  return (
+    <>
+      {scanning && <BarcodeScanModal onResult={onScanned} onClose={() => setScanning(false)} title="Scan bar code to tag this asset" />}
+      <div className="svc-head">
+        <span className="svc-note">Bar codes tagged to this asset</span>
+        <button className="icon-btn" onClick={onRefresh} title="Refresh"><Icon name="refresh" size={14} /></button>
+      </div>
+
+      <div className="svc-row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <select value={sel} onChange={(e) => { setSel(e.target.value); setManual('') }} style={{ minWidth: 200 }}>
+          <option value="">{untagged.length ? `Select untagged bar code (${untagged.length})` : 'No untagged bar codes'}</option>
+          {untagged.map((id) => <option key={id} value={id}>{id}</option>)}
+        </select>
+        <span className="muted">or</span>
+        <input placeholder="paste bar code id" value={manual} onChange={(e) => { setManual(e.target.value); setSel('') }} style={{ minWidth: 180 }} />
+        <button className="btn btn-ghost sm" disabled={busy} onClick={() => setScanning(true)} title="Scan a bar code with the camera or an image">
+          <Icon name="camera" size={14} /> Scan
+        </button>
+        <button className="btn btn-primary sm" disabled={busy || !idToTag} onClick={() => onTag(idToTag)}>
+          {busy ? <Spinner size={13} /> : <Icon name="barcode" size={14} />} Tag
+        </button>
+      </div>
+
+      {tags == null ? (
+        <div className="log-list"><Skeleton w="100%" h={44} /><Skeleton w="100%" h={44} /></div>
+      ) : tags.length === 0 ? (
+        <Empty icon="barcode" label="No bar codes tagged to this asset yet" />
+      ) : (
+        <div className="log-list">
+          {tags.map((q) => (
+            <div className="svc-row" key={q.id}>
+              <div className="svc-row-main" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {(q.imageUrl || q.image_url)
+                  ? <img src={q.imageUrl || q.image_url} alt="" style={{ width: 30, height: 30, borderRadius: 4, background: '#fff' }} />
+                  : <Icon name="barcode" size={18} />}
+                <code style={{ fontSize: 11 }}>{q.id}</code>
+              </div>
+              <div className="svc-row-side">
+                <button className="btn btn-ghost sm" disabled={busy} onClick={() => onUntag(q.id)}><Icon name="x" size={13} /> Untag</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
+function NfcTagView({ tags, untagged, busy, onTag, onUntag, onRefresh }) {
+  const [sel, setSel] = useState('')
+  const [manual, setManual] = useState('')
+  const [reading, setReading] = useState(false)
+  const idToTag = (manual.trim() || sel).trim()
+  // Web NFC is only available on supported devices (Android Chrome, over https).
+  const nfcSupported = typeof window !== 'undefined' && 'NDEFReader' in window
+  // Read an NFC tag via Web NFC and drop the decoded id into the manual field, so it
+  // flows through the same tag logic used by the select/paste box.
+  const readNfc = async () => {
+    if (!nfcSupported) return
+    setReading(true)
+    try {
+      const reader = new window.NDEFReader()
+      await reader.scan()
+      reader.onreading = (event) => {
+        let text = event?.serialNumber || ''
+        for (const rec of event?.message?.records || []) {
+          try {
+            const dec = new TextDecoder(rec.encoding || 'utf-8')
+            const val = dec.decode(rec.data)
+            if (val) { text = val; break }
+          } catch { /* not a decodable record — keep the serial number */ }
+        }
+        const id = codeIdFromText(text)
+        if (id) { setSel(''); setManual(id) }
+        setReading(false)
+      }
+      reader.onreadingerror = () => setReading(false)
+    } catch { setReading(false) }
+  }
+  return (
+    <>
+      <div className="svc-head">
+        <span className="svc-note">NFC tags tagged to this asset</span>
+        <button className="icon-btn" onClick={onRefresh} title="Refresh"><Icon name="refresh" size={14} /></button>
+      </div>
+
+      <div className="svc-row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <select value={sel} onChange={(e) => { setSel(e.target.value); setManual('') }} style={{ minWidth: 200 }}>
+          <option value="">{untagged.length ? `Select untagged NFC (${untagged.length})` : 'No untagged NFC tags'}</option>
+          {untagged.map((id) => <option key={id} value={id}>{id}</option>)}
+        </select>
+        <span className="muted">or</span>
+        <input placeholder="paste NFC id" value={manual} onChange={(e) => { setManual(e.target.value); setSel('') }} style={{ minWidth: 180 }} />
+        {nfcSupported && (
+          <button className="btn btn-ghost sm" disabled={busy || reading} onClick={readNfc} title="Read an NFC tag on this device">
+            {reading ? <Spinner size={13} /> : <Icon name="nfc" size={14} />} {reading ? 'Tap tag…' : 'Read'}
+          </button>
+        )}
+        {!nfcSupported && (
+          <button className="btn btn-ghost sm" disabled title="NFC scanning needs a supported device">
+            <Icon name="nfc" size={14} /> Read
+          </button>
+        )}
+        <button className="btn btn-primary sm" disabled={busy || !idToTag} onClick={() => onTag(idToTag)}>
+          {busy ? <Spinner size={13} /> : <Icon name="nfc" size={14} />} Tag
+        </button>
+      </div>
+
+      {tags == null ? (
+        <div className="log-list"><Skeleton w="100%" h={44} /><Skeleton w="100%" h={44} /></div>
+      ) : tags.length === 0 ? (
+        <Empty icon="nfc" label="No NFC tags tagged to this asset yet" />
+      ) : (
+        <div className="log-list">
+          {tags.map((q) => (
+            <div className="svc-row" key={q.id}>
+              <div className="svc-row-main" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {(q.imageUrl || q.image_url)
+                  ? <img src={q.imageUrl || q.image_url} alt="" style={{ width: 30, height: 30, borderRadius: 4, background: '#fff' }} />
+                  : <Icon name="nfc" size={18} />}
                 <code style={{ fontSize: 11 }}>{q.id}</code>
               </div>
               <div className="svc-row-side">

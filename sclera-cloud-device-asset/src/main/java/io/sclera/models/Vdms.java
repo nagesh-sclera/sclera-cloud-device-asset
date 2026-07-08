@@ -72,7 +72,7 @@ import java.util.Set;
 )
 @NamedNativeQuery(
         name = "Vdms.getVdmsDetails",
-        query = "SELECT vdms.id as id, vdms.property_name, vdms.address, vdms.city, vdms.country, vdms.state, vdms.zip, vdms.timezone, vdms.image_url, vdms.latitude, vdms.longitude, vdms.activation_timestamp, vdms.deployment_type, vdms.region FROM vdms",
+        query = "SELECT vdms.id as id, vdms.property_name, vdms.address, vdms.city, vdms.country, vdms.state, vdms.zip, vdms.timezone, vdms.image_url, vdms.latitude, vdms.longitude, vdms.activation_timestamp, vdms.deployment_type, vdms.region FROM vdms WHERE vdms.id = :vdms_id",
         resultSetMapping = "vdmsinfomappingstatus"
 )
 
@@ -94,7 +94,7 @@ import java.util.Set;
 
 @NamedNativeQuery(
         name = "Vdms.getSyncDetailsForADC",
-        query = "SELECT id, customer_org_id, adc_configuration_id, zip FROM vdms LIMIT 1",
+        query = "SELECT id, customer_org_id, adc_configuration_id, zip FROM vdms WHERE id = :vdms_id",
         resultSetMapping = "syncVdmsMapping"
 )
 
@@ -117,7 +117,7 @@ import java.util.Set;
 )
 @NamedNativeQuery(
         name = "Vdms.getVdmsMasterSlaveDetails",
-        query = "SELECT vdms.id as id, vdms.is_master, vdms.has_secondary_device, vdms.secondary_device_id, vdms.master_ip, vdms.slave_ip FROM vdms",
+        query = "SELECT vdms.id as id, vdms.is_master, vdms.has_secondary_device, vdms.secondary_device_id, vdms.master_ip, vdms.slave_ip FROM vdms WHERE vdms.id = :vdms_id",
         resultSetMapping = "vdmsmasterslaveinfomapping"
 )
 
@@ -222,6 +222,12 @@ public class Vdms {
 
     @Column(length = 64)
     private String adc_configuration_id;
+
+    @Column(length = 255)
+    private String server_url;
+
+    @Column(length = 255)
+    private String credential_ref;
 
     // removed: relation to Bucket-D entity Docker
     // removed: relation to Bucket-D entity Vdms_port
@@ -532,6 +538,22 @@ public class Vdms {
 
     public void setAdc_configuration_id(String adc_configuration_id) {
         this.adc_configuration_id = adc_configuration_id;
+    }
+
+    public String getServer_url() {
+        return server_url;
+    }
+
+    public void setServer_url(String server_url) {
+        this.server_url = server_url;
+    }
+
+    public String getCredential_ref() {
+        return credential_ref;
+    }
+
+    public void setCredential_ref(String credential_ref) {
+        this.credential_ref = credential_ref;
     }
 
     public Set<Building> getBuilding() {

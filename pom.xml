@@ -28,15 +28,7 @@
         <!-- services -->
         <module>sclera-cloud-device-asset</module>
         <module>sclera-vdms-service</module>
-        <module>sclera-audit</module>
-        <module>sclera-identity</module>
-        <module>sclera-alerts</module>
-        <module>sclera-inventory</module>
         <module>sclera-workorders</module>
-        <module>sclera-inspection</module>
-        <module>sclera-integrations</module>
-        <module>sclera-edge</module>
-        <module>sclera-scheduler</module>
         <module>sclera-api-gateway</module>
     </modules>
 </project>

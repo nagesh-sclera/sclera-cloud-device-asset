@@ -24,7 +24,6 @@ export default function QrScanModal({ onResult, onClose, title = 'Scan QR code' 
   const [status, setStatus] = useState('starting') // starting | scanning | error
   const [error, setError] = useState('')
   const scannerRef = useRef(null)
-  const startedRef = useRef(false)
 
   // --- live camera ---
   useEffect(() => {
@@ -33,9 +32,9 @@ export default function QrScanModal({ onResult, onClose, title = 'Scan QR code' 
     setStatus('starting'); setError('')
     const scanner = new Html5Qrcode(REGION_ID, { verbose: false })
     scannerRef.current = scanner
-    startedRef.current = false
 
-    scanner
+    // start() is async (getUserMedia). Keep the promise so cleanup can wait for it.
+    const startP = scanner
       .start(
         { facingMode: 'environment' }, // rear camera on phones
         { fps: 10, qrbox: qrboxSize },
@@ -45,24 +44,38 @@ export default function QrScanModal({ onResult, onClose, title = 'Scan QR code' 
         },
         () => {} // per-frame "not found" — ignore, it fires constantly
       )
-      .then(() => { if (!cancelled) { startedRef.current = true; setStatus('scanning') } })
+      .then(() => { if (!cancelled) setStatus('scanning') })
       .catch((err) => {
         if (cancelled) return
         setStatus('error')
         setError(cameraErrorText(err))
       })
 
-    return () => { cancelled = true; stopCamera() }
+    return () => {
+      cancelled = true
+      // Stop THIS scanner, and only AFTER start() settles. React StrictMode mounts→
+      // unmounts→remounts in dev; stopping before the async start resolves would leak
+      // its camera stream and the remount would open a SECOND camera (double-camera bug).
+      // Also stop the captured `scanner`, not scannerRef.current — the remount may have
+      // already reassigned the ref to the new instance by the time this deferred stop runs.
+      if (scannerRef.current === scanner) scannerRef.current = null
+      startP.finally(() => stopScanner(scanner))
+    }
     // eslint-disable-line react-hooks/exhaustive-deps
   }, [tab]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Stop + tear down a specific scanner instance. stop() rejects if it isn't running
+  // (e.g. start() failed) — swallow that; clear() removes the injected DOM either way.
+  const stopScanner = async (s) => {
+    if (!s) return
+    try { await s.stop() } catch { /* not running */ }
+    try { await s.clear() } catch { /* ignore */ }
+  }
 
   const stopCamera = async () => {
     const s = scannerRef.current
     scannerRef.current = null
-    if (!s) return
-    try { if (startedRef.current) await s.stop() } catch { /* already stopped */ }
-    try { await s.clear() } catch { /* ignore */ }
-    startedRef.current = false
+    await stopScanner(s)
   }
 
   const close = () => { stopCamera().finally(onClose) }

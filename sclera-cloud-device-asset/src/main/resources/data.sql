@@ -24,3 +24,13 @@ INSERT INTO docker (
     24, 'approved', 'configured', 1
 ) ON CONFLICT (name, vdms_id) DO NOTHING;
 
+-- Multi-VDMS migration: backfill per-VDMS config that previously lived in single-VDMS
+-- env/config (sclera.vdms-server-url, secret_url). Idempotent: only sets rows still NULL.
+UPDATE vdms
+   SET server_url = COALESCE(server_url, 'http://localhost:8089/vdms')
+ WHERE server_url IS NULL;
+
+UPDATE vdms
+   SET credential_ref = COALESCE(credential_ref, 'sclera/dev/edge/sclera-vdms-server/credential/')
+ WHERE credential_ref IS NULL;
+

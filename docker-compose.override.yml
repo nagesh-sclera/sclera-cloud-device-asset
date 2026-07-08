@@ -2,30 +2,28 @@
 #  1) A foreign `postgres` container holds host port 5432, so remap this stack's
 #     Postgres to host 5433. Inter-service traffic uses the container network
 #     (postgres:5432) and is unaffected.
-#  2) daprio/scheduler runs as non-root and can't mkdir in the scheduler-data volume.
-#     Run it as root for the demo so it can create its etcd data dir.
-#  3) DB-PER-SERVICE: each stateful service points at its OWN database (true
+#  2) DB-PER-SERVICE: each stateful service points at its OWN database (true
 #     microservice DB isolation) instead of sharing sclera_assets via schemas.
 #     The original sclera_assets DB is left intact as the rollback path.
-#     TO REVERT: delete the `DB_URL` blocks below (3) and run
+#     TO REVERT: delete the `DB_URL` blocks below and run
 #       docker compose up -d   (services fall back to sclera_assets from base compose)
 #     then force-recreate the dapr sidecars. The new *_db databases can stay or be dropped.
 #     (sclera-workorders already targets its own workorder_db via the base compose.)
-#  4) The OTel javaagent jar (infra/otel/opentelemetry-javaagent.jar) is now a REAL
-#     24MB agent (was a 1-byte stub). The agent is RE-ENABLED for `app`
-#     (sclera-cloud-device-asset) and `api-gateway` so the full frontend request trace
-#     (gateway SERVER span → device-asset HTTP server span → SQL + internal Dapr calls)
-#     reaches Jaeger. The remaining Java services keep JAVA_TOOL_OPTIONS blanked to save
-#     RAM; remove their override below to also capture their internal spans.
+#  3) The OTel javaagent jar (infra/otel/opentelemetry-javaagent.jar) is a REAL
+#     24MB agent. It stays RE-ENABLED for `app` (sclera-cloud-device-asset) and the
+#     api-gateway (via base compose) so the full frontend request trace reaches Jaeger.
+#     vdms-service keeps its agent blanked below to save RAM; remove the override to
+#     also capture its internal spans.
+#
+#  NOTE: The other business microservices (audit, identity, alerts, inventory,
+#  inspection, integrations, edge, scheduler) were removed from the stack — only
+#  device-asset (`app`), `vdms-service`, and `sclera-workorders` run here now.
 services:
   postgres:
     ports:
       - "5433:5432"
 
-  dapr-scheduler:
-    user: "0:0"
-
-  # --- Java services: blank JAVA_TOOL_OPTIONS (4); DB-per-service DB_URL (3) where applicable ---
+  # --- Java services: blank JAVA_TOOL_OPTIONS where applicable; DB-per-service DB_URL ---
   app:                       # sclera-cloud-device-asset  (was: sclera_assets / public)
     environment:
       # OTel agent RE-ENABLED here (real 24MB jar now present) → inbound HTTP server
@@ -35,35 +33,6 @@ services:
     environment:
       JAVA_TOOL_OPTIONS: ""
       DB_URL: jdbc:postgresql://postgres:5432/vdms_db
-  sclera-audit:
-    environment:
-      JAVA_TOOL_OPTIONS: ""
-  sclera-identity:
-    environment:
-      JAVA_TOOL_OPTIONS: ""
-  sclera-alerts:
-    environment:
-      JAVA_TOOL_OPTIONS: ""
-  sclera-inventory:
-    environment:
-      JAVA_TOOL_OPTIONS: ""
   sclera-workorders:
     environment:
       JAVA_TOOL_OPTIONS: ""
-  sclera-inspection:         # (was: sclera_assets / inspection_svc)
-    environment:
-      JAVA_TOOL_OPTIONS: ""
-      DB_URL: jdbc:postgresql://postgres:5432/inspection_db
-  sclera-integrations:       # (was: sclera_assets / integrations_svc)
-    environment:
-      JAVA_TOOL_OPTIONS: ""
-      DB_URL: jdbc:postgresql://postgres:5432/integrations_db
-  sclera-edge:
-    environment:
-      JAVA_TOOL_OPTIONS: ""
-  # api-gateway: OTel agent RE-ENABLED (no override) so the gateway SERVER span is the
-  # root of each frontend request and links down into sclera-cloud-device-asset.
-  sclera-scheduler:          # (was: sclera_assets / sclera_scheduler)
-    environment:
-      JAVA_TOOL_OPTIONS: ""
-      DB_URL: jdbc:postgresql://postgres:5432/scheduler_db

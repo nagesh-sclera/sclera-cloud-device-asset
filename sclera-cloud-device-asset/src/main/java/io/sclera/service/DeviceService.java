@@ -6432,10 +6432,10 @@ public class DeviceService implements DeviceServiceInterface {
      * Returns the ids of devices matching the given dockers, types, search key, virtual device
      * types, location ids, and QR/NFC tagging criteria.
      */
-    public List<String> getDeviceIdsByFilter(List<String> dockerNames, List<String> types, String searchKey,
+    public List<String> getDeviceIdsByFilter(String vdms_id, List<String> dockerNames, List<String> types, String searchKey,
                                              List<String> virtual_device_types, Boolean isTaggedToQrCode,
                                              Boolean isTaggedToNfc, List<String> locationIds) {
-        String vdmsid = authenticationUtils.getVdms_id();
+        String vdmsid = vdms_id;
         List<String> deviceIdsTaggedToQrCode = new ArrayList<>();
         List<String> deviceIdsTaggedToClientQrCode = new ArrayList<>();
         List<String> deviceIdsTaggedToNfc = new ArrayList<>();
@@ -6465,10 +6465,10 @@ public class DeviceService implements DeviceServiceInterface {
      * Returns devices matching the given dockers, types, search key, virtual device types, location
      * ids, explicit device ids, and QR/NFC tagging criteria.
      */
-    public List<DeviceDTO> getDevicesByFilter(List<String> dockerNames, List<String> types, String
+    public List<DeviceDTO> getDevicesByFilter(String vdms_id, List<String> dockerNames, List<String> types, String
             searchKey, List<String> virtual_device_types,
                                               Boolean isTaggedToQrCode, Boolean isTaggedToNfc, List<String> locationIds, List<String> deviceIds) {
-        String vdmsid = authenticationUtils.getVdms_id();
+        String vdmsid = vdms_id;
         List<String> deviceIdsTaggedToQrCode = new ArrayList<>();
         List<String> deviceIdsTaggedToNfc = new ArrayList<>();
         List<String> deviceIdsTaggedToClientQrCode = new ArrayList<>();

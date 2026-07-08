@@ -246,4 +246,16 @@ public class ClientNfcDTO {
     @lombok.Generated
     public ClientNfcDTO() {
     }
+
+    /** clientNfcDetails result-set-mapping constructor (id, nfc_id, uid, location_id, device_id, creation_time, created_by, vdms_id). */
+    public ClientNfcDTO(final String id, final String nfcId, final String uuid, final String locationId, final String deviceId, final BigInteger creationTime, final String createdBy, final String vdmsId) {
+        this.id = id;
+        this.nfcId = nfcId;
+        this.uuid = uuid;
+        this.locationId = locationId;
+        this.deviceId = deviceId;
+        this.creationTime = creationTime;
+        this.createdBy = createdBy;
+        this.vdmsId = vdmsId;
+    }
 }

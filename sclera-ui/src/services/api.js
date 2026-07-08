@@ -217,6 +217,78 @@ export const api = {
       method: 'POST', body: { clientQrCodeId, deviceId: null, locationId: null, vdmsId },
     }),
 
+  // ---- Bar code tagging on an asset/device (client-only, mirrors the client QR path) ----
+  // Bar codes are always "client" codes (externally-supplied / scanned): they live in the
+  // client_bar_code table and are tagged via /clientBarCode (which inserts if new).
+  // Bar codes currently tagged to this device (unwrap ResponseDTO .data).
+  barcodesForDevice: (deviceId, { vdmsId = DEMO.vdmsId } = {}) =>
+    request(asset(`/vdms/${encodeURIComponent(vdmsId)}/deviceId/${encodeURIComponent(deviceId)}/getClientBarCodeDetailsByVdmsIdAndDeviceId`))
+      .then((r) => r?.data ?? []),
+  // Pool of untagged client bar codes.
+  untaggedBarcodes: ({ vdmsId = DEMO.vdmsId, user = DEMO.user, orgId = DEMO.vdmsId, email = DEMO.user, pageNo = 1, pageSize = 200 } = {}) =>
+    request(asset(`/vdms/${encodeURIComponent(vdmsId)}/getUnTaggedClientBarCode${qs({ orgId, email, loggedInUser: user, pageNo, pageSize })}`))
+      .then((r) => r?.data ?? []),
+  // Tag (or re-tag) a bar code to this device; the backend inserts the row if it's new.
+  tagBarcodeToDevice: (clientBarCodeId, deviceId, { vdmsId = DEMO.vdmsId, user = DEMO.user, orgId = DEMO.vdmsId, email = DEMO.user } = {}) =>
+    request(asset(`/clientBarCode${qs({ orgId, email, loggedInUser: user })}`), {
+      method: 'POST', body: { clientBarCodeId, deviceId, vdmsId },
+    }),
+  // Untag a bar code: clear device/location by re-tagging with nulls.
+  untagBarcode: (clientBarCodeId, { vdmsId = DEMO.vdmsId, user = DEMO.user, orgId = DEMO.vdmsId, email = DEMO.user } = {}) =>
+    request(asset(`/clientBarCode${qs({ orgId, email, loggedInUser: user })}`), {
+      method: 'POST', body: { clientBarCodeId, deviceId: null, locationId: null, vdmsId },
+    }),
+  // True if the scanned id is already a known bar code in the DB (data != null). Resilient:
+  // any lookup failure is treated as "not found" so we still fall through to the tag path.
+  barcodeExistsInDb: (clientBarCodeId) =>
+    request(asset(`/clientBarCode/getClientBarCodeCheckById${qs({ clientBarCodeId })}`))
+      .then((r) => !!(r && r.data))
+      .catch(() => false),
+
+  // ---- NFC tagging on an asset/device (generated nfc + client_nfc, mirrors the QR pair) ----
+  // Sclera-generated NFC tags currently tagged to this device.
+  nfcForDevice: (deviceId, { vdmsId = DEMO.vdmsId } = {}) =>
+    request(asset(`/vdms/${encodeURIComponent(vdmsId)}/deviceId/${encodeURIComponent(deviceId)}/getNfcDetailsByVdmsIdAndDeviceId`))
+      .then((r) => r?.data ?? []),
+  // Client NFC tags currently tagged to this device.
+  clientNfcForDevice: (deviceId, { vdmsId = DEMO.vdmsId } = {}) =>
+    request(asset(`/vdms/${encodeURIComponent(vdmsId)}/deviceId/${encodeURIComponent(deviceId)}/getClientNfcDetailsByVdmsIdAndDeviceId`))
+      .then((r) => r?.data ?? []),
+  // Pool of untagged (Sclera-generated) NFC ids.
+  untaggedNfc: ({ vdmsId = DEMO.vdmsId, user = DEMO.user, pageNo = 1, pageSize = 200 } = {}) =>
+    request(asset(`/vdms/${encodeURIComponent(vdmsId)}/getUnTaggedNfc${qs({ loggedInUser: user, pageNo, pageSize })}`))
+      .then((r) => r?.data ?? []),
+  // Tag a Sclera-generated NFC id to this device (sets device_id + vdms_id on the nfc row).
+  tagNfcToDevice: (nfcId, deviceId, { vdmsId = DEMO.vdmsId, user = DEMO.user } = {}) =>
+    request(asset(`/nfc/updateNfc${qs({ loggedInUser: user })}`), {
+      method: 'POST', body: { id: nfcId, deviceId, vdmsId },
+    }),
+  // Untag a Sclera-generated NFC: clear device/location on the nfc row.
+  untagNfcFromDevice: (nfcId, { vdmsId = DEMO.vdmsId, user = DEMO.user } = {}) =>
+    request(asset(`/nfc/updateNfc${qs({ loggedInUser: user })}`), {
+      method: 'POST', body: { id: nfcId, deviceId: null, locationId: null, vdmsId },
+    }),
+  // Tag (or re-tag) a client NFC to this device; the backend inserts the row if it's new.
+  tagClientNfc: (nfcId, deviceId, { vdmsId = DEMO.vdmsId, user = DEMO.user, orgId = DEMO.vdmsId, email = DEMO.user } = {}) =>
+    request(asset(`/clientNfc${qs({ orgId, email, loggedInUser: user })}`), {
+      method: 'POST', body: { nfcId, deviceId, vdmsId },
+    }),
+  // Untag a client NFC: clear device/location by re-tagging with nulls.
+  untagClientNfc: (nfcId, { vdmsId = DEMO.vdmsId, user = DEMO.user, orgId = DEMO.vdmsId, email = DEMO.user } = {}) =>
+    request(asset(`/clientNfc${qs({ orgId, email, loggedInUser: user })}`), {
+      method: 'POST', body: { nfcId, deviceId: null, locationId: null, vdmsId },
+    }),
+  // True if the scanned id is a Sclera-generated NFC already in the nfc table (data != null).
+  // Resilient: any lookup failure is treated as "not a Sclera code" so we fall back to client.
+  // NOTE: getNfcCheckById always returns a data object {isTagged}: 1 = present in the nfc
+  // table (Sclera-generated), 2 = not in DB. So test isTagged===1, NOT `data != null`
+  // (the object is always non-null, which would wrongly route every id to the generated
+  // path — POST /nfc/updateNfc — that only UPDATEs and silently inserts nothing).
+  nfcExistsInDb: (nfcId) =>
+    request(asset(`/nfc/${encodeURIComponent(nfcId)}/getNfcCheckById`))
+      .then((r) => r?.data?.isTagged === 1)
+      .catch(() => false),
+
   deviceCount: ({ docker = DEMO.docker, ...ctx } = {}) =>
     request(asset(`/docker/${encodeURIComponent(docker)}/getdevicecount${qs({ ...scope(ctx), assignee: 'all' })}`)),
 

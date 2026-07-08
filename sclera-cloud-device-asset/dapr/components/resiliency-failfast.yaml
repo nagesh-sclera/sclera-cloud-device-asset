@@ -1,0 +1,65 @@
+# Fail-fast resiliency for services that were removed from this stack.
+# device-asset (and the gateway) still call these app-ids in some flows
+# (e.g. the asset-list endpoint enriches each device with NFC/QR counts from
+# sclera-integrations). With those services gone, each Dapr call otherwise
+# blocks ~2s on address resolution before failing soft, so a page of devices
+# blows past the UI's 15s timeout and "assets don't load".
+#
+# This policy caps each call to a removed service at 150ms with no retries, and
+# opens a circuit breaker after 2 consecutive failures (60s) so the remaining
+# calls in the same request fail INSTANTLY. The Java clients already fail-soft
+# (return 0), so the list loads immediately with 0 counts for the removed
+# services' data. Delete this file (and restart the dapr sidecars) to revert.
+apiVersion: dapr.io/v1alpha1
+kind: Resiliency
+metadata:
+  name: sclera-failfast-removed-services
+scopes:
+  - sclera-cloud-device-asset
+  - sclera-api-gateway
+  - vdms-service
+  - sclera-workorders
+spec:
+  policies:
+    timeouts:
+      failfast: 150ms
+    retries:
+      noRetry:
+        policy: constant
+        duration: 50ms
+        maxRetries: 0
+    circuitBreakers:
+      tripFast:
+        maxRequests: 1
+        timeout: 60s
+        trip: consecutiveFailures >= 2
+  targets:
+    apps:
+      sclera-integrations:
+        timeout: failfast
+        retry: noRetry
+        circuitBreaker: tripFast
+      sclera-alerts:
+        timeout: failfast
+        retry: noRetry
+        circuitBreaker: tripFast
+      sclera-inspection:
+        timeout: failfast
+        retry: noRetry
+        circuitBreaker: tripFast
+      sclera-edge:
+        timeout: failfast
+        retry: noRetry
+        circuitBreaker: tripFast
+      sclera-audit:
+        timeout: failfast
+        retry: noRetry
+        circuitBreaker: tripFast
+      sclera-identity:
+        timeout: failfast
+        retry: noRetry
+        circuitBreaker: tripFast
+      sclera-inventory:
+        timeout: failfast
+        retry: noRetry
+        circuitBreaker: tripFast

@@ -56,4 +56,27 @@ public interface VdmsRepository {
      * @return a non-zero value if this VDMS is the master, otherwise zero
      */
     Integer getIsMaster();
+
+    /**
+     * Returns the single VDMS id iff exactly one VDMS row exists (backward-compat
+     * fallback), otherwise {@code null}.
+     */
+    default String findSingleVdmsId() {
+        return getVDMSId();
+    }
+
+    /** Returns the VDMS details for the given id. */
+    default io.sclera.dto.touchscreen.settings.VdmsDTO getVdmsDetails(String vdmsId) {
+        return getVdmsDetails();
+    }
+
+    /** Returns the VDMS password for the given id. */
+    default String getVDMSPassword(String vdmsId) {
+        return getVDMSPassword();
+    }
+
+    /** Returns the master flag for the given id. */
+    default Integer getIsMaster(String vdmsId) {
+        return getIsMaster();
+    }
 }

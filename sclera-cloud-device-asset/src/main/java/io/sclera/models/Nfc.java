@@ -6,8 +6,19 @@ import jakarta.persistence.*;
 import java.math.BigInteger;
 
 @SqlResultSetMapping(name = "nfcdetails", classes = {@ConstructorResult(targetClass = NfcDTO.class, columns = {@ColumnResult(name = "id", type = String.class), @ColumnResult(name = "device_id", type = String.class), @ColumnResult(name = "location_id", type = String.class)})})
+@SqlResultSetMapping(name = "nfcTagDetails", classes = {@ConstructorResult(targetClass = NfcDTO.class, columns = {
+    @ColumnResult(name = "id", type = String.class),
+    @ColumnResult(name = "created_by", type = String.class),
+    @ColumnResult(name = "creation_time", type = BigInteger.class),
+    @ColumnResult(name = "device_id", type = String.class),
+    @ColumnResult(name = "location_id", type = String.class),
+    @ColumnResult(name = "uuid", type = String.class),
+    @ColumnResult(name = "vdms_id", type = String.class)
+})})
 @NamedNativeQuery(name = "Nfc.getNfcsByDeviceIds", query = "(SELECT nfc.id, nfc.device_id, nfc.location_id FROM nfc WHERE nfc.device_id IN (?1))\n" + "UNION ALL \n" + "(SELECT cnfc.id, cnfc.device_id, cnfc.location_id FROM client_nfc cnfc WHERE cnfc.device_id IN (?1))\n", resultSetMapping = "nfcdetails")
 @NamedNativeQuery(name = "Nfc.getNfcsByLocationIds", query = "(SELECT nfc.id, nfc.device_id, nfc.location_id FROM nfc WHERE nfc.location_id IN ?1)\n" + "UNION ALL \n" + "(SELECT cnfc.id, cnfc.device_id, cnfc.location_id FROM client_nfc cnfc WHERE cnfc.location_id IN ?1)\n", resultSetMapping = "nfcdetails")
+@NamedNativeQuery(name = "Nfc.getNfcDetailsByVdmsIdAndDeviceId", query = "SELECT id, created_by, creation_time, device_id, location_id, uuid, vdms_id FROM nfc WHERE vdms_id = ?1 AND device_id = ?2", resultSetMapping = "nfcTagDetails")
+@NamedNativeQuery(name = "Nfc.getNfcDetailsById", query = "SELECT id, created_by, creation_time, device_id, location_id, uuid, vdms_id FROM nfc WHERE id = ?1", resultSetMapping = "nfcTagDetails")
 /**
  * JPA entity representing an NFC tag associated with a device and location, used to enable
  * tag-based identification and scanning within the asset-management domain.

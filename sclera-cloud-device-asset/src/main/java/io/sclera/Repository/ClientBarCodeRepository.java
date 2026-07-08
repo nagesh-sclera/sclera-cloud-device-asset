@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import jakarta.transaction.Transactional;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -83,4 +84,27 @@ public interface ClientBarCodeRepository extends JpaRepository<ClientBarCode, St
     @Query("SELECT new io.sclera.dto.ClientBarCodeDTO(cbc.id, cbc.device.id, cbc.location.id) " +
            "FROM ClientBarCode cbc WHERE cbc.device.id IN ?1")
     Set<ClientBarCodeDTO> getBarCodesByDeviceIds(Set<String> deviceIds);
+
+    // -------------------------------------------------------------------------
+    // Detail lookups (bound to @NamedNativeQuery on ClientBarCode entity)
+    // -------------------------------------------------------------------------
+
+    /** Bound to {@code ClientBarCode.getUnTaggedClientBarCode} @NamedNativeQuery (params: limit, offset). */
+    @Query(nativeQuery = true)
+    List<ClientBarCodeDTO> getUnTaggedClientBarCode(int limit, int offset);
+
+    /** Bound to {@code ClientBarCode.getClientBarCodeDetailsByVdmsIdAndDeviceId} @NamedNativeQuery. */
+    @Query(nativeQuery = true)
+    List<ClientBarCodeDTO> getClientBarCodeDetailsByVdmsIdAndDeviceId(String vdmsId, String deviceId);
+
+    /** ADC-tagging checks (mirrors ClientQrCodeRepository). */
+    @Query(value = "SELECT COUNT(*) FROM client_bar_code WHERE client_bar_code_id = ?1", nativeQuery = true)
+    int checkClientBarCodeId(String clientBarCodeId);
+
+    /** Returns the row id of an existing client bar code by its business clientBarCodeId, or null if none. */
+    @Query(value = "SELECT id FROM client_bar_code WHERE client_bar_code_id = ?1 LIMIT 1", nativeQuery = true)
+    String findIdByClientBarCodeId(String clientBarCodeId);
+
+    @Query(value = "SELECT COUNT(*) FROM client_bar_code WHERE vdms_id IS NULL AND client_bar_code_id = ?1", nativeQuery = true)
+    int getAdcCheckByClientBarCodeId(String clientBarCodeId);
 }

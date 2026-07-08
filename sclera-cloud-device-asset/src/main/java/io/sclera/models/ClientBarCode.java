@@ -3,6 +3,29 @@ package io.sclera.models;
 
 import jakarta.persistence.*;
 import java.math.BigInteger;
+
+@SqlResultSetMapping(name = "clientBarCodeDetails", classes = {
+    @ConstructorResult(targetClass = io.sclera.dto.ClientBarCodeDTO.class, columns = {
+        @ColumnResult(name = "id", type = String.class),
+        @ColumnResult(name = "added_at", type = String.class),
+        @ColumnResult(name = "added_by", type = String.class),
+        @ColumnResult(name = "client_bar_code_id", type = String.class),
+        @ColumnResult(name = "device_id", type = String.class),
+        @ColumnResult(name = "location_id", type = String.class),
+        @ColumnResult(name = "updated_at", type = java.math.BigInteger.class),
+        @ColumnResult(name = "updated_by", type = String.class),
+        @ColumnResult(name = "vdms_id", type = String.class),
+        @ColumnResult(name = "batch_id", type = String.class)
+    })
+})
+@NamedNativeQueries({
+    @NamedNativeQuery(name = "ClientBarCode.getUnTaggedClientBarCode",
+        query = "SELECT id, added_at, added_by, client_bar_code_id, device_id, location_id, updated_at, updated_by, vdms_id, batch_id FROM client_bar_code WHERE device_id IS NULL AND location_id IS NULL AND is_deleted = false LIMIT ?1 OFFSET ?2",
+        resultSetMapping = "clientBarCodeDetails"),
+    @NamedNativeQuery(name = "ClientBarCode.getClientBarCodeDetailsByVdmsIdAndDeviceId",
+        query = "SELECT id, added_at, added_by, client_bar_code_id, device_id, location_id, updated_at, updated_by, vdms_id, batch_id FROM client_bar_code WHERE vdms_id = ?1 AND device_id = ?2 AND is_deleted = false",
+        resultSetMapping = "clientBarCodeDetails")
+})
 /**
  * JPA entity representing a client barcode tag that can be associated with a device or location,
  * tracking its batch, audit metadata, and soft-deletion state. Used to manage barcode tagging within

@@ -3,16 +3,24 @@ package io.sclera.service;
 import io.sclera.client.APICallClient;
 
 import com.alibaba.fastjson.JSONArray;
+import com.fasterxml.uuid.Generators;
 import io.sclera.Repository.ClientBarCodeRepository;
 import io.sclera.dto.ClientBarCodeDTO;
+import io.sclera.integration.dto.ResponseDTO;
 import io.sclera.queryrepository.ClientBarCodeQueryRepository;
 import io.sclera.interfaces.ClientBarCodeServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import javax.sql.DataSource;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -111,7 +119,11 @@ public class ClientBarCodeService implements ClientBarCodeServiceInterface {
                     preparedStatementUpdate.setString(4, clientBarCodeDTO.getClientBarCodeId());
                     preparedStatementUpdate.setString(5, clientBarCodeDTO.getDeviceId());
                     preparedStatementUpdate.setString(6, clientBarCodeDTO.getLocationId());
-                    preparedStatementUpdate.setString(7, clientBarCodeDTO.getUpdatedTime() == null ? null : String.valueOf(clientBarCodeDTO.getUpdatedTime()));
+                    if (clientBarCodeDTO.getUpdatedTime() == null) {
+                        preparedStatementUpdate.setNull(7, java.sql.Types.NUMERIC);
+                    } else {
+                        preparedStatementUpdate.setBigDecimal(7, new java.math.BigDecimal(clientBarCodeDTO.getUpdatedTime()));
+                    }
                     preparedStatementUpdate.setString(8, clientBarCodeDTO.getUpdatedBy());
                     preparedStatementUpdate.setString(9, clientBarCodeDTO.getVdmsId());
                     preparedStatementUpdate.setString(10, clientBarCodeDTO.getBatchId());
@@ -203,5 +215,129 @@ public class ClientBarCodeService implements ClientBarCodeServiceInterface {
     public Set<ClientBarCodeDTO> getBarCodesByDeviceIds(Set<String> deviceIds) {
         log.info("getBarCodesByDeviceIds");
         return clientBarCodeRepository.getBarCodesByDeviceIds(deviceIds);
+    }
+
+    // -------------------------------------------------------------------------
+    // Tagging surface (mirrors ClientQrCodeService; no cloud sync/WebSocket)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Tags (or re-tags) an existing client bar code to a device or location.
+     * If the bar code is not found locally it is inserted as a new record.
+     * Setting deviceId (and locationId) to null untags the bar code.
+     */
+    @Override
+    public ResponseEntity<ResponseDTO> tagClientBarCode(String orgId, String email,
+                                                        ClientBarCodeDTO clientBarCodeDTO, String loggedInUser) {
+        log.info("tagClientBarCode: orgId={}, email={}, loggedInUser={}", orgId, email, loggedInUser);
+        if (clientBarCodeDTO == null) {
+            log.error("tagClientBarCode: null payload");
+            ResponseDTO err = new ResponseDTO("Invalid client params", 700, false,
+                    BigInteger.valueOf(System.currentTimeMillis()));
+            return new ResponseEntity<>(err, HttpStatus.BAD_REQUEST);
+        }
+
+        BigInteger now = BigInteger.valueOf(System.currentTimeMillis());
+        String batchId = Generators.timeBasedGenerator().generate().toString();
+
+        int existsCount = clientBarCodeRepository.checkClientBarCodeId(clientBarCodeDTO.getClientBarCodeId());
+
+        ClientBarCodeDTO dto = new ClientBarCodeDTO();
+        if (existsCount > 0) {
+            // Reuse existing row id so the ON CONFLICT (id) upsert updates in place.
+            String existingId = clientBarCodeRepository.findIdByClientBarCodeId(clientBarCodeDTO.getClientBarCodeId());
+            dto.setId(existingId != null
+                    ? existingId
+                    : Generators.timeBasedGenerator().generate().toString());
+            log.info("tagClientBarCode: updating clientBarCodeId={}", clientBarCodeDTO.getClientBarCodeId());
+        } else {
+            dto.setId(Generators.timeBasedGenerator().generate().toString());
+            log.info("tagClientBarCode: inserting clientBarCodeId={}", clientBarCodeDTO.getClientBarCodeId());
+        }
+        dto.setClientBarCodeId(clientBarCodeDTO.getClientBarCodeId());
+        dto.setDeviceId(clientBarCodeDTO.getDeviceId());
+        dto.setLocationId(clientBarCodeDTO.getLocationId());
+        dto.setVdmsId(clientBarCodeDTO.getVdmsId());
+        dto.setAddedAt(String.valueOf(now));
+        dto.setAddedBy(email);
+        dto.setUpdatedBy(loggedInUser);
+        dto.setUpdatedTime(now);
+        dto.setBatchId(batchId);
+
+        Set<ClientBarCodeDTO> batch = new HashSet<>();
+        batch.add(dto);
+        upsertClientBarCodeInBatch(batch);
+
+        ResponseDTO responseDTO = new ResponseDTO("Client Bar-Code Details Updated Successfully",
+                200, true, BigInteger.valueOf(System.currentTimeMillis()));
+        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+    }
+
+    /**
+     * Returns client bar codes for the given VDMS filtered by device identifier.
+     */
+    @Override
+    public ResponseEntity<ResponseDTO> getClientBarCodeDetailsByVdmsIdAndDeviceId(String vdmsId, String deviceId) {
+        log.info("getClientBarCodeDetailsByVdmsIdAndDeviceId: vdmsId={}, deviceId={}", vdmsId, deviceId);
+        List<ClientBarCodeDTO> results =
+                clientBarCodeRepository.getClientBarCodeDetailsByVdmsIdAndDeviceId(vdmsId, deviceId);
+        ResponseDTO resp = new ResponseDTO(null, 200, results, true,
+                BigInteger.valueOf(System.currentTimeMillis()));
+        return new ResponseEntity<>(resp, HttpStatus.OK);
+    }
+
+    /**
+     * Returns a page of untagged client bar codes (no device_id and no location_id).
+     */
+    @Override
+    public ResponseEntity<ResponseDTO> getUnTaggedClientBarCode(String orgId, String email, String vdmsId,
+                                                                String loggedInUser, int pageNo, int pageSize) {
+        log.info("getUnTaggedClientBarCode: vdmsId={} pageNo={} pageSize={}", vdmsId, pageNo, pageSize);
+        int offset = pageSize * (pageNo - 1);
+        List<ClientBarCodeDTO> untagged = clientBarCodeRepository.getUnTaggedClientBarCode(pageSize, offset);
+        ResponseDTO resp = new ResponseDTO(null, 200, untagged, true,
+                BigInteger.valueOf(System.currentTimeMillis()));
+        return new ResponseEntity<>(resp, HttpStatus.OK);
+    }
+
+    /**
+     * Returns the ADC tagging status for the given clientBarCodeId.
+     * isTagged: 2 = not in DB, 0 = present but not tagged, 1 = present and tagged.
+     */
+    @Override
+    public ResponseEntity<ResponseDTO> getAdcCheckByClientBarCodeId(String clientBarCodeId) {
+        log.info("getAdcCheckByClientBarCodeId: clientBarCodeId={}", clientBarCodeId);
+        Map<String, Object> result = new HashMap<>();
+        int isPresentInDb = clientBarCodeRepository.checkClientBarCodeId(clientBarCodeId);
+        if (isPresentInDb == 0) {
+            result.put("isTagged", 2);
+            result.put("isAdc", false);
+        } else {
+            int adcCheck = clientBarCodeRepository.getAdcCheckByClientBarCodeId(clientBarCodeId);
+            result.put("isTagged", adcCheck > 0 ? 1 : 0);
+            result.put("isAdc", adcCheck == 1);
+        }
+        ResponseDTO resp = new ResponseDTO(null, 200, result, true,
+                BigInteger.valueOf(System.currentTimeMillis()));
+        return new ResponseEntity<>(resp, HttpStatus.OK);
+    }
+
+    /**
+     * Returns the client bar code record for the given clientBarCodeId, or null data if not found.
+     */
+    @Override
+    public ResponseEntity<ResponseDTO> getClientBarCodeDetailsByClientBarCodeId(String clientBarCodeId) {
+        log.info("getClientBarCodeDetailsByClientBarCodeId: clientBarCodeId={}", clientBarCodeId);
+        int count = clientBarCodeRepository.checkClientBarCodeId(clientBarCodeId);
+        if (count > 0) {
+            ClientBarCodeDTO dto = new ClientBarCodeDTO();
+            dto.setClientBarCodeId(clientBarCodeId);
+            ResponseDTO resp = new ResponseDTO(null, 200, dto, true,
+                    BigInteger.valueOf(System.currentTimeMillis()));
+            return new ResponseEntity<>(resp, HttpStatus.OK);
+        }
+        ResponseDTO resp = new ResponseDTO(null, 200, null, true,
+                BigInteger.valueOf(System.currentTimeMillis()));
+        return new ResponseEntity<>(resp, HttpStatus.OK);
     }
 }
