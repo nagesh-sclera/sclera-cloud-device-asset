@@ -33,7 +33,9 @@ const SUBTABS = ['Info', 'Sensors', 'Notes', 'Inspections', 'Work Orders', 'QR C
 // ALL editable text/select fields (img.png / img_2).
 const EDITABLE = [
   { key: 'user_data_name', label: 'Asset Name', type: 'text' },
-  { key: 'display_name', label: 'Display Name', type: 'text' },
+  // "Display Name" edits the same value as "Asset Name" (user_data_name); the discovered
+  // display_name column is never written by the backend edit path.
+  { key: 'user_data_name', label: 'Display Name', type: 'text' },
   { key: 'model', label: 'Model', type: 'text' },
   { key: 'assignee_email', label: 'Assignee', type: 'text', placeholder: 'Select User' },
   { key: 'operational_status', label: 'Operation Status', type: 'select', options: ['Working', 'Faulty', 'Under Repair', 'Decommissioned'] },
@@ -361,7 +363,7 @@ export default function DeviceDetailPanel({ deviceId, onClose, onChanged }) {
       EDITABLE.forEach((e) => {
         if (e.key === 'cost') return
         const v = form[e.key]
-        if (e.key === 'user_data_name') { payload.user_data_name = v; payload.display_name = form.display_name || v }
+        if (e.key === 'user_data_name') { payload.user_data_name = v; payload.display_name = v }
         else if (e.key === 'vendor') { payload.vendor = v; payload.user_data_vendor = v }
         else if (e.key === 'model') { payload.model = v; payload.user_data_model = v }
         else payload[e.key] = v === '' ? null : v
@@ -602,7 +604,7 @@ function InfoView({ device, name, st, counts }) {
       </div>
       <div className="dp-fields">
         <Row k="Asset Name" v={name} />
-        <Row k="Display Name" v={dash(d.display_name)} />
+        <Row k="Display Name" v={name} />
         <Row k="Model" v={dash(d.user_data_model || d.model)} />
         <Row k="Status" v={st?.label} tone={st?.tone} />
         <Row k="Operation Status" v={dash(d.operational_status) === '—' ? 'Working' : d.operational_status} accent />
@@ -695,8 +697,8 @@ function EditForm({ form, set, setFlag, networks = [], bldOptions = [], floorOpt
           {locOptions.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
         </select>
       </div>
-      {EDITABLE.map((f) => (
-        <div className="dp-editrow" key={f.key}>
+      {EDITABLE.map((f, i) => (
+        <div className="dp-editrow" key={i}>
           <label>{f.label}</label>
           {f.type === 'text' && <input value={form[f.key] || ''} onChange={set(f.key)} placeholder={f.placeholder || ''} />}
           {f.type === 'textarea' && <textarea rows={3} value={form[f.key] || ''} onChange={set(f.key)} />}

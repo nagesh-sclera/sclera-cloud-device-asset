@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * Thin Dapr client delegating to the sclera-integrations microservice (AP-C2).
  *
- * Replaces {@code io.sclera.service.ClientNfcService}.
+ * Replaces {@code io.sclera.service.impl.ClientNfcService}.
  * All methods return documented safe defaults on sidecar failure.
  */
 @Component

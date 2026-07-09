@@ -1,7 +1,7 @@
 package io.sclera.controller.admin;
 
 import io.sclera.dto.*;
-import io.sclera.service.PropertyQrcodeService;
+import io.sclera.service.impl.PropertyQrcodeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

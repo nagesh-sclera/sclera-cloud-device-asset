@@ -2,7 +2,7 @@ package io.sclera.controller.admin;
 
 import io.sclera.dto.ClientQrCodeDTO;
 import io.sclera.integration.dto.ResponseDTO;
-import io.sclera.service.ClientQrCodeService;
+import io.sclera.service.impl.ClientQrCodeService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.slf4j.Logger;

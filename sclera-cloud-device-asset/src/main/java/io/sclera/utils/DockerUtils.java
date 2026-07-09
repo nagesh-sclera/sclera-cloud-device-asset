@@ -13,7 +13,7 @@ import io.sclera.dto.touchscreen.settings.dockercli.ContainerDTO;
 import io.sclera.dto.touchscreen.settings.dockercli.NetworkDTO;
 import io.sclera.service.MasterSlaveAPICallService;
 import io.sclera.service.DockerService;
-import io.sclera.service.touchscreen.VdmsService;
+import io.sclera.service.VdmsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

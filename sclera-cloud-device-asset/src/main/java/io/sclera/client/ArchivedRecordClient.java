@@ -2,7 +2,7 @@ package io.sclera.client;
 
 import io.dapr.client.DaprClient;
 import io.dapr.client.domain.HttpExtension;
-import io.sclera.service.UserActionLogDTO;
+import io.sclera.service.impl.UserActionLogDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

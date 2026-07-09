@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * Thin Dapr client delegating to sclera-integrations (AP-C2).
- * Replaces {@code io.sclera.service.touchscreen.assetmapper.AssetMapperService}.
+ * Replaces {@code io.sclera.service.impl.touchscreen.assetmapper.AssetMapperService}.
  */
 @Component
 public class AssetMapperClient {

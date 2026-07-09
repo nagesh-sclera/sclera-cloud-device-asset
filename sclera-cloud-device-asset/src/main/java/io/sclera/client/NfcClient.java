@@ -16,7 +16,7 @@ import java.util.Set;
 /**
  * Thin Dapr client delegating to the sclera-integrations microservice (AP-C2).
  *
- * Replaces {@code io.sclera.service.NfcService}.
+ * Replaces {@code io.sclera.service.impl.NfcService}.
  * All methods return documented safe defaults on sidecar failure.
  */
 @Component

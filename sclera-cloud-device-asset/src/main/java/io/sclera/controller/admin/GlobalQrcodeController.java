@@ -2,7 +2,7 @@ package io.sclera.controller.admin;
 
 import com.alibaba.fastjson.JSONObject;
 import io.sclera.dto.GlobalQrcodeDTO;
-import io.sclera.service.GlobalQrcodeService;
+import io.sclera.service.impl.GlobalQrcodeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

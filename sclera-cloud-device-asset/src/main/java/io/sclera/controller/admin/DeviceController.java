@@ -8,7 +8,7 @@ import java.util.Set;
 
 import com.alibaba.fastjson.JSONObject;
 import io.sclera.dto.*;
-import io.sclera.service.touchscreen.DeviceMonitorService;
+import io.sclera.service.DeviceMonitorService;
 import io.sclera.integration.dto.ResponseDTO;
 import io.sclera.utils.PageUtils;
 import io.swagger.v3.oas.annotations.Operation;

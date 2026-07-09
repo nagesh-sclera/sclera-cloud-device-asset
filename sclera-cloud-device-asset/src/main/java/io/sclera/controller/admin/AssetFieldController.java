@@ -1,7 +1,7 @@
 package io.sclera.controller.admin;
 
 import io.sclera.dto.AssetFieldDTO;
-import io.sclera.service.touchscreen.AssetFieldService;
+import io.sclera.service.AssetFieldService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;

@@ -1,6 +1,6 @@
 package io.sclera.utils;
 
-//import io.sclera.service.touchscreen.VdmsService;
+//import io.sclera.service.VdmsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;

@@ -3,7 +3,7 @@
 //import io.sclera.Repository.VdmsRepository;
 //import io.sclera.dto.CorrigoConfigurationDTO;
 //import io.sclera.dto.CorrigoUserSettingsDTO;
-//import io.sclera.service.EssentialService;
+//import io.sclera.service.impl.EssentialService;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.stereotype.Component;
 //import org.slf4j.Logger;

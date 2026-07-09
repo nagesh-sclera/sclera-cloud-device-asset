@@ -2,7 +2,7 @@ package io.sclera.controller.admin;
 
 import io.sclera.dto.QrCodeDTO;
 import io.sclera.integration.dto.ResponseDTO;
-import io.sclera.service.QrCodeService;
+import io.sclera.service.impl.QrCodeService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

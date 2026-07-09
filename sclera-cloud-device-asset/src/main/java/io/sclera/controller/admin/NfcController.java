@@ -2,7 +2,7 @@ package io.sclera.controller.admin;
 
 import io.sclera.dto.NfcDTO;
 import io.sclera.integration.dto.ResponseDTO;
-import io.sclera.service.NfcService;
+import io.sclera.service.impl.NfcService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.slf4j.Logger;
