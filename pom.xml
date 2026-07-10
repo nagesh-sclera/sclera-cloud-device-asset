@@ -25,10 +25,8 @@
         <!-- shared library first (dependents resolve it from the reactor) -->
         <module>dapr-commons</module>
 
-        <!-- services -->
+        <!-- services (trimmed 2026-07-10 to device-asset only; vdms-service, workorders and
+             api-gateway removed — see migration-notes / dapr/APP_IDS.md) -->
         <module>sclera-cloud-device-asset</module>
-        <module>sclera-vdms-service</module>
-        <module>sclera-workorders</module>
-        <module>sclera-api-gateway</module>
     </modules>
 </project>

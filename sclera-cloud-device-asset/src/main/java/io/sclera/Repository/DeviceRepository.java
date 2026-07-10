@@ -2997,6 +2997,16 @@ public interface DeviceRepository extends JpaRepository<Device, String> {
     // NOT CONVERTED — stays native (PG-translation track): product_id column has no @Column field on Device entity
     @Query(value = "SELECT id, product_id FROM device WHERE id IN (:ids)", nativeQuery = true)
     List<Object[]> findDeviceProductIdRows(@Param("ids") Set<String> ids);
+
+    /**
+     * Returns the subset of the given device ids whose {@code monitor} flag is set.
+     * Backs the MI-service internal "monitored device ids" bridge route.
+     *
+     * @param deviceIds the device identifiers to filter
+     * @return the matching, monitored device ids
+     */
+    @Query("select d.id from Device d where d.id in :deviceIds and d.monitor = 1")
+    List<String> findMonitoredIds(@Param("deviceIds") java.util.Collection<String> deviceIds);
 }
 
 

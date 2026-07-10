@@ -320,4 +320,7 @@ public interface DeviceService {
     void setAssetImage(String deviceId, String imageUrl);
     java.util.Map<String, Object> importAssetsFromExcel(org.springframework.web.multipart.MultipartFile file, String vdmsid, String docker) throws java.io.IOException;
     java.util.Map<String, Object> multiUpdateAssets(java.util.List<String> ids, java.util.Map<String, Object> changes);
+
+    /** Subset of the given device ids whose {@code monitor} flag is set. */
+    Set<String> getMonitoredDeviceIds(java.util.Collection<String> deviceIds);
 }

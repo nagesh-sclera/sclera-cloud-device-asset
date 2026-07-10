@@ -11601,6 +11601,11 @@ public String daysCleaned(String input){
         return deviceIds;
     }
 
+    @Override
+    public Set<String> getMonitoredDeviceIds(java.util.Collection<String> deviceIds) {
+        if (deviceIds == null || deviceIds.isEmpty()) return java.util.Collections.emptySet();
+        return new java.util.HashSet<>(deviceRepository.findMonitoredIds(deviceIds));
+    }
 
 }
 

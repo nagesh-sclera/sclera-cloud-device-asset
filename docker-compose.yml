@@ -107,11 +107,11 @@ services:
       - app
       - redis
 
-  vdms-service:
+  measuring-instrument:
     build:
-      context: .
-      dockerfile: sclera-vdms-service/Dockerfile
-    container_name: vdms-service
+      context: ./sclera_cloud_measuring_instrument
+      dockerfile: Dockerfile
+    container_name: sclera-cloud-measuring-instrument
     depends_on:
       redis:
         condition: service_healthy
@@ -119,16 +119,15 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_URL: jdbc:postgresql://postgres:5432/sclera_assets
-      DB_USER: root
-      DB_PASS: mypass123
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
-      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
-      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: vdms_svc
-      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
-      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
+      SERVER_PORT: "8086"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sclera_cloud_measuring_instrument
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: mypass123
+      MANAGEMENT_HEALTH_REDIS_ENABLED: "false"
+      DAPR_HTTP_PORT: "3500"
+      DAPR_GRPC_PORT: "50001"
       JAVA_TOOL_OPTIONS: "-javaagent:/otel/agent.jar"
-      OTEL_SERVICE_NAME: "vdms-service"
+      OTEL_SERVICE_NAME: "sclera-cloud-measuring-instrument"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
       OTEL_TRACES_EXPORTER: "otlp"
       OTEL_METRICS_EXPORTER: "none"
@@ -137,121 +136,27 @@ services:
     volumes:
       - ./infra/otel/opentelemetry-javaagent.jar:/otel/agent.jar:ro
     ports:
-      - "8089:8089"
+      - "8086:8086"
     networks:
       - sclera-net
     restart: on-failure
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  vdms-dapr:
-    image: daprio/daprd:1.12.0
-    command: [
-      "./daprd",
-      "--app-id", "vdms-service",
-      "--app-port", "8089",
-      "--dapr-http-port", "3500",
-      "--dapr-grpc-port", "50001",
-      "--placement-host-address", "",
-      "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components",
-      "--log-level", "info"
-    ]
-    volumes:
-      - ./sclera-cloud-device-asset/dapr:/dapr
-    network_mode: "service:vdms-service"
-    restart: on-failure
-    depends_on:
-      - vdms-service
-      - redis
-
-  sclera-workorders:
-    build:
-      context: ./sclera-workorders
-      dockerfile: Dockerfile
-    container_name: sclera-workorders
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      APP_PORT: "8094"
-      DB_URL: jdbc:postgresql://postgres:5432/workorder_db
-      DB_USER: root
-      DB_PASSWORD: mypass123
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      DAPR_HTTP_PORT: "3500"
-      DAPR_GRPC_PORT: "50001"
-      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
-      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
-      JAVA_TOOL_OPTIONS: "-javaagent:/otel/agent.jar"
-      OTEL_SERVICE_NAME: "sclera-workorders"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
-      OTEL_TRACES_EXPORTER: "otlp"
-      OTEL_METRICS_EXPORTER: "none"
-      OTEL_LOGS_EXPORTER: "none"
-      OTEL_PROPAGATORS: "tracecontext,baggage,b3"
-    volumes:
-      - ./infra/otel/opentelemetry-javaagent.jar:/otel/agent.jar:ro
-    ports: ["8094:8094"]
-    networks: [sclera-net]
-    restart: on-failure
-    depends_on: [postgres, redis]
-
-  sclera-workorders-dapr:
+  measuring-instrument-dapr:
     image: daprio/daprd:1.12.0
     command: ["./daprd",
-      "--app-id", "sclera-workorders", "--app-port", "8094",
+      "--app-id", "sclera-cloud-measuring-instrument", "--app-port", "8086",
       "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
+      "--dapr-listen-addresses", "0.0.0.0",
       "--placement-host-address", "",
       "--config", "/dapr/config.yaml",
       "--resources-path", "/dapr/components",
       "--log-level", "info"]
     volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
-    network_mode: "service:sclera-workorders"
+    network_mode: "service:measuring-instrument"
     restart: on-failure
-    depends_on: [sclera-workorders, redis]
-
-  api-gateway:
-    build:
-      context: .
-      dockerfile: sclera-api-gateway/Dockerfile
-    container_name: sclera-api-gateway
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      DAPR_HTTP_PORT: "3500"
-      DAPR_GRPC_PORT: "50001"
-      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
-      MANAGEMENT_ENDPOINTS_WEB_CORS_ALLOWEDMETHODS: "GET"
-      JAVA_TOOL_OPTIONS: "-javaagent:/otel/agent.jar"
-      OTEL_SERVICE_NAME: "sclera-api-gateway"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
-      OTEL_TRACES_EXPORTER: "otlp"
-      OTEL_METRICS_EXPORTER: "none"
-      OTEL_LOGS_EXPORTER: "none"
-      OTEL_PROPAGATORS: "tracecontext,baggage,b3"
-    volumes:
-      - ./infra/otel/opentelemetry-javaagent.jar:/otel/agent.jar:ro
-    ports:
-      - "8080:8080"
-    depends_on:
-      - app
-      - vdms-service
-    networks:
-      - sclera-net
-    restart: on-failure
-
-  api-gateway-dapr:
-    image: daprio/daprd:1.12.0
-    command: ["./daprd",
-      "--app-id", "sclera-api-gateway", "--app-port", "8080",
-      "--dapr-http-port", "3500", "--dapr-grpc-port", "50001",
-      "--placement-host-address", "",
-      "--config", "/dapr/config.yaml",
-      "--resources-path", "/dapr/components",
-      "--log-level", "info"]
-    volumes: ["./sclera-cloud-device-asset/dapr:/dapr"]
-    network_mode: "service:api-gateway"
-    restart: on-failure
-    depends_on: [api-gateway, redis, otel-collector]
+    depends_on: [measuring-instrument, redis]
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.95.0
@@ -346,24 +251,11 @@ services:
     depends_on:
       - loki
 
-  httpbin:
-    image: kennethreitz/httpbin:latest
-    container_name: sclera-httpbin
-    networks:
-      - sclera-net
-    restart: on-failure
-
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: sclera-mailhog
-    ports:
-      - "8025:8025"
-    networks:
-      - sclera-net
-    restart: on-failure
-
-  # Old diagnostic test-ui removed — the React app (sclera-ui/docker-compose.yml)
-  # serves the real UI on port 3000 instead. Re-add if you need the old harness.
+  # Trimmed 2026-07-10 to a two-service workspace: vdms-service, sclera-workorders and
+  # sclera-api-gateway (plus the httpbin/mailhog dev helpers) were removed. Only
+  # sclera-cloud-device-asset (`app`) + observability infra run here. The measuring-instrument
+  # service runs from its own repo (sclera_cloud_measuring_instrument/docker-compose.yml), or is
+  # added to this stack via the Phase-2 Round-2 plan (Task 1).
 
 networks:
   sclera-net:

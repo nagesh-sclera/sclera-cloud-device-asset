@@ -16,9 +16,6 @@ metadata:
   name: sclera-failfast-removed-services
 scopes:
   - sclera-cloud-device-asset
-  - sclera-api-gateway
-  - vdms-service
-  - sclera-workorders
 spec:
   policies:
     timeouts:
@@ -60,6 +57,18 @@ spec:
         retry: noRetry
         circuitBreaker: tripFast
       sclera-inventory:
+        timeout: failfast
+        retry: noRetry
+        circuitBreaker: tripFast
+      # Removed from the trimmed two-service stack (2026-07-10). device-asset's VdmsClient/
+      # VdmsRepoClient/VdmsconfigurationRepoClient (app-id vdms-service) and CorrigoClient/
+      # PmsClient/TicketClient/WorkorderTemplateClient (app-id sclera-workorders) all fail soft
+      # (return null/safe default + one WARN), so failing fast keeps every request instant.
+      vdms-service:
+        timeout: failfast
+        retry: noRetry
+        circuitBreaker: tripFast
+      sclera-workorders:
         timeout: failfast
         retry: noRetry
         circuitBreaker: tripFast

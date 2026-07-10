@@ -15,24 +15,18 @@
 #     vdms-service keeps its agent blanked below to save RAM; remove the override to
 #     also capture its internal spans.
 #
-#  NOTE: The other business microservices (audit, identity, alerts, inventory,
-#  inspection, integrations, edge, scheduler) were removed from the stack — only
-#  device-asset (`app`), `vdms-service`, and `sclera-workorders` run here now.
+#  NOTE: Stack trimmed 2026-07-10 to a two-service workspace — only device-asset (`app`)
+#  + observability infra run here. vdms-service, sclera-workorders and sclera-api-gateway
+#  were removed; device-asset's Dapr calls to vdms-service/sclera-workorders now fail fast
+#  (see dapr/components/resiliency-failfast.yaml) and its clients return safe defaults.
 services:
   postgres:
     ports:
       - "5433:5432"
 
-  # --- Java services: blank JAVA_TOOL_OPTIONS where applicable; DB-per-service DB_URL ---
+  # --- device-asset: DB-per-service DB_URL ---
   app:                       # sclera-cloud-device-asset  (was: sclera_assets / public)
     environment:
       # OTel agent RE-ENABLED here (real 24MB jar now present) → inbound HTTP server
       # spans + SQL + request/response bodies for the full front-to-back request trace.
       DB_URL: jdbc:postgresql://postgres:5432/device_asset_db
-  vdms-service:              # (was: sclera_assets / vdms_svc)  schema env unchanged
-    environment:
-      JAVA_TOOL_OPTIONS: ""
-      DB_URL: jdbc:postgresql://postgres:5432/vdms_db
-  sclera-workorders:
-    environment:
-      JAVA_TOOL_OPTIONS: ""
