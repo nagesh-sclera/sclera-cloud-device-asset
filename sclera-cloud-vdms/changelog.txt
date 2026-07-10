@@ -1,7 +1,0 @@
-Sclera VDMS code backup before 
-1. Upcoming date filter changes in Release Notes
-2. TOTP Authenticator For Remote Session
-3. Enhanced email alerts for Measuring Instruments
-4. Included the property name in the subject line of emails for VDMS offline alerts
-
-Current tagname:2.1.33
